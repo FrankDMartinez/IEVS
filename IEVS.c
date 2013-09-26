@@ -4921,45 +4921,47 @@ void DrawCircle(int x, int y, uint radius, uint BorderColor, uint FillColor, uch
 
 uint SquareUint(uint x){ return x*x; }
 
-void DrawVoronoi(uint NumSites, int xx[], int yy[], uchar Barray[20000], int LpPow){
+void DrawVoronoi(uint NumSites, int xx[], int yy[], uchar Barray[20000], int LpPow)
+{
 	int x,y,ds,min;
 	uint col,i;
 	if(NumSites>16) NumSites=16;
-  for(x=0; x<200; x++){
-    for(y=0; y<200; y++){
-      min = 9999999; col=BIGINT;
-      for(i=0; i<NumSites; i++){
-	if(LpPow==2) ds = (int)(SquareReal(x-xx[i]) + SquareReal(y-yy[i]));
-	else  /*1*/  ds = (int)(fabs(x-xx[i]) + fabs(y-yy[i]));
-	if(ds < min){ min=ds; col=i; }
-      }
-      assert(col<NumSites);
-      CreatePixel(x,y,col,Barray);
-    }
-  }
-  for(i=0; i<NumSites; i++){
-    DrawCircle(xx[i], yy[i], 2, ((i!=15)?15:14), i, Barray);
-  }
+	for(x=0; x<200; x++) {
+		for(y=0; y<200; y++) {
+			min = 9999999; col=BIGINT;
+			for(i=0; i<NumSites; i++) {
+				if(LpPow==2) ds = (int)(SquareReal(x-xx[i]) + SquareReal(y-yy[i]));
+				else  /*1*/  ds = (int)(fabs(x-xx[i]) + fabs(y-yy[i]));
+				if(ds < min) { min=ds; col=i; }
+			}
+			assert(col<NumSites);
+			CreatePixel(x,y,col,Barray);
+		}
+	}
+	for(i=0; i<NumSites; i++) {
+		DrawCircle(xx[i], yy[i], 2, ((i!=15)?15:14), i, Barray);
+	}
 }
 
-void DrawFPvor(uint NumSites, int xx[], int yy[], uchar Barray[20000], int LpPow){
-  uint x,y,ds,mx,col,i;
-  if(NumSites>16) NumSites=16;
-  for(x=0; x<200; x++){
-    for(y=0; y<200; y++){
-      mx = 0; col=BIGINT;
-      for(i=0; i<NumSites; i++){
-	if(LpPow==2) ds = (int)(SquareReal(x-xx[i]) + SquareReal(y-yy[i]));
-	else  /*1*/  ds = (int)(fabs(x-xx[i]) + fabs(y-yy[i]));
-	if(ds >= mx){ mx=ds; col=i; }
-      }
-      assert(col<NumSites);
-      CreatePixel(x,y,col,Barray);
-    }
-  }
-  for(i=0; i<NumSites; i++){
-    DrawCircle(xx[i], yy[i], 2, ((i!=15)?15:14), i, Barray);
-  }
+void DrawFPvor(uint NumSites, int xx[], int yy[], uchar Barray[20000], int LpPow)
+{
+	uint x,y,ds,mx,col,i;
+	if(NumSites>16) NumSites=16;
+	for(x=0; x<200; x++) {
+		for(y=0; y<200; y++) {
+			mx = 0; col=BIGINT;
+			for(i=0; i<NumSites; i++) {
+				if(LpPow==2) ds = (int)(SquareReal(x-xx[i]) + SquareReal(y-yy[i]));
+				else  /*1*/  ds = (int)(fabs(x-xx[i]) + fabs(y-yy[i]));
+				if(ds >= mx) { mx=ds; col=i; }
+			}
+			assert(col<NumSites);
+			CreatePixel(x,y,col,Barray);
+		}
+	}
+	for(i=0; i<NumSites; i++) {
+		DrawCircle(xx[i], yy[i], 2, ((i!=15)?15:14), i, Barray);
+	}
 }
 
 /***
