@@ -305,13 +305,14 @@ primitive root mod that P. A still more enormous prime is
 trivial) but doing arithmetic mod this P is (although still fairly
 easy) less pleasant because bit-shifting is required.
 *************************************************************/
-uint32 BigLinCong32(){
-   uint32 y[120];
-   int i;
-   uint64 u;
+uint32 BigLinCong32()
+{
+	uint32 y[120];
+	int i;
+	uint64 u;
 
-   if(BLC32NumLeft==0){
-      /* Need to refill BLC32x[0..59] with 60 new random numbers: */
+	if(BLC32NumLeft==0) {
+		/* Need to refill BLC32x[0..59] with 60 new random numbers: */
 
  /****************************************************************
  * If BLC32x[0..59] is the digits, LS..MS, of a number in base 2^w,
@@ -324,41 +325,41 @@ uint32 BigLinCong32(){
 #define A1 (uint64)1284507170
 #define A2 (uint64)847441413
 #define A3 (uint64)650134147
-      for(i=0; i<3; i++){
-	 y[i] = 0;
-      }
-      u=0;
-      for(/*i=3*/; i<44; i++){
-	 u += A1 * BLC32x[i-3];
-	 y[i] = lohalf(u);
-	 u = u>>32;
-      }
-      for(/*i=44*/; i<59; i++){
-	 u += A1 * BLC32x[i-3];
-	 u += A2 * BLC32x[i-44];
-	 y[i] = lohalf(u);
-	 u = u>>32;
-      }
-      for(/*i=59*/; i<60+3; i++){
-	 u += A1 * BLC32x[i-3];
-	 u += A2 * BLC32x[i-44];
-	 u += A3 * BLC32x[i-59];
-	 y[i] = lohalf(u);
-	 u = u>>32;
-      }
-      for(/*i=60+3*/; i<60+44; i++){
-	 u += A2 * BLC32x[i-44];
-	 u += A3 * BLC32x[i-59];
-	 y[i] = lohalf(u);
-	 u = u>>32;
-      }
-      for(/*i=60+44*/; i<60+59; i++){
-	 u += A3 * BLC32x[i-59];
-	 y[i] = lohalf(u);
-	 u = u>>32;
-      }
-      /*i=60+59=119*/
-      y[i] = lohalf(u);
+		for(i=0; i<3; i++) {
+			y[i] = 0;
+		}
+		u=0;
+		for(/*i=3*/; i<44; i++) {
+			u += A1 * BLC32x[i-3];
+			y[i] = lohalf(u);
+			u = u>>32;
+		}
+		for(/*i=44*/; i<59; i++) {
+			u += A1 * BLC32x[i-3];
+			u += A2 * BLC32x[i-44];
+			y[i] = lohalf(u);
+			u = u>>32;
+		}
+		for(/*i=59*/; i<60+3; i++) {
+			u += A1 * BLC32x[i-3];
+			u += A2 * BLC32x[i-44];
+			u += A3 * BLC32x[i-59];
+			y[i] = lohalf(u);
+			u = u>>32;
+		}
+		for(/*i=60+3*/; i<60+44; i++) {
+			u += A2 * BLC32x[i-44];
+			u += A3 * BLC32x[i-59];
+			y[i] = lohalf(u);
+			u = u>>32;
+		}
+		for(/*i=60+44*/; i<60+59; i++) {
+			u += A3 * BLC32x[i-59];
+			y[i] = lohalf(u);
+			u = u>>32;
+		}
+		/*i=60+59=119*/
+		y[i] = lohalf(u);
 #undef A1
 #undef A2
 #undef A3
@@ -368,107 +369,107 @@ uint32 BigLinCong32(){
  * its remainder mod P in y[0..59]  (conceivably the result will
  * be >P, but this does not matter; it will never be >=2^(w*60)).
  **************************************************************/
-      u=1; /*borrow*/
+		u=1; /*borrow*/
 #define AllF 0xffffffff
-      /* Step 1: y[0..72] = y[0..59] + y[60..119]shift12 - y[60..119]: */
-      for(i=0; i<12; i++){
-	 u += y[i];
-	 u += (uint64)(uint32)~y[60+i];
-	 y[i] = lohalf(u);
-	 u = u>>32;
-      }
-      for(/*i=12*/; i<60; i++){
-	 u += y[i];
-	 u += y[48+i];
-	 u += (uint64)(uint32)~y[60+i];
-	 y[i] = lohalf(u);
-	 u = u>>32;
-      }
-      for(/*i=60*/; i<72; i++){
-	 u += AllF;
-	 u += y[48+i];
-	 y[i] = lohalf(u);
-	 u = u>>32;
-      }
-      assert(u>0);
-      y[72] = (uint32)(u-1); /*unborrow*/
+		/* Step 1: y[0..72] = y[0..59] + y[60..119]shift12 - y[60..119]: */
+		for(i=0; i<12; i++) {
+			u += y[i];
+			u += (uint64)(uint32)~y[60+i];
+			y[i] = lohalf(u);
+			u = u>>32;
+		}
+		for(/*i=12*/; i<60; i++) {
+			u += y[i];
+			u += y[48+i];
+			u += (uint64)(uint32)~y[60+i];
+			y[i] = lohalf(u);
+			u = u>>32;
+		}
+		for(/*i=60*/; i<72; i++) {
+			u += AllF;
+			u += y[48+i];
+			y[i] = lohalf(u);
+			u = u>>32;
+		}
+		assert(u>0);
+		y[72] = (uint32)(u-1); /*unborrow*/
 
-      /*  Step 2: y[0..60] = y[0..59] + y[60..72]shift12  - y[60..72]: */
-      u=1; /*borrow*/
-      for(i=0; i<12; i++){
-	 u += y[i];
-	 u += (uint64)(uint32)~y[60+i];
-	 y[i] = lohalf(u);
-	 u = u>>32;
-      }
-      /*i=12*/
-      u += y[i] + y[48+i];
-      u += (uint64)(uint32)~y[60+i];
-      y[i] = lohalf(u);
-      u = u>>32;
-      i++;
-      for(/*i=13*/; i<25; i++){
-	 u += AllF;
-	 u += y[i];
-	 u += y[48+i];
-	 y[i] = lohalf(u);
-	 u = u>>32;
-      }
-      for(/*i=25*/; i<60; i++){
-	 u += AllF;
-	 u += y[i];
-	 y[i] = lohalf(u);
-	 u = u>>32;
-      }
-      /*i=60*/
-      assert(u>0);
-      y[i] = (uint32)(u-1); /*unborrow*/
+		/*  Step 2: y[0..60] = y[0..59] + y[60..72]shift12  - y[60..72]: */
+		u=1; /*borrow*/
+		for(i=0; i<12; i++) {
+			u += y[i];
+			u += (uint64)(uint32)~y[60+i];
+			y[i] = lohalf(u);
+			u = u>>32;
+		}
+		/*i=12*/
+		u += y[i] + y[48+i];
+		u += (uint64)(uint32)~y[60+i];
+		y[i] = lohalf(u);
+		u = u>>32;
+		i++;
+		for(/*i=13*/; i<25; i++) {
+			u += AllF;
+			u += y[i];
+			u += y[48+i];
+			y[i] = lohalf(u);
+			u = u>>32;
+		}
+		for(/*i=25*/; i<60; i++) {
+			u += AllF;
+			u += y[i];
+			y[i] = lohalf(u);
+			u = u>>32;
+		}
+		/*i=60*/
+		assert(u>0);
+		y[i] = (uint32)(u-1); /*unborrow*/
 
-     /*It is rare that any iterations of this loop are needed:*/
-      while(y[60]!=0){
-         printf("rare loop\n");
-	 /*Step 3+:  y[0..60] = y[0..59] + y[60]shift12 - y[60]:*/
-	 u=1; /*borrow*/
-	 u += y[0];
-	 u += (uint64)(uint32)~y[60];
-	 y[0] = lohalf(u);
-	 u = u>>32;
-	 for(i=1; i<12; i++){
-	    u += AllF;
-	    u += y[i];
-	    y[i] = lohalf(u);
-	    u = u>>32;
-	 }
-	 /*i=12*/
-	 u += AllF;
-	 u += y[i];
-	 u += y[60];
-	 y[i] = lohalf(u);
-	 u = u>>32;
-	 i++;
-	 for(/*i=13*/; i<60; i++){
-	    u += AllF;
-	    u += y[i];
-	    y[i] = lohalf(u);
-	    u = u>>32;
-	 }
-	 /*i=60*/
-	 assert(u>0);
-	 y[i] = (uint32)(u-1); /*unborrow*/
-      }
+	/*It is rare that any iterations of this loop are needed:*/
+		while(y[60]!=0) {
+			printf("rare loop\n");
+			/*Step 3+:  y[0..60] = y[0..59] + y[60]shift12 - y[60]:*/
+			u=1; /*borrow*/
+			u += y[0];
+			u += (uint64)(uint32)~y[60];
+			y[0] = lohalf(u);
+			u = u>>32;
+			for(i=1; i<12; i++) {
+				u += AllF;
+				u += y[i];
+				y[i] = lohalf(u);
+				u = u>>32;
+			}
+			/*i=12*/
+			u += AllF;
+			u += y[i];
+			u += y[60];
+			y[i] = lohalf(u);
+			u = u>>32;
+			i++;
+			for(/*i=13*/; i<60; i++) {
+				u += AllF;
+				u += y[i];
+				y[i] = lohalf(u);
+				u = u>>32;
+			}
+			/*i=60*/
+			assert(u>0);
+			y[i] = (uint32)(u-1); /*unborrow*/
+		}
 #undef AllF
 #undef lohalf
 
-      /* Copy y[0..59] into BLC32x[0..59]: */
-      for(i=0; i<60; i++){
-	 BLC32x[i] = y[i];
-      }
-      /*printf("%u\n", BLC32x[44]);*/
-      BLC32NumLeft=60;
-   }
-   /* (Else) We have random numbers left, so return one: */
-   BLC32NumLeft--;
-   return BLC32x[BLC32NumLeft];
+		/* Copy y[0..59] into BLC32x[0..59]: */
+		for(i=0; i<60; i++) {
+			BLC32x[i] = y[i];
+		}
+		/*printf("%u\n", BLC32x[44]);*/
+		BLC32NumLeft=60;
+	}
+	/* (Else) We have random numbers left, so return one: */
+	BLC32NumLeft--;
+	return BLC32x[BLC32NumLeft];
 }
 
 void testbiglincong(){
