@@ -373,14 +373,14 @@ uint32 BigLinCong32(){
       /* Step 1: y[0..72] = y[0..59] + y[60..119]shift12 - y[60..119]: */
       for(i=0; i<12; i++){
 	 u += y[i];
-	 u += (uint64)~y[60+i];
+	 u += (uint64)(uint32)~y[60+i];
 	 y[i] = lohalf(u);
 	 u = u>>32;
       }
       for(/*i=12*/; i<60; i++){
 	 u += y[i];
 	 u += y[48+i];
-	 u += (uint64)~y[60+i];
+	 u += (uint64)(uint32)~y[60+i];
 	 y[i] = lohalf(u);
 	 u = u>>32;
       }
@@ -397,13 +397,13 @@ uint32 BigLinCong32(){
       u=1; /*borrow*/
       for(i=0; i<12; i++){
 	 u += y[i];
-	 u += (uint64)~y[60+i];
+	 u += (uint64)(uint32)~y[60+i];
 	 y[i] = lohalf(u);
 	 u = u>>32;
       }
       /*i=12*/
       u += y[i] + y[48+i];
-      u += (uint64)~y[60+i];
+      u += (uint64)(uint32)~y[60+i];
       y[i] = lohalf(u);
       u = u>>32;
       i++;
@@ -430,7 +430,7 @@ uint32 BigLinCong32(){
 	 /*Step 3+:  y[0..60] = y[0..59] + y[60]shift12 - y[60]:*/
 	 u=1; /*borrow*/
 	 u += y[0];
-	 u += (uint64)~y[60];
+	 u += (uint64)(uint32)~y[60];
 	 y[0] = lohalf(u);
 	 u = u>>32;
 	 for(i=1; i<12; i++){
