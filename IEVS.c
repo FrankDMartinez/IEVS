@@ -27,6 +27,7 @@
   #include <sys/time.h>
   #include <unistd.h>
 #endif
+#include <string.h>
 
 void myAssert(_Bool good, int number);
 
