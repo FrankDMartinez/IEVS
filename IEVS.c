@@ -28,6 +28,7 @@
   #include <unistd.h>
 #endif
 
+void myAssert(_Bool good, int number);
 
 /* #define NDEBUG    uncomment this line if want to turn off asserts for speed */
 #define VERSION 3.24
@@ -2174,10 +2175,7 @@ EMETH Sinkhorn(edata *E  /* candidate with max Sinkhorn rating (from all-positiv
 			if(maxsum < sum) maxsum = sum;
 			SinkRow[k] /= sum;
 		}
-		if( minsum == 0.0 ) {
-			printf("TOLCINSE #1\n");
-			exit(EXIT_FAILURE);
-		}
+		myAssert((minsum != 0.0), 1);
 		maxminRatio = maxsum/minsum;
     maxsum = -HUGE; minsum = HUGE;
 		for(k=0; k < (int)E->NumCands; k++){
@@ -2189,10 +2187,7 @@ EMETH Sinkhorn(edata *E  /* candidate with max Sinkhorn rating (from all-positiv
 			if(maxsum < sum) maxsum = sum;
 			SinkCol[k] /= sum;
 		}
-		if( minsum == 0.0 ) {
-			printf("TOLCINSE #2\n");
-			exit(EXIT_FAILURE);
-		}
+		myAssert((minsum != 0.0), 2);
 		t = maxsum/minsum;
     if( maxminRatio < t ) maxminRatio = t;
   }until(maxminRatio < 1.000003);
@@ -2783,10 +2778,7 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */
 	}
 	if(IRVTopLim >= (int)E->NumCands) IRVwinner=winner;
 	assert(stillthere==1);
-	if( stillthere != 1 ) {
-		printf("TOLCINSE #3\n");
-		exit(EXIT_FAILURE);
-	}
+	myAssert((stillthere==1), 3);
 	return(winner);
 }
 
@@ -3104,10 +3096,7 @@ EMETH IRNRv(edata *E  /*Brian Olson's voting method but with 2-param renorm*/
 				s += E->Score[x+j]; ct++;
 			}
 			assert(ct>0);
-			if( ct <= 0 ) {
-				printf("TOLCINSE #3\n");
-				exit(EXIT_FAILURE);
-			}
+			myAssert((ct>0), 5);
 			avg = s/ct; /*mean*/
 			s = 0.0;
       for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]){
@@ -4118,10 +4107,7 @@ void HonestyStrat( edata *E, real honfrac ){
 			else if( ThisU < MeanU ) E->Approve[offi] = FALSE;
 			else E->Approve[offi] = RandBool();
 			}
-			if( ACT == 0 ) {
-				printf("TOLCINSE #4\n");
-				exit(EXIT_FAILURE);
-			}
+			myAssert((ACT!=0), 4);
 			Mean2U /= ACT;
       for(i=E->NumCands -1; i>=0; i--){
 	offi = offset+i;
@@ -4167,10 +4153,7 @@ void HonestyStrat( edata *E, real honfrac ){
 					else{   E->CandRankings[offi] = hibd;  hibd--; }
 				}
 			}
-			if( ACT == 0 ) {
-				printf("TOLCINSE #4\n");
-				exit(EXIT_FAILURE);
-			}
+			myAssert((ACT!=0), 6);
 			Mean2U /= ACT;
       for(i=E->NumCands -1; i>=0; i--){
 	offi = offset+i;
@@ -5982,4 +5965,19 @@ void runTests()
 {
     	PrintConsts();
 	runSingleTest(1);
+}
+
+/*	myAssert(good, number):	assertion function making sure 'good' is
+ *				true before continuing and issuing a
+ *				diagnostic if not
+ *	good:			the condition to test
+ *	number:			the error number to report
+ */
+void myAssert(_Bool good, int number)
+{
+	if(good) { /* do nothing */ }
+	else {
+		printf("TOLCINSE #%d\n", number);
+		exit(EXIT_FAILURE);
+	}
 }
