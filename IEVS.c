@@ -5582,7 +5582,8 @@ void RWBRDriver(){
 
 /*************************** MAIN CODE: ***************************/
 
-main(int argc, char **argv){
+main(int argc, char **argv)
+{
 	uint seed, choice, ch2, ch3;
 	int ihonfrac, TopYeeVoters, GaussStdDev, subsqsideX, subsqsideY, LpPow;
 	int WhichMeth, NumSites, i,j;
@@ -5591,13 +5592,12 @@ main(int argc, char **argv){
 	char fname[100];
 	brdata B;
 
-		if( (argc > 1) && !strcmp(argv[1], "--test") )
-		{
+	if((argc > 1) && !strcmp(argv[1], "--test")) {
 		extern void runTests();
 
 		runTests();
-			exit(EXIT_SUCCESS);
-		}
+		exit(EXIT_SUCCESS);
+	}
 	printf("IEVS (Warren D. Smith's infinitely extendible voting system comparator) at your service!\n");
 	printf("Version=%f  Year=%d  Month=%d\n", VERSION, VERSIONYEAR, VERSIONMONTH);
 	fflush(stdout);
@@ -5620,7 +5620,7 @@ main(int argc, char **argv){
 	do{
 		fflush(stdout);
 		scanf("%u", &choice);
-		switch(choice){
+		switch(choice) {
 		case(1) :
 			printf("Answer a sequence of questions indicating what output format you want for\n");
 			printf("the regret tables:\n");
@@ -5833,12 +5833,12 @@ main(int argc, char **argv){
 			printf("Do you want IEVS to re-order the points to try for maximum color-contrast? (1) yes (2) no\n");
 			fflush(stdout);
 			scanf("%u", &ch2);
-			switch(ch2){
+			switch(ch2) {
 			case(1) :
 				printf("Reordering...\n");
 				cscore = ReorderForColorContrast(  NumSites, xx, yy );
 				printf("Color score %f (big=more constrast); Your (reordered) coords are:\n", cscore);
-				for(i=0; i<NumSites; i++){
+				for(i=0; i<NumSites; i++) {
 					printf("(%d, %d)\n", xx[i], yy[i]);
 				}
 				break;
