@@ -4166,7 +4166,6 @@ void HonestyStrat( edata *E, real honfrac ){
 	ThisU = E->PerceivedUtility[offi];
 	if( ThisU >= Mean2U ){ E->Approve2[offi] = TRUE; }
 	else{                  E->Approve2[offi] = FALSE;}
-	assert( E->CandRankings[offi] >= 0 );
 	assert( E->CandRankings[offi] < E->NumCands );
 	E->TopDownPrefs[ offset + E->CandRankings[offi] ] = i;
       }
