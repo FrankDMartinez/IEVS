@@ -1,3 +1,12 @@
+/* why I am editting this code (a note so I remember):
+
+   I want to be able to quickly add additional methods I find and
+   compare them to others, especially identifying the percentages when
+   a particular system comes out "on top". I also want to understand
+   what Warren means by "RandWinner". I could ask Him by e-mail but I
+   believe He is retired and He owes Me nothing; therefore, I do not
+   want to impose unnecessarily.
+ */
 #define TRUE (0<1)
 #define FALSE (1<0)
 #define MSWINDOWS FALSE
