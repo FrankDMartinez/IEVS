@@ -1981,32 +1981,32 @@ EMETH NansonBaldwin(edata *E  /* repeatedly eliminate Borda loser */
 	if(CondorcetWinner >= 0) return CondorcetWinner;
 #endif
 	if(BordaWinner<0) Borda(E);
-  FillBoolArray(E->NumCands, Eliminated, FALSE);
-  CopyIntArray(E->NumCands, (int*)BordaVoteCount, NansonVoteCount);
-  RandomlyPermute( E->NumCands, RandCandPerm );
-  for(rnd=1; rnd < (int)E->NumCands; rnd++){
-    BordaLoser = -1;
-    minc = BIGINT;
-    for(i=E->NumCands -1; i>=0; i--){
-      r = RandCandPerm[i];
-      if(!Eliminated[r] && NansonVoteCount[r]<minc){
-	minc=NansonVoteCount[r];
-	BordaLoser=r;
-      }
-    }
-    assert(BordaLoser>=0);
-    ensure(BordaLoser>=0, 7);
-    Eliminated[BordaLoser] = TRUE;
-    for(i=E->NumCands -1; i>=0; i--) if(!Eliminated[i]){
-      NansonVoteCount[i] -= E->MarginsMatrix[i*E->NumCands + BordaLoser];
-    }
-  } /* end of for(rnd) */
-  for(i=E->NumCands -1; i>=0; i--){ /* find non-eliminated candidate... */
-    if(!Eliminated[i]){
-      return i; /*NansonBaldwin winner*/
-    }
-  }
-  return(-1); /*error*/
+	FillBoolArray(E->NumCands, Eliminated, FALSE);
+	CopyIntArray(E->NumCands, (int*)BordaVoteCount, NansonVoteCount);
+	RandomlyPermute( E->NumCands, RandCandPerm );
+	for(rnd=1; rnd < (int)E->NumCands; rnd++) {
+		BordaLoser = -1;
+		minc = BIGINT;
+		for(i=E->NumCands -1; i>=0; i--) {
+			r = RandCandPerm[i];
+			if(!Eliminated[r] && NansonVoteCount[r]<minc) {
+				minc=NansonVoteCount[r];
+				BordaLoser=r;
+			}
+		}
+		assert(BordaLoser>=0);
+		ensure(BordaLoser>=0, 7);
+		Eliminated[BordaLoser] = TRUE;
+		for(i=E->NumCands -1; i>=0; i--) if(!Eliminated[i]) {
+			NansonVoteCount[i] -= E->MarginsMatrix[i*E->NumCands + BordaLoser];
+		}
+	} /* end of for(rnd) */
+	for(i=E->NumCands -1; i>=0; i--) { /* find non-eliminated candidate... */
+		if(!Eliminated[i]) {
+			return i; /*NansonBaldwin winner*/
+		}
+	}
+	return(-1); /*error*/
 }
 
 /***
@@ -2018,46 +2018,46 @@ EMETH NansonBaldwin(edata *E  /* repeatedly eliminate Borda loser */
  ******/
 EMETH Rouse(edata *E  /*like Nanson-Baldwin but with an extra level of recursion BUGGY*/
 	    ){ /* side effects: Rmark[], rRmark[] */
-  int i,j,k,m,r,highestb,bordsum, maxb, winner;
-  if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
-  FillBoolArray(E->NumCands, rRmark, TRUE); /* nobody eliminated initially */
-  for(m= E->NumCands; m>1; m--){ /* NumCands-1 elimination-rounds */
-    for(k=1; k<m; k++){  /* m-1 pseudo-elimination rounds */
-      maxb = -BIGINT; highestb = -1;
-      FillBoolArray(E->NumCands, Rmark, TRUE); /* nobody pseudo-eliminated initially */
-      RandomlyPermute( E->NumCands, RandCandPerm );
-      for(i=E->NumCands-1; i>=0; i--){
-        r = RandCandPerm[i];
-        if(rRmark[r] && Rmark[r]){
-          bordsum = 0;
-	  for(j=E->NumCands -1; j>=0; j--){
-	    if(Rmark[j] && rRmark[j]) bordsum += E->MarginsMatrix[r*E->NumCands +j];
-	  }
-          if(maxb < bordsum){ maxb = bordsum;  highestb = r; }
-        }
-      }
-      assert(highestb >= 0);
-      ensure(highestb >= 0, 8);
-      assert(rRmark[highestb]);
-      assert(Rmark[highestb]);
-      Rmark[highestb] = FALSE; /* pseudo-eliminate borda-winner */
-    }
-    /* Find the non-psu-eliminated canddt i: */
-    for(i=E->NumCands -1; i>=0; i--){ if(Rmark[i] && rRmark[i]){ break; }}
-    assert(i>=0);
-    assert(i<(int)E->NumCands);
-    ensure(i>=0, 9);
-    rRmark[i] = FALSE; /* (genuinely) eliminate it */
-  }
-  winner = -1;
-  for(k=0; k< (int)E->NumCands; k++){ if(rRmark[k]){ winner = k;  break; }}
-  assert(winner==0 || !rRmark[0]);
-  /***???
-  if(winner != CondorcetWinner && CondorcetWinner>=0){ *???*
-    printf("Rouse aint Condorcet (RW=%d CW=%d):\n", winner, CondorcetWinner);
-    PrintEdata(stdout, E);
-  }***/
-  return winner;
+	int i,j,k,m,r,highestb,bordsum, maxb, winner;
+	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	FillBoolArray(E->NumCands, rRmark, TRUE); /* nobody eliminated initially */
+	for(m= E->NumCands; m>1; m--){ /* NumCands-1 elimination-rounds */
+		for(k=1; k<m; k++){  /* m-1 pseudo-elimination rounds */
+			maxb = -BIGINT; highestb = -1;
+			FillBoolArray(E->NumCands, Rmark, TRUE); /* nobody pseudo-eliminated initially */
+			RandomlyPermute( E->NumCands, RandCandPerm );
+			for(i=E->NumCands-1; i>=0; i--){
+				r = RandCandPerm[i];
+				if(rRmark[r] && Rmark[r]){
+					bordsum = 0;
+					for(j=E->NumCands -1; j>=0; j--){
+						if(Rmark[j] && rRmark[j]) bordsum += E->MarginsMatrix[r*E->NumCands +j];
+					}
+					if(maxb < bordsum){ maxb = bordsum;  highestb = r; }
+				}
+			}
+			assert(highestb >= 0);
+			ensure(highestb >= 0, 8);
+			assert(rRmark[highestb]);
+			assert(Rmark[highestb]);
+			Rmark[highestb] = FALSE; /* pseudo-eliminate borda-winner */
+		}
+		/* Find the non-psu-eliminated canddt i: */
+		for(i=E->NumCands -1; i>=0; i--){ if(Rmark[i] && rRmark[i]){ break; }}
+		assert(i>=0);
+		assert(i<(int)E->NumCands);
+		ensure(i>=0, 9);
+		rRmark[i] = FALSE; /* (genuinely) eliminate it */
+	}
+	winner = -1;
+	for(k=0; k< (int)E->NumCands; k++){ if(rRmark[k]){ winner = k;  break; }}
+	assert(winner==0 || !rRmark[0]);
+	/***???
+	if(winner != CondorcetWinner && CondorcetWinner>=0){ *???*
+		printf("Rouse aint Condorcet (RW=%d CW=%d):\n", winner, CondorcetWinner);
+		PrintEdata(stdout, E);
+	}***/
+	return winner;
 }
 
 EMETH IterCopeland( edata *E  /*iterate Copeland on tied-winner set from previous iter until fixpt*/
@@ -2249,7 +2249,7 @@ EMETH SimpsonKramer(edata *E  /* candidate with mildest worst-defeat wins */
 
 EMETH RaynaudElim(edata *E  /* repeatedly eliminate canddt who suffered the worst-margin-defeat */
  ){ /* side effects: Eliminated[], RayDefeatMargin[], RayBeater[] */
-  int i, j, x, t, RayLoser, rnd, maxc, r, beater;
+	int i, j, x, t, RayLoser, rnd, maxc, r, beater;
 	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
 #if CWSPEEDUP
 	if(CondorcetWinner >= 0) return CondorcetWinner;
@@ -2266,97 +2266,97 @@ EMETH RaynaudElim(edata *E  /* repeatedly eliminate canddt who suffered the wors
 		RayDefeatMargin[i] = t; /*worst margin of defeat of i, nonpositive if undefeated */
 		RayBeater[i] = beater; /*who administered that beating*/
 	}
-  FillBoolArray(E->NumCands, Eliminated, FALSE);
-  for(rnd=1; rnd < (int)E->NumCands; rnd++){
-    RayLoser = -1;
-    maxc = -BIGINT;
-    RandomlyPermute( E->NumCands, RandCandPerm );
-    for(i=E->NumCands -1; i>=0; i--){
-      r = RandCandPerm[i];
-      if(!Eliminated[r] && RayDefeatMargin[r]>maxc){
-	maxc=RayDefeatMargin[r];
-	RayLoser=r;
-      }
-    }
-    assert(RayLoser >= 0);
-    ensure(RayLoser >= 0, 10);
-    if( maxc <= 0 ){ return RayLoser; } /*"loser" is undefeated*/
-    Eliminated[RayLoser] = TRUE;
-    for(i=E->NumCands -1; i>=0; i--) if(!Eliminated[i] && RayBeater[i]==RayLoser){
-      t = -BIGINT; beater = -1;
-      RandomlyPermute( E->NumCands, RandCandPerm );
-      for(j=E->NumCands -1; j>=0; j--){
-	r = RandCandPerm[j];
-	if(!Eliminated[r]){
-	  x = E->MarginsMatrix[r*E->NumCands+i];
-	  if(x>t){ t=x; beater=r; }
+	FillBoolArray(E->NumCands, Eliminated, FALSE);
+	for(rnd=1; rnd < (int)E->NumCands; rnd++){
+		RayLoser = -1;
+		maxc = -BIGINT;
+		RandomlyPermute( E->NumCands, RandCandPerm );
+		for(i=E->NumCands -1; i>=0; i--){
+			r = RandCandPerm[i];
+			if(!Eliminated[r] && RayDefeatMargin[r]>maxc){
+				maxc=RayDefeatMargin[r];
+				RayLoser=r;
+			}
+		}
+		assert(RayLoser >= 0);
+		ensure(RayLoser >= 0, 10);
+		if( maxc <= 0 ){ return RayLoser; } /*"loser" is undefeated*/
+		Eliminated[RayLoser] = TRUE;
+		for(i=E->NumCands -1; i>=0; i--) if(!Eliminated[i] && RayBeater[i]==RayLoser){
+			t = -BIGINT; beater = -1;
+			RandomlyPermute( E->NumCands, RandCandPerm );
+			for(j=E->NumCands -1; j>=0; j--){
+				r = RandCandPerm[j];
+				if(!Eliminated[r]){
+					x = E->MarginsMatrix[r*E->NumCands+i];
+					if(x>t){ t=x; beater=r; }
+				}
+			}
+			assert(beater >= 0);
+			RayDefeatMargin[i] = t;
+			RayBeater[i] = beater;
+		}
+	} /* end of for(rnd) */
+	for(i=E->NumCands -1; i>=0; i--){ /* find non-eliminated candidate... */
+		if(!Eliminated[i]){
+			return i; /*Raynaud winner*/
+		}
 	}
-      }
-      assert(beater >= 0);
-      RayDefeatMargin[i] = t;
-      RayBeater[i] = beater;
-    }
-  } /* end of for(rnd) */
-  for(i=E->NumCands -1; i>=0; i--){ /* find non-eliminated candidate... */
-    if(!Eliminated[i]){
-      return i; /*Raynaud winner*/
-    }
-  }
-  return(-1); /*error*/
+	return(-1); /*error*/
 }
 
 EMETH ArrowRaynaud(edata *E  /* repeatedly eliminate canddt with smallest {largest margin of victory, which is <=0 if never won} */
 ){ /* side effects: Eliminated[], ARchump[], ARVictMargin[].  ArrowRaynaud can eliminate a Condorcet Winner in round #1. */
-  int i, j, x, t, ARLoser, rnd, minc, r, chump;
-  if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
-  for(i=E->NumCands -1; i>=0; i--){
-    t = -BIGINT; chump = -1;
-    RandomlyPermute( E->NumCands, RandCandPerm );
-    for(j=E->NumCands -1; j>=0; j--){
-      r = RandCandPerm[j];
-      x = E->MarginsMatrix[i*E->NumCands + r];
-      if(x>t){ t=x; chump=r; }
-    }
-    assert(chump >= 0);
-    ARVictMargin[i] = t; /*largest margin of victory of i, nonpositive if never won*/
-    ARchump[i] = chump; /*who suffered that beating*/
-  }
-  FillBoolArray(E->NumCands, Eliminated, FALSE);
-  for(rnd=1; rnd < (int)E->NumCands; rnd++){
-    ARLoser = -1;
-    minc = BIGINT;
-    RandomlyPermute( E->NumCands, RandCandPerm );
-    for(i=E->NumCands -1; i>=0; i--){
-      r = RandCandPerm[i];
-      if(!Eliminated[r] && ARVictMargin[r]<minc){
-	minc=ARVictMargin[r];
-	ARLoser=r;
-      }
-    }
-    assert(ARLoser >= 0);
-    ensure(ARLoser >= 0, 11);
-    Eliminated[ARLoser] = TRUE;
-    for(i=E->NumCands -1; i>=0; i--) if(!Eliminated[i] && ARchump[i]==ARLoser){
-      t = -BIGINT; chump = -1;
-      RandomlyPermute( E->NumCands, RandCandPerm );
-      for(j=E->NumCands -1; j>=0; j--){
-	r = RandCandPerm[j];
-	if(!Eliminated[r]){
-	  x = E->MarginsMatrix[i*E->NumCands+r];
-	  if(x>t){ t=x; chump=r; }
+	int i, j, x, t, ARLoser, rnd, minc, r, chump;
+	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	for(i=E->NumCands -1; i>=0; i--){
+		t = -BIGINT; chump = -1;
+		RandomlyPermute( E->NumCands, RandCandPerm );
+		for(j=E->NumCands -1; j>=0; j--){
+			r = RandCandPerm[j];
+			x = E->MarginsMatrix[i*E->NumCands + r];
+			if(x>t){ t=x; chump=r; }
+		}
+		assert(chump >= 0);
+		ARVictMargin[i] = t; /*largest margin of victory of i, nonpositive if never won*/
+		ARchump[i] = chump; /*who suffered that beating*/
 	}
-      }
-      assert(chump >= 0);
-      ARVictMargin[i] = t;
-      ARchump[i] = chump;
-    }
-  } /* end of for(rnd) */
-  for(i=E->NumCands -1; i>=0; i--){ /* find non-eliminated candidate... */
-    if(!Eliminated[i]){
-      return i; /*ArrowRaynaud winner*/
-    }
-  }
-  return(-1); /*error*/
+	FillBoolArray(E->NumCands, Eliminated, FALSE);
+	for(rnd=1; rnd < (int)E->NumCands; rnd++){
+		ARLoser = -1;
+		minc = BIGINT;
+		RandomlyPermute( E->NumCands, RandCandPerm );
+		for(i=E->NumCands -1; i>=0; i--){
+			r = RandCandPerm[i];
+			if(!Eliminated[r] && ARVictMargin[r]<minc){
+				minc=ARVictMargin[r];
+				ARLoser=r;
+			}
+		}
+		assert(ARLoser >= 0);
+		ensure(ARLoser >= 0, 11);
+		Eliminated[ARLoser] = TRUE;
+		for(i=E->NumCands -1; i>=0; i--) if(!Eliminated[i] && ARchump[i]==ARLoser){
+			t = -BIGINT; chump = -1;
+			RandomlyPermute( E->NumCands, RandCandPerm );
+			for(j=E->NumCands -1; j>=0; j--){
+				r = RandCandPerm[j];
+				if(!Eliminated[r]){
+					x = E->MarginsMatrix[i*E->NumCands+r];
+					if(x>t){ t=x; chump=r; }
+				}
+			}
+			assert(chump >= 0);
+			ARVictMargin[i] = t;
+			ARchump[i] = chump;
+		}
+	} /* end of for(rnd) */
+	for(i=E->NumCands -1; i>=0; i--){ /* find non-eliminated candidate... */
+		if(!Eliminated[i]){
+			return i; /*ArrowRaynaud winner*/
+		}
+	}
+	return(-1); /*error*/
 }
 
 /* O(N^3) algorithm, but it is known how to speed it up to O(N^2) */
@@ -2809,7 +2809,7 @@ EMETH Top3IRV(edata *E  /* Top-3-choices-only IRV */
 
 EMETH BTRIRV(edata *E  /* Repeatedly eliminate either plur loser or 2nd-loser (whoever loses pairwise) */
 ){ /* side effects: Eliminated[], IFav[], RdVoteCount[], FavListNext[], HeadFav[], */
-  int Iround,x,i,RdLoser,RdLoser2,NextI,j,minc,r;
+	int Iround,x,i,RdLoser,RdLoser2,NextI,j,minc,r;
 	assert(E->NumCands <= MaxNumCands);
 #if CWSPEEDUP
 	if(CondorcetWinner>=0) return(CondorcetWinner);
@@ -2818,139 +2818,139 @@ EMETH BTRIRV(edata *E  /* Repeatedly eliminate either plur loser or 2nd-loser (w
 		Eliminated[i] = FALSE;
 		HeadFav[i] = -1;
 	}
-  ZeroIntArray(E->NumCands, RdVoteCount);
-  ZeroIntArray(E->NumVoters, IFav);
-  /* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
-  for(i=E->NumVoters -1; i>=0; i--){
-    assert(IFav[i] >= 0);
-    assert(IFav[i] < (int)E->NumCands);
-    x = E->TopDownPrefs[i*E->NumCands + IFav[i]]; /* the favorite of voter i */
-    assert(x >= 0);
-    assert(x < (int)E->NumCands);
-    RdVoteCount[ x ]++;
-    FavListNext[i] = HeadFav[x];
-    HeadFav[x] = i;
-  }
-  RandomlyPermute( E->NumCands, RandCandPerm );
-  for(Iround=1; Iround<(int)E->NumCands; Iround++){
-    RdLoser = -1;
-    minc = BIGINT;
-    for(i=E->NumCands -1; i>=0; i--){
-      r = RandCandPerm[i];
-      if(!Eliminated[r] && RdVoteCount[r]<minc){
-	minc=RdVoteCount[r];
-	RdLoser=r;
-      }
-    }
-    assert(RdLoser>=0);
-    RdLoser2 = -1;
-    minc = BIGINT;
-    for(i=E->NumCands -1; i>=0; i--){
-      r = RandCandPerm[i];
-      if(!Eliminated[r] && RdVoteCount[r]<minc && r!=RdLoser){
-	minc=RdVoteCount[r];
-	RdLoser2=r;
-      }
-    }
-    assert(RdLoser2>=0);
-    if( E->MarginsMatrix[ RdLoser*E->NumCands + RdLoser2 ] > 0 ) RdLoser = RdLoser2;
-    ensure(RdLoser>=0, 13);
-    Eliminated[RdLoser] = TRUE; /* eliminate RdLoser */
-    for(i=HeadFav[RdLoser]; i>=0; i=NextI){ /* Go thru list of voters with favorite=RdLoser, adjust: */
-      j = i*E->NumCands;
-      assert( E->TopDownPrefs[j+IFav[i]] == RdLoser );
-      assert(IFav[i] >= 0);
-      assert(IFav[i] < (int)E->NumCands);
-      do{ IFav[i]++; x = E->TopDownPrefs[j + IFav[i]]; }while( Eliminated[x] );
-      /* x is new favorite of voter i */
-      assert( IFav[i] < (int)E->NumCands );
-      NextI =  FavListNext[i];
-      /* update favorite-list: */
-      FavListNext[i] = HeadFav[x];
-      HeadFav[x] = i;
-      /* update vote count totals: */
-      assert(x >= 0);
-      assert(x < (int)E->NumCands);
-      RdVoteCount[ x ]++;
-    }
-  }
-  for(i=E->NumCands -1; i>=0; i--){ /* find the non-eliminated candidate... */
-    if(!Eliminated[i]){
-      return i; /*IRV winner*/
-    }
-  }
-  return(-1); /*error*/
+	ZeroIntArray(E->NumCands, RdVoteCount);
+	ZeroIntArray(E->NumVoters, IFav);
+	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
+	for(i=E->NumVoters -1; i>=0; i--){
+		assert(IFav[i] >= 0);
+		assert(IFav[i] < (int)E->NumCands);
+		x = E->TopDownPrefs[i*E->NumCands + IFav[i]]; /* the favorite of voter i */
+		assert(x >= 0);
+		assert(x < (int)E->NumCands);
+		RdVoteCount[ x ]++;
+		FavListNext[i] = HeadFav[x];
+		HeadFav[x] = i;
+	}
+	RandomlyPermute( E->NumCands, RandCandPerm );
+	for(Iround=1; Iround<(int)E->NumCands; Iround++){
+		RdLoser = -1;
+		minc = BIGINT;
+		for(i=E->NumCands -1; i>=0; i--){
+			r = RandCandPerm[i];
+			if(!Eliminated[r] && RdVoteCount[r]<minc){
+				minc=RdVoteCount[r];
+				RdLoser=r;
+			}
+		}
+		assert(RdLoser>=0);
+		RdLoser2 = -1;
+		minc = BIGINT;
+		for(i=E->NumCands -1; i>=0; i--){
+			r = RandCandPerm[i];
+			if(!Eliminated[r] && RdVoteCount[r]<minc && r!=RdLoser){
+				minc=RdVoteCount[r];
+				RdLoser2=r;
+			}
+		}
+		assert(RdLoser2>=0);
+		if( E->MarginsMatrix[ RdLoser*E->NumCands + RdLoser2 ] > 0 ) RdLoser = RdLoser2;
+		ensure(RdLoser>=0, 13);
+		Eliminated[RdLoser] = TRUE; /* eliminate RdLoser */
+		for(i=HeadFav[RdLoser]; i>=0; i=NextI){ /* Go thru list of voters with favorite=RdLoser, adjust: */
+			j = i*E->NumCands;
+			assert( E->TopDownPrefs[j+IFav[i]] == RdLoser );
+			assert(IFav[i] >= 0);
+			assert(IFav[i] < (int)E->NumCands);
+			do{ IFav[i]++; x = E->TopDownPrefs[j + IFav[i]]; }while( Eliminated[x] );
+			/* x is new favorite of voter i */
+			assert( IFav[i] < (int)E->NumCands );
+			NextI =	FavListNext[i];
+			/* update favorite-list: */
+			FavListNext[i] = HeadFav[x];
+			HeadFav[x] = i;
+			/* update vote count totals: */
+			assert(x >= 0);
+			assert(x < (int)E->NumCands);
+			RdVoteCount[ x ]++;
+		}
+	}
+	for(i=E->NumCands -1; i>=0; i--){ /* find the non-eliminated candidate... */
+		if(!Eliminated[i]){
+			return i; /*IRV winner*/
+		}
+	}
+	return(-1); /*error*/
 }
 
 EMETH Coombs(edata *E /*repeatedly eliminate antiplurality loser (with most bottom-rank votes)*/
 ){ /*side effects: Eliminated[], IFav[], RdVoteCount[], FavListNext[], HeadFav[] */
-  int Iround,i,RdLoser,NextI,j,x,maxc,r;
-  assert(E->NumCands <= MaxNumCands);
-  for(i=E->NumCands -1; i>=0; i--){
-    Eliminated[i] = FALSE;
-    HeadFav[i] = -1; /*HeadFav[i] will be the first voter whose current most-hated is i*/
-  }
-  ZeroIntArray(E->NumCands, RdVoteCount);
-  assert(E->NumCands >= 2);
-  assert(E->NumCands <= MaxNumVoters);
-  FillIntArray(E->NumVoters, IFav, E->NumCands -1);
-  /* IFav[i] is the rank of the last noneliminated canddt in voter i's topdownpref list
-   * (initially NumCands-1) */
-  FillIntArray(E->NumVoters, FavListNext, -1);
-  /* FavListNext is "next" indices in linked list of voters with common current favorite; -1 terminated. */
-  /* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
-  for(i=E->NumVoters -1; i>=0; i--){
-    assert(IFav[i] >= 0);
-    assert(IFav[i] < (int)E->NumCands);
-    x = E->TopDownPrefs[i*E->NumCands + IFav[i]]; /* the initial most-hated of voter i */
-    assert(x >= 0);
-    assert(x < (int)E->NumCands);
-    RdVoteCount[ x ]++; /*antiplurality voting*/
-    FavListNext[i] = HeadFav[x];
-    HeadFav[x] = i;
-  }
-  RandomlyPermute( E->NumCands, RandCandPerm );
-  for(Iround=1; Iround < (int)E->NumCands; Iround++){
-    RdLoser = -1;
-    maxc = -BIGINT;
-    for(i=E->NumCands -1; i>=0; i--){
-      r = RandCandPerm[i];
-      assert(r >= 0);
-      assert(r < (int)E->NumCands);
-      if(!Eliminated[r]){
-	if(RdVoteCount[r]>maxc){
-	  maxc=RdVoteCount[r];
-	  RdLoser=r;
+	int Iround,i,RdLoser,NextI,j,x,maxc,r;
+	assert(E->NumCands <= MaxNumCands);
+	for(i=E->NumCands -1; i>=0; i--){
+		Eliminated[i] = FALSE;
+		HeadFav[i] = -1; /*HeadFav[i] will be the first voter whose current most-hated is i*/
 	}
-      }
-    }
-    assert(RdLoser>=0);
-    ensure(RdLoser>=0, 14);
-    Eliminated[RdLoser] = TRUE; /* eliminate RdLoser */
-    for(i=HeadFav[RdLoser]; i>=0; i=NextI){/*Go thru linked list of voters with favorite=RdLoser, adjust:*/
-      j = i*E->NumCands;
-      assert( IFav[i]>=0 );
-      assert( IFav[i]<= (int)E->NumCands );
-      assert( E->TopDownPrefs[ j+IFav[i] ] == RdLoser );
-      do{ IFav[i]--; x = E->TopDownPrefs[j+IFav[i]]; }while( Eliminated[x] );
-      /* x is new favorite of voter i */
-      assert( IFav[i] >= 0 );
-      NextI =  FavListNext[i];
-      /* update favorite-list: */
-      FavListNext[i] = HeadFav[x];
-      HeadFav[x] = i;
-      /* update vote count totals: */
-      assert(x>=0);
-      assert(x < (int)E->NumCands);
-      RdVoteCount[ x ]++;
-    }
-  }  /* end of for(Iround) */
-  for(i=E->NumCands -1; i>=0; i--){ /* find the non-eliminated candidate... */
-    if(!Eliminated[i]){
-      return i; /*Coombs winner*/
-    }
-  }
-  return(-1); /*error*/
+	ZeroIntArray(E->NumCands, RdVoteCount);
+	assert(E->NumCands >= 2);
+	assert(E->NumCands <= MaxNumVoters);
+	FillIntArray(E->NumVoters, IFav, E->NumCands -1);
+	/* IFav[i] is the rank of the last noneliminated canddt in voter i's topdownpref list
+	 * (initially NumCands-1) */
+	FillIntArray(E->NumVoters, FavListNext, -1);
+	/* FavListNext is "next" indices in linked list of voters with common current favorite; -1 terminated. */
+	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
+	for(i=E->NumVoters -1; i>=0; i--){
+		assert(IFav[i] >= 0);
+		assert(IFav[i] < (int)E->NumCands);
+		x = E->TopDownPrefs[i*E->NumCands + IFav[i]]; /* the initial most-hated of voter i */
+		assert(x >= 0);
+		assert(x < (int)E->NumCands);
+		RdVoteCount[ x ]++; /*antiplurality voting*/
+		FavListNext[i] = HeadFav[x];
+		HeadFav[x] = i;
+	}
+	RandomlyPermute( E->NumCands, RandCandPerm );
+	for(Iround=1; Iround < (int)E->NumCands; Iround++){
+		RdLoser = -1;
+		maxc = -BIGINT;
+		for(i=E->NumCands -1; i>=0; i--){
+			r = RandCandPerm[i];
+			assert(r >= 0);
+			assert(r < (int)E->NumCands);
+			if(!Eliminated[r]){
+				if(RdVoteCount[r]>maxc){
+					maxc=RdVoteCount[r];
+					RdLoser=r;
+				}
+			}
+		}
+		assert(RdLoser>=0);
+		ensure(RdLoser>=0, 14);
+		Eliminated[RdLoser] = TRUE; /* eliminate RdLoser */
+		for(i=HeadFav[RdLoser]; i>=0; i=NextI){/*Go thru linked list of voters with favorite=RdLoser, adjust:*/
+			j = i*E->NumCands;
+			assert( IFav[i]>=0 );
+			assert( IFav[i]<= (int)E->NumCands );
+			assert( E->TopDownPrefs[ j+IFav[i] ] == RdLoser );
+			do{ IFav[i]--; x = E->TopDownPrefs[j+IFav[i]]; }while( Eliminated[x] );
+			/* x is new favorite of voter i */
+			assert( IFav[i] >= 0 );
+			NextI =	FavListNext[i];
+			/* update favorite-list: */
+			FavListNext[i] = HeadFav[x];
+			HeadFav[x] = i;
+			/* update vote count totals: */
+			assert(x>=0);
+			assert(x < (int)E->NumCands);
+			RdVoteCount[ x ]++;
+		}
+	}	/* end of for(Iround) */
+	for(i=E->NumCands -1; i>=0; i--){ /* find the non-eliminated candidate... */
+		if(!Eliminated[i]){
+			return i; /*Coombs winner*/
+		}
+	}
+	return(-1); /*error*/
 }
 
 EMETH Approval(edata *E   /* canddt with most-approvals wins */
@@ -3043,50 +3043,50 @@ Brian Olson's IRNR system:
 real IRNRPOWER=2.0;
 EMETH IRNR(edata *E  /*Brian Olson's voting method described above*/
 ){ /* side effects: Eliminated[], SumNormedRatings[]*/
-  int rd,i,j,x,r,loser;
-  real s,t,minc;
+	int rd,i,j,x,r,loser;
+	real s,t,minc;
 
-  FillBoolArray(E->NumCands, Eliminated, FALSE);
-  for(rd=E->NumCands; rd>1; rd--){
-    ZeroRealArray( E->NumCands, SumNormedRating );
-    for(i=0; i<(int)E->NumVoters; i++){
-      x = i*E->NumCands;
-      s = 0.0;
-      for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]){
-	t = E->Score[x+j] - 0.5;
-	if(t < 0.0) t = -t;
-	s += pow(t, IRNRPOWER);
-      }
-      if(s>0.0){
-	s = pow(s, -1.0/IRNRPOWER);
-	for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]){
-	  SumNormedRating[j] += s * E->Score[x+j];
+	FillBoolArray(E->NumCands, Eliminated, FALSE);
+	for(rd=E->NumCands; rd>1; rd--){
+		ZeroRealArray( E->NumCands, SumNormedRating );
+		for(i=0; i<(int)E->NumVoters; i++){
+			x = i*E->NumCands;
+			s = 0.0;
+			for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]){
+				t = E->Score[x+j] - 0.5;
+				if(t < 0.0) t = -t;
+				s += pow(t, IRNRPOWER);
+			}
+			if(s>0.0){
+				s = pow(s, -1.0/IRNRPOWER);
+				for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]){
+					SumNormedRating[j] += s * E->Score[x+j];
+				}
+			}
+		}
+		RandomlyPermute( E->NumCands, RandCandPerm );
+		loser = -1;
+		minc = HUGE;
+		for(j=E->NumCands -1; j>=0; j--){
+			r = RandCandPerm[j];
+			if(!Eliminated[r]){
+				if( SumNormedRating[r] < minc ){
+					minc = SumNormedRating[r];
+					loser = r;
+				}
+			}
+		}
+		assert(loser>=0);
+		ensure(loser>=0, 15);
+		Eliminated[loser] = TRUE;
 	}
-      }
-    }
-    RandomlyPermute( E->NumCands, RandCandPerm );
-    loser = -1;
-    minc = HUGE;
-    for(j=E->NumCands -1; j>=0; j--){
-      r = RandCandPerm[j];
-      if(!Eliminated[r]){
-	if( SumNormedRating[r] < minc ){
-	  minc = SumNormedRating[r];
-	  loser = r;
+	for(i=E->NumCands -1; i>=0; i--){ /* find random non-eliminated candidate... */
+		j = RandCandPerm[i];
+		if(!Eliminated[j]){
+			return j; /*winner*/
+		}
 	}
-      }
-    }
-    assert(loser>=0);
-    ensure(loser>=0, 15);
-    Eliminated[loser] = TRUE;
-  }
-  for(i=E->NumCands -1; i>=0; i--){ /* find random non-eliminated candidate... */
-    j = RandCandPerm[i];
-    if(!Eliminated[j]){
-      return j; /*winner*/
-    }
-  }
-  return(-1); /*error*/
+	return(-1); /*error*/
 }
 
 /* Like IRNR based on squares, but when "renomalizing" it now does a TWO-parameter
@@ -3149,51 +3149,51 @@ EMETH IRNRv(edata *E  /*Brian Olson's voting method but with 2-param renorm*/
  * linear transformation so max=1 and min=0. */
 EMETH IRNRm(edata *E  /*Brian Olson's voting method but with 2-param renorm*/
 ){ /* side effects: Eliminated[], SumNormedRatings[]*/
-  int rd,i,j,x,r,loser;
-  real s,t,minc,mx,mn;
+	int rd,i,j,x,r,loser;
+	real s,t,minc,mx,mn;
 
-  FillBoolArray(E->NumCands, Eliminated, FALSE);
-  for(rd=E->NumCands; rd>1; rd--){
-    ZeroRealArray( E->NumCands, SumNormedRating );
-    for(i=0; i<(int)E->NumVoters; i++){
-      x = i*E->NumCands;
-      mx = -HUGE; mn = HUGE;
-      for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]){
-	t = E->Score[x+j];
-	if(t<mn) mn=t;
-	if(t>mx) mx=t;
-      }
-      s = mx-mn;
-      if(s>0.0){
-	s = 1.0/s;
-	for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]){
-	  SumNormedRating[j] += s * (E->Score[x+j] - mn);
+	FillBoolArray(E->NumCands, Eliminated, FALSE);
+	for(rd=E->NumCands; rd>1; rd--){
+		ZeroRealArray( E->NumCands, SumNormedRating );
+		for(i=0; i<(int)E->NumVoters; i++){
+			x = i*E->NumCands;
+			mx = -HUGE; mn = HUGE;
+			for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]){
+				t = E->Score[x+j];
+				if(t<mn) mn=t;
+				if(t>mx) mx=t;
+			}
+			s = mx-mn;
+			if(s>0.0){
+				s = 1.0/s;
+				for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]){
+					SumNormedRating[j] += s * (E->Score[x+j] - mn);
+				}
+			}
+		}
+		RandomlyPermute( E->NumCands, RandCandPerm );
+		loser = -1;
+		minc = HUGE;
+		for(j=E->NumCands -1; j>=0; j--){
+			r = RandCandPerm[j];
+			if(!Eliminated[r]){
+				if( SumNormedRating[r] < minc ){
+					minc = SumNormedRating[r];
+					loser = r;
+				}
+			}
+		}
+		assert(loser>=0);
+		ensure(loser>=0, 17);
+		Eliminated[loser] = TRUE;
 	}
-      }
-    }
-    RandomlyPermute( E->NumCands, RandCandPerm );
-    loser = -1;
-    minc = HUGE;
-    for(j=E->NumCands -1; j>=0; j--){
-      r = RandCandPerm[j];
-      if(!Eliminated[r]){
-	if( SumNormedRating[r] < minc ){
-	  minc = SumNormedRating[r];
-	  loser = r;
+	for(i=E->NumCands -1; i>=0; i--){ /* find random non-eliminated candidate... */
+		j = RandCandPerm[i];
+		if(!Eliminated[j]){
+			return j; /*winner*/
+		}
 	}
-      }
-    }
-    assert(loser>=0);
-    ensure(loser>=0, 17);
-    Eliminated[loser] = TRUE;
-  }
-  for(i=E->NumCands -1; i>=0; i--){ /* find random non-eliminated candidate... */
-    j = RandCandPerm[i];
-    if(!Eliminated[j]){
-      return j; /*winner*/
-    }
-  }
-  return(-1); /*error*/
+	return(-1); /*error*/
 }
 
 EMETH MCA(edata *E  /*canddt with most-2approvals wins if gets >50%, else regular approval-winner wins*/
@@ -3499,61 +3499,61 @@ EMETH HeitzigRiver(edata *E /*http://lists.electorama.com/pipermail/election-met
 	if(CondorcetWinner>=0) return(CondorcetWinner);
 #endif
 	/* find potential (and actual) parents: */
-  for(i=0; i < (int)E->NumCands; i++){
-    maxc = -BIGINT; pp = -1;
-    RandomlyPermute( E->NumCands, RandCandPerm );
-    for(j=0; j < (int)E->NumCands; j++){
-      r = RandCandPerm[j];
-      if(r!=i && E->MarginsMatrix[r*E->NumCands +i]>maxc){
-        maxc = E->MarginsMatrix[r*E->NumCands +i];
-        pp = r;
-      }
-    }
-    assert(pp>=0);
-    Hpotpar[i] = pp;
-    Hpar[i] = i;
-    Hroot[i] = i;
-  }
-  for(z = E->NumCands; ; ){ /* loop that adds arcs: */
-    /* scan tree roots to find best new arc to add: */
-    maxc = -BIGINT; k = -1;
-    RandomlyPermute( E->NumCands, RandCandPerm );
-    for(i=0; i < (int)E->NumCands; i++){
-      r = RandCandPerm[i];
-      if(Hpar[r]==r){ /* tree root */
-	pp = Hpotpar[r];
-	if(maxc < E->MarginsMatrix[pp*E->NumCands +r]){
-	  maxc = E->MarginsMatrix[pp*E->NumCands +r];
-	  k = r;
+	for(i=0; i < (int)E->NumCands; i++){
+		maxc = -BIGINT; pp = -1;
+		RandomlyPermute( E->NumCands, RandCandPerm );
+		for(j=0; j < (int)E->NumCands; j++){
+			r = RandCandPerm[j];
+			if(r!=i && E->MarginsMatrix[r*E->NumCands +i]>maxc){
+				maxc = E->MarginsMatrix[r*E->NumCands +i];
+				pp = r;
+			}
+		}
+		assert(pp>=0);
+		Hpotpar[i] = pp;
+		Hpar[i] = i;
+		Hroot[i] = i;
 	}
-      }
-    }/*end for(i)*/
-    assert(k>=0);
-    ensure(k>=0, 18);
-    /* add it: */
-    pp = Hpotpar[k];
-    Hpar[k] = pp;
-    /* update roots: */
-    newroot = Hroot[pp];
-    z--;
-    if(z<=1) break;
-    oldroot = Hroot[k];
-    for(i=0; i < (int)E->NumCands; i++){
-      if(Hroot[i] == oldroot) Hroot[i] = newroot;
-    }
-    /* update potential parent of newroot: */
-    maxc = -BIGINT; k = -1;
-    for(j=0; j < (int)E->NumCands; j++){
-      r = RandCandPerm[j];
-      if(Hroot[r]!=newroot && E->MarginsMatrix[r*E->NumCands +newroot]>maxc){
-	maxc = E->MarginsMatrix[r*E->NumCands +newroot];
-	k = r;
-      }
-    }
-    assert(k>=0);
-    Hpotpar[newroot] = k;
-  }
-  return newroot;
+	for(z = E->NumCands; ; ){ /* loop that adds arcs: */
+		/* scan tree roots to find best new arc to add: */
+		maxc = -BIGINT; k = -1;
+		RandomlyPermute( E->NumCands, RandCandPerm );
+		for(i=0; i < (int)E->NumCands; i++){
+			r = RandCandPerm[i];
+			if(Hpar[r]==r){ /* tree root */
+				pp = Hpotpar[r];
+				if(maxc < E->MarginsMatrix[pp*E->NumCands +r]){
+					maxc = E->MarginsMatrix[pp*E->NumCands +r];
+					k = r;
+				}
+			}
+		}/*end for(i)*/
+		assert(k>=0);
+		ensure(k>=0, 18);
+		/* add it: */
+		pp = Hpotpar[k];
+		Hpar[k] = pp;
+		/* update roots: */
+		newroot = Hroot[pp];
+		z--;
+		if(z<=1) break;
+		oldroot = Hroot[k];
+		for(i=0; i < (int)E->NumCands; i++){
+			if(Hroot[i] == oldroot) Hroot[i] = newroot;
+		}
+		/* update potential parent of newroot: */
+		maxc = -BIGINT; k = -1;
+		for(j=0; j < (int)E->NumCands; j++){
+			r = RandCandPerm[j];
+			if(Hroot[r]!=newroot && E->MarginsMatrix[r*E->NumCands +newroot]>maxc){
+				maxc = E->MarginsMatrix[r*E->NumCands +newroot];
+				k = r;
+			}
+		}
+		assert(k>=0);
+		Hpotpar[newroot] = k;
+	}
+	return newroot;
 }
 
 EMETH DMC(edata *E  /* eliminate least-approved candidate until unbeaten winner exists */
@@ -3597,52 +3597,52 @@ EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 	int i,j,winner,ctm,CopeWinr,r;
 	uint t,maxt;
 	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
-  if(ApprovalWinner<0) Approval(E);
-  ctm=0;
-  for(i=E->NumCands -1; i>=0; i--){
-    if(2*ApprovalVoteCount[i] > E->NumVoters){
-      MajApproved[i] = TRUE; ctm++;
-    }else{  MajApproved[i] = FALSE;  }
-  }
-  if(ctm<=1){
-    /*if exactly 0 or 1 canddt majority-approved, ApprovalWinner wins*/
-    return ApprovalWinner;
-  }
-  assert(ctm>=2);  /*Two or more majority-approved:*/
-  for(i=E->NumCands -1; i>=0; i--) if(MajApproved[i]){
-    for(j=E->NumCands -1; j>=0; j--) if(j!=i && MajApproved[j]){
-      if( E->MarginsMatrix[i*E->NumCands + j] <= 0 ){ goto BADi; }
-    }
-    winner = i; /*beats-all winner among >=2 majority-approved canddts wins*/
-    return winner;
-  BADi: ;
-  }
-  /*now Brams&Sanver want the most-approved member of the
-   *top-cycle among the majority-approved canddts, to win: */
-  maxt = 0;
-  CopeWinr = -1;
-  for(i=E->NumCands -1; i>=0; i--) if(MajApproved[i]){
-    t = 0;
-    for(j=E->NumCands -1; j>=0; j--) if(j!=i && MajApproved[j]){
-      if( E->MarginsMatrix[i*E->NumCands + j] > 0 ){ t++; }
-    }
-    if(t >= maxt){ maxt=t; CopeWinr=i; }
-  }
-  assert(CopeWinr >= 0);
-  ensure(CopeWinr >= 0, 19);
-  assert(MajApproved[CopeWinr]);
-  FillBoolArray(E->NumCands, BSSmithMembs, FALSE);
-  BSSmithMembs[CopeWinr] = TRUE;
-  BSbeatDFS(CopeWinr, 1, BSSmithMembs, MajApproved, E->MarginsMatrix, E->NumCands);
-  assert(BSSmithMembs[CopeWinr]);
-  RandomlyPermute( E->NumCands, RandCandPerm );
-  winner = -1;
-  maxt = 0;
-  for(i=E->NumCands -1; i>=0; i--){
-    r = RandCandPerm[i];
-    if(BSSmithMembs[r] && ApprovalVoteCount[r]>maxt){ maxt=ApprovalVoteCount[r]; winner=r; }
-  }
-  return winner;
+	if(ApprovalWinner<0) Approval(E);
+	ctm=0;
+	for(i=E->NumCands -1; i>=0; i--){
+		if(2*ApprovalVoteCount[i] > E->NumVoters){
+			MajApproved[i] = TRUE; ctm++;
+		}else{  MajApproved[i] = FALSE;  }
+	}
+	if(ctm<=1){
+		/*if exactly 0 or 1 canddt majority-approved, ApprovalWinner wins*/
+		return ApprovalWinner;
+	}
+	assert(ctm>=2);  /*Two or more majority-approved:*/
+	for(i=E->NumCands -1; i>=0; i--) if(MajApproved[i]){
+		for(j=E->NumCands -1; j>=0; j--) if(j!=i && MajApproved[j]){
+			if( E->MarginsMatrix[i*E->NumCands + j] <= 0 ){ goto BADi; }
+		}
+		winner = i; /*beats-all winner among >=2 majority-approved canddts wins*/
+		return winner;
+	BADi: ;
+	}
+	/*now Brams&Sanver want the most-approved member of the
+	 *top-cycle among the majority-approved canddts, to win: */
+	maxt = 0;
+	CopeWinr = -1;
+	for(i=E->NumCands -1; i>=0; i--) if(MajApproved[i]){
+		t = 0;
+		for(j=E->NumCands -1; j>=0; j--) if(j!=i && MajApproved[j]){
+			if( E->MarginsMatrix[i*E->NumCands + j] > 0 ){ t++; }
+		}
+		if(t >= maxt){ maxt=t; CopeWinr=i; }
+	}
+	assert(CopeWinr >= 0);
+	ensure(CopeWinr >= 0, 19);
+	assert(MajApproved[CopeWinr]);
+	FillBoolArray(E->NumCands, BSSmithMembs, FALSE);
+	BSSmithMembs[CopeWinr] = TRUE;
+	BSbeatDFS(CopeWinr, 1, BSSmithMembs, MajApproved, E->MarginsMatrix, E->NumCands);
+	assert(BSSmithMembs[CopeWinr]);
+	RandomlyPermute( E->NumCands, RandCandPerm );
+	winner = -1;
+	maxt = 0;
+	for(i=E->NumCands -1; i>=0; i--){
+		r = RandCandPerm[i];
+		if(BSSmithMembs[r] && ApprovalVoteCount[r]>maxt){ maxt=ApprovalVoteCount[r]; winner=r; }
+	}
+	return winner;
 }
 
 EMETH MDDA(edata *E  /* approval-count winner among canddts not majority-defeated (or all, if all maj-defeated) */
