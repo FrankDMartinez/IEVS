@@ -4929,8 +4929,8 @@ void DrawVoronoi(uint NumSites, int xx[], int yy[], uchar Barray[20000], int LpP
     for(y=0; y<200; y++){
       min = 9999999; col=BIGINT;
       for(i=0; i<NumSites; i++){
-	if(LpPow==2) ds = SquareReal(x-xx[i]) + SquareReal(y-yy[i]);
-	else  /*1*/  ds =  fabs(x-xx[i]) + fabs(y-yy[i]);
+	if(LpPow==2) ds = (int)(SquareReal(x-xx[i]) + SquareReal(y-yy[i]));
+	else  /*1*/  ds = (int)(fabs(x-xx[i]) + fabs(y-yy[i]));
 	if(ds < min){ min=ds; col=i; }
       }
       assert(col<NumSites);
@@ -4949,8 +4949,8 @@ void DrawFPvor(uint NumSites, int xx[], int yy[], uchar Barray[20000], int LpPow
     for(y=0; y<200; y++){
       mx = 0; col=BIGINT;
       for(i=0; i<NumSites; i++){
-	if(LpPow==2) ds = SquareReal(x-xx[i]) + SquareReal(y-yy[i]);
-	else  /*1*/  ds =  fabs(x-xx[i]) + fabs(y-yy[i]);
+	if(LpPow==2) ds = (int)(SquareReal(x-xx[i]) + SquareReal(y-yy[i]));
+	else  /*1*/  ds = (int)(fabs(x-xx[i]) + fabs(y-yy[i]));
 	if(ds >= mx){ mx=ds; col=i; }
       }
       assert(col<NumSites);
