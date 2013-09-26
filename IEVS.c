@@ -1644,8 +1644,9 @@ typedef struct dum1 {
 } edata;
 
 void PrintEdata(FILE *F, edata *E){ /* prints out the edata */
-  int v,j;
-  fprintf(F, "NumVoters=%d  NumCands=%d\n", E->NumVoters, E->NumCands);
+	int v;
+	uint j;
+	fprintf(F, "NumVoters=%d  NumCands=%d\n", E->NumVoters, E->NumCands);
   for(v=0; v<(int)E->NumVoters; v++){
     fprintf(F, "Voter %2d:\n",v);
     fprintf(F, "Utility: ");
@@ -1687,7 +1688,7 @@ void BuildDefeatsMatrix(edata *E
 
   assert(E->NumCands <= MaxNumCands);
   x = LCMfact[E->NumCands];
-  for(j=E->NumCands -1; j>=0; j--){  NauruWt[j] = x / (j+1); }
+  for(j=E->NumCands -1; j>=0; j--){  NauruWt[j] = x / (j+1U); }
   for(j=MinInt(E->NumCands -1,9); j>=0; j--){  BaseballWt[j] = 10-j; }
   BaseballWt[0] = 14;
   ZeroIntArray(  SquareInt(E->NumCands),  E->DefeatsMatrix );
@@ -3582,8 +3583,9 @@ void BSbeatDFS( int x, int diff, bool Set[], bool OK[], int Mat[], int N ){
 
 EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Combine Approval and Preference,2006*/
 ){ /* side effects: MajApproved[] */
-  int i,j,winner,ctm,t,maxt,CopeWinr,r;
-  if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	int i,j,winner,ctm,CopeWinr,r;
+	uint t,maxt;
+	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
   if(ApprovalWinner<0) Approval(E);
   ctm=0;
   for(i=E->NumCands -1; i>=0; i--){
@@ -4925,8 +4927,9 @@ void DrawCircle(int x, int y, uint radius, uint BorderColor, uint FillColor, uch
 uint SquareUint(uint x){ return x*x; }
 
 void DrawVoronoi(uint NumSites, int xx[], int yy[], uchar Barray[20000], int LpPow){
-  int x,y,ds,min,col,i;
-  if(NumSites>16) NumSites=16;
+	int x,y,ds,min;
+	uint col,i;
+	if(NumSites>16) NumSites=16;
   for(x=0; x<200; x++){
     for(y=0; y<200; y++){
       min = 9999999; col=BIGINT;
@@ -5146,7 +5149,7 @@ real ReorderForColorContrast( uint NumSites, int xx[], int yy[] ){
 /******************** BR driver and output: *************/
 
 int      honfraclower=0, honfracupper=100;
-int      candnumlower=2, candnumupper=7;
+uint     candnumlower=2, candnumupper=7;
 int      votnumlower=2, votnumupper=MaxNumVoters;
 int      numelections2try = 59;
 int      utilnumlower=0,  utilnumupper = NumUtilGens;
