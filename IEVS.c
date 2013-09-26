@@ -178,7 +178,6 @@ uint BROutputMode=0;
 
 /******************** GENERAL PURPOSE routines having nothing to do with voting: ******/
 
-int EulerPrimePoly(int n){ return(n*n+n+41); } /*prime for n=0..39*/
 const int Pow2Primes[] = {2, 3, 7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 8191, 16381};
 /** Greatest prime <=2^n. **/
 
@@ -186,24 +185,15 @@ const int Pow2Primes[] = {2, 3, 7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 
 bool SingletonSet(uint x){ return ((x&(x-1))==0); } /*assumes non-empty*/
 bool StrictSuperset(uint x, uint y){ return ((x&y)==y && x!=y); }
 bool EmptySet(uint x){ return (x==0); }
-int CardinalitySet(uint x){
-   int ct=0;
-   while( x ){ ct++; x &= x-1; }
-   return(ct);
-}
-
 /****** convenient fns: *******/
 real SquareReal(real x){  return x*x; }
 int SquareInt(int x){  return x*x; }
 int AbsInt(int x){  if(x<0) return -x; else return x; }
-real PosReal(real x){ if(x>0.0) return x; else return 0.0; }
 uint PosInt(int x){ if(x>0) return x; else return 0; }
 int SignInt(int x){ if(x>0) return 1; else if(x<0) return -1; else return 0; }
 int SignReal(real x){ if(x>0) return 1; else if(x<0) return -1; else return 0; }
 int MaxInt(int a, int b){ return (((a)>(b)) ? (a):(b)); }
-real MaxReal(real a, real b){ return (((a)>(b)) ? (a):(b)); }
 int MinInt(int a, int b){ return (((a)<(b)) ? (a):(b)); }
-real MinReal(real a, real b){ return (((a)<(b)) ? (a):(b)); }
 
 uint GCD(uint a, uint b){ /*Euclid alg*/
   if(a>b){ a %= b; if(a==0) return b; }
@@ -471,25 +461,6 @@ uint32 BigLinCong32()
 	return BLC32x[BLC32NumLeft];
 }
 
-void testbiglincong(){
-   int i;
-   /* lexically minimal permissible seed: */
-   for(i=0; i<60; i++){ BLC32x[i]=0; }
-   BLC32x[0] = 1;
-   BLC32NumLeft = 0;
-
-   for(i=0; i<599; i++){ BigLinCong32(); }
-   printf("%u %u %u %u %u\n",
-       BigLinCong32(),BigLinCong32(),
-       BigLinCong32(),BigLinCong32(),BigLinCong32());
-
-   for(i=0; i<12; i++){
-      printf("%8x %8x %8x %8x %8x\n",
-       BigLinCong32(),BigLinCong32(),
-       BigLinCong32(),BigLinCong32(),BigLinCong32());
-   }
-}
-
 /********************************
 MAPLE script to check it works:
 
@@ -533,10 +504,6 @@ oops
 1758817216
 2847725135 1364008005 3563722108 2020382641 1091616930
 *************************/
-
-uint32 RandUint(){ /* returns random uint32 */
-  return BigLinCong32();
-}
 
 real Rand01(){ /* returns random uniform in [0,1] */
   return ((BigLinCong32()+0.5)/(1.0 + MAXUINT) + BigLinCong32())/(1.0 + MAXUINT);
@@ -771,11 +738,6 @@ void GenRandNormalArr(int N, real Arr[]){ /* returns Arr[0..N-1] of standard nor
   }
 }
 
-void GenRandSkewArr(int N, real Arr[]){ /* returns Arr[0..N-1] of skew randoms */
-  int i;
-  for(i=0; i<N; i++){ Arr[i] = RandSkew(); }
-}
-
 uint RandInt(uint N){ /* returns random integer in {0,1, ..., N-1} */
     return (int)(Rand01()*N);
 }
@@ -814,41 +776,6 @@ void GenRandWackyArr(int N, real Arr[]){ /* returns Arr[0..N-1] of skew randoms 
     exit(EXIT_FAILURE);
   }
 }
-
-void OldSortedUpRand01Arr(int N, real Arr[]){ /*makes Arr[0..N-1] of uniform01 randoms, SORTED increasing*/
-  int i;
-  real k,x,p;
-  k = 1.0;
-  for(i=N; i>0; i--){
-    p = 1.0/i;
-    do{
-      x = Rand01();
-      x = pow(x, p);
-    }while(x<=0.0 || x>=1.0);
-    k = k*x;
-    /*printf("i=%d k=%f\n", i,k);*/
-    assert(k<=1.0);
-    assert(0.0<=k);
-    Arr[i-1] = k;
-  }
-}
-
-/* J.Bentley & J.Saxe: Generating Sorted Lists of Random Numbers,
- * ACM Trans. Math'l. Software 6,3 (1980) 359-364. */
-void SortedUpRand01Arr(int N, real Arr[]){ /*makes Arr[0..N-1] of uniform01 randoms, SORTED increasing*/
-  int k;
-  real s;
-  s = 0.0;
-  for(k=0; k<N; k++){
-    s -= log(Rand01());
-    Arr[k] = s;
-  }
-  s -= log(Rand01());
-  for(k=0; k<N; k++){
-    Arr[k] /= s;
-  }
-}
-
 
 void TestsOfRand(){
   TestRand01(); TestNormalRand(); TestRandExpl();
@@ -1006,40 +933,6 @@ int ArgMaxRealArr(uint N, real Arr[], int RandPerm[] ){
   return(winner);
 }
 
-/* Assumes RandPerm[0..N-1] contains random perm and MinInd is index for Arr[] yielding min value.
- * Returns index of second-min. */
-int Arg2MinIntArr(uint N, int Arr[], int RandPerm[], int MinInd ){
-  int minc, i, r, winner;
-  winner = -1;
-  minc = BIGINT;
-  for(i=0; i<(int)N; i++){
-    r = RandPerm[i];
-    if(Arr[r]<minc && r!=MinInd){
-      minc=Arr[r];
-      winner=r;
-    }
-  }
-  assert(winner>=0);
-  return(winner);
-}
-
-/* Assumes RandPerm[0..N-1] contains random perm and MaxInd is index for Arr[] yielding max.
- * Returns index of second-max. */
-int Arg2MaxIntArr(uint N, int Arr[], int RandPerm[], int MaxInd ){
-  int maxc, i, r, winner;
-  winner = -1;
-  maxc = -BIGINT;
-  for(i=0; i<(int)N; i++){
-    r = RandPerm[i];
-    if(Arr[r]>maxc && r!=MaxInd){
-      maxc=Arr[r];
-      winner=r;
-    }
-  }
-  assert(winner>=0);
-  return(winner);
-}
-
 /* Assumes RandPerm[0..N-1] contains random perm and MaxInd is index for Arr[] yielding max.
  * Returns index of second-max. */
 int Arg2MaxUIntArr(uint N, uint Arr[], int RandPerm[], int MaxInd ){
@@ -1127,16 +1020,6 @@ real LpDistanceSquared(uint N, real a[], real b[], real Lp ){
   return pow( d, 2.0/Lp );
 }
 
-real LpDistance(uint N, real a[], real b[], real Lp ){
- real d = 0.0;
-  int i;
-  assert(Lp >= 1.0);
-  if(Lp==1.0) return L1Distance(N,a,b);
-  if(Lp==2.0) return sqrt( DistanceSquared(N,a,b) );
-  for(i=0; i<(int)N; i++) d += pow( fabs( a[i]-b[i] ), Lp );
-  return pow( d, 1.0/Lp );
-}
-
 real  SumRealArray( uint N, real a[] ){
   real s = 0.0;
   int i;
@@ -1152,24 +1035,6 @@ real DotProd(uint N, real a[], real b[] ){
 }
 
 /******* sorting: **********/
-int SortedReal( uint N, real Arr[] ){ /* +1 if Arr[0..N-1] increasing, -1 if decreasing, 2 if unsorted, 0 if all-eq */
-  int i,s;
-  s = SignReal( Arr[N-1]-Arr[0] );
-  for(i=1; i<(int)N; i++){
-    if( s*SignReal( Arr[i] - Arr[i-1] ) < 0 ) return(2);
-  }
-  return s;
-}
-
-int SortedInt( uint N, int Arr[] ){ /* +1 if Arr[0..N-1] increasing, -1 if decreasing, 2 if unsorted, 0 if all-eq */
-  int i,s;
-  s = SignInt( Arr[N-1]-Arr[0] );
-  for(i=1; i<(int)N; i++){
-    if( s*SignInt( Arr[i] - Arr[i-1] ) < 0 ) return(2);
-  }
-  return s;
-}
-
 int SortedRealKey( uint N, int Arr[], real Key[] ){
   int i,s;
   s = SignReal( Key[Arr[N-1]]-Key[Arr[0]] );
@@ -1195,73 +1060,6 @@ const int ShellIncs[] = {1750, 701, 301, 132, 57, 23, 10, 4, 1, 0};
    Springer Lecture Notes in Computer Science #2138, pp.106-117.
 Here 1750 is unsure and how the sequence continues past 1750 is unknown.
  ***/
-
-void RealShellSortUp( uint N, real Arr[] ){ /* Sorts Arr[0..N-1] into increasing order */
-  int h,i,j,k;
-  real x;
-  for(k=0; (h=ShellIncs[k])>0; k++){
-      for(i=h; i<(int)N; i++){
-	x=Arr[i];
-	for(j=i-h; j>=0 && Arr[j]>x; j -= h){ Arr[j+h]=Arr[j]; }
-	Arr[j+h]=x;
-      }
-  }
-  assert((SortedReal(N,Arr)&(~1))==0);
-}
-
-void IntShellSortUp( uint N, int Arr[] ){ /* Sorts Arr[0..N-1] into increasing order */
-  int h,i,j,k;
-  int x;
-  for(k=0; (h=ShellIncs[k])>0; k++){
-
-      for(i=h; i<(int)N; i++){
-	x=Arr[i];
-	for(j=i-h; j>=0 && Arr[j]>x; j -= h){ Arr[j+h]=Arr[j]; }
-	Arr[j+h]=x;
-      }
-  }
-  assert((SortedInt(N,Arr)&(~1))==0);
-}
-
-void RealShellSortDown( uint N, real Arr[] ){ /* Sorts Arr[0..N-1] into decreasing order */
-  int h,i,j,k;
-  real x;
-  for(k=0; (h=ShellIncs[k])>0; k++){
-      for(i=h; i<(int)N; i++){
-	x=Arr[i];
-	for(j=i-h; j>=0 && Arr[j]<x; j -= h){ Arr[j+h]=Arr[j]; }
-	Arr[j+h]=x;
-      }
-  }
-  assert(SortedReal(N,Arr)<=0);
-}
-
-void IntShellSortDown( uint N, int Arr[] ){ /* Sorts Arr[0..N-1] into decreasing order */
-  int h,i,j,k;
-  int x;
-  for(k=0; (h=ShellIncs[k])>0; k++){
-      for(i=h; i<(int)N; i++){
-	x=Arr[i];
-	for(j=i-h; j>=0 && Arr[j]<x; j -= h){ Arr[j+h]=Arr[j]; }
-	Arr[j+h]=x;
-      }
-  }
-  assert(SortedInt(N,Arr)<=0);
-}
-
-/* Rearranges Perm[0..N-1] so Key[Perm[0..N-1]] is in increasing order: */
-void IntPermShellSortUp(  uint N, int Perm[], int Key[] ){
-  int h,i,j,k;
-  int x;
-  for(k=0; (h=ShellIncs[k])>0; k++){
-    for(i=h; i<(int)N; i++){
-      x=Perm[i];
-      for(j=i-h; j>=0 && Key[Perm[j]]>Key[x]; j -= h){ Perm[j+h]=Perm[j]; }
-      Perm[j+h]=x;
-    }
-  }
-  assert((SortedIntKey(N,Perm,Key)&(~1))==0);
-}
 
 /* Rearranges Perm[0..N-1] so Key[Perm[0..N-1]] is in increasing order: */
 void RealPermShellSortUp(  uint N, int Perm[], real Key[] ){
@@ -1289,19 +1087,6 @@ void IntPermShellSortDown(  uint N, int Perm[], int Key[] ){
     }
   }
   assert(SortedIntKey(N,Perm,Key)<=0);
-}
-
-/* Rearranges Perm[0..N-1] so Key[Perm[0..N-1]] is in decreasing order.  Key[] not altered: */
-void ScharPermShellSortDown(  uint N, schar Perm[], uint Key[] ){
-  int h,i,j,k;
-  int x;
-  for(k=0; (h=ShellIncs[k])>0; k++){
-    for(i=h; i<(int)N; i++){
-      x=Perm[i];
-      for(j=i-h; j>=0 && Key[Perm[j]]<Key[x]; j -= h){ Perm[j+h]=Perm[j]; }
-      Perm[j+h]=x;
-    }
-  }
 }
 
 /* Rearranges Perm[0..N-1] so Key[Perm[0..N-1]] is in decreasing order: */
@@ -2443,88 +2228,10 @@ EMETH SchwartzSet(edata *E  /* Schwartz set = smallest nonempty set of canddts u
 /* Uncovered set.  A "covers" B if the candidates A beats pairwise
 are a superset of those B beats pairwise.  "Landau's theorem":
 All Copeland winners are members of the uncovered set.
-Can do this an order of magnitude faster if MaxNumCands<sizeof(uint)*4 because set inclusion can
-be tested in 1 step using wordwide operations??
-****/
-EMETH SlowUncoveredSet(edata *E /*A "covers" B if A beats a strict?? superset of those B beats.*/
-){ /* side effects: UncoveredSt[], CoverMatrix[] */
-  int A,B,C,i,r;
-  bool cov;
-  if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
-  if(SchwartzWinner<0) SchwartzSet(E);
-  /*find cover relation:*/
-  for(A=0; A < (int)E->NumCands; A++){
-    for(B=0; B < (int)E->NumCands; B++) if(B!=A){
-      cov = TRUE;
-      for(C=0; C < (int)E->NumCands; C++){
-	if( E->MarginsMatrix[A*E->NumCands + C]<=0 &&
-	    E->MarginsMatrix[B*E->NumCands + C]>0  ){
-	  cov = FALSE; break;
-	}
-      }
-      CoverMatrix[A*E->NumCands + B] = cov;
-    }
-    UncoveredSt[A] = TRUE; /*initialization*/
-  }
-  for(A=0; A < (int)E->NumCands; A++){
-    for(B=0; B < A; B++) if(B!=A){
-      if( CoverMatrix[A*E->NumCands + B] &&  CoverMatrix[B*E->NumCands + A] ){
-	/*enforce strict superset; otherwise coverage both ways would be possible:*/
-	CoverMatrix[A*E->NumCands + B] = FALSE;
-	CoverMatrix[B*E->NumCands + A] = FALSE;
-      }
-    }
-  }
-  /*find UncoveredSt:*/
-  for(A=0; A < (int)E->NumCands; A++){
-    for(B=0; B < (int)E->NumCands; B++) if(B!=A){
-      if( CoverMatrix[B*E->NumCands+A] ){
-	UncoveredSt[A] = FALSE; break;
-      }
-    }
-  }
-  /*select random uncovered winner:*/
-  RandomlyPermute( E->NumCands, RandCandPerm );
-  for(i=E->NumCands -1; i>=0; i--){
-    if( !(UncoveredSt[i]?SchwartzMembs[i]:TRUE) ){
-      printf("bozo!\n");
-      printf("%d %d %d %d %d %d %d %d %d\n",
-	     E->MarginsMatrix[0*E->NumCands + 0],
-	     E->MarginsMatrix[0*E->NumCands + 1],
-	     E->MarginsMatrix[0*E->NumCands + 2],
-	     E->MarginsMatrix[1*E->NumCands + 0],
-	     E->MarginsMatrix[1*E->NumCands + 1],
-	     E->MarginsMatrix[1*E->NumCands + 2],
-	     E->MarginsMatrix[2*E->NumCands + 0],
-	     E->MarginsMatrix[2*E->NumCands + 1],
-	     E->MarginsMatrix[2*E->NumCands + 2]  );
-      printf("CopeWinOnlyWinner=%d\n",CopeWinOnlyWinner);
-      printf("Sc=%d%d%d\n", SchwartzMembs[0], SchwartzMembs[1], SchwartzMembs[2]);
-      printf("Un=%d%d%d\n", UncoveredSt[0], UncoveredSt[1], UncoveredSt[2]);
-    }
-    assert( UncoveredSt[i]?SchwartzMembs[i]:TRUE );
-    r = RandCandPerm[i];
-    if(UncoveredSt[r]){
-      RandomUncoveredMemb = r;
-      return r;
-    }
-  }
-  printf("yikes!\n");
-  printf("%d %d %d %d\n",
-	 E->MarginsMatrix[0*E->NumCands + 0],
-	 E->MarginsMatrix[1*E->NumCands + 0],
-	 E->MarginsMatrix[0*E->NumCands + 1],
-	 E->MarginsMatrix[1*E->NumCands + 1] );
-  return(-1);
-}
-
-
-/* Uncovered set.  A "covers" B if the candidates A beats pairwise
-are a superset of those B beats pairwise.  "Landau's theorem":
-All Copeland winners are members of the uncovered set.
 Now an order of magnitude faster assuming MaxNumCands<sizeof(uint)*4 because set inclusion can
 be tested in 1 step using wordwide operations.
 ****/
+
 EMETH UncoveredSet(edata *E /*A "covers" B if A beats a strict superset of those B beats.*/
 ){ /* side effects: UncoveredSt[], CoverMatrix[] */
   int A,B,i,r;
@@ -4807,54 +4514,6 @@ void BogoPutc(uchar x, FILE *F){
   if(F!=NULL) putc(x, F);
 }
 
-void OutputGensane16ColorPaletteABC( FILE *F ){
-        BogoPutc(255, F);   BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(0, F);
-        BogoPutc(  0, F);   BogoPutc(255, F);   BogoPutc(  0, F);   BogoPutc(0, F);
-        BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(255, F);   BogoPutc(0, F);
-
-        BogoPutc(226, F);   BogoPutc(  0, F);   BogoPutc(212, F);   BogoPutc(0, F);
-        BogoPutc(212, F);   BogoPutc(226, F);   BogoPutc(  0, F);   BogoPutc(0, F);
-        BogoPutc(  0, F);   BogoPutc(212, F);   BogoPutc(226, F);   BogoPutc(0, F);
-
-        BogoPutc(106, F);   BogoPutc(113, F);   BogoPutc(  0, F);   BogoPutc(0, F);
-        BogoPutc(  0, F);   BogoPutc(106, F);   BogoPutc(113, F);   BogoPutc(0, F);
-        BogoPutc(113, F);   BogoPutc(  0, F);   BogoPutc(106, F);   BogoPutc(0, F);
-
-        BogoPutc(110, F);   BogoPutc(103, F);   BogoPutc(222, F);   BogoPutc(0, F);
-        BogoPutc(103, F);   BogoPutc(222, F);   BogoPutc(110, F);   BogoPutc(0, F);
-        BogoPutc(222, F);   BogoPutc(110, F);   BogoPutc(103, F);   BogoPutc(0, F);
-
-        BogoPutc(255, F);   BogoPutc(146, F);   BogoPutc(255, F);   BogoPutc(0, F);
-        BogoPutc(146, F);   BogoPutc(255, F);   BogoPutc(255, F);   BogoPutc(0, F);
-        BogoPutc(255, F);   BogoPutc(255, F);   BogoPutc(146, F);   BogoPutc(0, F);
-
-        BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(0, F);
-}
-
-void OutputGensane16ColorPaletteACB( FILE *F ){
-  BogoPutc(255, F);   BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(0, F); /*primary*/
-  BogoPutc(  0, F);   BogoPutc(255, F);   BogoPutc(  0, F);   BogoPutc(0, F);
-  BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(255, F);   BogoPutc(0, F);
-
-  BogoPutc(  0, F);   BogoPutc(226, F);   BogoPutc(212, F);   BogoPutc(0, F);
-  BogoPutc(212, F);   BogoPutc(  0, F);   BogoPutc(226, F);   BogoPutc(0, F);
-  BogoPutc(226, F);   BogoPutc(212, F);   BogoPutc(  0, F);   BogoPutc(0, F);
-
-  BogoPutc(  0, F);   BogoPutc(113, F);   BogoPutc(106, F);   BogoPutc(0, F);
-  BogoPutc(113, F);   BogoPutc(106, F);   BogoPutc(  0, F);   BogoPutc(0, F);
-  BogoPutc(106, F);   BogoPutc(  0, F);   BogoPutc(113, F);   BogoPutc(0, F);
-
-  BogoPutc(110, F);   BogoPutc(222, F);   BogoPutc(103, F);   BogoPutc(0, F);
-  BogoPutc(103, F);   BogoPutc(110, F);   BogoPutc(222, F);   BogoPutc(0, F);
-  BogoPutc(222, F);   BogoPutc(103, F);   BogoPutc(110, F);   BogoPutc(0, F);
-
-  BogoPutc(255, F);   BogoPutc(255, F);   BogoPutc(146, F);   BogoPutc(0, F);
-  BogoPutc(146, F);   BogoPutc(255, F);   BogoPutc(255, F);   BogoPutc(0, F);
-  BogoPutc(255, F);   BogoPutc(146, F);   BogoPutc(255, F);   BogoPutc(0, F);
-
-  BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(0, F); /*black*/
-}
-
 void OutputFCC16ColorPalette( FILE *F ){
   BogoPutc(255, F);   BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(0, F); /*red*/
   BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(255, F);   BogoPutc(0, F); /*blue*/
@@ -4931,8 +4590,6 @@ void DrawCircle(int x, int y, uint radius, uint BorderColor, uint FillColor, uch
     } /*end while*/
   }
 }
-
-uint SquareUint(uint x){ return x*x; }
 
 void DrawVoronoi(uint NumSites, int xx[], int yy[], uchar Barray[20000], int LpPow)
 {
@@ -5167,7 +4824,6 @@ real HonLevels[] = {1.0, 0.5, 0.0, 0.75, 0.25};
 real IgnLevels[] = {0.001, 0.01, 0.1, 1.0, -1.0};
 real RegretSum[NumMethods];
 int CoombCt[NumMethods];
-bool CoombElim[NumMethods];
 int MethPerm[NumMethods];
 int VMPerm[NumMethods];
 real RegretData[MaxScenarios*NumMethods];
