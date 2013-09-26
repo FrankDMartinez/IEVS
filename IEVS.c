@@ -2153,22 +2153,22 @@ EMETH CondorcetLR(edata *E   /* candidate with least sum-of-pairwise-defeat-marg
 
 EMETH Sinkhorn(edata *E  /* candidate with max Sinkhorn rating (from all-positive DefeatsMatrix+1) */
 ){ /* side effects SinkRat[], SinkRow[], SinkCol[], SinkMat[] */
-  int j,k,winner;
-  real t,maxsum,minsum,sum,maxminRatio;
-  if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
-  FillRealArray( E->NumCands, SinkRow, 1.0 );
-  FillRealArray( E->NumCands, SinkCol, 1.0 );
-  do{
-    for(k=0; k < (int)E->NumCands; k++){
-      for(j=E->NumCands -1; j>=0; j--){
-	SinkMat[k*E->NumCands + j] =
-	  SinkRow[k]*SinkCol[j] * (E->DefeatsMatrix[k*E->NumCands + j] + 1.0);
-      }
-    }
-    maxsum = -HUGE; minsum = HUGE;
-		for(k=0; k < (int)E->NumCands; k++){
+	int j,k,winner;
+	real t,maxsum,minsum,sum,maxminRatio;
+	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	FillRealArray( E->NumCands, SinkRow, 1.0 );
+	FillRealArray( E->NumCands, SinkCol, 1.0 );
+	do{
+		for(k=0; k < (int)E->NumCands; k++) {
+			for(j=E->NumCands -1; j>=0; j--) {
+				SinkMat[k*E->NumCands + j] =
+					SinkRow[k]*SinkCol[j] * (E->DefeatsMatrix[k*E->NumCands + j] + 1.0);
+			}
+		}
+		maxsum = -HUGE; minsum = HUGE;
+		for(k=0; k < (int)E->NumCands; k++) {
 			sum = 0.0;
-			for(j=E->NumCands -1; j>=0; j--){
+			for(j=E->NumCands -1; j>=0; j--) {
 				sum += SinkMat[k*E->NumCands + j];
 			}
 			if(minsum > sum) minsum = sum;
@@ -2177,10 +2177,10 @@ EMETH Sinkhorn(edata *E  /* candidate with max Sinkhorn rating (from all-positiv
 		}
 		myAssert((minsum != 0.0), 1);
 		maxminRatio = maxsum/minsum;
-    maxsum = -HUGE; minsum = HUGE;
-		for(k=0; k < (int)E->NumCands; k++){
+		maxsum = -HUGE; minsum = HUGE;
+		for(k=0; k < (int)E->NumCands; k++) {
 			sum = 0.0;
-			for(j=E->NumCands -1; j>=0; j--){
+			for(j=E->NumCands -1; j>=0; j--) {
 				sum += SinkMat[j*E->NumCands + k];
 			}
 			if(minsum > sum) minsum = sum;
@@ -2189,13 +2189,13 @@ EMETH Sinkhorn(edata *E  /* candidate with max Sinkhorn rating (from all-positiv
 		}
 		myAssert((minsum != 0.0), 2);
 		t = maxsum/minsum;
-    if( maxminRatio < t ) maxminRatio = t;
-  }until(maxminRatio < 1.000003);
-  for(j=E->NumCands -1; j>=0; j--){
-    SinkRat[j] = SinkCol[j]/SinkRow[j];
-  }
-  winner = ArgMaxRealArr( E->NumCands, SinkRat, (int*)RandCandPerm );
-  return winner;
+		if( maxminRatio < t ) maxminRatio = t;
+	}until(maxminRatio < 1.000003);
+	for(j=E->NumCands -1; j>=0; j--) {
+		SinkRat[j] = SinkCol[j]/SinkRow[j];
+	}
+	winner = ArgMaxRealArr( E->NumCands, SinkRat, (int*)RandCandPerm );
+	return winner;
 }
 
 EMETH KeenerEig(edata *E  /* winning canddt has max Frobenius eigenvector entry (of all-positive DefeatsMatrix+1) */
@@ -2702,12 +2702,12 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */
 	assert(E->NumCands <= MaxNumCands);
 	if(SmithIRVwinner<0 && IRVTopLim==BIGINT && CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
 	RandomlyPermute( E->NumCands, RandCandPerm );
-	for(i=E->NumCands -1; i>=0; i--){
+	for(i=E->NumCands -1; i>=0; i--) {
 		Eliminated[i] = FALSE;
 		HeadFav[i] = -1; /*HeadFav[i] will be the first voter whose current favorite is i*/
-		if(SmithIRVwinner<0 && IRVTopLim==BIGINT){
+		if(SmithIRVwinner<0 && IRVTopLim==BIGINT) {
 			t=0;
-			for(j=E->NumCands -1; j>=0; j--) if(E->MarginsMatrix[j*E->NumCands + i] > 0){ t++; }
+			for(j=E->NumCands -1; j>=0; j--) if(E->MarginsMatrix[j*E->NumCands + i] > 0) { t++; }
 			LossCount[i] = t;
 		}
 	} /*end for(i)*/
@@ -2716,9 +2716,9 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */
 	/* IFav[i] is the rank of the 1st noneliminated canddt in voter i's topdownpref list (initially 0) */
 	FillIntArray(E->NumVoters, FavListNext, -1);
 	/* FavListNext is "next" indices in linked list of voters with common current favorite; -1 terminated. */
-	if(SmithIRVwinner<0 && IRVTopLim==BIGINT){ SmithIRVwinner = CondorcetWinner; }
+	if(SmithIRVwinner<0 && IRVTopLim==BIGINT) { SmithIRVwinner = CondorcetWinner; }
 	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
-	for(i=E->NumVoters -1; i>=0; i--){
+	for(i=E->NumVoters -1; i>=0; i--) {
 		x = E->TopDownPrefs[i*E->NumCands+IFav[i]]; /* the initial favorite of voter i */
 		assert(x >= 0);
 		assert(x < (int)E->NumCands);
@@ -2727,12 +2727,12 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */
 		HeadFav[x] = i;
 	}
 	RandomlyPermute( E->NumCands, RandCandPerm );
-	for(Iround=1; Iround < (int)E->NumCands; Iround++){ /*perform IRV rounds*/
+	for(Iround=1; Iround < (int)E->NumCands; Iround++) { /*perform IRV rounds*/
 		RdLoser = -1;
 		minc = BIGINT;
-		for(i=E->NumCands -1; i>=0; i--){
+		for(i=E->NumCands -1; i>=0; i--) {
 			r = RandCandPerm[i];
-			if(!Eliminated[r] && RdVoteCount[r]<minc){
+			if(!Eliminated[r] && RdVoteCount[r]<minc) {
 				minc=RdVoteCount[r];
 				RdLoser=r;
 			}
@@ -2740,14 +2740,14 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */
 		assert(RdLoser>=0);
 		assert(RdLoser < (int)E->NumCands);
 		Eliminated[RdLoser] = TRUE; /* eliminate RdLoser */
-		if(IRVTopLim==BIGINT && SmithIRVwinner < 0){
-			for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]){ /* update LossCount[j] */
+		if(IRVTopLim==BIGINT && SmithIRVwinner < 0) {
+			for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]) { /* update LossCount[j] */
 				t = E->MarginsMatrix[RdLoser*E->NumCands + j];
-				if(t>0){ LossCount[j] --; }
-				if( LossCount[j] <= 0 ){ SmithIRVwinner = j; break; }
+				if(t>0) { LossCount[j] --; }
+				if( LossCount[j] <= 0 ) { SmithIRVwinner = j; break; }
 			}
 		}
-		for(i=HeadFav[RdLoser]; i>=0; i=NextI){/*Go thru linked list of voters with favorite=RdLoser, adjust:*/
+		for(i=HeadFav[RdLoser]; i>=0; i=NextI) {/*Go thru linked list of voters with favorite=RdLoser, adjust:*/
 			j = i*E->NumCands;
 			NextI =  FavListNext[i];
 			assert(IFav[i] >= 0);
@@ -2764,14 +2764,14 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */
 			FavListNext[i] = HeadFav[x];
 			HeadFav[x] = i;
 			/* update vote count totals: */
-			if(IFav[i] < IRVTopLim){	RdVoteCount[ x ]++;   }
+			if(IFav[i] < IRVTopLim) {	RdVoteCount[ x ]++;   }
 		} /*end for(i)*/
 	}  /* end of for(Iround) */
 	stillthere = 0;
 	if(IRVTopLim >= (int)E->NumCands) IRVwinner = -1;
 	winner = -1;
-	for(i=E->NumCands -1; i>=0; i--){ /* find non-eliminated candidate... */
-		if(!Eliminated[i]){
+	for(i=E->NumCands -1; i>=0; i--) { /* find non-eliminated candidate... */
+		if(!Eliminated[i]) {
 			winner=i;
 			stillthere++;
 		}
@@ -3083,15 +3083,15 @@ EMETH IRNR(edata *E  /*Brian Olson's voting method described above*/
  * linear transformation so mean=0 and variance=1. */
 EMETH IRNRv(edata *E  /*Brian Olson's voting method but with 2-param renorm*/
 ){ /* side effects: Eliminated[], SumNormedRatings[]*/
-  int rd,i,j,x,r,loser,ct;
-  real s,t,minc,avg;
+	int rd,i,j,x,r,loser,ct;
+	real s,t,minc,avg;
 
-  FillBoolArray(E->NumCands, Eliminated, FALSE);
-  for(rd=E->NumCands; rd>1; rd--){
-    ZeroRealArray( E->NumCands, SumNormedRating );
-    for(i=0; i<(int)E->NumVoters; i++){
-      x = i*E->NumCands;
-      s = 0.0; ct=0;
+	FillBoolArray(E->NumCands, Eliminated, FALSE);
+	for(rd=E->NumCands; rd>1; rd--) {
+		ZeroRealArray( E->NumCands, SumNormedRating );
+		for(i=0; i<(int)E->NumVoters; i++) {
+			x = i*E->NumCands;
+			s = 0.0; ct=0;
 			for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]) {
 				s += E->Score[x+j]; ct++;
 			}
@@ -3099,39 +3099,39 @@ EMETH IRNRv(edata *E  /*Brian Olson's voting method but with 2-param renorm*/
 			myAssert((ct>0), 5);
 			avg = s/ct; /*mean*/
 			s = 0.0;
-      for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]){
-	t = E->Score[x+j] - avg;
-	s += t*t;
-      }
-      if(s>0.0){
-	s = 1.0/sqrt(s);
-	for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]){
-	  SumNormedRating[j] += s * (E->Score[x+j] - avg);
+			for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]) {
+				t = E->Score[x+j] - avg;
+				s += t*t;
+			}
+			if(s>0.0) {
+				s = 1.0/sqrt(s);
+				for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]) {
+					SumNormedRating[j] += s * (E->Score[x+j] - avg);
+				}
+			}
+		}
+		RandomlyPermute( E->NumCands, RandCandPerm );
+		loser = -1;
+		minc = HUGE;
+		for(j=E->NumCands -1; j>=0; j--) {
+			r = RandCandPerm[j];
+			if(!Eliminated[r]) {
+				if( SumNormedRating[r] < minc ) {
+					minc = SumNormedRating[r];
+					loser = r;
+				}
+			}
+		}
+		assert(loser>=0);
+		Eliminated[loser] = TRUE;
 	}
-      }
-    }
-    RandomlyPermute( E->NumCands, RandCandPerm );
-    loser = -1;
-    minc = HUGE;
-    for(j=E->NumCands -1; j>=0; j--){
-      r = RandCandPerm[j];
-      if(!Eliminated[r]){
-	if( SumNormedRating[r] < minc ){
-	  minc = SumNormedRating[r];
-	  loser = r;
+	for(i=E->NumCands -1; i>=0; i--) { /* find random non-eliminated candidate... */
+		j = RandCandPerm[i];
+		if(!Eliminated[j]) {
+			return j; /*winner*/
+		}
 	}
-      }
-    }
-    assert(loser>=0);
-    Eliminated[loser] = TRUE;
-  }
-  for(i=E->NumCands -1; i>=0; i--){ /* find random non-eliminated candidate... */
-    j = RandCandPerm[i];
-    if(!Eliminated[j]){
-      return j; /*winner*/
-    }
-  }
-  return(-1); /*error*/
+	return(-1); /*error*/
 }
 
 /* Like IRNR based on squares, but when "renomalizing" it now does a TWO-parameter
@@ -4069,66 +4069,66 @@ strategic (honesty probability is honfrac).  Note, if the luck is right,
 this still can yield 100% strategic or 100% honest voters
 also - that is unlikely, but could happen. ***/
 void HonestyStrat( edata *E, real honfrac ){
-  int lobd, hibd, v, i, nexti, ACT;
-  uint offi, offset, rb;
-  real MovingAvg, tmp, MaxUtil, MinUtil, SumU, MeanU, Mean2U, ThisU, RecipDiffUtil;
-  assert(E->NumVoters <= MaxNumVoters);
-  assert(E->NumCands <= MaxNumCands);
-  assert(honfrac >= 0.0);
-  assert(honfrac <= 1.0);
-  for(v=E->NumVoters -1; v>=0; v--){
-    offset = v*E->NumCands;
-    if( Rand01() < honfrac ){ /*honest voter*/
-      MakeIdentityPerm( E->NumCands, E->TopDownPrefs+offset );
-      RealPermShellSortDown( E->NumCands, (int*)E->TopDownPrefs+offset, E->PerceivedUtility+offset );
-      assert( IsPerm(E->NumCands, E->TopDownPrefs+offset) );
-      MaxUtil = -HUGE;
-      MinUtil =  HUGE;
-      SumU = 0.0;
-      for(i=E->NumCands -1; i>=0; i--){
-	offi = offset+i;
-	E->CandRankings[offset + E->TopDownPrefs[offi]] = i;
-	ThisU = E->PerceivedUtility[offi];
-	if(MaxUtil < ThisU){  MaxUtil = ThisU; }
-	if(MinUtil > ThisU){  MinUtil = ThisU; }
-	SumU += ThisU;
-      }
-      assert(IsPerm(E->NumCands, E->CandRankings+offset));
-      RecipDiffUtil = MaxUtil-MinUtil;
-      if(RecipDiffUtil != 0.0) RecipDiffUtil = 1.0 / RecipDiffUtil;
-      MeanU = SumU / E->NumCands;
-      Mean2U = 0.0; ACT=0;
-			for(i=E->NumCands -1; i>=0; i--){
+	int lobd, hibd, v, i, nexti, ACT;
+	uint offi, offset, rb;
+	real MovingAvg, tmp, MaxUtil, MinUtil, SumU, MeanU, Mean2U, ThisU, RecipDiffUtil;
+	assert(E->NumVoters <= MaxNumVoters);
+	assert(E->NumCands <= MaxNumCands);
+	assert(honfrac >= 0.0);
+	assert(honfrac <= 1.0);
+	for(v=E->NumVoters -1; v>=0; v--) {
+		offset = v*E->NumCands;
+		if( Rand01() < honfrac ) { /*honest voter*/
+			MakeIdentityPerm( E->NumCands, E->TopDownPrefs+offset );
+			RealPermShellSortDown( E->NumCands, (int*)E->TopDownPrefs+offset, E->PerceivedUtility+offset );
+			assert( IsPerm(E->NumCands, E->TopDownPrefs+offset) );
+			MaxUtil = -HUGE;
+			MinUtil =  HUGE;
+			SumU = 0.0;
+			for(i=E->NumCands -1; i>=0; i--) {
+				offi = offset+i;
+				E->CandRankings[offset + E->TopDownPrefs[offi]] = i;
+				ThisU = E->PerceivedUtility[offi];
+				if(MaxUtil < ThisU) {  MaxUtil = ThisU; }
+				if(MinUtil > ThisU) {  MinUtil = ThisU; }
+				SumU += ThisU;
+			}
+			assert(IsPerm(E->NumCands, E->CandRankings+offset));
+			RecipDiffUtil = MaxUtil-MinUtil;
+			if(RecipDiffUtil != 0.0) RecipDiffUtil = 1.0 / RecipDiffUtil;
+			MeanU = SumU / E->NumCands;
+			Mean2U = 0.0; ACT=0;
+			for(i=E->NumCands -1; i>=0; i--) {
 			offi = offset+i;
 			ThisU = E->PerceivedUtility[offi];
 			E->Score[offi] = ( ThisU-MinUtil ) * RecipDiffUtil;
 			/* mean-based threshold (with coin toss if exactly at thresh) for approvals */
-			if( ThisU > MeanU ){ E->Approve[offi] = TRUE; Mean2U += ThisU; ACT++; }
+			if( ThisU > MeanU ) { E->Approve[offi] = TRUE; Mean2U += ThisU; ACT++; }
 			else if( ThisU < MeanU ) E->Approve[offi] = FALSE;
 			else E->Approve[offi] = RandBool();
 			}
 			myAssert((ACT!=0), 4);
 			Mean2U /= ACT;
-      for(i=E->NumCands -1; i>=0; i--){
-	offi = offset+i;
-	ThisU = E->PerceivedUtility[offi];
-	if( ThisU >= Mean2U ) E->Approve2[offi] = TRUE;
-	else E->Approve2[offi] = FALSE;
-      }
-    }else{ /*strategic voter*/
-      ACT = 0;
-      Mean2U = 0.0;
-      MovingAvg = 0.0;
-      nexti = -1;
-      hibd = E->NumCands-1;
-      lobd = 0;
-			for(i=0; i<(int)E->NumCands; i++){
+			for(i=E->NumCands -1; i>=0; i--) {
 				offi = offset+i;
 				ThisU = E->PerceivedUtility[offi];
-				if(i > nexti){
+				if( ThisU >= Mean2U ) E->Approve2[offi] = TRUE;
+				else E->Approve2[offi] = FALSE;
+			}
+		}else{ /*strategic voter*/
+			ACT = 0;
+			Mean2U = 0.0;
+			MovingAvg = 0.0;
+			nexti = -1;
+			hibd = E->NumCands-1;
+			lobd = 0;
+			for(i=0; i<(int)E->NumCands; i++) {
+				offi = offset+i;
+				ThisU = E->PerceivedUtility[offi];
+				if(i > nexti) {
 					nexti++;
 					assert(nexti >= 0);
-					for( ; nexti<(int)E->NumCands; nexti++){
+					for( ; nexti<(int)E->NumCands; nexti++) {
 						tmp = E->PerceivedUtility[offset+nexti];
 						MovingAvg += (tmp-MovingAvg)/(nexti+1.0);
 						if( fabs(tmp-MovingAvg) > 0.000000000001 ) break;
@@ -4138,33 +4138,33 @@ void HonestyStrat( edata *E, real honfrac ){
 				assert(hibd >= 0);
 				assert(lobd < (int)E->NumCands);
 				assert(hibd < (int)E->NumCands);
-				if( ThisU > MovingAvg ){
+				if( ThisU > MovingAvg ) {
 					E->Approve[offi] = TRUE;  E->Score[offi] = 1.0;
 					Mean2U += ThisU; ACT++;
 					E->CandRankings[offi] = lobd;  lobd++;
 				}
-				else if( ThisU < MovingAvg ){
+				else if( ThisU < MovingAvg ) {
 					E->Approve[offi] = FALSE; E->Score[offi] = 0.0;
 					E->CandRankings[offi] = hibd;  hibd--;
 				}
 				else{
 					rb = RandBool(); E->Approve[offi] = rb; E->Score[offi] = 0.5;
-					if(rb){ E->CandRankings[offi] = lobd;  lobd++; }
+					if(rb) { E->CandRankings[offi] = lobd;  lobd++; }
 					else{   E->CandRankings[offi] = hibd;  hibd--; }
 				}
 			}
 			myAssert((ACT!=0), 6);
 			Mean2U /= ACT;
-      for(i=E->NumCands -1; i>=0; i--){
-	offi = offset+i;
-	ThisU = E->PerceivedUtility[offi];
-	if( ThisU >= Mean2U ){ E->Approve2[offi] = TRUE; }
-	else{                  E->Approve2[offi] = FALSE;}
-	assert( E->CandRankings[offi] < E->NumCands );
-	E->TopDownPrefs[ offset + E->CandRankings[offi] ] = i;
-      }
-    }/*end if(...honfrac) else clause*/
-  }/*end for(v)*/
+			for(i=E->NumCands -1; i>=0; i--) {
+				offi = offset+i;
+				ThisU = E->PerceivedUtility[offi];
+				if( ThisU >= Mean2U ) { E->Approve2[offi] = TRUE; }
+				else{                  E->Approve2[offi] = FALSE;}
+				assert( E->CandRankings[offi] < E->NumCands );
+				E->TopDownPrefs[ offset + E->CandRankings[offi] ] = i;
+			}
+		}/*end if(...honfrac) else clause*/
+	}/*end for(v)*/
 }
 
 /*************************** VOTER IGNORANCE: ***********
@@ -5963,7 +5963,7 @@ void runSingleTest(uint aSeed)
  */
 void runTests()
 {
-    	PrintConsts();
+	PrintConsts();
 	runSingleTest(1);
 }
 
