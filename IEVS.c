@@ -1995,6 +1995,7 @@ EMETH NansonBaldwin(edata *E  /* repeatedly eliminate Borda loser */
       }
     }
     assert(BordaLoser>=0);
+    ensure(BordaLoser>=0, 7);
     Eliminated[BordaLoser] = TRUE;
     for(i=E->NumCands -1; i>=0; i--) if(!Eliminated[i]){
       NansonVoteCount[i] -= E->MarginsMatrix[i*E->NumCands + BordaLoser];
@@ -2036,6 +2037,7 @@ EMETH Rouse(edata *E  /*like Nanson-Baldwin but with an extra level of recursion
         }
       }
       assert(highestb >= 0);
+      ensure(highestb >= 0, 8);
       assert(rRmark[highestb]);
       assert(Rmark[highestb]);
       Rmark[highestb] = FALSE; /* pseudo-eliminate borda-winner */
@@ -2044,6 +2046,7 @@ EMETH Rouse(edata *E  /*like Nanson-Baldwin but with an extra level of recursion
     for(i=E->NumCands -1; i>=0; i--){ if(Rmark[i] && rRmark[i]){ break; }}
     assert(i>=0);
     assert(i<(int)E->NumCands);
+    ensure(i>=0, 9);
     rRmark[i] = FALSE; /* (genuinely) eliminate it */
   }
   winner = -1;
@@ -2276,6 +2279,7 @@ EMETH RaynaudElim(edata *E  /* repeatedly eliminate canddt who suffered the wors
       }
     }
     assert(RayLoser >= 0);
+    ensure(RayLoser >= 0, 10);
     if( maxc <= 0 ){ return RayLoser; } /*"loser" is undefeated*/
     Eliminated[RayLoser] = TRUE;
     for(i=E->NumCands -1; i>=0; i--) if(!Eliminated[i] && RayBeater[i]==RayLoser){
@@ -2330,6 +2334,7 @@ EMETH ArrowRaynaud(edata *E  /* repeatedly eliminate canddt with smallest {large
       }
     }
     assert(ARLoser >= 0);
+    ensure(ARLoser >= 0, 11);
     Eliminated[ARLoser] = TRUE;
     for(i=E->NumCands -1; i>=0; i--) if(!Eliminated[i] && ARchump[i]==ARLoser){
       t = -BIGINT; chump = -1;
@@ -2740,6 +2745,7 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */
 		}
 		assert(RdLoser>=0);
 		assert(RdLoser < (int)E->NumCands);
+		ensure(RdLoser>=0, 12);
 		Eliminated[RdLoser] = TRUE; /* eliminate RdLoser */
 		if(IRVTopLim==BIGINT && SmithIRVwinner < 0) {
 			for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]) { /* update LossCount[j] */
@@ -2848,6 +2854,7 @@ EMETH BTRIRV(edata *E  /* Repeatedly eliminate either plur loser or 2nd-loser (w
     }
     assert(RdLoser2>=0);
     if( E->MarginsMatrix[ RdLoser*E->NumCands + RdLoser2 ] > 0 ) RdLoser = RdLoser2;
+    ensure(RdLoser>=0, 13);
     Eliminated[RdLoser] = TRUE; /* eliminate RdLoser */
     for(i=HeadFav[RdLoser]; i>=0; i=NextI){ /* Go thru list of voters with favorite=RdLoser, adjust: */
       j = i*E->NumCands;
@@ -2918,6 +2925,7 @@ EMETH Coombs(edata *E /*repeatedly eliminate antiplurality loser (with most bott
       }
     }
     assert(RdLoser>=0);
+    ensure(RdLoser>=0, 14);
     Eliminated[RdLoser] = TRUE; /* eliminate RdLoser */
     for(i=HeadFav[RdLoser]; i>=0; i=NextI){/*Go thru linked list of voters with favorite=RdLoser, adjust:*/
       j = i*E->NumCands;
@@ -3069,6 +3077,7 @@ EMETH IRNR(edata *E  /*Brian Olson's voting method described above*/
       }
     }
     assert(loser>=0);
+    ensure(loser>=0, 15);
     Eliminated[loser] = TRUE;
   }
   for(i=E->NumCands -1; i>=0; i--){ /* find random non-eliminated candidate... */
@@ -3124,6 +3133,7 @@ EMETH IRNRv(edata *E  /*Brian Olson's voting method but with 2-param renorm*/
 			}
 		}
 		assert(loser>=0);
+		ensure(loser>=0, 16);
 		Eliminated[loser] = TRUE;
 	}
 	for(i=E->NumCands -1; i>=0; i--) { /* find random non-eliminated candidate... */
@@ -3174,6 +3184,7 @@ EMETH IRNRm(edata *E  /*Brian Olson's voting method but with 2-param renorm*/
       }
     }
     assert(loser>=0);
+    ensure(loser>=0, 17);
     Eliminated[loser] = TRUE;
   }
   for(i=E->NumCands -1; i>=0; i--){ /* find random non-eliminated candidate... */
@@ -3518,6 +3529,7 @@ EMETH HeitzigRiver(edata *E /*http://lists.electorama.com/pipermail/election-met
       }
     }/*end for(i)*/
     assert(k>=0);
+    ensure(k>=0, 18);
     /* add it: */
     pp = Hpotpar[k];
     Hpar[k] = pp;
@@ -3617,6 +3629,7 @@ EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Comb
     if(t >= maxt){ maxt=t; CopeWinr=i; }
   }
   assert(CopeWinr >= 0);
+  ensure(CopeWinr >= 0, 19);
   assert(MajApproved[CopeWinr]);
   FillBoolArray(E->NumCands, BSSmithMembs, FALSE);
   BSSmithMembs[CopeWinr] = TRUE;
@@ -5324,6 +5337,7 @@ void BRDriver(){
 				if(RegretData[r+i] >= maxc){ maxc=RegretData[r+i]; k=i; }
 			}
 			assert(k>=0);
+			ensure(k>=0, 20);
 			CoombCt[k]++;
 		}
 		k = -1; j = -1;
@@ -5331,6 +5345,7 @@ void BRDriver(){
 			if(CoombCt[i] > k){ k=CoombCt[i]; j=i; }
 		}
 		assert(j>=0);
+		ensure(j>=0, 21);
 		assert(!CoombElimination[j]);
 		CoombElimination[j] = TRUE;
 		printf("%d=",j); PrintMethName(j,TRUE);
@@ -5528,6 +5543,7 @@ void RWBRDriver(){
 				if(RegretData[r+i] >= maxc){ maxc=RegretData[r+i]; k=i; }
 			}
 			assert(k>=0);
+			ensure(k>=0, 22);
 			CoombCt[k]++;
 		}
 		k = -1; j = -1;
@@ -5535,6 +5551,7 @@ void RWBRDriver(){
 			if(CoombCt[i] > k){ k=CoombCt[i]; j=i; }
 		}
 		assert(j>=0);
+		ensure(j>=0, 23);
 		assert(!CoombElimination[j]);
 		CoombElimination[j] = TRUE;
 		printf("%d=",j); PrintMethName(j,TRUE);
