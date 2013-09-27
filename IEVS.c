@@ -144,7 +144,7 @@ David Cary's Changes (not listing ones WDS did anyhow) include:
 ****************************/
 
 #define until(x) while(!(x))
-#define bool char
+#define bool _Bool
 #define uint32 unsigned int
 #define uint64 unsigned long long
 #define uchar unsigned char
