@@ -3820,13 +3820,13 @@ void HonestyStrat( edata *E, real honfrac ){
 			MeanU = SumU / E->NumCands;
 			Mean2U = 0.0; ACT=0;
 			for(i=E->NumCands -1; i>=0; i--) {
-			offi = offset+i;
-			ThisU = E->PerceivedUtility[offi];
-			E->Score[offi] = ( ThisU-MinUtil ) * RecipDiffUtil;
-			/* mean-based threshold (with coin toss if exactly at thresh) for approvals */
-			if( ThisU > MeanU ) { E->Approve[offi] = TRUE; Mean2U += ThisU; ACT++; }
-			else if( ThisU < MeanU ) E->Approve[offi] = FALSE;
-			else E->Approve[offi] = RandBool();
+				offi = offset+i;
+				ThisU = E->PerceivedUtility[offi];
+				E->Score[offi] = ( ThisU-MinUtil ) * RecipDiffUtil;
+				/* mean-based threshold (with coin toss if exactly at thresh) for approvals */
+				if( ThisU > MeanU ) { E->Approve[offi] = TRUE; Mean2U += ThisU; ACT++; }
+				else if( ThisU < MeanU ) E->Approve[offi] = FALSE;
+				else E->Approve[offi] = RandBool();
 			}
 			ensure((ACT!=0), 4);
 			Mean2U /= ACT;
@@ -4917,7 +4917,7 @@ void BRDriver(){
 								if(ScenarioCount > MaxScenarios){
 									printf("ScenarioCount=%d exceeded upper limit; terminating\n", ScenarioCount);
 									fflush(stdout);
-								exit(EXIT_FAILURE);
+									exit(EXIT_FAILURE);
 								}
 								if(BROutputMode&HTMLMODE) printf("</td></tr>");
 								else if(BROutputMode&TEXMODE) printf(" \\\\ ");
