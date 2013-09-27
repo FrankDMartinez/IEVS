@@ -5447,7 +5447,7 @@ main(int argc, char **argv)
 			printf(".\nWhat filename [.bmp suffix will be auto-added for you]?\n");
 			fflush(stdout);
 			scanf("%s", fname);
-			for(i=0; fname[i]; i++);
+			i = strlen(fname);
 			if(i>30) {
 				printf("filename too long, moron\n");
 				fflush(stdout); exit(EXIT_FAILURE);
