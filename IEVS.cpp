@@ -29,7 +29,7 @@
 #endif
 #include <string.h>
 
-void ensure(_Bool good, int number);
+void ensure(bool good, int number);
 
 /* #define NDEBUG    uncomment this line if want to turn off asserts for speed */
 #define VERSION 3.24
@@ -144,7 +144,6 @@ David Cary's Changes (not listing ones WDS did anyhow) include:
 ****************************/
 
 #define until(x) while(!(x))
-#define bool _Bool
 #define uint32 unsigned int
 #define uint64 unsigned long long
 #define uchar unsigned char
@@ -5652,7 +5651,7 @@ void runTests()
  *	good:			the condition to test
  *	number:			the error number to report
  */
-void ensure(_Bool good, int number)
+void ensure(bool good, int number)
 {
 	if(good) { /* do nothing */ }
 	else {
