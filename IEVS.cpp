@@ -4791,7 +4791,8 @@ real ColorContrastScore( uint NumSites, int xx[], int yy[] ){
 }
 
 real ReorderForColorContrast( uint NumSites, int xx[], int yy[] ){
-  int i,tm;
+  int i;
+  int temp;
   real cs2,cscore;
   uint s1,s2;
   OutputFCC16ColorPalette( NULL );
@@ -4800,12 +4801,12 @@ real ReorderForColorContrast( uint NumSites, int xx[], int yy[] ){
     s1 = RandInt(NumSites);
     s2 = RandInt(NumSites);
     if(s1 != s2){
-      tm=xx[s1]; xx[s1]=xx[s2]; xx[s2]=tm;
-      tm=yy[s1]; yy[s1]=yy[s2]; yy[s2]=tm;
+      temp=xx[s1]; xx[s1]=xx[s2]; xx[s2]=temp;
+      temp=yy[s1]; yy[s1]=yy[s2]; yy[s2]=temp;
       cs2 = ColorContrastScore( NumSites, xx, yy );
       if(cs2<cscore){
-	tm=xx[s1]; xx[s1]=xx[s2]; xx[s2]=tm;
-	tm=yy[s1]; yy[s1]=yy[s2]; yy[s2]=tm;
+	temp=xx[s1]; xx[s1]=xx[s2]; xx[s2]=temp;
+	temp=yy[s1]; yy[s1]=yy[s2]; yy[s2]=temp;
       }else{ cscore = cs2; }
     }
   }
