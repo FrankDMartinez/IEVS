@@ -5624,6 +5624,8 @@ main(int argc, char **argv)
  */
 void runSingleTest(uint aSeed)
 {
+	extern void runSingleYeeTest(uint aSeed);
+
     	InitRand(aSeed);
 	BROutputMode = SORTMODE|ALLMETHS;
 	candnumupper=16;//MaxNumCands-1;
@@ -5631,6 +5633,7 @@ void runSingleTest(uint aSeed)
 	numelections2try=1;//99999999;
 	utilnumupper=15;
 	BRDriver();
+	runSingleYeeTest(aSeed);
 }
 
 /*	runTests():	simulates User interaction of multiple
@@ -5656,4 +5659,52 @@ void ensure(_Bool good, int number)
 		printf("TOLCINSE #%d\n", number);
 		exit(EXIT_FAILURE);
 	}
+}
+
+/*	runSingleYeeTest(aSeed):	simulates User interaction to
+ *					help ensure Yee output remains
+ *					the same
+ *	aSeed:				the seed value for
+ *					randomization
+ */
+void runSingleYeeTest(uint aSeed)
+{
+	int LpPow=1;
+	int ihonfrac=50;
+	int WhichMeth=2;
+	char fname[100]="IEVSbmp";
+	int NumSites=16;
+	int subsqsideX=200;
+	int subsqsideY=200;
+	int i;
+	int xx[16], yy[16];
+	int j;
+	real cscore;
+	int TopYeeVoters=26;
+	int GaussStdDev=200;
+
+	for(i=0; i<NumSites; i++) {
+	REGEN:
+		xx[i] = (int)(100 - subsqsideX*0.5 + Rand01()*(subsqsideX-0.001));
+		yy[i] = (int)(100 - subsqsideY*0.5 + Rand01()*(subsqsideY-0.001));
+		for(j=0; j<i; j++) {
+			if( AbsInt(xx[i]-xx[j]) + AbsInt(yy[i]-yy[j]) <= (7*subsqsideX+7*subsqsideY)/400 ) {
+	/*too close to some previous point*/
+				goto REGEN;
+			}
+		}
+	}
+	cscore = ReorderForColorContrast(  NumSites, xx, yy );
+	printf("Color score %f (big=more constrast); Your coords are:\n", cscore);
+	for(i=0; i<NumSites; i++) {
+		printf("(%d, %d)\n", xx[i], yy[i]);
+	}
+	printf("Reordering...\n");
+	cscore = ReorderForColorContrast(  NumSites, xx, yy );
+	printf("Color score %f (big=more constrast); Your (reordered) coords are:\n", cscore);
+	for(i=0; i<NumSites; i++) {
+		printf("(%d, %d)\n", xx[i], yy[i]);
+	}
+	MakeYeePict( fname, xx, yy, NumSites, WhichMeth, TopYeeVoters, GaussStdDev, ihonfrac*0.01, LpPow );
+	printf("seed=%d\n", aSeed);
 }
