@@ -5634,6 +5634,8 @@ void runSingleTest(uint aSeed)
 	utilnumupper=15;
 	BRDriver();
 	runSingleYeeTest(aSeed);
+	printf("Test of randgen & other tests\n");
+	TestsOfRand();
 }
 
 /*	runTests():	simulates User interaction of multiple
