@@ -174,6 +174,8 @@ David Cary's Changes (not listing ones WDS did anyhow) include:
 #define ALLMETHS 256
 #define TOP10METHS 512
 uint BROutputMode=0;
+void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(), real (*func2)());
+real ZeroValue();
 
 /******************** GENERAL PURPOSE routines having nothing to do with voting: ******/
 
@@ -587,29 +589,22 @@ real RandExpl(){ /* returns standard exponential (density=exp(-x) for x>0) rando
   return -log(x);
 }
 
-void TestRandExpl(){
-  int i, y, ct[10];
-  real x,s,mx,mn,v;
-  s=0.0; v=0.0;
-  mn = HUGE;
-  mx = -HUGE;
-  for(i=0; i<10; i++) ct[i]=0;
-  printf("Performing 100000 randgen calls to test that expl randgen behaving ok:\n");
-  for(i=0; i<100000; i++){
-     x = RandExpl();
-     s += x;
-     if(mx<x) mx=x;
-     if(x<mn) mn=x;
-     v += x*x;
-     y = (int)(x*10);
-     if(x>=0 && y<10) ct[y]++;
-  }
-  printf("mean=%g(should be 1)  min=%f  max=%g   variance=%g(should be 2?)\n",
-	 s/100000.0, mn, mx, v/100000.0);
-  printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
-  for(i=0; i<10; i++) printf(" %d", ct[i]);
-  printf("\n");
-  fflush(stdout);
+void TestRandExpl()
+{
+	int i, ct[10];
+	real s,mx,mn,v;
+	s=0.0; v=0.0;
+	mn = HUGE;
+	mx = -HUGE;
+	for(i=0; i<10; i++) ct[i]=0;
+	printf("Performing 100000 randgen calls to test that expl randgen behaving ok:\n");
+	RandomTest(s, mn, mx, v, ct, RandExpl, ZeroValue);
+	printf("mean=%g(should be 1)  min=%f  max=%g   variance=%g(should be 2?)\n",
+	        s/100000.0, mn, mx, v/100000.0);
+	printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
+	for(i=0; i<10; i++) printf(" %d", ct[i]);
+	printf("\n");
+	fflush(stdout);
 }
 
 real RandNormal(){ /* returns standard Normal (gaussian variance=1 mean=0) deviate */
@@ -632,29 +627,22 @@ real RandNormal(){ /* returns standard Normal (gaussian variance=1 mean=0) devia
   return x1;
 }
 
-void TestNormalRand(){
-  int i, y, ct[10];
-  real x,s,mx,mn,v;
-  s=0.0; v=0.0;
-  mn = HUGE;
-  mx = -HUGE;
-  for(i=0; i<10; i++) ct[i]=0;
-  printf("Performing 100000 randgen calls to test that normal randgen behaving ok:\n");
-  for(i=0; i<100000; i++){
-     x = RandNormal();
-     s += x;
-     if(mx<x) mx=x;
-     if(x<mn) mn=x;
-     v += x*x;
-     y = (int)(x*10);
-     if(x>=0 && y<10) ct[y]++;
-  }
-  printf("mean=%g(should be 0)  min=%f  max=%g   variance=%g(should be 1)\n",
-	 s/100000.0, mn, mx, v/100000.0);
-  printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
-  for(i=0; i<10; i++) printf(" %d", ct[i]);
-  printf("\n");
-  fflush(stdout);
+void TestNormalRand()
+{
+	int i, ct[10];
+	real s,mx,mn,v;
+	s=0.0; v=0.0;
+	mn = HUGE;
+	mx = -HUGE;
+	for(i=0; i<10; i++) ct[i]=0;
+	printf("Performing 100000 randgen calls to test that normal randgen behaving ok:\n");
+	RandomTest(s, mn, mx, v, ct, RandNormal, ZeroValue);
+	printf("mean=%g(should be 0)  min=%f  max=%g   variance=%g(should be 1)\n",
+	        s/100000.0, mn, mx, v/100000.0);
+	printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
+	for(i=0; i<10; i++) printf(" %d", ct[i]);
+	printf("\n");
+	fflush(stdout);
 }
 
 /* If a 2D normal [x & y coords of which are i.i.d. standard normals]
@@ -668,56 +656,40 @@ real RandRadialNormal(){
   return w;
 }
 
-void TestRadialNormalRand(){
-  int i, y, ct[10];
-  real x,s,mx,mn,v;
-  s=0.0; v=0.0;
-  mn = HUGE;
-  mx = -HUGE;
-  for(i=0; i<10; i++) ct[i]=0;
-  printf("Performing 100000 randgen calls to test that radial normal randgen behaving ok:\n");
-  for(i=0; i<100000; i++){
-     x = RandRadialNormal();
-     s += x;
-     if(mx<x) mx=x;
-     if(x<mn) mn=x;
-     v += x*x;
-     y = (int)(x*10);
-     if(x>=0 && y<10) ct[y]++;
-  }
-  printf("mean=%g(should be ~1.25)  min=%f  max=%g   meansq=%g(should be 2)\n",
-	 s/100000.0, mn, mx, v/100000.0);
-  printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
-  for(i=0; i<10; i++) printf(" %d", ct[i]);
-  printf("\n");
-  fflush(stdout);
+void TestRadialNormalRand()
+{
+	int i, ct[10];
+	real s,mx,mn,v;
+	s=0.0; v=0.0;
+	mn = HUGE;
+	mx = -HUGE;
+	for(i=0; i<10; i++) ct[i]=0;
+	printf("Performing 100000 randgen calls to test that radial normal randgen behaving ok:\n");
+	RandomTest(s, mn, mx, v, ct, RandRadialNormal, ZeroValue);
+	printf("mean=%g(should be ~1.25)  min=%f  max=%g   meansq=%g(should be 2)\n",
+	        s/100000.0, mn, mx, v/100000.0);
+	printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
+	for(i=0; i<10; i++) printf(" %d", ct[i]);
+	printf("\n");
+	fflush(stdout);
 }
 
-void TestRadialNormalRand2(){
-  int i, y, ct[10];
-  real x,s,mx,mn,v,w;
-  s=0.0; v=0.0;
-  mn = HUGE;
-  mx = -HUGE;
-  for(i=0; i<10; i++) ct[i]=0;
-  printf("Performing 100000 randgen calls to test that normal randgen behaving ok radially:\n");
-  for(i=0; i<100000; i++){
-     x = RandNormal();
-     w = RandNormal();
-     x = sqrt(x*x+w*w);
-     s += x;
-     if(mx<x) mx=x;
-     if(x<mn) mn=x;
-     v += x*x;
-     y = (int)(x*10);
-     if(x>=0 && y<10) ct[y]++;
-  }
-  printf("mean=%g(should be ~1.25)  min=%f  max=%g   meansq=%g(should be 2)\n",
-	 s/100000.0, mn, mx, v/100000.0);
-  printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
-  for(i=0; i<10; i++) printf(" %d", ct[i]);
-  printf("\n");
-  fflush(stdout);
+void TestRadialNormalRand2()
+{
+	int i, ct[10];
+	real s,mx,mn,v;
+	s=0.0; v=0.0;
+	mn = HUGE;
+	mx = -HUGE;
+	for(i=0; i<10; i++) ct[i]=0;
+	printf("Performing 100000 randgen calls to test that normal randgen behaving ok radially:\n");
+	RandomTest(s, mn, mx, v, ct, RandNormal, RandNormal);
+	printf("mean=%g(should be ~1.25)  min=%f  max=%g   meansq=%g(should be 2)\n",
+	        s/100000.0, mn, mx, v/100000.0);
+	printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
+	for(i=0; i<10; i++) printf(" %d", ct[i]);
+	printf("\n");
+	fflush(stdout);
 }
 
 #define RECIPRTPI 0.564189583547756286948079451560772585844050   /* 1/sqrt(pi) */
@@ -5663,6 +5635,41 @@ void ensure(bool good, int number)
 	}
 }
 
+/*	RandomTest(s, mn, mx, v, ct, func1, func2):	performs a
+ *			loop of 100000 times to test if the randgen
+ *			calls represented by 'func1' and 'func2'
+ *			perform as expected.
+ *	s:		the sum of all randomly created values during
+ *			the loop
+ *	mn:		the minimum value created during the loop
+ *	mx:		the maximum value created during the loop
+ *	v:		the sum of variances created during the loop
+ *	ct:		the counts of value created in blocks of 0.1
+ *	func1:		the first function used to create a random value
+ *	func2:		the second function used to create a random value
+ */
+void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(), real (*func2)())
+{
+	int i;
+	int y;
+	real w;
+	real x;
+
+	for(i=0; i<100000; i++){
+		x = func1();
+		if( func2 != ZeroValue ) {
+			w = func2();
+			x = sqrt(x*x+w*w);
+		}
+		s += x;
+		if(mx<x) mx=x;
+		if(x<mn) mn=x;
+		v += x*x;
+		y = (int)(x*10);
+		if(x>=0 && y<10) ct[y]++;
+	}
+}
+
 /*	runSingleYeeTest(aSeed):	simulates User interaction to
  *					help ensure Yee output remains
  *					the same
@@ -5709,4 +5716,11 @@ void runSingleYeeTest(uint aSeed)
 	}
 	MakeYeePict( fname, xx, yy, NumSites, WhichMeth, TopYeeVoters, GaussStdDev, ihonfrac*0.01, LpPow );
 	printf("seed=%d\n", aSeed);
+}
+
+/*	ZeroValue():	returns 0.0; often used as a placeholder
+ */
+real ZeroValue()
+{
+	return 0.0;
 }
