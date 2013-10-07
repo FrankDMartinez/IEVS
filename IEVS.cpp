@@ -174,9 +174,9 @@ David Cary's Changes (not listing ones WDS did anyhow) include:
 #define ALLMETHS 256
 #define TOP10METHS 512
 uint BROutputMode=0;
-void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(), real (*func2)());
+void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void));
 void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10]);
-real ZeroValue();
+real ZeroValue(void);
 
 /******************** GENERAL PURPOSE routines having nothing to do with voting: ******/
 
@@ -5221,7 +5221,7 @@ main(int argc, char **argv)
 	brdata B;
 
 	if((argc > 1) && !strcmp(argv[1], "--test")) {
-		extern void runTests();
+		extern void runTests(void);
 
 		runTests();
 		exit(EXIT_SUCCESS);
@@ -5629,7 +5629,7 @@ void ensure(bool good, int number)
  *	func1:		the first function used to create a random value
  *	func2:		the second function used to create a random value
  */
-void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(), real (*func2)())
+void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void))
 {
 	int i;
 	int y;
