@@ -175,6 +175,7 @@ David Cary's Changes (not listing ones WDS did anyhow) include:
 #define TOP10METHS 512
 uint BROutputMode=0;
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(), real (*func2)());
+void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10]);
 real ZeroValue();
 
 /******************** GENERAL PURPOSE routines having nothing to do with voting: ******/
@@ -599,12 +600,7 @@ void TestRandExpl()
 	for(i=0; i<10; i++) ct[i]=0;
 	printf("Performing 100000 randgen calls to test that expl randgen behaving ok:\n");
 	RandomTest(s, mn, mx, v, ct, RandExpl, ZeroValue);
-	printf("mean=%g(should be 1)  min=%f  max=%g   variance=%g(should be 2?)\n",
-	        s/100000.0, mn, mx, v/100000.0);
-	printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
-	for(i=0; i<10; i++) printf(" %d", ct[i]);
-	printf("\n");
-	fflush(stdout);
+	RandomTestReport("1", "2?", s, mn, mx, v, ct);
 }
 
 real RandNormal(){ /* returns standard Normal (gaussian variance=1 mean=0) deviate */
@@ -637,12 +633,7 @@ void TestNormalRand()
 	for(i=0; i<10; i++) ct[i]=0;
 	printf("Performing 100000 randgen calls to test that normal randgen behaving ok:\n");
 	RandomTest(s, mn, mx, v, ct, RandNormal, ZeroValue);
-	printf("mean=%g(should be 0)  min=%f  max=%g   variance=%g(should be 1)\n",
-	        s/100000.0, mn, mx, v/100000.0);
-	printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
-	for(i=0; i<10; i++) printf(" %d", ct[i]);
-	printf("\n");
-	fflush(stdout);
+	RandomTestReport("0", "1", s, mn, mx, v, ct);
 }
 
 /* If a 2D normal [x & y coords of which are i.i.d. standard normals]
@@ -666,12 +657,7 @@ void TestRadialNormalRand()
 	for(i=0; i<10; i++) ct[i]=0;
 	printf("Performing 100000 randgen calls to test that radial normal randgen behaving ok:\n");
 	RandomTest(s, mn, mx, v, ct, RandRadialNormal, ZeroValue);
-	printf("mean=%g(should be ~1.25)  min=%f  max=%g   meansq=%g(should be 2)\n",
-	        s/100000.0, mn, mx, v/100000.0);
-	printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
-	for(i=0; i<10; i++) printf(" %d", ct[i]);
-	printf("\n");
-	fflush(stdout);
+	RandomTestReport("~1.25", "2", s, mn, mx, v, ct);
 }
 
 void TestRadialNormalRand2()
@@ -684,12 +670,7 @@ void TestRadialNormalRand2()
 	for(i=0; i<10; i++) ct[i]=0;
 	printf("Performing 100000 randgen calls to test that normal randgen behaving ok radially:\n");
 	RandomTest(s, mn, mx, v, ct, RandNormal, RandNormal);
-	printf("mean=%g(should be ~1.25)  min=%f  max=%g   meansq=%g(should be 2)\n",
-	        s/100000.0, mn, mx, v/100000.0);
-	printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
-	for(i=0; i<10; i++) printf(" %d", ct[i]);
-	printf("\n");
-	fflush(stdout);
+	RandomTestReport("~1.25", "2", s, mn, mx, v, ct);
 }
 
 #define RECIPRTPI 0.564189583547756286948079451560772585844050   /* 1/sqrt(pi) */
@@ -5724,3 +5705,34 @@ real ZeroValue()
 {
 	return 0.0;
 }
+
+/*      RandomTestReport(mean_str, meansq_str, s, mn, mx, v, class T):   outputs
+ *                      the results of a call to 'RandomTest()'
+ *      mean_str:       a string showing the expected arithmetic mean
+ *      meansq_str:     a string showing the expected mean of the squares
+ *	s:		the sum of all randomly created values during
+ *			the call to 'RandomTest()'
+ *	mn:		the minimum value created during the call to
+ *	                'RandomTest()'
+ *	mx:		the maximum value created during the call to
+ *	                'RandomTest()'
+ *	v:		the sum of variances created during the call
+ *	                to 'RandomTest()'
+ *	ct:		the counts of value created in blocks of 0.1
+ *	                during the call to 'RandomTest()'
+ */
+void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10])
+        {
+        int i;
+        printf("mean=%g(should be %s)  min=%f  max=%g   meansq=%g(should be %s)\n",
+	       s/100000.0,
+               mean_str,
+               mn,
+               mx,
+               v/100000.0,
+               meansq_str);
+	printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
+	for(i=0; i<10; i++) printf(" %d", ct[i]);
+	printf("\n");
+	fflush(stdout);
+        }
