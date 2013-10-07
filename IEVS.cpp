@@ -5706,33 +5706,33 @@ real ZeroValue()
 	return 0.0;
 }
 
-/*      RandomTestReport(mean_str, meansq_str, s, mn, mx, v, class T):   outputs
- *                      the results of a call to 'RandomTest()'
- *      mean_str:       a string showing the expected arithmetic mean
- *      meansq_str:     a string showing the expected mean of the squares
+/*	RandomTestReport(mean_str, meansq_str, s, mn, mx, v, class T):
+ *			outputs the results of a call to 'RandomTest()'
+ *	mean_str:	a string showing the expected arithmetic mean
+ *	meansq_str:     a string showing the expected mean of the squares
  *	s:		the sum of all randomly created values during
  *			the call to 'RandomTest()'
  *	mn:		the minimum value created during the call to
- *	                'RandomTest()'
+ *			    'RandomTest()'
  *	mx:		the maximum value created during the call to
- *	                'RandomTest()'
+ *			    'RandomTest()'
  *	v:		the sum of variances created during the call
- *	                to 'RandomTest()'
+ *			    to 'RandomTest()'
  *	ct:		the counts of value created in blocks of 0.1
- *	                during the call to 'RandomTest()'
+ *			    during the call to 'RandomTest()'
  */
 void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10])
-        {
-        int i;
-        printf("mean=%g(should be %s)  min=%f  max=%g   meansq=%g(should be %s)\n",
+	{
+	int i;
+	printf("mean=%g(should be %s)  min=%f  max=%g   meansq=%g(should be %s)\n",
 	       s/100000.0,
-               mean_str,
-               mn,
-               mx,
-               v/100000.0,
-               meansq_str);
+	       mean_str,
+	       mn,
+	       mx,
+	       v/100000.0,
+	       meansq_str);
 	printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
 	for(i=0; i<10; i++) printf(" %d", ct[i]);
 	printf("\n");
 	fflush(stdout);
-        }
+	}
