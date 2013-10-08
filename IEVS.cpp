@@ -5547,6 +5547,7 @@ main(int argc, char **argv)
 void runSingleTest(uint aSeed)
 {
 	extern void runSingleYeeTest(uint aSeed);
+	brdata B;
 
     	InitRand(aSeed);
 	BROutputMode = SORTMODE|ALLMETHS;
@@ -5558,6 +5559,10 @@ void runSingleTest(uint aSeed)
 	runSingleYeeTest(aSeed);
 	printf("Test of randgen & other tests\n");
 	TestsOfRand();
+	printf("\nTest edata structure:\n"); fflush(stdout);
+	B.NumVoters=6; B.NumCands=5; B.NumElections=1;
+	B.IgnoranceAmplitude=0.001;
+	TestEDataStructs(&B);
 }
 
 /*	runTests():	simulates User interaction of multiple
