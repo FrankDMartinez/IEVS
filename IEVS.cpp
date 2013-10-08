@@ -176,7 +176,8 @@ David Cary's Changes (not listing ones WDS did anyhow) include:
 uint BROutputMode=0;
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void));
 void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10]);
-real ZeroValue(void);
+void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str);
+#define NullFunction ((real(*)(void))NULL)
 
 /******************** GENERAL PURPOSE routines having nothing to do with voting: ******/
 
@@ -592,15 +593,7 @@ real RandExpl(){ /* returns standard exponential (density=exp(-x) for x>0) rando
 
 void TestRandExpl()
 {
-	int i, ct[10];
-	real s,mx,mn,v;
-	s=0.0; v=0.0;
-	mn = HUGE;
-	mx = -HUGE;
-	for(i=0; i<10; i++) ct[i]=0;
-	printf("Performing 100000 randgen calls to test that expl randgen behaving ok:\n");
-	RandomTest(s, mn, mx, v, ct, RandExpl, ZeroValue);
-	RandomTestReport("1", "2?", s, mn, mx, v, ct);
+	Test("expl randgen", "", RandExpl, NullFunction, "1", "2?");
 }
 
 real RandNormal(){ /* returns standard Normal (gaussian variance=1 mean=0) deviate */
@@ -625,15 +618,7 @@ real RandNormal(){ /* returns standard Normal (gaussian variance=1 mean=0) devia
 
 void TestNormalRand()
 {
-	int i, ct[10];
-	real s,mx,mn,v;
-	s=0.0; v=0.0;
-	mn = HUGE;
-	mx = -HUGE;
-	for(i=0; i<10; i++) ct[i]=0;
-	printf("Performing 100000 randgen calls to test that normal randgen behaving ok:\n");
-	RandomTest(s, mn, mx, v, ct, RandNormal, ZeroValue);
-	RandomTestReport("0", "1", s, mn, mx, v, ct);
+	Test("normal randgen", "", RandNormal, NullFunction, "0", "1");
 }
 
 /* If a 2D normal [x & y coords of which are i.i.d. standard normals]
@@ -649,28 +634,12 @@ real RandRadialNormal(){
 
 void TestRadialNormalRand()
 {
-	int i, ct[10];
-	real s,mx,mn,v;
-	s=0.0; v=0.0;
-	mn = HUGE;
-	mx = -HUGE;
-	for(i=0; i<10; i++) ct[i]=0;
-	printf("Performing 100000 randgen calls to test that radial normal randgen behaving ok:\n");
-	RandomTest(s, mn, mx, v, ct, RandRadialNormal, ZeroValue);
-	RandomTestReport("~1.25", "2", s, mn, mx, v, ct);
+	Test("radial normal randgen", "", RandRadialNormal, NullFunction, "~1.25", "2");
 }
 
 void TestRadialNormalRand2()
 {
-	int i, ct[10];
-	real s,mx,mn,v;
-	s=0.0; v=0.0;
-	mn = HUGE;
-	mx = -HUGE;
-	for(i=0; i<10; i++) ct[i]=0;
-	printf("Performing 100000 randgen calls to test that normal randgen behaving ok radially:\n");
-	RandomTest(s, mn, mx, v, ct, RandNormal, RandNormal);
-	RandomTestReport("~1.25", "2", s, mn, mx, v, ct);
+	Test("normal randgen", " radially", RandNormal, RandNormal, "~1.25", "2");
 }
 
 #define RECIPRTPI 0.564189583547756286948079451560772585844050   /* 1/sqrt(pi) */
@@ -5638,7 +5607,7 @@ void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*fun
 
 	for(i=0; i<100000; i++){
 		x = func1();
-		if( func2 != ZeroValue ) {
+		if( func2 != NullFunction ) {
 			w = func2();
 			x = sqrt(x*x+w*w);
 		}
@@ -5699,13 +5668,6 @@ void runSingleYeeTest(uint aSeed)
 	printf("seed=%d\n", aSeed);
 }
 
-/*	ZeroValue():	returns 0.0; often used as a placeholder
- */
-real ZeroValue()
-{
-	return 0.0;
-}
-
 /*	RandomTestReport(mean_str, meansq_str, s, mn, mx, v, class T):
  *			outputs the results of a call to 'RandomTest()'
  *	mean_str:	a string showing the expected arithmetic mean
@@ -5736,3 +5698,28 @@ void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real
 	printf("\n");
 	fflush(stdout);
 	}
+
+/*	Test(name, direction, func1, func2, mean_str, meansq_str):
+ *				runs a 'random' number generation
+ *				test involving 'func1' and 'func2'
+ *				to ensure the functions are
+ *				performing as expected
+ *	name:		the name of the test
+ *	direction:	a 'direction' or behavior
+ *	func1:		the first function used to create a random value
+ *	func2:		the second function used to create a random value
+ *	mean_str:	a string showing the expected arithmetic mean
+ *	meansq_str:     a string showing the expected mean of the squares
+ */
+void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str)
+        {
+	int i, ct[10];
+	real s,mx,mn,v;
+	s=0.0; v=0.0;
+	mn = HUGE;
+	mx = -HUGE;
+	for(i=0; i<10; i++) ct[i]=0;
+	printf("Performing 100000 randgen calls to test that %s behaving ok%s:\n", name, direction);
+	RandomTest(s, mn, mx, v, ct, func1, func2);
+	RandomTestReport(mean_str, meansq_str, s, mn, mx, v, ct);
+        }
