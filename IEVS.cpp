@@ -3625,6 +3625,8 @@ typedef struct dum2 {
    int Winners[NumMethods];
 } brdata;
 
+void EDataPrep(edata &E, brdata *B);
+
 /* all arrays here have NumMethods entries */
 int FindWinnersAndRegrets( edata *E,  brdata *B,  bool Methods[] ){
   int m,w,j;
@@ -4179,57 +4181,49 @@ void PrintConsts(){
 }
 
 /************ Bayesian Regret ***********/
-void ComputeBRs( brdata *B, bool VotMethods[], int UtilMeth ){
-  uint elnum;
-  edata E;
+void ComputeBRs( brdata *B, bool VotMethods[], int UtilMeth )
+{
+	uint elnum;
+	edata E;
 
-  ZeroRealArray( NumMethods, B->MeanRegret );
-  ZeroRealArray( NumMethods, B->SRegret );
-  ZeroIntArray( NumMethods, (int*)B->RegCount );
-  ZeroIntArray( NumMethods*NumMethods, (int*)B->AgreeCount );
-  ZeroIntArray( NumMethods*NumMethods, (int*)B->AgreeCount );
-  ZeroIntArray( NumMethods, (int*)B->CondAgreeCount );
-  ZeroIntArray( NumMethods, (int*)B->TrueCondAgreeCount );
-  InitCoreElState();
-  E.NumVoters = B->NumVoters;
-  E.NumCands = B->NumCands;
-  if(B->NumElections < 1){
-    printf("NumElections=%d<1, error\n", B->NumElections);
-    fflush(stdout); exit(EXIT_FAILURE);
-  }
-  for(elnum=0; elnum < B->NumElections; elnum++){
-    UtilDispatcher(&E, UtilMeth);
-    AddIgnorance(&E, B->IgnoranceAmplitude);
-    HonestyStrat(&E, B->Honfrac);
-    FindWinnersAndRegrets(&E, B, VotMethods);
-  }
-  B->NumVoters =  E.NumVoters;
-  B->NumCands = E.NumCands;
-  ScaleRealVec(NumMethods, B->SRegret, 1.0/((B->NumElections - 1.0)*B->NumElections) ); /*StdDev/sqrt(#) = StdErr.*/
+	ZeroRealArray( NumMethods, B->MeanRegret );
+	ZeroRealArray( NumMethods, B->SRegret );
+	ZeroIntArray( NumMethods, (int*)B->RegCount );
+	ZeroIntArray( NumMethods*NumMethods, (int*)B->AgreeCount );
+	ZeroIntArray( NumMethods*NumMethods, (int*)B->AgreeCount );
+	ZeroIntArray( NumMethods, (int*)B->CondAgreeCount );
+	ZeroIntArray( NumMethods, (int*)B->TrueCondAgreeCount );
+	InitCoreElState();
+	EDataPrep(E, B);
+	for(elnum=0; elnum < B->NumElections; elnum++){
+		UtilDispatcher(&E, UtilMeth);
+		AddIgnorance(&E, B->IgnoranceAmplitude);
+		HonestyStrat(&E, B->Honfrac);
+		FindWinnersAndRegrets(&E, B, VotMethods);
+	}
+	B->NumVoters =  E.NumVoters;
+	B->NumCands = E.NumCands;
+	ScaleRealVec(NumMethods, B->SRegret, 1.0/((B->NumElections - 1.0)*B->NumElections) ); /*StdDev/sqrt(#) = StdErr.*/
 }
 
-void TestEDataStructs( brdata *B ){
-  uint elnum;
-  edata E;
-  E.NumVoters = B->NumVoters;
-  E.NumCands = B->NumCands;
-  if(B->NumElections < 1){
-    printf("NumElections=%d<1, error\n", B->NumElections);
-    fflush(stdout); exit(EXIT_FAILURE);
-  }
-  for(elnum=0; elnum < B->NumElections; elnum++){
-    printf("GenNormalUtils:\n"); fflush(stdout);
-    GenNormalUtils(&E);
-    printf("AddIgnorance:\n"); fflush(stdout);
-    AddIgnorance(&E, B->IgnoranceAmplitude);
-    printf("HonestyStrat:\n"); fflush(stdout);
-    HonestyStrat(&E, 1.0);
-    printf("BuildDefetasMatrix:\n"); fflush(stdout);
-    BuildDefeatsMatrix(&E);
-    printf("PrintEdata:\n"); fflush(stdout);
-    PrintEdata(stdout, &E);
-  }
-  fflush(stdout);
+void TestEDataStructs( brdata *B )
+{
+	uint elnum;
+	edata E;
+	EDataPrep(E, B);
+	for(elnum=0; elnum < B->NumElections; elnum++){
+		printf("GenNormalUtils:\n"); fflush(stdout);
+		GenNormalUtils(&E);
+		printf("AddIgnorance:\n"); fflush(stdout);
+		AddIgnorance(&E, B->IgnoranceAmplitude);
+		printf("HonestyStrat:\n"); fflush(stdout);
+		HonestyStrat(&E, 1.0);
+		printf("BuildDefetasMatrix:\n"); fflush(stdout);
+		BuildDefeatsMatrix(&E);
+		printf("PrintEdata:\n"); fflush(stdout);
+		PrintEdata(stdout, &E);
+	}
+	fflush(stdout);
 }
 
 /*************************** BMP BITMAP GRAPHICS: ***************************/
@@ -5590,6 +5584,23 @@ void ensure(bool good, int number)
 	}
 }
 
+/*	EDataPrep(E, B):	prepares 'E' for testing with data
+ *				from 'B'
+ *	E:			the edata object which will be
+ *				tested
+ *	B:			the information for initializing
+ *				'E'
+ */
+void EDataPrep(edata &E, brdata *B)
+{
+	E.NumVoters = B->NumVoters;
+	E.NumCands = B->NumCands;
+	if(B->NumElections < 1){
+		printf("NumElections=%d<1, error\n", B->NumElections);
+		fflush(stdout); exit(EXIT_FAILURE);
+	}
+}
+
 /*	RandomTest(s, mn, mx, v, ct, func1, func2):	performs a
  *			loop of 100000 times to test if the randgen
  *			calls represented by 'func1' and 'func2'
@@ -5689,7 +5700,7 @@ void runSingleYeeTest(uint aSeed)
  *			    during the call to 'RandomTest()'
  */
 void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10])
-	{
+{
 	int i;
 	printf("mean=%g(should be %s)  min=%f  max=%g   meansq=%g(should be %s)\n",
 	       s/100000.0,
@@ -5702,7 +5713,7 @@ void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real
 	for(i=0; i<10; i++) printf(" %d", ct[i]);
 	printf("\n");
 	fflush(stdout);
-	}
+}
 
 /*	Test(name, direction, func1, func2, mean_str, meansq_str):
  *				runs a 'random' number generation
@@ -5717,7 +5728,7 @@ void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real
  *	meansq_str:     a string showing the expected mean of the squares
  */
 void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str)
-        {
+{
 	int i, ct[10];
 	real s,mx,mn,v;
 	s=0.0; v=0.0;
@@ -5727,4 +5738,4 @@ void Test(const char *name, const char *direction, real (*func1)(void), real (*f
 	printf("Performing 100000 randgen calls to test that %s behaving ok%s:\n", name, direction);
 	RandomTest(s, mn, mx, v, ct, func1, func2);
 	RandomTestReport(mean_str, meansq_str, s, mn, mx, v, ct);
-        }
+}
