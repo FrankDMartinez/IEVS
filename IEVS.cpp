@@ -177,6 +177,10 @@ uint BROutputMode=0;
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void));
 void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10]);
 void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str);
+template< class T1,
+		T1 (*SelectionFunc)( uint, uint, uint, T1[] ),
+		bool (*RightFunc)( uint, uint, uint, T1[] )>
+		T1 TwiceMedian(uint N, T1 A[] );
 #define NullFunction ((real(*)(void))NULL)
 
 /******************** GENERAL PURPOSE routines having nothing to do with voting: ******/
@@ -1089,22 +1093,6 @@ int FloydRivestSelectInt( uint L, uint R, uint K, int A[] ){
   return( A[K] );
 }
 
-/* returns twice the median of A[0..N-1] or sum of the bimedians if N even */
-int TwiceMedianInt( uint N, int A[] ){
-  int M,T;
-  int i;
-  assert(N>0);
-  M = FloydRivestSelectInt( 0, N-1, N/2, A );
-  assert( SelectedRightInt( 0, N-1, N/2, A ) );
-  if((N&1)==0){ /*N is even*/
-    T = A[N/2 - 1];
-    for(i=N/2 - 2; i>=0; i--){
-      if(A[i] > T) T=A[i];
-    }
-  }else{ T=M; }
-  return T+M;
-}
-
 /* Rearranges A[L..R] so that A[i] <= A[K] <= A[j]  if L<=i<K<j<=R.
  * Then returns A[K].  If R-L+1=N then
  * expected runtime for randomly ordered A[] is 1.5*N compares
@@ -1152,22 +1140,6 @@ real FloydRivestSelectReal( uint L, uint R, uint K, real A[] ){
     /* Now continue on using contracted [L..R] interval... */
   }
   return( A[K] );
-}
-
-/* returns twice the median of A[0..N-1] or sum of the bimedians if N even */
-real TwiceMedianReal( uint N, real A[] ){
-  real M,T;
-  int i;
-  assert(N>0);
-  M = FloydRivestSelectReal( 0, N-1, N/2, A );
-  assert( SelectedRightReal( 0, N-1, N/2, A ) );
-  if((N&1)==0){ /*N is even*/
-    T = A[N/2 - 1];
-    for(i=N/2 - 2; i>=0; i--){
-      if(A[i] > T) T=A[i];
-    }
-  }else{ T=M; }
-  return T+M;
 }
 
 /*************************** VOTING METHODS:  ********
@@ -3029,7 +3001,7 @@ EMETH TopMedianRating(edata *E    /* canddt with highest median Score wins */
       x = i*E->NumCands + j;
       CScoreVec[i] = E->Score[x];
     }
-    MedianRating[j] = TwiceMedianReal( E->NumVoters, CScoreVec );
+    MedianRating[j] = TwiceMedian<real, FloydRivestSelectReal, SelectedRightReal>(E->NumVoters, CScoreVec);
   }
   winner = ArgMaxRealArr( E->NumCands, MedianRating, (int*)RandCandPerm );
   return(winner);
@@ -3043,7 +3015,7 @@ EMETH LoMedianRank(edata *E    /* canddt with best median ranking wins */
       x = i*E->NumCands + j;
       CRankVec[i] = E->CandRankings[x];
     }
-    MedianRank[j] = TwiceMedianInt( E->NumVoters, CRankVec );
+    MedianRank[j] = TwiceMedian<int, FloydRivestSelectInt, SelectedRightInt>(E->NumVoters, CRankVec);
     assert( MedianRank[j] >= 0 );
     assert( MedianRank[j] <= 2*((int)E->NumCands - 1) );
   }
@@ -5738,4 +5710,28 @@ void Test(const char *name, const char *direction, real (*func1)(void), real (*f
 	printf("Performing 100000 randgen calls to test that %s behaving ok%s:\n", name, direction);
 	RandomTest(s, mn, mx, v, ct, func1, func2);
 	RandomTestReport(mean_str, meansq_str, s, mn, mx, v, ct);
+}
+
+/*	T1 TwiceMedian(uint N, T1 A[] ):	returns twice the median of 'A[0..N-1]' or
+ *						sum of the bimedians if 'N' is even
+ *	N:	the expected number of elements in 'A'
+ *	A:	the set of values to examine
+ */
+template< class T1,
+		T1 (*SelectionFunc)( uint, uint, uint, T1[] ),
+		bool (*RightFunc)( uint, uint, uint, T1[] )>
+		T1 TwiceMedian(uint N, T1 A[] )
+{
+	T1 M,T;
+	int i;
+	assert(N>0);
+	M = SelectionFunc( 0, N-1, N/2, A );
+	assert( RightFunc( 0, N-1, N/2, A ) );
+	if((N&1)==0){ /*N is even*/
+		T = A[N/2 - 1];
+		for(i=N/2 - 2; i>=0; i--){
+			if(A[i] > T) T=A[i];
+		}
+	}else{ T=M; }
+	return T+M;
 }
