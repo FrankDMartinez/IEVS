@@ -5153,7 +5153,7 @@ main(int argc, char **argv)
 	int xx[16], yy[16];
 	real cscore;
 	char fname[100];
-	brdata B;
+	extern void runSelfTests(void);
 
 	if((argc > 1) && !strcmp(argv[1], "--test")) {
 		extern void runTests(void);
@@ -5452,12 +5452,7 @@ main(int argc, char **argv)
 			printf("seed=%d\n", seed);
 			break;
 		case(3):
-			printf("Test of randgen & other tests\n");
-			TestsOfRand();
-			printf("\nTest edata structure:\n"); fflush(stdout);
-			B.NumVoters=6; B.NumCands=5; B.NumElections=1;
-			B.IgnoranceAmplitude=0.001;
-			TestEDataStructs(&B);
+			runSelfTests();
 			break;
 		case(4):
 			printf("Tally an election with votes you enter (NOT IMPLEMENTED HERE - try\n");
@@ -5505,6 +5500,24 @@ main(int argc, char **argv)
 
 /*	Additions by Me		*/
 
+/*	runSelfTests():		perfomrs a test of the various
+ *				PRNGs and edata structures
+ */
+void runSelfTests()
+{
+	brdata B;
+
+	printf("Test of randgen & other tests\n");
+	TestsOfRand();
+	printf("\nTest edata structure:\n");
+	fflush(stdout);
+	B.NumVoters=6;
+	B.NumCands=5;
+	B.NumElections=1;
+	B.IgnoranceAmplitude=0.001;
+	TestEDataStructs(&B);
+}
+
 /*	runSingleTest(aSeed):	simulates User interation of a single
  *				scenario to help ensure output remains
  *				the same
@@ -5513,7 +5526,6 @@ main(int argc, char **argv)
 void runSingleTest(uint aSeed)
 {
 	extern void runSingleYeeTest(uint aSeed);
-	brdata B;
 
     	InitRand(aSeed);
 	BROutputMode = SORTMODE|ALLMETHS;
@@ -5523,12 +5535,7 @@ void runSingleTest(uint aSeed)
 	utilnumupper=15;
 	BRDriver();
 	runSingleYeeTest(aSeed);
-	printf("Test of randgen & other tests\n");
-	TestsOfRand();
-	printf("\nTest edata structure:\n"); fflush(stdout);
-	B.NumVoters=6; B.NumCands=5; B.NumElections=1;
-	B.IgnoranceAmplitude=0.001;
-	TestEDataStructs(&B);
+	runSelfTests();
 }
 
 /*	runTests():	simulates User interaction of multiple
