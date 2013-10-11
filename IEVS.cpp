@@ -2127,64 +2127,66 @@ be tested in 1 step using wordwide operations.
 
 EMETH UncoveredSet(edata *E /*A "covers" B if A beats a strict superset of those B beats.*/
 ){ /* side effects: UncoveredSt[], CoverMatrix[] */
-  int A,B,i,r;
-  if( E->NumCands > 4*sizeof(uint) ){
-    printf("UncoveredSet: too many candidates %d to use machine words(%d) to represent sets\n",
-	   E->NumCands,
-	   (int)(4*sizeof(uint)) );
-    printf("You could rewrite the code to use uint64s to try allow up to 64 canddts\n");
-    exit(EXIT_FAILURE);
-  }
-  if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
-  if(SchwartzWinner<0) SchwartzSet(E);
-  /*find cover relation:*/
-  for(A=0; A < (int)E->NumCands; A++){
-    for(B=0; B < (int)E->NumCands; B++) if(B!=A){
-	CoverMatrix[A*E->NumCands + B] = StrictSuperset(IBeat[A], IBeat[B]);
-    }
-    UncoveredSt[A] = TRUE; /*initialization*/
-  }
-  /*find UncoveredSt:*/
-  for(A=0; A < (int)E->NumCands; A++){
-    for(B=0; B < (int)E->NumCands; B++) if(B!=A){
-      if( CoverMatrix[B*E->NumCands+A] ){
-	UncoveredSt[A] = FALSE; break;
-      }
-    }
-  }
-  /*select random uncovered winner:*/
-  RandomlyPermute( E->NumCands, RandCandPerm );
-  for(i=E->NumCands -1; i>=0; i--){
-    if( !(UncoveredSt[i]?SchwartzMembs[i]:TRUE) ){
-      printf("bozo! i=%d NumCands=%d\n", i, E->NumCands);
-      printf("%d %d %d; %d %d %d; %d %d %d\n",
-	     E->MarginsMatrix[0*E->NumCands + 0],
-	     E->MarginsMatrix[0*E->NumCands + 1],
-	     E->MarginsMatrix[0*E->NumCands + 2],
-	     E->MarginsMatrix[1*E->NumCands + 0],
-	     E->MarginsMatrix[1*E->NumCands + 1],
-	     E->MarginsMatrix[1*E->NumCands + 2],
-	     E->MarginsMatrix[2*E->NumCands + 0],
-	     E->MarginsMatrix[2*E->NumCands + 1],
-	     E->MarginsMatrix[2*E->NumCands + 2]  );
-      printf("CopeWinOnlyWinner=%d\n",CopeWinOnlyWinner);
-      printf("Sc=%d%d%d\n", SchwartzMembs[0], SchwartzMembs[1], SchwartzMembs[2]);
-      printf("Un=%d%d%d\n", UncoveredSt[0], UncoveredSt[1], UncoveredSt[2]);
-    }
-    assert( UncoveredSt[i]?SchwartzMembs[i]:TRUE );
-    r = RandCandPerm[i];
-    if(UncoveredSt[r]){
-      RandomUncoveredMemb = r;
-      return r;
-    }
-  }
-  printf("yikes!\n");
-  printf("%d %d %d %d\n",
-	 E->MarginsMatrix[0*E->NumCands + 0],
-	 E->MarginsMatrix[1*E->NumCands + 0],
-	 E->MarginsMatrix[0*E->NumCands + 1],
-	 E->MarginsMatrix[1*E->NumCands + 1] );
-  return(-1);
+	int A,B,i,r;
+	if( E->NumCands > 4*sizeof(E->NumCands) ){
+		printf("UncoveredSet: too many candidates %d to use machine words(%d) to represent sets\n",
+			E->NumCands,
+			(int)(4*sizeof(E->NumCands)) );
+		printf("You could rewrite the code to use uint64s to try allow up to 64 canddts\n");
+		exit(EXIT_FAILURE);
+	}
+	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	if(SchwartzWinner<0) SchwartzSet(E);
+	/*find cover relation:*/
+	for(A=0; A < (int)E->NumCands; A++) {
+		for(B=0; B < (int)E->NumCands; B++)
+			if(B!=A) {
+				CoverMatrix[A*E->NumCands + B] = StrictSuperset(IBeat[A], IBeat[B]);
+			}
+		UncoveredSt[A] = TRUE; /*initialization*/
+	}
+	/*find UncoveredSt:*/
+	for(A=0; A < (int)E->NumCands; A++) {
+		for(B=0; B < (int)E->NumCands; B++)
+			if(B!=A) {
+				if( CoverMatrix[B*E->NumCands+A] ) {
+					UncoveredSt[A] = FALSE; break;
+				}
+			}
+	}
+	/*select random uncovered winner:*/
+	RandomlyPermute( E->NumCands, RandCandPerm );
+	for(i=E->NumCands -1; i>=0; i--){
+		if( !(UncoveredSt[i]?SchwartzMembs[i]:TRUE) ){
+			printf("bozo! i=%d NumCands=%d\n", i, E->NumCands);
+			printf("%d %d %d; %d %d %d; %d %d %d\n",
+				E->MarginsMatrix[0*E->NumCands + 0],
+				E->MarginsMatrix[0*E->NumCands + 1],
+				E->MarginsMatrix[0*E->NumCands + 2],
+				E->MarginsMatrix[1*E->NumCands + 0],
+				E->MarginsMatrix[1*E->NumCands + 1],
+				E->MarginsMatrix[1*E->NumCands + 2],
+				E->MarginsMatrix[2*E->NumCands + 0],
+				E->MarginsMatrix[2*E->NumCands + 1],
+				E->MarginsMatrix[2*E->NumCands + 2]  );
+			printf("CopeWinOnlyWinner=%d\n",CopeWinOnlyWinner);
+			printf("Sc=%d%d%d\n", SchwartzMembs[0], SchwartzMembs[1], SchwartzMembs[2]);
+			printf("Un=%d%d%d\n", UncoveredSt[0], UncoveredSt[1], UncoveredSt[2]);
+		}
+		assert( UncoveredSt[i]?SchwartzMembs[i]:TRUE );
+		r = RandCandPerm[i];
+		if(UncoveredSt[r]){
+			RandomUncoveredMemb = r;
+			return r;
+		}
+	}
+	printf("yikes!\n");
+	printf("%d %d %d %d\n",
+		E->MarginsMatrix[0*E->NumCands + 0],
+		E->MarginsMatrix[1*E->NumCands + 0],
+		E->MarginsMatrix[0*E->NumCands + 1],
+		E->MarginsMatrix[1*E->NumCands + 1] );
+	return(-1);
 }
 
 EMETH Bucklin(edata *E   /* canddt with over half the voters ranking him in top-k wins (for k minimal) */
@@ -3341,66 +3343,66 @@ is not disqualified; he is the winner.
 *****************************************/
 EMETH WoodallDAC(edata *E  /*Woodall: Monotonocity of single-seat preferential election rules, Discrete Applied Maths 77 (1997) 81-98.*/
 ){ /*side effects: WoodHashCount[],  WoodHashSet[], WoodSetPerm[] */
-  /* Hash Tab entries contain counter and set-code which is a single machine word. */
-   int v,c,k,r;
-   uint offset, s, x, h, numsets;
-   if( E->NumCands > 4*sizeof(uint) ){
-     printf("WoodallDAC: too many candidates %d to use machine words(%d) to represent sets\n",
-	    E->NumCands,
-	    (int)(4*sizeof(uint)) );
-     printf("You could rewrite the code to use uint64s to try allow up to 64 canddts\n");
-     exit(EXIT_FAILURE);
-   }
-   for(v=ARTINPRIME-1; v>=0; v--){ WoodHashCount[v] = 0; WoodHashSet[v] = 0; }
-   for(v=E->NumVoters-1; v>=0; v--){
-      s = 0;
-      offset = v*E->NumCands;
-      for(c=0; c < (int)E->NumCands; c++){
-         s |= (1<<(E->TopDownPrefs[offset+c]));
-         h = s%ARTINPRIME;
-	 assert( !EmptySet(s) );
-	 for(;;){
-	   x = WoodHashSet[h];
-	   if( EmptySet(x) ){ /* insert new set s into hash table */
-	     WoodHashSet[h] = s;  WoodHashCount[h] = 1;  break;
-	   }else if( x==s ){ /* already there so increment count */
-	     WoodHashCount[h]++;  break;
-	   }
-	   h++; /* hash table collision so walk ("linear probing") */
-	 }
-      }
-   }
-   numsets=0;
-   for(v=ARTINPRIME-1; v>=0; v--){
-     if( !EmptySet(WoodHashSet[v]) ){
-       WoodSetPerm[numsets] = v;
-       numsets++;
-     }
-   }
-   assert(numsets <= E->NumCands * E->NumVoters);
-   IntPermShellSortDown( numsets, (int*)WoodSetPerm, (int*)WoodHashCount );
-   s = WoodHashSet[WoodSetPerm[0]];
-   assert( !EmptySet(s) );
-   if(SingletonSet(s)){  goto DONE;  }
-   for(k=1; k<(int)numsets; k++){ /*decreasing order!*/
-      h = WoodSetPerm[k];
-      x = s & WoodHashSet[h];
-      if(!EmptySet(x)){
-	s = x;
+	/* Hash Tab entries contain counter and set-code which is a single machine word. */
+	int v,c,k,r;
+	uint offset, s, x, h, numsets;
+	if( E->NumCands > 4*sizeof(E->NumCands) ){
+		printf("WoodallDAC: too many candidates %d to use machine words(%d) to represent sets\n",
+			E->NumCands,
+			(int)(4*sizeof(E->NumCands)) );
+		printf("You could rewrite the code to use uint64s to try allow up to 64 canddts\n");
+		exit(EXIT_FAILURE);
+	}
+	for(v=ARTINPRIME-1; v>=0; v--){ WoodHashCount[v] = 0; WoodHashSet[v] = 0; }
+	for(v=E->NumVoters-1; v>=0; v--){
+			s = 0;
+			offset = v*E->NumCands;
+			for(c=0; c < (int)E->NumCands; c++) {
+				s |= (1<<(E->TopDownPrefs[offset+c]));
+				h = s%ARTINPRIME;
+				assert( !EmptySet(s) );
+				for(;;) {
+					x = WoodHashSet[h];
+					if( EmptySet(x) ){ /* insert new set s into hash table */
+						WoodHashSet[h] = s;  WoodHashCount[h] = 1;  break;
+					}else if( x==s ){ /* already there so increment count */
+						WoodHashCount[h]++;  break;
+					}
+					h++; /* hash table collision so walk ("linear probing") */
+				}
+			}
+	}
+	numsets=0;
+	for(v=ARTINPRIME-1; v>=0; v--){
+		if( !EmptySet(WoodHashSet[v]) ){
+			WoodSetPerm[numsets] = v;
+			numsets++;
+		}
+	}
+	assert(numsets <= E->NumCands * E->NumVoters);
+	IntPermShellSortDown( numsets, (int*)WoodSetPerm, (int*)WoodHashCount );
+	s = WoodHashSet[WoodSetPerm[0]];
+	assert( !EmptySet(s) );
 	if(SingletonSet(s)){  goto DONE;  }
-      }
-   }
+	for(k=1; k<(int)numsets; k++){ /*decreasing order!*/
+			h = WoodSetPerm[k];
+			x = s & WoodHashSet[h];
+			if(!EmptySet(x)) {
+				s = x;
+				if(SingletonSet(s)){  goto DONE;  }
+			}
+	}
  DONE: ;
-   /*printf("C%d/%d\n", CardinalitySet(s), E->NumCands);*/
-   /*It is extremely rare that s is not a singleton set.  In fact may never happen.*/
-   RandomlyPermute( E->NumCands, RandCandPerm );
-   for(k=E->NumCands -1; k>=0; k--){
-     r = RandCandPerm[k];
-     if( (s>>r)&1 ){
-       return r; /* return random set-element */
-     }
-   }
-   return(-1); /*failure*/
+	/*printf("C%d/%d\n", CardinalitySet(s), E->NumCands);*/
+	/*It is extremely rare that s is not a singleton set.  In fact may never happen.*/
+	RandomlyPermute( E->NumCands, RandCandPerm );
+	for(k=E->NumCands -1; k>=0; k--){
+		r = RandCandPerm[k];
+		if( (s>>r)&1 ){
+			return r; /* return random set-element */
+		}
+	}
+	return(-1); /*failure*/
 }
 
 /******** uber-routines which package many voting methods into one: **********/
