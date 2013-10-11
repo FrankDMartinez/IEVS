@@ -5536,6 +5536,8 @@ void runSingleTest(uint aSeed)
 	BRDriver();
 	runSingleYeeTest(aSeed);
 	runSelfTests();
+	LoadEldataFiles();
+	RWBRDriver();
 }
 
 /*	runTests():	simulates User interaction of multiple
