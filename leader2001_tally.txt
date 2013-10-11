@@ -1,0 +1,461 @@
+<!-- MHonArc v2.6.3 -->
+<!--X-Subject: And the winner is... -->
+<!--X-From-R13: Dnhy [vyyre <zbguNqrovna.bet> -->
+<!--X-Date: Thu, 29 Mar 2001 06:49:56 &#45;0600 -->
+<!--X-Message-Id: 985868721.2dfe1d5c@debian.org -->
+<!--X-Content-Type: text/plain -->
+<!--X-Head-End-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML//EN">
+<html>
+<head>
+<title>And the winner is...</title>
+<link rev="made" href="mailto:moth@debian.org">
+<link rel="index" href="maillist.html">
+<link rel="top" href="threads.html">
+<link rel="up" href="msg00159.html">
+<link rel="prev" href="msg00158.html">
+<link rel="next" href="msg00160.html">
+</head>
+<body>
+<!--X-Body-Begin-->
+<!--X-User-Header-->
+<!--X-User-Header-End-->
+<!--X-TopPNI-->
+<hr>
+<form method="POST" action="http://lists.debian.org/cgi-bin/spam-report.pl">
+<input type="hidden" name="listname" value="debian-vote" />
+<input type="hidden" name="msg" value="msg00159.html" />
+<input type="hidden" name="date" value="2001/03" />
+<input type="submit" value="Report as spam" style="float: right"  />
+
+[<a href="msg00158.html">Date Prev</a>][<a href="msg00160.html">Date Next</a>]
+[<a href="msg00158.html">Thread Prev</a>][<a href="msg00160.html">Thread Next</a>]
+[<a href="maillist.html#00159">Date Index</a>]
+[<a href="threads.html#00159">Thread Index</a>]
+</form>
+
+
+<!--X-TopPNI-End-->
+<!--X-MsgBody-->
+<!--X-Subject-Header-Begin-->
+<h1>And the winner is...</h1>
+<hr>
+<!--X-Subject-Header-End-->
+<!--X-Head-of-Message-->
+<ul>
+<li><em>To</em>: <a href="mailto:debian-devel-announce%40lists.debian.org">debian-devel-announce@lists.debian.org</a>, <a href="mailto:debian-vote%40lists.debian.org">debian-vote@lists.debian.org</a></li>
+<li><em>Subject</em>: And the winner is...</li>
+<li><em>From</em>: Raul Miller &lt;<a href="mailto:moth%40debian.org">moth@debian.org</a>&gt;</li>
+<li><em>Date</em>: Thu, 29 Mar 2001 07:47:47 -0500</li>
+<li><em>Message-id</em>: &lt;<a href="msg00159.html">985868721.2dfe1d5c@debian.org</a>&gt;</li>
+<li><em>Reply-to</em>: Please think before replying &lt;<a href="mailto:debian-vote%40lists.debian.org">debian-vote@lists.debian.org</a>&gt;</li>
+<li><em>User-agent</em>: Mutt/1.3.12i</li>
+</ul>
+<!--X-Head-of-Message-End-->
+<!--X-Head-Body-Sep-Begin-->
+<hr>
+<!--X-Head-Body-Sep-End-->
+<!--X-Body-of-Message-->
+<pre>Ok, voting is over, Ben Collins is our new leader.
+
+Congratulations to everyone who participated, and especially Ben.
+
+311 people voted, here's a summary of the tallies:
+
+Choice #1: Branden Robinson
+        is prefered to Choice #2: Anand Kumria (165-31)
+        is prefered to Choice #4: Bdale Garbee (133-118)
+        is prefered to Choice #5: None Of The Above (158-25)
+Choice #2: Anand Kumria
+        is prefered to Choice #5: None Of The Above (98-59)
+Choice #3: Ben Collins
+        is prefered to Choice #1: Branden Robinson (149-112)
+        is prefered to Choice #2: Anand Kumria (175-24)
+        is prefered to Choice #4: Bdale Garbee (145-115)
+        is prefered to Choice #5: None Of The Above (162-20)
+Choice #4: Bdale Garbee
+        is prefered to Choice #2: Anand Kumria (178-20)
+        is prefered to Choice #5: None Of The Above (179-10)
+Choice #5: None Of The Above
+
+Here's how people voted:
+
+  Choice #1: Branden Robinson
+/  Choice #2: Anand Kumria
+|/  Choice #3: Ben Collins
+||/  Choice #4: Bdale Garbee
+|||/  Choice #5: None Of The Above
+||||/
+23-14 Clint Adams &lt;schizo@debian.org&gt;
+--21- Wichert Akkerman &lt;wakkerma@debian.org&gt;
+4312- Bradley Alexander &lt;storm@debian.org&gt;
+2413- Cosimo Alfarano &lt;kalfa@debian.org&gt;
+3-21- Stefan Alfredsson &lt;alfs@debian.org&gt;
+35124 Brian Almeida &lt;bma@debian.org&gt;
+2-1-- Tom Amundsen &lt;tca@debian.org&gt;
+35214 Ben Armstrong &lt;synrg@debian.org&gt;
+--12- Enrique Arnuncio &lt;era@debian.org&gt;
+24315 Luis Arocha &lt;data@debian.org&gt;
+--21- Richard Atterer &lt;atterer@debian.org&gt;
+4321- Pablo Averbuj &lt;pablo@debian.org&gt;
+34215 Paul Bame &lt;bame@debian.org&gt;
+13425 Denis Barbier &lt;barbier@debian.org&gt;
+2-1-3 Brian Bassett &lt;brianb@debian.org&gt;
+14325 Douglas Bates &lt;bates@debian.org&gt;
+--12- Roland Bauerschmidt &lt;rb@debian.org&gt;
+54213 Michael Beattie &lt;mjb@debian.org&gt;
+53124 Guenter Bechly &lt;gbechly@debian.org&gt;
+25134 Cord Beermann &lt;cord@debian.org&gt;
+-4123 Darren Benham &lt;gecko@debian.org&gt;
+3-21- Martin Bialasinski &lt;martinb@debian.org&gt;
+35124 Robert Bihlmeyer &lt;robbe@debian.org&gt;
+24135 Julien Blache &lt;jblache@debian.org&gt;
+14235 Bastian Blank &lt;waldi@debian.org&gt;
+15324 Oliver Bolzer &lt;oliver@debian.org&gt;
+35214 Ed Boraas &lt;ed@debian.org&gt;
+23145 Maurizio Boriani &lt;baux@debian.org&gt;
+2-1-- Charl Botha &lt;cpbotha@debian.org&gt;
+24315 Maitland Bottoms &lt;bottoms@debian.org&gt;
+13524 Jean Bourdaret &lt;casi@debian.org&gt;
+45213 Richard Braakman &lt;dark@debian.org&gt;
+---1- Jeff Breidenbach &lt;jab@debian.org&gt;
+3-12- Adrian Bridgett &lt;bridgett@debian.org&gt;
+14523 Marcus Brinkmann &lt;brinkmd@debian.org&gt;
+15324 Mark Brown &lt;broonie@debian.org&gt;
+2-13- Martin Buck &lt;mbuck@debian.org&gt;
+2-1-3 Adrian Bunk &lt;bunk@debian.org&gt;
+3421- Bart Bunting &lt;bart@debian.org&gt;
+15234 Daniel Burrows &lt;dburrows@debian.org&gt;
+1-23- Ben Burton &lt;bab@debian.org&gt;
+23145 Thomas Bushnell &lt;tb@debian.org&gt;
+2413- Chris Butler &lt;chrisb@debian.org&gt;
+2-1-- Eric Cain &lt;ecain@debian.org&gt;
+--12- Joseph Carter &lt;knghtbrd@debian.org&gt;
+2-413 Giacomo Catenazzi &lt;cate@debian.org&gt;
+24135 Patrick Caulfield &lt;patrick@debian.org&gt;
+--21- Petr Cech &lt;cech@debian.org&gt;
+----1 Philip Charles &lt;philipc@debian.org&gt;
+3-21- Randolph Chung &lt;tausq@debian.org&gt;
+24135 Ashley Clark &lt;aclark@debian.org&gt;
+1--23 David Coe &lt;davidc@debian.org&gt;
+54123 Ben Collins &lt;bcollins@debian.org&gt;
+35421 Claire Connelly &lt;cmc@debian.org&gt;
+34125 Peter Crystal &lt;darke@debian.org&gt;
+-312- Marco D'Itri &lt;md@debian.org&gt;
+34125 Michel Daenzer &lt;daenzer@debian.org&gt;
+34125 Ray Dassen &lt;jdassen@debian.org&gt;
+14235 Stijn De Bekker &lt;stijn@debian.org&gt;
+--1-- Adam Di Carlo &lt;aph@debian.org&gt;
+132-- Federico Di Gregorio &lt;fog@debian.org&gt;
+52413 Drake Diedrich &lt;dld@debian.org&gt;
+14253 Scott Dier &lt;sdier@debian.org&gt;
+1--2- Steve Dobson &lt;dobbo@debian.org&gt;
+43125 Randall Donald &lt;rdonald@debian.org&gt;
+3-21- Michael Dorman &lt;mdorman@debian.org&gt;
+24135 Tyson Dowd &lt;tyson@debian.org&gt;
+35214 Joe Drew &lt;drew@debian.org&gt;
+--213 Dirk Eddelbuettel &lt;edd@debian.org&gt;
+2-31- Mark Eichin &lt;eichin@debian.org&gt;
+24315 David Engel &lt;david@debian.org&gt;
+1-23- Carey Evans &lt;carey@debian.org&gt;
+41235 Andrea Fanfani &lt;andrea@debian.org&gt;
+24135 Ron Farrer &lt;rbf@debian.org&gt;
+24135 John Ferlito &lt;johnf@debian.org&gt;
+4321- Luca Filipozzi &lt;lfilipoz@debian.org&gt;
+14235 Decklin Foster &lt;decklin@debian.org&gt;
+1---- Philipp Frauenfelder &lt;pfrauenf@debian.org&gt;
+3-12- Turbo Fredriksson &lt;turbo@debian.org&gt;
+2314- Stephen Frost &lt;sfrost@debian.org&gt;
+3412- Gerfried Fuchs &lt;alfie@debian.org&gt;
+---1- Peter Galbraith &lt;psg@debian.org&gt;
+34215 Bdale Garbee &lt;bdale@debian.org&gt;
+25314 Hector Garcia &lt;hector@debian.org&gt;
+23145 Igor Genibel &lt;igenibel@debian.org&gt;
+--21- Risko Gergely &lt;risko@debian.org&gt;
+---12 Ben Gertzfield &lt;che@debian.org&gt;
+3-214 Julian Gilbey &lt;jdg@debian.org&gt;
+14235 Eric Gillespie &lt;epg@debian.org&gt;
+35214 Andrew Gray &lt;ajpg@debian.org&gt;
+15234 Steve Greenland &lt;stevegr@debian.org&gt;
+34125 Stefan Gybas &lt;sgybas@debian.org&gt;
+2413- Sami Haahtinen &lt;ressu@debian.org&gt;
+14235 Hugo Haas &lt;hugo@debian.org&gt;
+35214 Anders Hammarquist &lt;iko@debian.org&gt;
+24135 Christian Hammers &lt;ch@debian.org&gt;
+1423- Chris Hanson &lt;cph@debian.org&gt;
+1-23- Marcel Harkema &lt;marcel@debian.org&gt;
+1--23 Sam Hartman &lt;hartmans@debian.org&gt;
+13245 Shuzo Hatta &lt;hattas@debian.org&gt;
+13245 Masayuki Hatta &lt;mhatta@debian.org&gt;
+1432- Paul Hedderly &lt;prh@debian.org&gt;
+24135 Tollef Heen &lt;tfheen@debian.org&gt;
+14235 Rapha&euml;L Hertzog &lt;hertzog@debian.org&gt;
+24315 Joey Hess &lt;joeyh@debian.org&gt;
+2-13- Benjamin Hill &lt;mako@debian.org&gt;
+35214 Bob Hilliard &lt;hilliard@debian.org&gt;
+2413- Florian Hinzman &lt;fh@debian.org&gt;
+2-31- Falk Hueffner &lt;falk@debian.org&gt;
+23415 David Huggins-Daines &lt;dhd@debian.org&gt;
+53124 Zephaniah Hull &lt;warp@debian.org&gt;
+14235 Michael Ivey &lt;ivey@debian.org&gt;
+3-21- Dan Jacobowitz &lt;dan@debian.org&gt;
+14523 Scott Jaderholm &lt;jsj@debian.org&gt;
+3412- Ulf Jaenicke-Roessler &lt;ujr@debian.org&gt;
+24135 Lenart Janos &lt;ocsi@debian.org&gt;
+15234 Arto Jantunen &lt;viiru@debian.org&gt;
+53214 Lamont Jones &lt;lamont@debian.org&gt;
+13425 Norman Jordan &lt;njordan@debian.org&gt;
+15234 Antti-Juhani Kaijanaho &lt;ajk@debian.org&gt;
+24153 Atsushi Kamoshida &lt;kamop@debian.org&gt;
+1-2-3 Peter Karlsson &lt;peterk@debian.org&gt;
+--1-2 Peter Kelemen &lt;fuji@debian.org&gt;
+1--2- Klaus Kettner &lt;kk@debian.org&gt;
+24135 Takuo Kitame &lt;kitame@debian.org&gt;
+23145 Timshel Knoll &lt;timshel@debian.org&gt;
+1-2-- Pekka Knuutila &lt;pa@debian.org&gt;
+4132- Daniel Kobras &lt;kobras@debian.org&gt;
+231-- Alexander Koch &lt;efraim@debian.org&gt;
+34125 Tibor Koleszar &lt;oldw@debian.org&gt;
+--213 Arthur Korn &lt;arthur@debian.org&gt;
+1324- Richard Kreckel &lt;kreckel@debian.org&gt;
+13245 Tomohiro Kubota &lt;kubota@debian.org&gt;
+3-124 Christian Kurz &lt;shorty@debian.org&gt;
+14325 Rafael Laboissiere &lt;rafael@debian.org&gt;
+34125 Corrin Lakeland &lt;lakeland@debian.org&gt;
+3-124 Christoph Lameter &lt;clameter@debian.org&gt;
+24135 Torsten Landschoff &lt;torsten@debian.org&gt;
+4132- Edward Lang &lt;edlang@debian.org&gt;
+2413- Steve Langasek &lt;vorlon@debian.org&gt;
+1-2-3 Siggi Langauf &lt;siggi@debian.org&gt;
+25134 Christopher Lawrence &lt;lawrencc@debian.org&gt;
+14235 An Le &lt;anle@debian.org&gt;
+---1- Tom Lear &lt;lear@debian.org&gt;
+1-32- Ron Lee &lt;ron@debian.org&gt;
+3-21- Remi Lefebvre &lt;remi@debian.org&gt;
+45123 Carsten Leonhardt &lt;leo@debian.org&gt;
+34215 John Leuner &lt;jewel@debian.org&gt;
+1432- Christian Leutloff &lt;leutloff@debian.org&gt;
+1-234 James Lewismoss &lt;dres@debian.org&gt;
+4-123 Nicolas Lichtmaier &lt;nick@debian.org&gt;
+54213 Kevin Lindsay &lt;klindsay@debian.org&gt;
+3-12- John Lines &lt;jlines@debian.org&gt;
+3-124 Nils Lohner &lt;lohner@debian.org&gt;
+2-314 Will Lowe &lt;lowe@debian.org&gt;
+24135 Robert Luberda &lt;robert@debian.org&gt;
+--123 Sven Luther &lt;luther@debian.org&gt;
+14523 Jim Lynch &lt;jwl@debian.org&gt;
+14325 Pete Lypkie &lt;plypkie@debian.org&gt;
+3412- Gergely Madarasz &lt;gorgo@debian.org&gt;
+52413 Keita Maehara &lt;maehara@debian.org&gt;
+---12 Marcelo Magallon &lt;mmagallo@debian.org&gt;
+2-1-- Aigars Mahinovs &lt;aigarius@debian.org&gt;
+2-13- Peter Makholm &lt;makholm@debian.org&gt;
+1-234 Jordi Mallach &lt;jordi@debian.org&gt;
+32145 Tony Mancill &lt;tmancill@debian.org&gt;
+14235 Jerome Marant &lt;jerome@debian.org&gt;
+24135 Christian Marillat &lt;marillat@debian.org&gt;
+14235 Mike Markley &lt;madhack@debian.org&gt;
+3421- Bradley Marshall &lt;bradm@debian.org&gt;
+3421- Christoph Martin &lt;chrism@debian.org&gt;
+--123 Dale Martin &lt;dmartin@debian.org&gt;
+34125 Daniel Martin &lt;fizbin@debian.org&gt;
+1-2-- Paul Martin &lt;pm@debian.org&gt;
+24135 Roland Mas &lt;lolando@debian.org&gt;
+24315 Gordon Matzigkeit &lt;gord@debian.org&gt;
+34125 Brian May &lt;bam@debian.org&gt;
+15234 Thom May &lt;thom@debian.org&gt;
+2-13- Rene Mayrhofer &lt;rmayr@debian.org&gt;
+3421- Brian Mays &lt;brian@debian.org&gt;
+15423 David Maze &lt;dmaze@debian.org&gt;
+231-- Jonathan McDowell &lt;noodles@debian.org&gt;
+14325 Glenn McGrath &lt;bug1@debian.org&gt;
+34215 Steve McIntyre &lt;93sam@debian.org&gt;
+14235 Robert McQueen &lt;robot101@debian.org&gt;
+-2-13 Michael Meskes &lt;meskes@debian.org&gt;
+14532 Martin Michlmayr &lt;tbm@debian.org&gt;
+15234 Raul Miller &lt;moth@debian.org&gt;
+-21-- Jim Mintha &lt;jmintha@debian.org&gt;
+13524 Martin Mitchell &lt;martin@debian.org&gt;
+32-14 Hamish Moffatt &lt;hamish@debian.org&gt;
+1-32- Paolo Molaro &lt;lupus@debian.org&gt;
+15324 Lantz Moore &lt;lmoore@debian.org&gt;
+43125 Ivan Moore &lt;rkrusty@debian.org&gt;
+2--1- Stephen Moraco &lt;stephen@debian.org&gt;
+54123 Guillaume Morin &lt;gemorin@debian.org&gt;
+54213 Ryan Murray &lt;rmurray@debian.org&gt;
+1-2-- Kenshi Muto &lt;kmuto@debian.org&gt;
+14253 Ishikawa Mutsumi &lt;ishikawa@debian.org&gt;
+2413- Hayao Nakahara &lt;nakahara@debian.org&gt;
+2-134 Gopal Narayanan &lt;gopal@debian.org&gt;
+43215 Jonathon Nelson &lt;john@debian.org&gt;
+----1 Mark Ng &lt;ng@debian.org&gt;
+1-234 Dan Nguyen &lt;dnn@debian.org&gt;
+2413- Takatsugu Nokubi &lt;knok@debian.org&gt;
+14235 Gustavo Noronha &lt;kov@debian.org&gt;
+14235 Gregory Norris &lt;adric@debian.org&gt;
+43215 Peter Novodvorsky &lt;nidd@debian.org&gt;
+4231- Brendan O'Dea &lt;bod@debian.org&gt;
+43512 William Ono &lt;wmono@debian.org&gt;
+2-1-- Susumu Osawa &lt;susumuo@debian.org&gt;
+--1-- Ossama Othman &lt;ossama@debian.org&gt;
+15324 Patrick Ouellette &lt;pouelle@debian.org&gt;
+1-2-- Marcin Owsiany &lt;porridge@debian.org&gt;
+54213 Peter Palfrader &lt;weasel@debian.org&gt;
+2-1-3 Jason Parker &lt;henry@debian.org&gt;
+2-13- Othmar Pasteka &lt;othmar@debian.org&gt;
+24315 James Penny &lt;jpenny@debian.org&gt;
+45321 Frederic Peters &lt;fpeters@debian.org&gt;
+14235 Doug Porter &lt;dsp@debian.org&gt;
+--12- Davide Puricelli &lt;evo@debian.org&gt;
+14523 Karl Ramm &lt;kcr@debian.org&gt;
+34125 Nils Rennebarth &lt;nils@debian.org&gt;
+25143 Steven Robbins &lt;smr@debian.org&gt;
+15432 Branden Robinson &lt;branden@debian.org&gt;
+35124 John Robinson &lt;jaqque@debian.org&gt;
+3-124 Josip Rodin &lt;joy@debian.org&gt;
+3-12- Adam Rogoyski &lt;rogoyski@debian.org&gt;
+24315 Brian Russo &lt;wolfie@debian.org&gt;
+25134 Changwoo Ryu &lt;cwryu@debian.org&gt;
+24513 Davide Salvetti &lt;salve@debian.org&gt;
+42513 Craig Sanders &lt;cas@debian.org&gt;
+24315 Taketoshi Sano &lt;sano@debian.org&gt;
+24135 Lonnie Sauter &lt;sauter@debian.org&gt;
+15234 Jorgen Schaefer &lt;forcer@debian.org&gt;
+2-13- Dale Scheetz &lt;dwarf@debian.org&gt;
+1-23- Roderick Schertler &lt;rjs@debian.org&gt;
+2-314 Nikita Schmidt &lt;cetus@debian.org&gt;
+23145 Kenneth Schmidt &lt;charon@debian.org&gt;
+2431- Dennis Schoen &lt;dennis@debian.org&gt;
+3-21- Thomas Schoepf &lt;schoepf@debian.org&gt;
+34125 Alain Schroeder &lt;alain@debian.org&gt;
+--12- Andreas Schuldei &lt;andreas@debian.org&gt;
+14235 Bart Schuller &lt;schuller@debian.org&gt;
+3-21- Martin Schulze &lt;joey@debian.org&gt;
+1-2-- Eric Sharkey &lt;sharkey@debian.org&gt;
+23145 Chanop Silpa-Anan &lt;chanop@debian.org&gt;
+3-21- Craig Small &lt;csmall@debian.org&gt;
+1-2-- Roger So &lt;rogerso@debian.org&gt;
+1432- Karl Soderstrom &lt;ks@debian.org&gt;
+35412 Manoj Srivastava &lt;srivasta@debian.org&gt;
+2431- Joop Stakenborg &lt;pa3aba@debian.org&gt;
+3124- Fredrik Steen &lt;stone@debian.org&gt;
+2-13- Christian Steigies &lt;cts@debian.org&gt;
+24135 Lars Steinke &lt;lss@debian.org&gt;
+---12 Robert Stone &lt;talby@debian.org&gt;
+15423 Andrew Stribblehill &lt;ads@debian.org&gt;
+24135 Stevie Strickland &lt;sstrick@debian.org&gt;
+25314 Jim Studt &lt;jstudt@debian.org&gt;
+15243 Jean-Philippe Sugarbroad &lt;taral@debian.org&gt;
+-312- Christian Surchi &lt;csurchi@debian.org&gt;
+3421- Dave Swegen &lt;dsw@debian.org&gt;
+24135 Yasuhiro Take &lt;take@debian.org&gt;
+24315 Masato Taruishi &lt;taru@debian.org&gt;
+1---- Pavel Tcholakov &lt;pavel@debian.org&gt;
+2413- Andreas Tille &lt;tille@debian.org&gt;
+1432- Ivo Timmermans &lt;ivo@debian.org&gt;
+4-213 Anthony Towns &lt;ajt@debian.org&gt;
+2--13 John Travers &lt;jtravs@debian.org&gt;
+4312- James Treacy &lt;treacy@debian.org&gt;
+1-23- Ralf Treinen &lt;treinen@debian.org&gt;
+--213 Philippe Troin &lt;phil@debian.org&gt;
+---12 James Troup &lt;troup@debian.org&gt;
+13425 Junichi Uekawa &lt;dancer@debian.org&gt;
+35214 Fumitoshi Ukai &lt;ukai@debian.org&gt;
+4231- Joost Van Baal &lt;joostvb@debian.org&gt;
+34125 Remco Van De Meent &lt;remco@debian.org&gt;
+35214 Martijn Van De Streek &lt;martijn@debian.org&gt;
+2-13- Peter Van Eynde &lt;pvaneynd@debian.org&gt;
+3--12 Filip Van Raemdonck &lt;mechanix@debian.org&gt;
+24315 Paul Van Tilburg &lt;paulvt@debian.org&gt;
+14235 Matej Vela &lt;vela@debian.org&gt;
+14235 Wouter Verhelst &lt;wouter@debian.org&gt;
+24531 Matthew Vernon &lt;matthew@debian.org&gt;
+-312- Santiago Vila &lt;sanvila@debian.org&gt;
+2-134 Tommi Virtanen &lt;tv@debian.org&gt;
+1--23 Michael Vogt &lt;mvo@debian.org&gt;
+45123 Jochen Voss &lt;voss@debian.org&gt;
+1432- Jaldhar Vyas &lt;jaldhar@debian.org&gt;
+1432- Colin Watson &lt;cjwatson@debian.org&gt;
+2--13 Zhao Way &lt;zw@debian.org&gt;
+1-2-- Shane Wegner &lt;shane@debian.org&gt;
+45213 David Welton &lt;davidw@debian.org&gt;
+32145 Jim Westveer &lt;jwest@debian.org&gt;
+1-234 David Whedon &lt;dwhedon@debian.org&gt;
+14235 Pawel Wiecek &lt;coven@debian.org&gt;
+34215 Matthew Wilcox &lt;willy@debian.org&gt;
+1423- Lars Wirzenius &lt;lars@debian.org&gt;
+2-13- Anthony Wong &lt;ypwong@debian.org&gt;
+14235 Robert Woodcock &lt;rcw@debian.org&gt;
+54213 Herbert Xu &lt;herbert@debian.org&gt;
+--213 Rick Younie &lt;younie@debian.org&gt;
+--1-- Guanghui Yu &lt;ygh@debian.org&gt;
+15324 Milan Zamazal &lt;pdm@debian.org&gt;
+---1- Enrique Zanardi &lt;ezanard@debian.org&gt;
+2341- Stephen Zander &lt;gibreel@debian.org&gt;
+2-13- Matt Zimmerman &lt;mdz@debian.org&gt;
+2-31- Anton Zinoviev &lt;zinoviev@debian.org&gt;
+1---2 Bas Zoetekouw &lt;bas@debian.org&gt;
+2-1-- Itai Zukerman &lt;zukerman@debian.org&gt;
+--21- Detlev Zundel &lt;dzu@debian.org&gt;
+
+Thanks,
+
+-- 
+Raul
+
+
+</pre>
+<!--X-Body-of-Message-End-->
+<!--X-MsgBody-End-->
+<!--X-Follow-Ups-->
+<hr />
+<strong>Reply to:</strong>
+<ul>
+  <li><a href="mailto:debian-vote&#64;lists.debian.org?In-Reply-To=&lt;985868721.2dfe1d5c@debian.org&gt;&amp;Subject=Re:%20And the winner is...">debian-vote&#64;lists.debian.org</a></li>
+  <li><a href="mailto:moth@debian.org?In-Reply-To=&lt;985868721.2dfe1d5c@debian.org&gt;&amp;Subject=Re:%20And the winner is...&amp;CC=debian-vote&#64;lists.debian.org">Raul Miller (on-list)</a></li>
+  <li><a href="mailto:moth@debian.org?In-Reply-To=&lt;985868721.2dfe1d5c@debian.org&gt;&amp;Subject=Re:%20And the winner is...">Raul Miller (off-list)</a></li>
+</ul>
+<hr />
+<ul><li><strong>Follow-Ups</strong>:
+<ul>
+<li><strong><a name="00160" href="msg00160.html">Re: And the winner is...</a></strong>
+<ul><li><em>From:</em> Ben Collins &lt;bcollins@debian.org&gt;</li></ul></li>
+<li><strong><a name="00161" href="msg00161.html">Re: And the winner is...</a></strong>
+<ul><li><em>From:</em> Brian Russo &lt;brusso@phys.hawaii.edu&gt;</li></ul></li>
+<li><strong><a name="00162" href="msg00162.html">Re: And the winner is...</a></strong>
+<ul><li><em>From:</em> Nils Lohner &lt;lohner@ecf.teradyne.com&gt;</li></ul></li>
+<li><strong><a name="00169" href="msg00169.html">Re: And the winner is...</a></strong>
+<ul><li><em>From:</em> Domenico Andreoli &lt;cavok@filibusta.crema.unimi.it&gt;</li></ul></li>
+<li><strong><a name="00176" href="msg00176.html">Our counting procedure</a></strong>
+<ul><li><em>From:</em> &quot;Marcelo E. Magallon&quot; &lt;mmagallo@debian.org&gt;</li></ul></li>
+</ul></li></ul>
+<!--X-Follow-Ups-End-->
+<!--X-References-->
+<!--X-References-End-->
+<!--X-BotPNI-->
+<ul>
+<li>Prev by Date:
+<strong><a href="msg00158.html">Re: End of leader vote</a></strong>
+</li>
+<li>Next by Date:
+<strong><a href="msg00160.html">Re: And the winner is...</a></strong>
+</li>
+<li>Previous by thread:
+<strong><a href="msg00158.html">Re: End of leader vote</a></strong>
+</li>
+<li>Next by thread:
+<strong><a href="msg00160.html">Re: And the winner is...</a></strong>
+</li>
+<li>Index(es):
+<ul>
+<li><a href="maillist.html#00159"><strong>Date</strong></a></li>
+<li><a href="threads.html#00159"><strong>Thread</strong></a></li>
+</ul>
+</li>
+</ul>
+
+<!--X-BotPNI-End-->
+<!--X-User-Footer-->
+<!--X-User-Footer-End-->
+</body>
+</html>
