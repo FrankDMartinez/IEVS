@@ -1147,7 +1147,7 @@ all are subroutines with a common format - here is the format (which is all subs
 the convenient data structure "edata"):
 input:
 uint NumVoters;
-uint NumCands;
+uint64 NumCands;
 
 uint TopDownPrefs[NumVoters*NumCands];
 Entry x*NumCands+y says the candidate who is the (y-1)th choice of voter x, x=0..NumVoters-1.
@@ -1316,7 +1316,7 @@ void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have be
 
 typedef struct dum1 {
   uint NumVoters;
-  uint NumCands;
+  uint64 NumCands;
   uint TopDownPrefs[MaxNumCands*MaxNumVoters];
   uint CandRankings[MaxNumCands*MaxNumVoters];
   real Score[MaxNumCands*MaxNumVoters];
@@ -1332,36 +1332,37 @@ typedef struct dum1 {
   real MargArmy[MaxNumCands*MaxNumCands];
 } edata;
 
-void PrintEdata(FILE *F, edata *E){ /* prints out the edata */
+void PrintEdata(FILE *F, edata *E)
+{ /* prints out the edata */
 	int v;
 	uint j;
-	fprintf(F, "NumVoters=%d  NumCands=%d\n", E->NumVoters, E->NumCands);
-  for(v=0; v<(int)E->NumVoters; v++){
-    fprintf(F, "Voter %2d:\n",v);
-    fprintf(F, "Utility: ");
-    for(j=0; j < E->NumCands; j++){  fprintf(F, "%6.3f", E->Utility[v*E->NumCands + j]);  }
-    fprintf(F, "\n");
-    fprintf(F, "PercUti: ");
-    for(j=0; j < E->NumCands; j++){  fprintf(F, "%6.3f", E->PerceivedUtility[v*E->NumCands + j]);  }
-    fprintf(F, "\n");
-    fprintf(F, "RangeScore: ");
-    for(j=0; j < E->NumCands; j++){  fprintf(F, "%6.3f", E->Score[v*E->NumCands + j]);  }
-    fprintf(F, "\n");
-    fprintf(F, "CandRank: ");
-    for(j=0; j < E->NumCands; j++){  fprintf(F, "%2d", E->CandRankings[v*E->NumCands + j]);  }
-    fprintf(F, "\n");
-    fprintf(F, "TopDown: ");
-    for(j=0; j < E->NumCands; j++){  fprintf(F, "%2d", E->TopDownPrefs[v*E->NumCands + j]);  }
-    fprintf(F, "\n");
-    fprintf(F, "Approve: ");
-    for(j=0; j < E->NumCands; j++){  fprintf(F, "%2d", E->Approve[v*E->NumCands + j] ? 1:0);  }
-    fprintf(F, "\n");
-    fprintf(F, "Approve2: ");
-    for(j=0; j < E->NumCands; j++){  fprintf(F, "%2d", E->Approve2[v*E->NumCands + j] ? 1:0);  }
-    fprintf(F, "\n");
-  }
-  /*???more?*/
-  fflush(F);
+	fprintf(F, "NumVoters=%d  NumCands=%lld\n", E->NumVoters, E->NumCands);
+	for(v=0; v<(int)E->NumVoters; v++){
+		fprintf(F, "Voter %2d:\n",v);
+		fprintf(F, "Utility: ");
+		for(j=0; j < E->NumCands; j++){  fprintf(F, "%6.3f", E->Utility[v*E->NumCands + j]);  }
+		fprintf(F, "\n");
+		fprintf(F, "PercUti: ");
+		for(j=0; j < E->NumCands; j++){  fprintf(F, "%6.3f", E->PerceivedUtility[v*E->NumCands + j]);  }
+		fprintf(F, "\n");
+		fprintf(F, "RangeScore: ");
+		for(j=0; j < E->NumCands; j++){  fprintf(F, "%6.3f", E->Score[v*E->NumCands + j]);  }
+		fprintf(F, "\n");
+		fprintf(F, "CandRank: ");
+		for(j=0; j < E->NumCands; j++){  fprintf(F, "%2d", E->CandRankings[v*E->NumCands + j]);  }
+		fprintf(F, "\n");
+		fprintf(F, "TopDown: ");
+		for(j=0; j < E->NumCands; j++){  fprintf(F, "%2d", E->TopDownPrefs[v*E->NumCands + j]);  }
+		fprintf(F, "\n");
+		fprintf(F, "Approve: ");
+		for(j=0; j < E->NumCands; j++){  fprintf(F, "%2d", E->Approve[v*E->NumCands + j] ? 1:0);  }
+		fprintf(F, "\n");
+		fprintf(F, "Approve2: ");
+		for(j=0; j < E->NumCands; j++){  fprintf(F, "%2d", E->Approve2[v*E->NumCands + j] ? 1:0);  }
+		fprintf(F, "\n");
+	}
+	/*???more?*/
+	fflush(F);
 }
 
 #define EMETH int  /* allows fgrep EMETH IEVS.c to find out what Election methods now available */
@@ -2125,14 +2126,14 @@ Now an order of magnitude faster assuming MaxNumCands<sizeof(uint)*4 because set
 be tested in 1 step using wordwide operations.
 ****/
 
-EMETH UncoveredSet(edata *E /*A "covers" B if A beats a strict superset of those B beats.*/
-){ /* side effects: UncoveredSt[], CoverMatrix[] */
+EMETH UncoveredSet(edata *E /*A "covers" B if A beats a strict superset of those B beats.*/)
+{ /* side effects: UncoveredSt[], CoverMatrix[] */
 	int A,B,i,r;
-	if( E->NumCands > 4*sizeof(E->NumCands) ){
-		printf("UncoveredSet: too many candidates %d to use machine words(%d) to represent sets\n",
+	if( E->NumCands > 4*sizeof(E->NumCands) ) {
+		printf("UncoveredSet: too many candidates %lld to use machine words(%d) to represent sets\n",
 			E->NumCands,
 			(int)(4*sizeof(E->NumCands)) );
-		printf("You could rewrite the code to use uint64s to try allow up to 64 canddts\n");
+		printf("You could rewrite the code to use uint128s to try allow up to 128 canddts\n");
 		exit(EXIT_FAILURE);
 	}
 	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
@@ -2157,8 +2158,8 @@ EMETH UncoveredSet(edata *E /*A "covers" B if A beats a strict superset of those
 	/*select random uncovered winner:*/
 	RandomlyPermute( E->NumCands, RandCandPerm );
 	for(i=E->NumCands -1; i>=0; i--){
-		if( !(UncoveredSt[i]?SchwartzMembs[i]:TRUE) ){
-			printf("bozo! i=%d NumCands=%d\n", i, E->NumCands);
+		if( !(UncoveredSt[i]?SchwartzMembs[i]:TRUE) ) {
+			printf("bozo! i=%d NumCands=%lld\n", i, E->NumCands);
 			printf("%d %d %d; %d %d %d; %d %d %d\n",
 				E->MarginsMatrix[0*E->NumCands + 0],
 				E->MarginsMatrix[0*E->NumCands + 1],
@@ -3346,11 +3347,11 @@ EMETH WoodallDAC(edata *E  /*Woodall: Monotonocity of single-seat preferential e
 	/* Hash Tab entries contain counter and set-code which is a single machine word. */
 	int v,c,k,r;
 	uint offset, s, x, h, numsets;
-	if( E->NumCands > 4*sizeof(E->NumCands) ){
-		printf("WoodallDAC: too many candidates %d to use machine words(%d) to represent sets\n",
+	if( E->NumCands > 4*sizeof(E->NumCands) ) {
+		printf("WoodallDAC: too many candidates %lld to use machine words(%d) to represent sets\n",
 			E->NumCands,
 			(int)(4*sizeof(E->NumCands)) );
-		printf("You could rewrite the code to use uint64s to try allow up to 64 canddts\n");
+		printf("You could rewrite the code to use uint128s to try allow up to 128 canddts\n");
 		exit(EXIT_FAILURE);
 	}
 	for(v=ARTINPRIME-1; v>=0; v--){ WoodHashCount[v] = 0; WoodHashSet[v] = 0; }
@@ -3582,7 +3583,7 @@ int GimmeWinner( edata *E, int WhichMeth ){
 
 typedef struct dum2 {
   uint NumVoters;
-  uint NumCands;
+  uint64 NumCands;
   uint NumElections;
   real IgnoranceAmplitude;
   real Honfrac;
@@ -3602,54 +3603,56 @@ typedef struct dum2 {
 void EDataPrep(edata &E, brdata *B);
 
 /* all arrays here have NumMethods entries */
-int FindWinnersAndRegrets( edata *E,  brdata *B,  bool Methods[] ){
-  int m,w,j;
-  real r;
-  BuildDefeatsMatrix(E);
-  FillBoolArray(NumMethods*NumMethods, B->Agree, FALSE);
-  FillBoolArray(NumMethods, B->CondAgree, FALSE);
-  FillBoolArray(NumMethods, B->TrueCondAgree, FALSE);
-  InitCoreElState();
-  for(m=0; m<NumMethods; m++){
-    if(Methods[m] || m<NumCoreMethods){ /* always run Core Methods */
-      w = GimmeWinner(E, m);
-      B->Winners[m] = w;
-      r = UtilitySum[BestWinner] - UtilitySum[w];
-      if(r<0.0 || BestWinner != B->Winners[0]){
-	printf("FUCK! major failure, r=%g<0 u[best]=%g u[w]=%g u[w[0]]=%g\n", r,UtilitySum[BestWinner],UtilitySum[w],UtilitySum[B->Winners[0]]);
-	printf("w=%d m=%d BestWinner=%d E->NumCands=%d B->Winners[0]=%d\n", w,m,BestWinner,E->NumCands,B->Winners[0]);
-	fflush(stdout);
-      }
-      assert( BestWinner == B->Winners[0] );
-      assert(r>=0.0); /*can only fail if somebody overwrites array...*/
-      B->Regret[m] = r;
-      WelfordUpdateMeanSD(r, (int*)&(B->RegCount[m]), &(B->MeanRegret[m]), &(B->SRegret[m]));
-      for(j=0; j<m; j++) if(Methods[j] || j<NumCoreMethods){
-	if( B->Winners[j] == w ){
-	  B->Agree[m*NumMethods+j]=TRUE;
-	  B->Agree[j*NumMethods+m]=TRUE;
-	  B->AgreeCount[m*NumMethods+j]++;
-	  B->AgreeCount[j*NumMethods+m]++;
-	  assert( B->AgreeCount[j*NumMethods+m] == B->AgreeCount[m*NumMethods+j] );
+int FindWinnersAndRegrets( edata *E,  brdata *B,  bool Methods[] )
+{
+	int m,w,j;
+	real r;
+	BuildDefeatsMatrix(E);
+	FillBoolArray(NumMethods*NumMethods, B->Agree, FALSE);
+	FillBoolArray(NumMethods, B->CondAgree, FALSE);
+	FillBoolArray(NumMethods, B->TrueCondAgree, FALSE);
+	InitCoreElState();
+	for(m=0; m<NumMethods; m++) {
+		if(Methods[m] || m<NumCoreMethods) { /* always run Core Methods */
+			w = GimmeWinner(E, m);
+			B->Winners[m] = w;
+			r = UtilitySum[BestWinner] - UtilitySum[w];
+			if(r<0.0 || BestWinner != B->Winners[0]) {
+				printf("FUCK! major failure, r=%g<0 u[best]=%g u[w]=%g u[w[0]]=%g\n", r,UtilitySum[BestWinner],UtilitySum[w],UtilitySum[B->Winners[0]]);
+				printf("w=%d m=%d BestWinner=%d E->NumCands=%lld B->Winners[0]=%d\n", w,m,BestWinner,E->NumCands,B->Winners[0]);
+				fflush(stdout);
+			}
+			assert( BestWinner == B->Winners[0] );
+			assert(r>=0.0); /*can only fail if somebody overwrites array...*/
+			B->Regret[m] = r;
+			WelfordUpdateMeanSD(r, (int*)&(B->RegCount[m]), &(B->MeanRegret[m]), &(B->SRegret[m]));
+			for(j=0; j<m; j++)
+				if(Methods[j] || j<NumCoreMethods) {
+					if( B->Winners[j] == w ) {
+						B->Agree[m*NumMethods+j]=TRUE;
+						B->Agree[j*NumMethods+m]=TRUE;
+						B->AgreeCount[m*NumMethods+j]++;
+						B->AgreeCount[j*NumMethods+m]++;
+						assert( B->AgreeCount[j*NumMethods+m] == B->AgreeCount[m*NumMethods+j] );
+					}
+				}
+		}
 	}
-      }
-    }
-  }
-  if(CondorcetWinner >= 0){
-    for(m=0; m<NumMethods; m++){
-      if(Methods[m] || m<NumCoreMethods){
-	if(B->Winners[m]==CondorcetWinner){
-	  B->CondAgree[m]=TRUE;
-	  B->CondAgreeCount[m]++;
+	if(CondorcetWinner >= 0) {
+		for(m=0; m<NumMethods; m++) {
+			if(Methods[m] || m<NumCoreMethods) {
+				if(B->Winners[m]==CondorcetWinner) {
+					B->CondAgree[m]=TRUE;
+					B->CondAgreeCount[m]++;
+				}
+				if(B->Winners[m]==TrueCW) {
+					B->TrueCondAgree[m]=TRUE;
+					B->TrueCondAgreeCount[m]++;
+				}
+			}
+		}
 	}
-	if(B->Winners[m]==TrueCW){
-	  B->TrueCondAgree[m]=TRUE;
-	  B->TrueCondAgreeCount[m]++;
-	}
-      }
-    }
-  }
-  return(CondorcetWinner);
+	return(CondorcetWinner);
 }
 
 
@@ -3658,7 +3661,7 @@ all are subroutines with a common format (embraced by the edata structure):
 
 input:
 uint NumVoters;
-uint NumCands;
+uint64 NumCands;
 
 real PerceivedUtility[NumVoters*NumCands];
 Entry x*NumCands+y says the utility (a floating point real; greater means better candidate)
@@ -3788,7 +3791,7 @@ void HonestyStrat( edata *E, real honfrac ){
 /*************************** VOTER IGNORANCE: ***********
 input:
 uint NumVoters;
-uint NumCands;
+uint64 NumCands;
 real IgnoranceAmplitude;
 
 real Utility[NumVoters*NumCands];
@@ -3822,7 +3825,7 @@ void AddIgnorance( edata *E, real IgnoranceAmplitude ){
 /*************************** UTILITY GENERATORS: ***********
 input:
 uint NumVoters;
-uint NumCands;
+uint64 NumCands;
 
 output:
 real Utility[NumVoters*NumCands];
@@ -3835,14 +3838,14 @@ real CandLocation[MaxNumCands*MaxNumIssues];
 
 #define UTGEN void /*allows fgrep UTGEN IEVS.c to find out what utility-generators now available*/
 
-void GenNormalLocations( /*input:*/ uint NumVoters, uint NumCands, uint Issues,
+void GenNormalLocations( /*input:*/ uint NumVoters, uint64 NumCands, uint Issues,
 			 /*output:*/ real vLocation[], real cLocation[] )
 {
 	GenRandNormalArr(NumVoters*Issues, vLocation);
 	GenRandNormalArr(NumCands*Issues, cLocation);
 }
 
-void GenWackyLocations( /*input:*/ uint NumVoters, uint NumCands, uint Issues,
+void GenWackyLocations( /*input:*/ uint NumVoters, uint64 NumCands, uint Issues,
 			 /*output:*/ real vLocation[], real cLocation[] )
 {
 	GenRandWackyArr(NumVoters*Issues, vLocation);
@@ -4724,7 +4727,8 @@ real RegretData[MaxScenarios*NumMethods];
  *In IEVS 2.59 and above we include a summarizer so that if
  *you ignore the voluminous output, you still get a nice summary of it at
  *the end:*/
-void BRDriver(){
+void BRDriver()
+{
 	real BPStrength[NumMethods*NumMethods];
 	bool VotMethods[NumMethods];
 	bool CoombElimination[NumMethods];
@@ -4733,16 +4737,16 @@ void BRDriver(){
 	real scalefac, reb, maxc;
 	brdata B;
 
-	for(iglevel=0; iglevel<5; iglevel++){
-		for(UtilMeth=0; UtilMeth<NumUtilGens; UtilMeth++) if(UtilMeth>=utilnumlower && UtilMeth<=utilnumupper){
-			for(whichhonlevel=0; whichhonlevel<5; whichhonlevel++){
+	for(iglevel=0; iglevel<5; iglevel++) {
+		for(UtilMeth=0; UtilMeth<NumUtilGens; UtilMeth++) if(UtilMeth>=utilnumlower && UtilMeth<=utilnumupper) {
+			for(whichhonlevel=0; whichhonlevel<5; whichhonlevel++) {
 				B.Honfrac = HonLevels[whichhonlevel];
 				if(B.Honfrac*100 < honfracupper + 0.0001 &&
-					 B.Honfrac*100 > honfraclower - 0.0001 ){
+					B.Honfrac*100 > honfraclower - 0.0001 ) {
 						for(prind=0; Pow2Primes[prind]<MaxNumVoters; prind++)
-						if(Pow2Primes[prind]<=votnumupper && Pow2Primes[prind]>=votnumlower){
+						if(Pow2Primes[prind]<=votnumupper && Pow2Primes[prind]>=votnumlower) {
 							B.NumVoters=Pow2Primes[prind];
-							for(B.NumCands=candnumlower; B.NumCands<=candnumupper; B.NumCands++){
+							for(B.NumCands=candnumlower; B.NumCands<=candnumupper; B.NumCands++) {
 								B.NumElections=numelections2try;
 								/*1299999=good enough to get all BRs accurate to at least 3 significant digits*/
 								/*2999=good enough for usually 2 sig figs, and is 400X faster*/
@@ -4752,9 +4756,9 @@ void BRDriver(){
 								printf("(Scenario#%d:", ScenarioCount);
 								printf(" UtilMeth=");
 								PrintUtilName(UtilMeth, FALSE);
-								printf(" Honfrac=%.2f, NumVoters=%d, NumCands=%d, NumElections=%d, IgnoranceAmplitude=%f)\n",
-								 B.Honfrac, B.NumVoters, B.NumCands,
-								 B.NumElections, B.IgnoranceAmplitude);
+								printf(" Honfrac=%.2f, NumVoters=%d, NumCands=%lld, NumElections=%d, IgnoranceAmplitude=%f)\n",
+									B.Honfrac, B.NumVoters, B.NumCands,
+									B.NumElections, B.IgnoranceAmplitude);
 								if(BROutputMode&(ALLMETHS|TOP10METHS)){
 									if(BROutputMode&HTMLMODE)
 										printf("<tr><th>Voting Method</th><th>Regrets</th><th>#Agreements with ");
@@ -4850,7 +4854,7 @@ void BRDriver(){
 		}
 	}
 	printf("==================SUMMARY OF NORMALIZED REGRET DATA FROM %d SCENARIOS=============\n",
-	 ScenarioCount);
+		ScenarioCount);
 	/* regret-sum, Coombs, and Schulze beatpaths used as summarizers
 	 * since are good for honest voters and cloneproof. */
 	printf("1. voting methods sorted by sum of (normalized so RandWinner=1) regrets (best first):\n");
@@ -4941,7 +4945,8 @@ void BRDriver(){
 
 
 /* Like BRDriver only based on the real world election dataset: */
-void RWBRDriver(){
+void RWBRDriver()
+{
 	real BPStrength[NumMethods*NumMethods];
 	bool VotMethods[NumMethods];
 	bool CoombElimination[NumMethods];
@@ -4950,113 +4955,113 @@ void RWBRDriver(){
 	real scalefac, reb, maxc;
 	brdata B;
 
-	for(iglevel=0; iglevel<4; iglevel++){
-	for(whichhonlevel=0; whichhonlevel<5; whichhonlevel++){
+	for(iglevel=0; iglevel<4; iglevel++) {
+	for(whichhonlevel=0; whichhonlevel<5; whichhonlevel++) {
 		B.Honfrac = HonLevels[whichhonlevel];
 		if(B.Honfrac*100 < honfracupper + 0.0001 &&
-			 B.Honfrac*100 > honfraclower - 0.0001 ){
-			B.NumElections=numelections2try;
-			/*1299999=good enough to get all BRs accurate to at least 3 significant digits*/
-			/*2999=good enough for usually 2 sig figs, and is 400X faster*/
-			B.IgnoranceAmplitude = IgnLevels[iglevel];
-			FillBoolArray(NumMethods, VotMethods, TRUE); /*might want to only do a subset... ??*/
-			printf("\n"); fflush(stdout);
-			MakeIdentityPerm(NumMethods, (uint*)MethPerm);
-			ComputeBRs(&B, VotMethods, -1);
-			RealPermShellSortUp(NumMethods, MethPerm, B.MeanRegret);
-			printf("(Scenario#%d:", ScenarioCount);
-			printf(" Honfrac=%.2f, NumVoters=%d, NumCands=%d, NumElections=%d, IgnoranceAmplitude=%f)\n",
-			 B.Honfrac, B.NumVoters, B.NumCands,
-			 B.NumElections, B.IgnoranceAmplitude);
-			if(BROutputMode&(ALLMETHS|TOP10METHS)){
-				if(BROutputMode&HTMLMODE)
-					printf("<tr><th>Voting Method</th><th>Regrets</th><th>#Agreements with ");
-				else printf("Voting Method & Regrets & #Agreements with ");
-				if(BROutputMode&VBCONDMODE) printf("(vote-based) ");
-				else printf("(true-utility-based) ");
-				printf("Condorcet Winner (when CW exists)");
-				if(BROutputMode&HTMLMODE) printf("</th></tr>");
+			B.Honfrac*100 > honfraclower - 0.0001 ) {
+				B.NumElections=numelections2try;
+				/*1299999=good enough to get all BRs accurate to at least 3 significant digits*/
+				/*2999=good enough for usually 2 sig figs, and is 400X faster*/
+				B.IgnoranceAmplitude = IgnLevels[iglevel];
+				FillBoolArray(NumMethods, VotMethods, TRUE); /*might want to only do a subset... ??*/
+				printf("\n"); fflush(stdout);
+				MakeIdentityPerm(NumMethods, (uint*)MethPerm);
+				ComputeBRs(&B, VotMethods, -1);
+				RealPermShellSortUp(NumMethods, MethPerm, B.MeanRegret);
+				printf("(Scenario#%d:", ScenarioCount);
+				printf(" Honfrac=%.2f, NumVoters=%d, NumCands=%lld, NumElections=%d, IgnoranceAmplitude=%f)\n",
+					B.Honfrac, B.NumVoters, B.NumCands,
+					B.NumElections, B.IgnoranceAmplitude);
+				if(BROutputMode&(ALLMETHS|TOP10METHS)){
+					if(BROutputMode&HTMLMODE)
+						printf("<tr><th>Voting Method</th><th>Regrets</th><th>#Agreements with ");
+					else printf("Voting Method & Regrets & #Agreements with ");
+					if(BROutputMode&VBCONDMODE) printf("(vote-based) ");
+					else printf("(true-utility-based) ");
+					printf("Condorcet Winner (when CW exists)");
+					if(BROutputMode&HTMLMODE) printf("</th></tr>");
+					printf("\n");
+				}
+				fflush(stdout);
+				TopMeth = 0;
+				if(BROutputMode&ALLMETHS) TopMeth = NumMethods;
+				if(BROutputMode&TOP10METHS) TopMeth = 10;
+				for(i=0; i<TopMeth; i++) {
+					r=i;
+					if(BROutputMode&SORTMODE) r=MethPerm[i];
+					if(BROutputMode&HTMLMODE) printf("<tr><td>");
+					printf("%d=",r); PrintMethName(r,TRUE);
+					if(BROutputMode&HTMLMODE) printf("</td><td>");
+					else if(BROutputMode&TEXMODE) printf(" & ");
+					if(BROutputMode&NORMALIZEREGRETS) printf(" \t %8.5g", B.MeanRegret[r]/B.MeanRegret[2]);
+					else if(BROutputMode&SHENTRUPVSR) printf(" \t %8.5g", 100.0*(1.0 - B.MeanRegret[r]/B.MeanRegret[2]));
+					else printf(" \t %8.5g", B.MeanRegret[r]);
+					if(!(BROutputMode&OMITERRORBARS)){
+						if(BROutputMode&HTMLMODE) printf("&plusmn;");
+						else if(BROutputMode&TEXMODE) printf("\\pm");
+						else printf("+-");
+						if(BROutputMode&NORMALIZEREGRETS) reb = sqrt(B.SRegret[r])/B.MeanRegret[2];
+						else if(BROutputMode&SHENTRUPVSR) reb = 100.0*sqrt(B.SRegret[r])/B.MeanRegret[2];
+						else reb = sqrt(B.SRegret[r]);
+						printf("%5.2g", reb);
+					}
+					if(BROutputMode&HTMLMODE) printf("</td><td>");
+					else if(BROutputMode&TEXMODE) printf(" & ");
+					if(BROutputMode&VBCONDMODE) printf(" \t  %7d", B.CondAgreeCount[r]);
+					else printf(" \t  %7d", B.TrueCondAgreeCount[r]);
+					if(BROutputMode&HTMLMODE) printf("</td></tr>\n");
+					else if(BROutputMode&TEXMODE) printf(" \\\\ \n");
+					else printf("\n");
+				}/*end for(i)*/
+				for(i=0; i<NumMethods; i++) {  /*accumulate regret data for later summary*/
+					RegretData[ScenarioCount*NumMethods + i] =
+						(B.MeanRegret[i] + 0.00000000001*Rand01())/( B.MeanRegret[2]+0.00000000001 );
+				}
+				ScenarioCount++;
+				if(ScenarioCount > MaxScenarios) {
+					printf("ScenarioCount=%d exceeded upper limit; terminating\n", ScenarioCount);
+					fflush(stdout);
+					exit(EXIT_FAILURE);
+				}
+				if(BROutputMode&HTMLMODE) printf("</td></tr>");
+				else if(BROutputMode&TEXMODE) printf(" \\\\ ");
 				printf("\n");
-			}
-			fflush(stdout);
-			TopMeth = 0;
-			if(BROutputMode&ALLMETHS) TopMeth = NumMethods;
-			if(BROutputMode&TOP10METHS) TopMeth = 10;
-			for(i=0; i<TopMeth; i++) {
-				r=i;
-				if(BROutputMode&SORTMODE) r=MethPerm[i];
-				if(BROutputMode&HTMLMODE) printf("<tr><td>");
-				printf("%d=",r); PrintMethName(r,TRUE);
-				if(BROutputMode&HTMLMODE) printf("</td><td>");
-				else if(BROutputMode&TEXMODE) printf(" & ");
-				if(BROutputMode&NORMALIZEREGRETS) printf(" \t %8.5g", B.MeanRegret[r]/B.MeanRegret[2]);
-				else if(BROutputMode&SHENTRUPVSR) printf(" \t %8.5g", 100.0*(1.0 - B.MeanRegret[r]/B.MeanRegret[2]));
-				else printf(" \t %8.5g", B.MeanRegret[r]);
-				if(!(BROutputMode&OMITERRORBARS)){
+				if( (BROutputMode&OMITERRORBARS) && (BROutputMode&(ALLMETHS|TOP10METHS)) ) {
+					if(BROutputMode&NORMALIZEREGRETS) reb = sqrt(B.SRegret[2])/B.MeanRegret[2];
+					else if(BROutputMode&SHENTRUPVSR) reb = 100.0*sqrt(B.SRegret[2])/B.MeanRegret[2];
+					else reb = sqrt(B.SRegret[2]);
+					printf("ErrorBar for RandomWinner's regret=");
 					if(BROutputMode&HTMLMODE) printf("&plusmn;");
 					else if(BROutputMode&TEXMODE) printf("\\pm");
 					else printf("+-");
-					if(BROutputMode&NORMALIZEREGRETS) reb = sqrt(B.SRegret[r])/B.MeanRegret[2];
-					else if(BROutputMode&SHENTRUPVSR) reb = 100.0*sqrt(B.SRegret[r])/B.MeanRegret[2];
-					else reb = sqrt(B.SRegret[r]);
-					printf("%5.2g", reb);
+					printf("%5.2g;\n", reb);
+					printf("This (experimentally always?) upperbounds the error bar for every other regret.\n");
 				}
-				if(BROutputMode&HTMLMODE) printf("</td><td>");
-				else if(BROutputMode&TEXMODE) printf(" & ");
-				if(BROutputMode&VBCONDMODE) printf(" \t  %7d", B.CondAgreeCount[r]);
-				else printf(" \t  %7d", B.TrueCondAgreeCount[r]);
-				if(BROutputMode&HTMLMODE) printf("</td></tr>\n");
-				else if(BROutputMode&TEXMODE) printf(" \\\\ \n");
-				else printf("\n");
-			}/*end for(i)*/
-			for(i=0; i<NumMethods; i++) {  /*accumulate regret data for later summary*/
-				RegretData[ScenarioCount*NumMethods + i] =
-					(B.MeanRegret[i] + 0.00000000001*Rand01())/( B.MeanRegret[2]+0.00000000001 );
-			}
-			ScenarioCount++;
-			if(ScenarioCount > MaxScenarios) {
-				printf("ScenarioCount=%d exceeded upper limit; terminating\n", ScenarioCount);
 				fflush(stdout);
-				exit(EXIT_FAILURE);
-			}
-			if(BROutputMode&HTMLMODE) printf("</td></tr>");
-			else if(BROutputMode&TEXMODE) printf(" \\\\ ");
-			printf("\n");
-			if( (BROutputMode&OMITERRORBARS) && (BROutputMode&(ALLMETHS|TOP10METHS)) ) {
-				if(BROutputMode&NORMALIZEREGRETS) reb = sqrt(B.SRegret[2])/B.MeanRegret[2];
-				else if(BROutputMode&SHENTRUPVSR) reb = 100.0*sqrt(B.SRegret[2])/B.MeanRegret[2];
-				else reb = sqrt(B.SRegret[2]);
-				printf("ErrorBar for RandomWinner's regret=");
-				if(BROutputMode&HTMLMODE) printf("&plusmn;");
-				else if(BROutputMode&TEXMODE) printf("\\pm");
-				else printf("+-");
-				printf("%5.2g;\n", reb);
-				printf("This (experimentally always?) upperbounds the error bar for every other regret.\n");
-			}
-			fflush(stdout);
 
-			if(BROutputMode&DOAGREETABLES){
-				scalefac = 1.0;
-				if(B.NumElections > 999){
-					scalefac = 999.5/B.NumElections;
-					printf("\nScaling AgreeCounts into 0-999.");
-				}
-				printf("\nAGREE 0 ");
-				for(i=1; i<NumMethods; i++){ printf(" %3d ", i); }
-				for(i=0; i<NumMethods; i++){
-					printf("\n%2d ", i);
-					for(j=0; j<NumMethods; j++){
-						if(j==i) printf("  *  ");
-						else printf(" %4d", (int)(0.4999 + B.AgreeCount[i*NumMethods+j] * scalefac));
+				if(BROutputMode&DOAGREETABLES){
+					scalefac = 1.0;
+					if(B.NumElections > 999){
+						scalefac = 999.5/B.NumElections;
+						printf("\nScaling AgreeCounts into 0-999.");
 					}
+					printf("\nAGREE 0 ");
+					for(i=1; i<NumMethods; i++){ printf(" %3d ", i); }
+					for(i=0; i<NumMethods; i++){
+						printf("\n%2d ", i);
+						for(j=0; j<NumMethods; j++){
+							if(j==i) printf("  *  ");
+							else printf(" %4d", (int)(0.4999 + B.AgreeCount[i*NumMethods+j] * scalefac));
+						}
+					}
+					printf("\n");
+					fflush(stdout);
 				}
-				printf("\n");
-				fflush(stdout);
-			}
 		}} /*end for(whichhonlevel)*/
 	}/*end for(ignlevel)*/
 	printf("==================SUMMARY OF NORMALIZED REGRET DATA FROM %d SCENARIOS=============\n",
-	 ScenarioCount);
+		ScenarioCount);
 	/* regret-sum, Coombs, and Schulze beatpaths used as summarizers
 	 * since are good for honest voters and cloneproof. */
 	printf("1. voting methods sorted by sum of (normalized so RandWinner=1) regrets (best first):\n");
