@@ -174,6 +174,8 @@ David Cary's Changes (not listing ones WDS did anyhow) include:
 #define ALLMETHS 256
 #define TOP10METHS 512
 uint BROutputMode=0;
+template< class T >
+		int ArgMinArr(uint N, T Arr[], int RandPerm[], T initial_value);
 template<class T, int (*f)(uint, int[], T[])>
 		void PermShellSortDown( uint N, int Perm[], T Key[] );
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void));
@@ -770,25 +772,6 @@ void ZeroRealArray(uint N, real Arr[] ){ /* sets Arr[0..N-1] = 0 */
    FillRealArray( N, Arr, 0.0 );
 }
 
-/* Assumes RandPerm[0..N-1] contains perm. Returns index of random min entry of Arr[0..N-1]. */
-int ArgMinIntArr(uint N, int Arr[], int RandPerm[] ){
-  int minc, i, r, winner;
-  winner = -1;
-  minc = BIGINT;
-  RandomlyPermute( N, (uint*)RandPerm );
-  for(i=0; i<(int)N; i++){
-    r = RandPerm[i];
-    if(Arr[r]<minc){
-      minc=Arr[r];
-      winner=r;
-    }
-  }
-  assert(winner>=0);
-  assert( Arr[winner] <= Arr[0] );
-  assert( Arr[winner] <= Arr[N-1] );
-  return(winner);
-}
-
 /* Assumes RandPerm[0..N-1] contains perm. Returns index of random max entry of Arr[0..N-1]. */
 int ArgMaxIntArr(uint N, int Arr[], int RandPerm[] ){
   int maxc, i, r, winner;
@@ -817,24 +800,6 @@ int ArgMaxUIntArr(uint N, uint Arr[], int RandPerm[] ){
     r = RandPerm[i];
     if(Arr[r]>=maxc){
       maxc=Arr[r];
-      winner=r;
-    }
-  }
-  assert(winner>=0);
-  return(winner);
-}
-
-/* Assumes RandPerm[0..N-1] contains perm. Returns index of random min entry of Arr[0..N-1]. */
-int ArgMinRealArr(uint N, real Arr[], int RandPerm[] ){
-  real minc;
-  int i,r,winner;
-  winner = -1;
-  minc = HUGE;
-  RandomlyPermute( N, (uint*)RandPerm );
-  for(i=0; i<(int)N; i++){
-    r = RandPerm[i];
-    if(Arr[r]<minc){
-      minc=Arr[r];
       winner=r;
     }
   }
@@ -1451,11 +1416,11 @@ EMETH SociallyBest(edata *E  /* greatest utility-sum winner */
   return BestWinner;
 }
 
-EMETH SociallyWorst(edata *E   /* least utility-sum winner */
-){ /* side effects: UtilitySum[], WorstWinner */
-  if(BestWinner<0) SociallyBest(E);
-  WorstWinner = ArgMinRealArr( E->NumCands, UtilitySum, (int*)RandCandPerm );
-  return WorstWinner;
+EMETH SociallyWorst(edata *E   /* least utility-sum winner */)
+{ /* side effects: UtilitySum[], WorstWinner */
+	if(BestWinner<0) SociallyBest(E);
+	WorstWinner = ArgMinArr<real>(E->NumCands, UtilitySum, (int*)RandCandPerm, HUGE);
+	return WorstWinner;
 }
 
 EMETH RandomWinner(edata *E){ return (int)RandInt( E->NumCands ); }
@@ -1514,15 +1479,15 @@ EMETH Plurality(edata *E   /* canddt with most top-rank votes wins */
   return PlurWinner;
 }
 
-EMETH AntiPlurality(edata *E   /* canddt with fewest bottom-rank votes wins */
-		    ){ /* side effects: AntiPlurVoteCount[], AntiPlurWinner */
-  int i;
-  ZeroIntArray( E->NumCands, (int*)AntiPlurVoteCount );
-  for(i=0; i<(int)E->NumVoters; i++){
-    AntiPlurVoteCount[ E->TopDownPrefs[i*E->NumCands + E->NumCands - 1] ]++;
-  }
-  AntiPlurWinner = ArgMinIntArr( E->NumCands, (int*)AntiPlurVoteCount, (int*)RandCandPerm );
-  return AntiPlurWinner;
+EMETH AntiPlurality(edata *E   /* canddt with fewest bottom-rank votes wins */)
+{ /* side effects: AntiPlurVoteCount[], AntiPlurWinner */
+	int i;
+	ZeroIntArray( E->NumCands, (int*)AntiPlurVoteCount );
+	for(i=0; i<(int)E->NumVoters; i++){
+		AntiPlurVoteCount[ E->TopDownPrefs[i*E->NumCands + E->NumCands - 1] ]++;
+	}
+	AntiPlurWinner = ArgMinArr<int>(E->NumCands, (int*)AntiPlurVoteCount, (int*)RandCandPerm, BIGINT);
+	return AntiPlurWinner;
 }
 
 /* Plurality needs to have already been run before running Dabagh.  */
@@ -1792,9 +1757,9 @@ EMETH BaseballMVP(edata *E  /* weighted positional with weights 14,9,8,7,6,5,4,3
   return(winner);
 }
 
-EMETH CondorcetLR(edata *E   /* candidate with least sum-of-pairwise-defeat-margins wins */
-){ /* side effects:, SumOfDefeatMargins[]  */
-   int i,j,t,winner;
+EMETH CondorcetLR(edata *E   /* candidate with least sum-of-pairwise-defeat-margins wins */)
+{ /* side effects:, SumOfDefeatMargins[]  */
+	int i,j,t,winner;
 	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
 #if CWSPEEDUP
 	if(CondorcetWinner >= 0) return CondorcetWinner;
@@ -1804,8 +1769,8 @@ EMETH CondorcetLR(edata *E   /* candidate with least sum-of-pairwise-defeat-marg
 		for(j=E->NumCands -1; j>=0; j--){  t += PosInt( E->MarginsMatrix[j*E->NumCands+i] );  }
 		SumOfDefeatMargins[i] = t;
 	}
-   winner = ArgMinIntArr( E->NumCands, (int*)SumOfDefeatMargins, (int*)RandCandPerm );
-   return winner;
+	winner = ArgMinArr<int>(E->NumCands, (int*)SumOfDefeatMargins, (int*)RandCandPerm, BIGINT);
+	return winner;
 }
 
 EMETH Sinkhorn(edata *E  /* candidate with max Sinkhorn rating (from all-positive DefeatsMatrix+1) */
@@ -1879,9 +1844,9 @@ EMETH KeenerEig(edata *E  /* winning canddt has max Frobenius eigenvector entry 
   return winner;
 }
 
-EMETH SimpsonKramer(edata *E  /* candidate with mildest worst-defeat wins */
-){ /* Side effects: WorstDefeatMargin[] */
-  int i,r,x,t,j,winner;
+EMETH SimpsonKramer(edata *E  /* candidate with mildest worst-defeat wins */)
+{ /* Side effects: WorstDefeatMargin[] */
+	int i,r,x,t,j,winner;
 	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
 #if CWSPEEDUP
 	if(CondorcetWinner >= 0) return CondorcetWinner;
@@ -1896,8 +1861,8 @@ EMETH SimpsonKramer(edata *E  /* candidate with mildest worst-defeat wins */
 		}
 		WorstDefeatMargin[i] = t;
 	}
-  winner = ArgMinIntArr( E->NumCands, WorstDefeatMargin, (int*)RandCandPerm );
-  return winner;
+	winner = ArgMinArr<int>(E->NumCands, WorstDefeatMargin, (int*)RandCandPerm, BIGINT);
+	return winner;
 }
 
 EMETH RaynaudElim(edata *E  /* repeatedly eliminate canddt who suffered the worst-margin-defeat */
@@ -2249,9 +2214,9 @@ EMETH Copeland(edata *E   /* canddt with largest number of pairwise-wins elected
   return CopelandWinner;
 }
 
-EMETH SimmonsCond(edata *E  /* winner = X with least sum of top-rank-votes for rivals pairwise-beating X */
-){ /* side effects: SimmVotesAgainst[] */
-  int i,j,t,winner;
+EMETH SimmonsCond(edata *E  /* winner = X with least sum of top-rank-votes for rivals pairwise-beating X */)
+{ /* side effects: SimmVotesAgainst[] */
+	int i,j,t,winner;
 	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
 	if(PlurWinner<0) Plurality(E);
 	if(SmithWinner<0) SmithSet(E);
@@ -2267,7 +2232,7 @@ EMETH SimmonsCond(edata *E  /* winner = X with least sum of top-rank-votes for r
 		}
 		SimmVotesAgainst[i] = t;
 	}
-	winner = ArgMinIntArr( E->NumCands, SimmVotesAgainst, (int*)RandCandPerm );
+	winner = ArgMinArr<int>(E->NumCands, SimmVotesAgainst, (int*)RandCandPerm, BIGINT);
 	return winner;
 }
 
@@ -2984,20 +2949,20 @@ EMETH TopMedianRating(edata *E    /* canddt with highest median Score wins */
   return(winner);
 }
 
-EMETH LoMedianRank(edata *E    /* canddt with best median ranking wins */
-){ /* side effects:   MedianRank[], CRankVec[]  */
-  int i,j,x,winner;
-  for(j=E->NumCands -1; j>=0; j--){
-    for(i=E->NumVoters -1; i>=0; i--){
-      x = i*E->NumCands + j;
-      CRankVec[i] = E->CandRankings[x];
-    }
-    MedianRank[j] = TwiceMedian<int, FloydRivestSelectInt, SelectedRightInt>(E->NumVoters, CRankVec);
-    assert( MedianRank[j] >= 0 );
-    assert( MedianRank[j] <= 2*((int)E->NumCands - 1) );
-  }
-  winner = ArgMinIntArr( E->NumCands, MedianRank, (int*)RandCandPerm );
-  return(winner);
+EMETH LoMedianRank(edata *E    /* canddt with best median ranking wins */)
+{ /* side effects:   MedianRank[], CRankVec[]  */
+	int i,j,x,winner;
+	for(j=E->NumCands -1; j>=0; j--) {
+		for(i=E->NumVoters -1; i>=0; i--) {
+			x = i*E->NumCands + j;
+			CRankVec[i] = E->CandRankings[x];
+		}
+		MedianRank[j] = TwiceMedian<int, FloydRivestSelectInt, SelectedRightInt>(E->NumVoters, CRankVec);
+		assert( MedianRank[j] >= 0 );
+		assert( MedianRank[j] <= 2*((int)E->NumCands - 1) );
+	}
+	winner = ArgMinArr<int>(E->NumCands, MedianRank, (int*)RandCandPerm, BIGINT);
+	return(winner);
 }
 
 /* Tideman ranked pairs with Honest voters.
@@ -5481,6 +5446,34 @@ int main(int argc, char **argv)
 *****/
 
 /*	Additions by Me		*/
+
+/*	ArgMinArr(N, Arr[], RandPerm[], inital_value):	returns index of random min
+ *							entry of Arr[0..N-1]
+ *	N:		the expected number of elements in 'Arr' and 'RandPerm'
+ *	Arr:		array of values to examine
+ *	RandPerm:	array of perm.
+ *	initial_value:	the initial minimum
+ */
+template< class T >
+int ArgMinArr(uint N, T Arr[], int RandPerm[], T initial_value)
+{
+	T minc;
+	int i,r,winner;
+	winner = -1;
+	minc = initial_value;
+	RandomlyPermute( N, (uint*)RandPerm );
+	for(i=0; i<(int)N; i++) {
+		r = RandPerm[i];
+		if(Arr[r]<minc) {
+			minc=Arr[r];
+			winner=r;
+		}
+	}
+	assert(winner>=0);
+	assert( Arr[winner] <= Arr[0] );
+	assert( Arr[winner] <= Arr[N-1] );
+	return(winner);
+}
 
 /*	runSelfTests():		perfomrs a test of the various
  *				PRNGs and edata structures
