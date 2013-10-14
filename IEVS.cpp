@@ -5727,8 +5727,8 @@ void Test(const char *name, const char *direction, real (*func1)(void), real (*f
 	RandomTestReport(mean_str, meansq_str, s, mn, mx, v, ct);
 }
 
-/*	T1 TwiceMedian(uint N, T1 A[] ):	returns twice the median of 'A[0..N-1]' or
- *						sum of the bimedians if 'N' is even
+/*	TwiceMedian(N, A[] ):	returns twice the median of 'A[0..N-1]' or sum of the
+ *				bimedians if 'N' is even
  *	N:	the expected number of elements in 'A'
  *	A:	the set of values to examine
  */
