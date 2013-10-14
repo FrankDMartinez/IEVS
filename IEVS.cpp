@@ -5152,7 +5152,7 @@ void RWBRDriver()
 
 /*************************** MAIN CODE: ***************************/
 
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	uint seed, choice, ch2, ch3;
 	int ihonfrac, TopYeeVoters, GaussStdDev, subsqsideX, subsqsideY, LpPow;
