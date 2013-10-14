@@ -174,6 +174,8 @@ David Cary's Changes (not listing ones WDS did anyhow) include:
 #define ALLMETHS 256
 #define TOP10METHS 512
 uint BROutputMode=0;
+template<class T, int (*f)(uint, int[], T[])>
+		void PermShellSortDown( uint N, int Perm[], T Key[] );
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void));
 void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10]);
 void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str);
@@ -998,34 +1000,6 @@ void RealPermShellSortUp(  uint N, int Perm[], real Key[] ){
     }
   }
   assert((SortedRealKey(N,Perm,Key)&(~1))==0);
-}
-
-/* Rearranges Perm[0..N-1] so Key[Perm[0..N-1]] is in decreasing order.  Key[] not altered: */
-void IntPermShellSortDown(  uint N, int Perm[], int Key[] ){
-  int h,i,j,k;
-  int x;
-  for(k=0; (h=ShellIncs[k])>0; k++){
-    for(i=h; i<(int)N; i++){
-      x=Perm[i];
-      for(j=i-h; j>=0 && Key[Perm[j]]<Key[x]; j -= h){ Perm[j+h]=Perm[j]; }
-      Perm[j+h]=x;
-    }
-  }
-  assert(SortedIntKey(N,Perm,Key)<=0);
-}
-
-/* Rearranges Perm[0..N-1] so Key[Perm[0..N-1]] is in decreasing order: */
-void RealPermShellSortDown(  uint N, int Perm[], real Key[] ){
-  int h,i,j,k;
-  int x;
-  for(k=0; (h=ShellIncs[k])>0; k++){
-    for(i=h; i<(int)N; i++){
-      x=Perm[i];
-      for(j=i-h; j>=0 && Key[Perm[j]]<Key[x]; j -= h){ Perm[j+h]=Perm[j]; }
-      Perm[j+h]=x;
-    }
-  }
-  assert(SortedRealKey(N,Perm,Key)<=0);
 }
 
 bool SelectedRightInt( uint L, uint R, uint K, int A[] ){
@@ -3159,28 +3133,28 @@ EMETH HeitzigRiver(edata *E /*http://lists.electorama.com/pipermail/election-met
 	return newroot;
 }
 
-EMETH DMC(edata *E  /* eliminate least-approved candidate until unbeaten winner exists */
-){ /* side effects: LossCount[] */
-  int i,j,t;
+EMETH DMC(edata *E  /* eliminate least-approved candidate until unbeaten winner exists */)
+{ /* side effects: LossCount[] */
+	int i,j,t;
 	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
 #if CWSPEEDUP
 	if(CondorcetWinner>=0) return(CondorcetWinner);
 #endif
-	for(i=E->NumCands -1; i>=0; i--){
+	for(i=E->NumCands -1; i>=0; i--) {
 		t=0;
 		for(j=E->NumCands -1; j>=0; j--) if(E->MarginsMatrix[j*E->NumCands + i]>0){ t++; }
 		LossCount[i] = t;
 	}
-  RandomlyPermute( E->NumCands, RandCandPerm );
-  IntPermShellSortDown(  E->NumCands, (int*)RandCandPerm,  (int*)ApprovalVoteCount );
-  for(i=E->NumCands-1; i>0; i--){
-    if( LossCount[i] <= 0 ){  return(i); /*winner*/ }
-    for(j=0; j<i; j++){ /* eliminate i and update Losscount[] */
-      t = E->MarginsMatrix[i*E->NumCands + j];
-      if(t>0){ LossCount[j] --; }
-    }
-  }
-  return(i);
+	RandomlyPermute( E->NumCands, RandCandPerm );
+	PermShellSortDown<int, SortedIntKey>(E->NumCands, (int*)RandCandPerm, (int*)ApprovalVoteCount);
+	for(i=E->NumCands-1; i>0; i--) {
+		if( LossCount[i] <= 0 ){  return(i); /*winner*/ }
+		for(j=0; j<i; j++){ /* eliminate i and update Losscount[] */
+			t = E->MarginsMatrix[i*E->NumCands + j];
+			if(t>0){ LossCount[j] --; }
+		}
+	}
+	return(i);
 }
 
 void BSbeatDFS( int x, int diff, bool Set[], bool OK[], int Mat[], int N ){
@@ -3342,8 +3316,8 @@ would disqualify all remaining candidates (i.e. would result in the empty set).
 Continue until only one candidate
 is not disqualified; he is the winner.
 *****************************************/
-EMETH WoodallDAC(edata *E  /*Woodall: Monotonocity of single-seat preferential election rules, Discrete Applied Maths 77 (1997) 81-98.*/
-){ /*side effects: WoodHashCount[],  WoodHashSet[], WoodSetPerm[] */
+EMETH WoodallDAC(edata *E  /*Woodall: Monotonocity of single-seat preferential election rules, Discrete Applied Maths 77 (1997) 81-98.*/)
+{ /*side effects: WoodHashCount[],  WoodHashSet[], WoodSetPerm[] */
 	/* Hash Tab entries contain counter and set-code which is a single machine word. */
 	int v,c,k,r;
 	uint offset, s, x, h, numsets;
@@ -3381,7 +3355,7 @@ EMETH WoodallDAC(edata *E  /*Woodall: Monotonocity of single-seat preferential e
 		}
 	}
 	assert(numsets <= E->NumCands * E->NumVoters);
-	IntPermShellSortDown( numsets, (int*)WoodSetPerm, (int*)WoodHashCount );
+	PermShellSortDown<int, SortedIntKey>(numsets, (int*)WoodSetPerm, (int*)WoodHashCount);
 	s = WoodHashSet[WoodSetPerm[0]];
 	assert( !EmptySet(s) );
 	if(SingletonSet(s)){  goto DONE;  }
@@ -3689,7 +3663,8 @@ for each voter, whether to make her be honest or
 strategic (honesty probability is honfrac).  Note, if the luck is right,
 this still can yield 100% strategic or 100% honest voters
 also - that is unlikely, but could happen. ***/
-void HonestyStrat( edata *E, real honfrac ){
+void HonestyStrat( edata *E, real honfrac )
+{
 	int lobd, hibd, v, i, nexti, ACT;
 	uint offi, offset, rb;
 	real MovingAvg, tmp, MaxUtil, MinUtil, SumU, MeanU, Mean2U, ThisU, RecipDiffUtil;
@@ -3701,7 +3676,7 @@ void HonestyStrat( edata *E, real honfrac ){
 		offset = v*E->NumCands;
 		if( Rand01() < honfrac ) { /*honest voter*/
 			MakeIdentityPerm( E->NumCands, E->TopDownPrefs+offset );
-			RealPermShellSortDown( E->NumCands, (int*)E->TopDownPrefs+offset, E->PerceivedUtility+offset );
+			PermShellSortDown<real, SortedRealKey>( E->NumCands, (int*)E->TopDownPrefs+offset, E->PerceivedUtility+offset );
 			assert( IsPerm(E->NumCands, E->TopDownPrefs+offset) );
 			MaxUtil = -HUGE;
 			MinUtil =  HUGE;
@@ -3780,7 +3755,7 @@ void HonestyStrat( edata *E, real honfrac ){
 				offi = offset+i;
 				ThisU = E->PerceivedUtility[offi];
 				if( ThisU >= Mean2U ) { E->Approve2[offi] = TRUE; }
-				else{                  E->Approve2[offi] = FALSE;}
+				else{                   E->Approve2[offi] = FALSE;}
 				assert( E->CandRankings[offi] < E->NumCands );
 				E->TopDownPrefs[ offset + E->CandRankings[offi] ] = i;
 			}
@@ -5587,6 +5562,30 @@ void EDataPrep(edata &E, brdata *B)
 		printf("NumElections=%d<1, error\n", B->NumElections);
 		fflush(stdout); exit(EXIT_FAILURE);
 	}
+}
+
+/*	PermShellSortDown( N, Perm, Key ):	rearranges 'Perm[0..N-1]' so
+ *						'Key[Perm[0..N-1]]' is in decreasing
+ *						order
+ *	N:	the number of expected entries in 'Perm' and 'Key'
+ *	Perm:	a set of values to rearrange
+ *	Key:	a set of values to guide sorting
+ *
+ *	f:	a function used to verify sorting worked as expected
+ */
+template<class T, int (*f)(uint, int[], T[])>
+void PermShellSortDown( uint N, int Perm[], T Key[] )
+{
+	int h,i,j,k;
+	int x;
+	for(k=0; (h=ShellIncs[k])>0; k++) {
+		for(i=h; i<(int)N; i++) {
+			x=Perm[i];
+			for(j=i-h; j>=0 && Key[Perm[j]]<Key[x]; j -= h){ Perm[j+h]=Perm[j]; }
+			Perm[j+h]=x;
+		}
+	}
+	assert(f(N,Perm,Key)<=0);
 }
 
 /*	RandomTest(s, mn, mx, v, ct, func1, func2):	performs a
