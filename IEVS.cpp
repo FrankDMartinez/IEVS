@@ -185,7 +185,6 @@ void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*fun
 void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10]);
 void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str);
 template< class T1,
-		T1 (*SelectionFunc)( uint, uint, uint, T1[] ),
 		bool (*RightFunc)( uint, uint, uint, T1[] )>
 		T1 TwiceMedian(uint N, T1 A[] );
 #define NullFunction ((real(*)(void))NULL)
@@ -947,106 +946,6 @@ bool SelectedRightReal( uint L, uint R, uint K, real A[] ){
   for(i=L; i<K; i++){ if( A[i]>A[K] ) return FALSE; }
   for(i=R; i>K; i--){ if( A[K]>A[i] ) return FALSE; }
   return TRUE;
-}
-
-/* Rearranges A[L..R] so that A[i] <= A[K] <= A[j]  if L<=i<K<j<=R.
- * Then returns A[K].  If R-L+1=N then
- * expected runtime for randomly ordered A[] is 1.5*N compares
- * asymptotically to find median (and less for other K, finds max in only 1.0*N).
- * In particular if L=0, R=N-1 and K=(N-1)/2 with N odd, then returns median.
- * If N is even, then use K=N/2 to find the upper bimedian, and then
- * the max of A[0..K-1] is the lower bimedian.
- *   Note: the magic constants 601, 0.5, 0.5, 20, 5, and 5 in the below should
- * be tuned to optimize speed.  They are probably improveable.
- ***/
-int FloydRivestSelectInt( uint L, uint R, uint K, int A[] ){
-  int I, J, N, S, SD, LL, RR;
-  real Z;
-  int T,W;
-  while( R > L ){
-    N = R - L + 1;
-    if( N > 601 ){ /* big enough so worth doing FR-type subsampling to find strong splitter */
-      I = K - L + 1;
-      Z = log((real)(N));
-      S = (int)(0.5 * exp(Z * 2.0/3));
-      SD = (int)(0.5 * sqrt(Z * S * (N - S)/N) * SignInt(2*I - N));
-      LL = MaxInt(L, K - ((I * S) / N) + SD);
-      RR = MinInt(R, K + (((N - I) * S) / N) + SD);
-      /* Recursively select inside small subsample to find an element A[K] usually very
-       * near the desired one: */
-      FloydRivestSelectInt( LL, RR, K, A );
-    }else if( N > 20 && (int)(5*(K-L)) > N && (int)(5*(R-K)) > N){
-        /* not big enough to be worth evaluating those expensive logs etc;
-         * but big enough so random splitter is poor; so use median-of-3 */
-      I = K-1; if(A[K] < A[I]){ W = A[I]; A[I] = A[K]; A[K] = W; }
-      I = K+1; if(A[I] < A[K]){ W = A[I]; A[I] = A[K]; A[K] = W; }
-      I = K-1; if(A[K] < A[I]){ W = A[I]; A[I] = A[K]; A[K] = W; }
-    } /* otherwise using random splitter (i.e. current value of A[K]) */
-    /* now use A[K] to split A[L..R] into two parts... */
-    T = A[K]; I = L; J = R;
-    W = A[L]; A[L] = A[K]; A[K] = W;
-    if( A[R] > T ){ W = A[R]; A[R] = A[L]; A[L] = W; }
-    while( I < J ){
-      W = A[I]; A[I] = A[J]; A[J] = W; I++; J--;
-      while(A[I] < T){ I++; }
-      while(A[J] > T){ J--; }
-    }
-    if( A[L] == T ){ W = A[L]; A[L] = A[J]; A[J] = W; }
-    else{ J++; W = A[J]; A[J] = A[R]; A[R] = W; }
-    if( J <= (int)K ){ L = J + 1; }
-    if( (int)K <= J ){ R = J - 1; }
-    /* Now continue on using contracted [L..R] interval... */
-  }
-  return( A[K] );
-}
-
-/* Rearranges A[L..R] so that A[i] <= A[K] <= A[j]  if L<=i<K<j<=R.
- * Then returns A[K].  If R-L+1=N then
- * expected runtime for randomly ordered A[] is 1.5*N compares
- * asymptotically to find median (and less for other K, finds max in only 1.0*N).
- * In particular if L=0, R=N-1 and K=(N-1)/2 with N odd, then returns median.
- * If N is even, then use K=N/2 to find the upper bimedian, and then
- * the max of A[0..K-1] is the lower bimedian.
- ***/
-real FloydRivestSelectReal( uint L, uint R, uint K, real A[] ){
-  int I, J, N, S, SD, LL, RR;
-  real Z;
-  real T,W;
-  while( R > L ){
-    N = R - L + 1;
-    if( N > 601 ){ /* big enough so worth doing FR-type subsampling to find strong splitter */
-      I = K - L + 1;
-      Z = log((real)(N));
-      S = (int)(0.5 * exp(Z * 2.0/3));
-      SD = (int)(0.5 * sqrt(Z * S * (N - S)/N) * SignInt(2*I - N));
-      LL = MaxInt(L, K - ((I * S) / N) + SD);
-      RR = MinInt(R, K + (((N - I) * S) / N) + SD);
-      /* Recursively select inside small subsample to find an element A[K] usually very
-       * near the desired one: */
-      FloydRivestSelectReal( LL, RR, K, A );
-    }else if( N > 20 && (int)(5*(K-L)) > N && (int)(5*(R-K)) > N){
-        /* not big enough to be worth evaluating those expensive logs etc;
-         * but big enough so random splitter is poor; so use median-of-3 */
-      I = K-1; if(A[K] < A[I]){ W = A[I]; A[I] = A[K]; A[K] = W; }
-      I = K+1; if(A[I] < A[K]){ W = A[I]; A[I] = A[K]; A[K] = W; }
-      I = K-1; if(A[K] < A[I]){ W = A[I]; A[I] = A[K]; A[K] = W; }
-    } /* otherwise using random splitter (i.e. current value of A[K]) */
-    /* now use A[K] to split A[L..R] into two parts... */
-    T = A[K]; I = L; J = R;
-    W = A[L]; A[L] = A[K]; A[K] = W;
-    if( A[R] > T ){ W = A[R]; A[R] = A[L]; A[L] = W; }
-    while( I < J ){
-      W = A[I]; A[I] = A[J]; A[J] = W; I++; J--;
-      while(A[I] < T){ I++; }
-      while(A[J] > T){ J--; }
-    }
-    if( A[L] == T ){ W = A[L]; A[L] = A[J]; A[J] = W; }
-    else{ J++; W = A[J]; A[J] = A[R]; A[R] = W; }
-    if( J <= (int)K ){ L = J + 1; }
-    if( (int)K <= J ){ R = J - 1; }
-    /* Now continue on using contracted [L..R] interval... */
-  }
-  return( A[K] );
 }
 
 /*************************** VOTING METHODS:  ********
@@ -2912,7 +2811,7 @@ EMETH TopMedianRating(edata *E    /* canddt with highest median Score wins */)
 			x = i*E->NumCands + j;
 			CScoreVec[i] = E->Score[x];
 		}
-		MedianRating[j] = TwiceMedian<real, FloydRivestSelectReal, SelectedRightReal>(E->NumVoters, CScoreVec);
+		MedianRating[j] = TwiceMedian<real, SelectedRightReal>(E->NumVoters, CScoreVec);
 	}
 	winner = ArgMaxArr<real>(E->NumCands, MedianRating, (int*)RandCandPerm);
 	return(winner);
@@ -2926,7 +2825,7 @@ EMETH LoMedianRank(edata *E    /* canddt with best median ranking wins */)
 			x = i*E->NumCands + j;
 			CRankVec[i] = E->CandRankings[x];
 		}
-		MedianRank[j] = TwiceMedian<int, FloydRivestSelectInt, SelectedRightInt>(E->NumVoters, CRankVec);
+		MedianRank[j] = TwiceMedian<int, SelectedRightInt>(E->NumVoters, CRankVec);
 		assert( MedianRank[j] >= 0 );
 		assert( MedianRank[j] <= 2*((int)E->NumCands - 1) );
 	}
@@ -5468,6 +5367,75 @@ int ArgMinArr(uint N, T Arr[], int RandPerm[])
 	return(winner);
 }
 
+/*	FloydRivestSelect(L, R, K, A[]):	rearranges A[L..R] so A[i]<=A[K]<= A[j]
+ *						if L<=i<K<j<=R. Then returns A[K].
+ *
+ *						If R-L+1=N, then expected runtime for
+ *						randomly ordered A[] is 1.5*N compares
+ *						asymptotically to find median (and less
+ *						for other K, finds max in only 1.0*N).
+ *
+ *						In particular, if L=0, R=N-1, and
+ *						K=(N-1)/2 with N odd, then the function
+ *						returns the median. If N is even, then
+ *						the function uses K=N/2 to find the
+ *						upper bimedian, and then the max of
+ *						A[0..K-1] is the lower bimedian.
+ *
+ *						Note: the magic constants 601, 0.5, 0.5,
+ *						20, 5, and 5 in the below should be
+ *						tuned to optimize speed. They are
+ *						probably improveable.
+ *	L:	the 'leftmost' index, assuming indices increase from left to right
+ *	R:	the 'rightmost' index, assuming indices increase from left to right
+ *	K:	the median index of 'A'
+ *	A:	the array of values to rearrange
+ *
+ *	Note:	the descriptions of 'L', 'R', 'K', and/or 'A' may not be accurate; the
+ *		description of what the function does, however, is.
+ */
+template< class T1 > T1 FloydRivestSelect(uint L, uint R, uint K, T1 A[])
+{
+	int I, J, N, S, SD, LL, RR;
+	real Z;
+	T1 T,W;
+	while( R > L ) {
+		N = R - L + 1;
+		if( N > 601 ) { /* big enough so worth doing FR-type subsampling to find strong splitter */
+			I = K - L + 1;
+			Z = log((real)(N));
+			S = (int)(0.5 * exp(Z * 2.0/3));
+			SD = (int)(0.5 * sqrt(Z * S * (N - S)/N) * SignInt(2*I - N));
+			LL = MaxInt(L, K - ((I * S) / N) + SD);
+			RR = MinInt(R, K + (((N - I) * S) / N) + SD);
+			/* Recursively select inside small subsample to find an element A[K] usually very
+			 * near the desired one: */
+			FloydRivestSelect<T1>( LL, RR, K, A );
+		}else if( N > 20 && (int)(5*(K-L)) > N && (int)(5*(R-K)) > N) {
+				/* not big enough to be worth evaluating those expensive logs etc;
+				 * but big enough so random splitter is poor; so use median-of-3 */
+			I = K-1; if(A[K] < A[I]) { W = A[I]; A[I] = A[K]; A[K] = W; }
+			I = K+1; if(A[I] < A[K]) { W = A[I]; A[I] = A[K]; A[K] = W; }
+			I = K-1; if(A[K] < A[I]) { W = A[I]; A[I] = A[K]; A[K] = W; }
+		} /* otherwise using random splitter (i.e. current value of A[K]) */
+		/* now use A[K] to split A[L..R] into two parts... */
+		T = A[K]; I = L; J = R;
+		W = A[L]; A[L] = A[K]; A[K] = W;
+		if( A[R] > T ) { W = A[R]; A[R] = A[L]; A[L] = W; }
+		while( I < J ) {
+			W = A[I]; A[I] = A[J]; A[J] = W; I++; J--;
+			while(A[I] < T) { I++; }
+			while(A[J] > T) { J--; }
+		}
+		if( A[L] == T ) { W = A[L]; A[L] = A[J]; A[J] = W; }
+		else{ J++; W = A[J]; A[J] = A[R]; A[R] = W; }
+		if( J <= (int)K ) { L = J + 1; }
+		if( (int)K <= J ) { R = J - 1; }
+		/* Now continue on using contracted [L..R] interval... */
+	}
+	return( A[K] );
+}
+
 /*	runSelfTests():		perfomrs a test of the various
  *				PRNGs and edata structures
  */
@@ -5719,18 +5687,17 @@ void Test(const char *name, const char *direction, real (*func1)(void), real (*f
  *	A:	the set of values to examine
  */
 template< class T1,
-		T1 (*SelectionFunc)( uint, uint, uint, T1[] ),
 		bool (*RightFunc)( uint, uint, uint, T1[] )>
 		T1 TwiceMedian(uint N, T1 A[] )
 {
 	T1 M,T;
 	int i;
 	assert(N>0);
-	M = SelectionFunc( 0, N-1, N/2, A );
+	M = FloydRivestSelect<T1>( 0, N-1, N/2, A );
 	assert( RightFunc( 0, N-1, N/2, A ) );
-	if((N&1)==0){ /*N is even*/
+	if((N&1)==0) { /*N is even*/
 		T = A[N/2 - 1];
-		for(i=N/2 - 2; i>=0; i--){
+		for(i=N/2 - 2; i>=0; i--) {
 			if(A[i] > T) T=A[i];
 		}
 	}else{ T=M; }
