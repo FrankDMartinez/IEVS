@@ -28,6 +28,7 @@
   #include <unistd.h>
 #endif
 #include <string.h>
+#include <typeinfo>
 
 void ensure(bool good, int number);
 
@@ -175,8 +176,8 @@ David Cary's Changes (not listing ones WDS did anyhow) include:
 #define TOP10METHS 512
 uint BROutputMode=0;
 template< class T >
-		int ArgMinArr(uint N, T Arr[], int RandPerm[], T initial_value);
-template<class T, int (*f)(uint, int[], T[])>
+		int ArgMinArr(uint N, T Arr[], int RandPerm[]);
+template<class T>
 		void PermShellSortDown( uint N, int Perm[], T Key[] );
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void));
 void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10]);
@@ -1419,7 +1420,7 @@ EMETH SociallyBest(edata *E  /* greatest utility-sum winner */
 EMETH SociallyWorst(edata *E   /* least utility-sum winner */)
 { /* side effects: UtilitySum[], WorstWinner */
 	if(BestWinner<0) SociallyBest(E);
-	WorstWinner = ArgMinArr<real>(E->NumCands, UtilitySum, (int*)RandCandPerm, HUGE);
+	WorstWinner = ArgMinArr<real>(E->NumCands, UtilitySum, (int*)RandCandPerm);
 	return WorstWinner;
 }
 
@@ -1486,7 +1487,7 @@ EMETH AntiPlurality(edata *E   /* canddt with fewest bottom-rank votes wins */)
 	for(i=0; i<(int)E->NumVoters; i++){
 		AntiPlurVoteCount[ E->TopDownPrefs[i*E->NumCands + E->NumCands - 1] ]++;
 	}
-	AntiPlurWinner = ArgMinArr<int>(E->NumCands, (int*)AntiPlurVoteCount, (int*)RandCandPerm, BIGINT);
+	AntiPlurWinner = ArgMinArr<int>(E->NumCands, (int*)AntiPlurVoteCount, (int*)RandCandPerm);
 	return AntiPlurWinner;
 }
 
@@ -1769,7 +1770,7 @@ EMETH CondorcetLR(edata *E   /* candidate with least sum-of-pairwise-defeat-marg
 		for(j=E->NumCands -1; j>=0; j--){  t += PosInt( E->MarginsMatrix[j*E->NumCands+i] );  }
 		SumOfDefeatMargins[i] = t;
 	}
-	winner = ArgMinArr<int>(E->NumCands, (int*)SumOfDefeatMargins, (int*)RandCandPerm, BIGINT);
+	winner = ArgMinArr<int>(E->NumCands, (int*)SumOfDefeatMargins, (int*)RandCandPerm);
 	return winner;
 }
 
@@ -1861,7 +1862,7 @@ EMETH SimpsonKramer(edata *E  /* candidate with mildest worst-defeat wins */)
 		}
 		WorstDefeatMargin[i] = t;
 	}
-	winner = ArgMinArr<int>(E->NumCands, WorstDefeatMargin, (int*)RandCandPerm, BIGINT);
+	winner = ArgMinArr<int>(E->NumCands, WorstDefeatMargin, (int*)RandCandPerm);
 	return winner;
 }
 
@@ -2232,7 +2233,7 @@ EMETH SimmonsCond(edata *E  /* winner = X with least sum of top-rank-votes for r
 		}
 		SimmVotesAgainst[i] = t;
 	}
-	winner = ArgMinArr<int>(E->NumCands, SimmVotesAgainst, (int*)RandCandPerm, BIGINT);
+	winner = ArgMinArr<int>(E->NumCands, SimmVotesAgainst, (int*)RandCandPerm);
 	return winner;
 }
 
@@ -2961,7 +2962,7 @@ EMETH LoMedianRank(edata *E    /* canddt with best median ranking wins */)
 		assert( MedianRank[j] >= 0 );
 		assert( MedianRank[j] <= 2*((int)E->NumCands - 1) );
 	}
-	winner = ArgMinArr<int>(E->NumCands, MedianRank, (int*)RandCandPerm, BIGINT);
+	winner = ArgMinArr<int>(E->NumCands, MedianRank, (int*)RandCandPerm);
 	return(winner);
 }
 
@@ -3111,7 +3112,7 @@ EMETH DMC(edata *E  /* eliminate least-approved candidate until unbeaten winner 
 		LossCount[i] = t;
 	}
 	RandomlyPermute( E->NumCands, RandCandPerm );
-	PermShellSortDown<int, SortedIntKey>(E->NumCands, (int*)RandCandPerm, (int*)ApprovalVoteCount);
+	PermShellSortDown<int>(E->NumCands, (int*)RandCandPerm, (int*)ApprovalVoteCount);
 	for(i=E->NumCands-1; i>0; i--) {
 		if( LossCount[i] <= 0 ){  return(i); /*winner*/ }
 		for(j=0; j<i; j++){ /* eliminate i and update Losscount[] */
@@ -3320,7 +3321,7 @@ EMETH WoodallDAC(edata *E  /*Woodall: Monotonocity of single-seat preferential e
 		}
 	}
 	assert(numsets <= E->NumCands * E->NumVoters);
-	PermShellSortDown<int, SortedIntKey>(numsets, (int*)WoodSetPerm, (int*)WoodHashCount);
+	PermShellSortDown<int>(numsets, (int*)WoodSetPerm, (int*)WoodHashCount);
 	s = WoodHashSet[WoodSetPerm[0]];
 	assert( !EmptySet(s) );
 	if(SingletonSet(s)){  goto DONE;  }
@@ -3641,7 +3642,7 @@ void HonestyStrat( edata *E, real honfrac )
 		offset = v*E->NumCands;
 		if( Rand01() < honfrac ) { /*honest voter*/
 			MakeIdentityPerm( E->NumCands, E->TopDownPrefs+offset );
-			PermShellSortDown<real, SortedRealKey>( E->NumCands, (int*)E->TopDownPrefs+offset, E->PerceivedUtility+offset );
+			PermShellSortDown<real>( E->NumCands, (int*)E->TopDownPrefs+offset, E->PerceivedUtility+offset );
 			assert( IsPerm(E->NumCands, E->TopDownPrefs+offset) );
 			MaxUtil = -HUGE;
 			MinUtil =  HUGE;
@@ -5447,20 +5448,19 @@ int main(int argc, char **argv)
 
 /*	Additions by Me		*/
 
-/*	ArgMinArr(N, Arr[], RandPerm[], inital_value):	returns index of random min
- *							entry of Arr[0..N-1]
+/*	ArgMinArr(N, Arr[], RandPerm[]):	returns index of random min entry of
+ *						Arr[0..N-1]
  *	N:		the expected number of elements in 'Arr' and 'RandPerm'
  *	Arr:		array of values to examine
  *	RandPerm:	array of perm.
- *	initial_value:	the initial minimum
  */
 template< class T >
-int ArgMinArr(uint N, T Arr[], int RandPerm[], T initial_value)
+int ArgMinArr(uint N, T Arr[], int RandPerm[])
 {
 	T minc;
 	int i,r,winner;
 	winner = -1;
-	minc = initial_value;
+	minc = (typeid(T)==typeid(int)) ? (T)BIGINT : (T)HUGE;
 	RandomlyPermute( N, (uint*)RandPerm );
 	for(i=0; i<(int)N; i++) {
 		r = RandPerm[i];
@@ -5557,18 +5557,18 @@ void EDataPrep(edata &E, brdata *B)
 	}
 }
 
-/*	PermShellSortDown( N, Perm, Key ):	rearranges 'Perm[0..N-1]' so
+/*	PermShellSortDown(N, Perm, Key):	rearranges 'Perm[0..N-1]' so
  *						'Key[Perm[0..N-1]]' is in decreasing
  *						order
  *	N:	the number of expected entries in 'Perm' and 'Key'
  *	Perm:	a set of values to rearrange
  *	Key:	a set of values to guide sorting
- *
- *	f:	a function used to verify sorting worked as expected
  */
-template<class T, int (*f)(uint, int[], T[])>
-void PermShellSortDown( uint N, int Perm[], T Key[] )
+template<class T>
+void PermShellSortDown(uint N, int Perm[], T Key[])
 {
+	typedef int (*fp)(uint, int[], T[]);
+	static const fp f = (typeid(T)==typeid(int)) ? (fp) SortedIntKey : (fp) SortedRealKey;
 	int h,i,j,k;
 	int x;
 	for(k=0; (h=ShellIncs[k])>0; k++) {
