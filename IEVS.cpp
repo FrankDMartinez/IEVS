@@ -2640,88 +2640,64 @@ makes the method much less vulnerable to "turkey raising" strategy
 (because voters in the first round can't have their votes do both of
 promote one of their sincerely approved candidates and also
 a "turkey").
-***/
-EMETH Benham2AppRunoff(edata *E  /*description above*/
-){
-  int i,j,y,r,maxc;
-  uint jct, awct, offset;
-  if(ApprovalWinner<0) Approval(E);
-  RandomlyPermute( E->NumCands, RandCandPerm );
-  maxc = -BIGINT;
-  j = -1;
-  for(i=0; i<(int)E->NumCands; i++){
-    r = RandCandPerm[i];
-    y = PairApproval[ApprovalWinner*E->NumCands +r];
-    if( ApprovalVoteCount[r] + y > ApprovalVoteCount[ApprovalWinner] ){
-      if( (int)ApprovalVoteCount[r] - y > maxc ){
-	maxc = ApprovalVoteCount[r] - y;
-	j = r;
-      }
-    }
-  }
-  if(j<0) return(ApprovalWinner);
-  /* now for honest runoff between ApprovalWinner and j */
-  awct=0;
-  jct=0;
-  for(i=0; i<(int)E->NumVoters; i++){
-    offset = i*E->NumCands;
-    if( E->PerceivedUtility[offset+ApprovalWinner] > E->PerceivedUtility[offset+j] ){
-      awct++;
-    }else if( E->PerceivedUtility[offset+ApprovalWinner] < E->PerceivedUtility[offset+j] ){
-      jct++;
-    }
-  }
-  if( awct > jct || (awct == jct && RandBool()) ) return(ApprovalWinner);
-  return(j);
-}
 
-EMETH Benham2AppRunB(edata *E  /*same as above, except if no 2nd qualifier then just use top 2 approval finishers; always do runoff*/
-){ /* side effects: PairApproval[], ASecond */
-  uint offset, pwct=0, wct=0;
-  int i,j,y,r,maxc;
-  uint jct, awct;
-  if(ApprovalWinner<0) Approval(E);
-  RandomlyPermute( E->NumCands, RandCandPerm );
-  maxc = -BIGINT;
-  j = -1;
-  for(i=0; i<(int)E->NumCands; i++){
-    r = RandCandPerm[i];
-    y = PairApproval[ApprovalWinner*E->NumCands +r];
-    if( ApprovalVoteCount[r] + y > ApprovalVoteCount[ApprovalWinner] ){
-      if( (int)ApprovalVoteCount[r] - y > maxc ){
-	maxc = ApprovalVoteCount[r] - y;
-	j = r;
-      }
-    }
-  }
-  if(j<0){ /* no 2nd qualifier*/
-    ASecond = -1;
-    ASecond = Arg2MaxUIntArr( E->NumCands, ApprovalVoteCount, (int*)RandCandPerm, ApprovalWinner );
-    assert(ASecond>=0);
-    for(i=0; i<(int)E->NumVoters; i++){
-      offset = i*E->NumCands;
-      if( E->PerceivedUtility[offset+ApprovalWinner] > E->PerceivedUtility[offset+ASecond] ){
-	pwct++;
-      }else if( E->PerceivedUtility[offset+ApprovalWinner] < E->PerceivedUtility[offset+ASecond] ){
-	wct++;
-      }
-    }
-    if( pwct > wct || (pwct == wct && RandBool()) ) return(ApprovalWinner);
-    return(ASecond);
-  }
-  /* now for honest runoff between ApprovalWinner and j */
-  awct=0;
-  jct=0;
-  for(i=0; i<(int)E->NumVoters; i++){
-    offset = i*E->NumCands;
-    if( E->PerceivedUtility[offset+ApprovalWinner] > E->PerceivedUtility[offset+j] ){
-      awct++;
-    }else if( E->PerceivedUtility[offset+ApprovalWinner] < E->PerceivedUtility[offset+j] ){
-      jct++;
-    }
-  }
-  if( awct > jct || (awct == jct && RandBool()) ) return(ApprovalWinner);
-  return(j);
+Commentary by Me:
+	Benham2AppRunoff(E, alwaysRunoff):	see above
+ *
+ *	E:		the election data
+ *	alwaysRunoff:	whether to always do a run-off election or not
+***/
+EMETH Benham2AppRunoff(edata *E, bool alwaysRunoff)
+{
+	int i,j,y,r,maxc;
+	uint jct, awct, offset;
+	if(ApprovalWinner<0) Approval(E);
+	RandomlyPermute( E->NumCands, RandCandPerm );
+	maxc = -BIGINT;
+	j = -1;
+	for(i=0; i<(int)E->NumCands; i++) {
+		r = RandCandPerm[i];
+		y = PairApproval[ApprovalWinner*E->NumCands +r];
+		if( ApprovalVoteCount[r] + y > ApprovalVoteCount[ApprovalWinner] ) {
+			if( (int)ApprovalVoteCount[r] - y > maxc ) {
+				maxc = ApprovalVoteCount[r] - y;
+				j = r;
+			}
+		}
+	}
+	if(j<0) {
+		if(alwaysRunoff) {
+			uint pwct=0, wct=0;
+			ASecond = -1;
+			ASecond = Arg2MaxUIntArr( E->NumCands, ApprovalVoteCount, (int*)RandCandPerm, ApprovalWinner );
+			assert(ASecond>=0);
+			for(i=0; i<(int)E->NumVoters; i++) {
+				offset = i*E->NumCands;
+				if( E->PerceivedUtility[offset+ApprovalWinner] > E->PerceivedUtility[offset+ASecond] ){
+					pwct++;
+				} else if( E->PerceivedUtility[offset+ApprovalWinner] < E->PerceivedUtility[offset+ASecond] ){
+					wct++;
+				}
+			}
+			if( pwct > wct || (pwct == wct && RandBool()) ) return(ApprovalWinner);
+			return(ASecond);
+		} else {
+			return(ApprovalWinner);
+		}
+	}
+	/* now for honest runoff between ApprovalWinner and j */
+	awct=0;
+	jct=0;
+	for(i=0; i<(int)E->NumVoters; i++) {
+		offset = i*E->NumCands;
+		if( E->PerceivedUtility[offset+ApprovalWinner] > E->PerceivedUtility[offset+j] ) {
+			awct++;
+		} else if( E->PerceivedUtility[offset+ApprovalWinner] < E->PerceivedUtility[offset+j] ) {
+			jct++;
+		}
+	}
+	if( awct > jct || (awct == jct && RandBool()) ) return(ApprovalWinner);
+	return(j);
 }
 
 EMETH CondorcetApproval(edata *E  /*Condorcet winner if exists, else use Approval*/
@@ -3302,90 +3278,91 @@ void PrintAvailableVMethods(){
   fflush(stdout);
 }
 
-int GimmeWinner( edata *E, int WhichMeth ){
-  int w;
-  switch(WhichMeth){
-  case(0) : w=SociallyBest(E); break;
-  case(1) : w=SociallyWorst(E); break;
-  case(2) : w=RandomWinner(E); break;
-  case(3) : w=Plurality(E); break;
-  case(4) : w=Borda(E); break;
-  case(5) : w=IRV(E); break;
-  case(6) : w=Approval(E); break;
-  case(7) : w=Range(E); break;
-  case(8) : w=SmithSet(E); break;
-  case(9) : w=SchwartzSet(E); break;
-  case(10) : w=AntiPlurality(E); break;
-  case(11) : w=Top2Runoff(E); break;
-    /****** above methods were "Core"; below are optional *****/
-  case(12) : w=CondorcetLR(E); break;
-  case(13) : w=SimpsonKramer(E); break;
-  case(14) : w=Bucklin(E); break;
-  case(15) : w=Copeland(E); break;
-  case(16) : w=SimmonsCond(E); break;
-  case(17) : w=SmithIRV(E); break;
-  case(18) : w=BTRIRV(E); break;
-  case(19) : w=DMC(E); break;
-  case(20) : w=Dabagh(E); break;
-  case(21) : w=VtForAgainst(E); break;
-  case(22) : w=SchulzeBeatpaths(E); break;
-  case(23) : w=PlurIR(E); break;
-  case(24) : w=Black(E); break;
-  case(25) : w=RandomBallot(E); break;
-  case(26) : w=RandomPair(E); break;
-  case(27) : w=NansonBaldwin(E); break;
-  case(28) : w=Nauru(E); break;
-  case(29) : w=TopMedianRating(E); break;
-  case(30) : w=LoMedianRank(E); break;
-  case(31) : w=RaynaudElim(E); break;
-  case(32) : w=ArrowRaynaud(E); break;
-  case(33) : w=Sinkhorn(E); break;
-  case(34) : w=KeenerEig(E); break;
-  case(35) : w=MDDA(E); break;
-  case(36) : w=VenzkeDisqPlur(E); break;
-  case(37) : w=CondorcetApproval(E); break;
-  case(38) : w=UncoveredSet(E); break;
-  case(39) : w=BramsSanverPrAV(E); break;
-  case(40) : w=Coombs(E); break;
-  case(41) : w=Top3IRV(E); break;
-  case(42) : w=ContinCumul(E); break;
-  case(43) : w=IterCopeland(E); break;
-  case(44) : w=HeitzigRiver(E); break;
-  case(45) : w=MCA(E); break;
-  case(46) : RangeGranul=3;  w=RangeN(E); break;
-  case(47) : RangeGranul=10; w=RangeN(E); break;
-  case(48) : w=HeismanTrophy(E); break;
-  case(49) : w=BaseballMVP(E); break;
-  case(50) : w=App2Runoff(E); break;
-  case(51) : w=Range2Runoff(E); break;
-  case(52) : w=HeitzigDFC(E); break;
-  case(53) : w=ArmytagePCSchulze(E); break;
-  case(54) : w=Hay(E); break;
-  case(55) : w=HeitzigLFC(E); break;
-  case(56) : w=Benham2AppRunoff(E); break;
-  case(57) : w=Benham2AppRunB(E); break;
-  case(58) : w=WoodallDAC(E); break;
-  case(59) : w=UncAAO(E); break;
-    /****** below methods are "Slow": *****/
-  case(NumFastMethods+0) : w=TidemanRankedPairs(E); break;
-  case(NumFastMethods+1) : IRNRPOWER=2.0; w=IRNR(E); break;
-  case(NumFastMethods+2) : IRNRPOWER=1.0; w=IRNR(E); break;
-  case(NumFastMethods+3) : IRNRPOWER=3.0; w=IRNR(E); break;
-  case(NumFastMethods+4) : IRNRPOWER=9.0; w=IRNR(E); break;
-  case(NumFastMethods+5) : w=IRNRv(E); break;
-  case(NumFastMethods+6) : w=IRNRm(E); break;
-  case(NumFastMethods+7) : w=Rouse(E); break;
-  default :
-    printf("Unsupported voting method %d\n", WhichMeth);
-    fflush(stdout); exit(EXIT_FAILURE);
-  } /*end switch*/
-  if(w<0 || w>=(int)E->NumCands){
-    printf("Voting method %d=", WhichMeth); PrintMethName(WhichMeth,FALSE);
-    printf(" returned erroneous winner %d\n", w);
-    fflush(stdout);
-    exit(EXIT_FAILURE);
-  }
-  return(w);
+int GimmeWinner( edata *E, int WhichMeth )
+{
+	int w;
+	switch(WhichMeth) {
+	case(0) : w=SociallyBest(E); break;
+	case(1) : w=SociallyWorst(E); break;
+	case(2) : w=RandomWinner(E); break;
+	case(3) : w=Plurality(E); break;
+	case(4) : w=Borda(E); break;
+	case(5) : w=IRV(E); break;
+	case(6) : w=Approval(E); break;
+	case(7) : w=Range(E); break;
+	case(8) : w=SmithSet(E); break;
+	case(9) : w=SchwartzSet(E); break;
+	case(10) : w=AntiPlurality(E); break;
+	case(11) : w=Top2Runoff(E); break;
+		/****** above methods were "Core"; below are optional *****/
+	case(12) : w=CondorcetLR(E); break;
+	case(13) : w=SimpsonKramer(E); break;
+	case(14) : w=Bucklin(E); break;
+	case(15) : w=Copeland(E); break;
+	case(16) : w=SimmonsCond(E); break;
+	case(17) : w=SmithIRV(E); break;
+	case(18) : w=BTRIRV(E); break;
+	case(19) : w=DMC(E); break;
+	case(20) : w=Dabagh(E); break;
+	case(21) : w=VtForAgainst(E); break;
+	case(22) : w=SchulzeBeatpaths(E); break;
+	case(23) : w=PlurIR(E); break;
+	case(24) : w=Black(E); break;
+	case(25) : w=RandomBallot(E); break;
+	case(26) : w=RandomPair(E); break;
+	case(27) : w=NansonBaldwin(E); break;
+	case(28) : w=Nauru(E); break;
+	case(29) : w=TopMedianRating(E); break;
+	case(30) : w=LoMedianRank(E); break;
+	case(31) : w=RaynaudElim(E); break;
+	case(32) : w=ArrowRaynaud(E); break;
+	case(33) : w=Sinkhorn(E); break;
+	case(34) : w=KeenerEig(E); break;
+	case(35) : w=MDDA(E); break;
+	case(36) : w=VenzkeDisqPlur(E); break;
+	case(37) : w=CondorcetApproval(E); break;
+	case(38) : w=UncoveredSet(E); break;
+	case(39) : w=BramsSanverPrAV(E); break;
+	case(40) : w=Coombs(E); break;
+	case(41) : w=Top3IRV(E); break;
+	case(42) : w=ContinCumul(E); break;
+	case(43) : w=IterCopeland(E); break;
+	case(44) : w=HeitzigRiver(E); break;
+	case(45) : w=MCA(E); break;
+	case(46) : RangeGranul=3;  w=RangeN(E); break;
+	case(47) : RangeGranul=10; w=RangeN(E); break;
+	case(48) : w=HeismanTrophy(E); break;
+	case(49) : w=BaseballMVP(E); break;
+	case(50) : w=App2Runoff(E); break;
+	case(51) : w=Range2Runoff(E); break;
+	case(52) : w=HeitzigDFC(E); break;
+	case(53) : w=ArmytagePCSchulze(E); break;
+	case(54) : w=Hay(E); break;
+	case(55) : w=HeitzigLFC(E); break;
+	case(56) : w=Benham2AppRunoff(E, false); break;
+	case(57) : w=Benham2AppRunoff(E, true); break;
+	case(58) : w=WoodallDAC(E); break;
+	case(59) : w=UncAAO(E); break;
+		/****** below methods are "Slow": *****/
+	case(NumFastMethods+0) : w=TidemanRankedPairs(E); break;
+	case(NumFastMethods+1) : IRNRPOWER=2.0; w=IRNR(E); break;
+	case(NumFastMethods+2) : IRNRPOWER=1.0; w=IRNR(E); break;
+	case(NumFastMethods+3) : IRNRPOWER=3.0; w=IRNR(E); break;
+	case(NumFastMethods+4) : IRNRPOWER=9.0; w=IRNR(E); break;
+	case(NumFastMethods+5) : w=IRNRv(E); break;
+	case(NumFastMethods+6) : w=IRNRm(E); break;
+	case(NumFastMethods+7) : w=Rouse(E); break;
+	default :
+		printf("Unsupported voting method %d\n", WhichMeth);
+		fflush(stdout); exit(EXIT_FAILURE);
+	} /*end switch*/
+	if(w<0 || w>=(int)E->NumCands) {
+		printf("Voting method %d=", WhichMeth); PrintMethName(WhichMeth,FALSE);
+		printf(" returned erroneous winner %d\n", w);
+		fflush(stdout);
+		exit(EXIT_FAILURE);
+	}
+	return(w);
 }
 
 typedef struct dum2 {
