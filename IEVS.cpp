@@ -5541,7 +5541,7 @@ void runSingleYeeTest(uint aSeed)
 	int LpPow=1;
 	int ihonfrac=50;
 	int WhichMeth=2;
-	char fname[100]="IEVSbmp";
+	char fname[100];
 	int NumSites=16;
 	int subsqsideX=200;
 	int subsqsideY=200;
@@ -5574,6 +5574,7 @@ void runSingleYeeTest(uint aSeed)
 	for(i=0; i<NumSites; i++) {
 		printf("(%d, %d)\n", xx[i], yy[i]);
 	}
+	sprintf(fname,"IEVSbmp%u",aSeed);
 	MakeYeePict( fname, xx, yy, NumSites, WhichMeth, TopYeeVoters, GaussStdDev, ihonfrac*0.01, LpPow );
 	printf("seed=%d\n", aSeed);
 }
