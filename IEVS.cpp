@@ -3454,7 +3454,8 @@ also - that is unlikely, but could happen. ***/
 void HonestyStrat( edata *E, real honfrac )
 {
 	int lobd, hibd, v, i, nexti, ACT;
-	uint offi, offset, rb;
+	uint offi, offset;
+	bool rb;
 	real MovingAvg, tmp, MaxUtil, MinUtil, SumU, MeanU, Mean2U, ThisU, RecipDiffUtil;
 	assert(E->NumVoters <= MaxNumVoters);
 	assert(E->NumCands <= MaxNumCands);
