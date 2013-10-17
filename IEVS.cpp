@@ -5437,6 +5437,7 @@ void runTests()
 {
 	PrintConsts();
 	runSingleTest(1);
+	runSingleTest(2);
 }
 
 /*	ensure(good, number):	assertion function making sure 'good' is
