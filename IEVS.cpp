@@ -1173,6 +1173,8 @@ void PrintEdata(FILE *F, edata *E)
 
 #define EMETH int  /* allows fgrep EMETH IEVS.c to find out what Election methods now available */
 
+EMETH runoffForApprovalVoting(edata *E);
+
 void BuildDefeatsMatrix(edata *E)
 { /* initializes  E->DefeatsMatrix[], E->MarginsMatrix[], RandCandPerm[], NauruWt[], WinCount[], DrawCt[], CondorcetWinner, CopeWinOnlyWinner, TrueCW */
 	int k,i,j,y;
@@ -2378,24 +2380,12 @@ EMETH Approval(edata *E   /* canddt with most-approvals wins */
   return(ApprovalWinner);
 }
 
-EMETH App2Runoff(edata *E    /*top-2-runoff, 1stRd=approval, 2nd round has fully-honest voting*/
-){ /* side effects: ASecond */
-  int i;
-  uint offset, pwct=0, wct=0;
-  ASecond = -1;
-  if(ApprovalWinner<0) Approval(E);
-  ASecond = Arg2MaxUIntArr( E->NumCands, ApprovalVoteCount, (int*)RandCandPerm, ApprovalWinner );
-  assert(ASecond>=0);
-  for(i=0; i<(int)E->NumVoters; i++){
-    offset = i*E->NumCands;
-    if( E->PerceivedUtility[offset+ApprovalWinner] > E->PerceivedUtility[offset+ASecond] ){
-       pwct++;
-    }else if( E->PerceivedUtility[offset+ApprovalWinner] < E->PerceivedUtility[offset+ASecond] ){
-      wct++;
-    }
-  }
-  if( pwct > wct || (pwct == wct && RandBool()) ) return(ApprovalWinner);
-  return(ASecond);
+EMETH App2Runoff(edata *E    /*top-2-runoff, 1stRd=approval, 2nd round has fully-honest voting*/)
+{ /* side effects: ASecond */
+	EMETH winner;
+	if(ApprovalWinner<0) Approval(E);
+	winner = runoffForApprovalVoting(E);
+	return winner;
 }
 
 EMETH HeitzigDFC(edata *E)
@@ -2667,20 +2657,9 @@ EMETH Benham2AppRunoff(edata *E, bool alwaysRunoff)
 	}
 	if(j<0) {
 		if(alwaysRunoff) {
-			uint pwct=0, wct=0;
-			ASecond = -1;
-			ASecond = Arg2MaxUIntArr( E->NumCands, ApprovalVoteCount, (int*)RandCandPerm, ApprovalWinner );
-			assert(ASecond>=0);
-			for(i=0; i<(int)E->NumVoters; i++) {
-				offset = i*E->NumCands;
-				if( E->PerceivedUtility[offset+ApprovalWinner] > E->PerceivedUtility[offset+ASecond] ){
-					pwct++;
-				} else if( E->PerceivedUtility[offset+ApprovalWinner] < E->PerceivedUtility[offset+ASecond] ){
-					wct++;
-				}
-			}
-			if( pwct > wct || (pwct == wct && RandBool()) ) return(ApprovalWinner);
-			return(ASecond);
+			EMETH winner;
+			winner = runoffForApprovalVoting(E);
+			return winner;
 		} else {
 			return(ApprovalWinner);
 		}
@@ -5631,6 +5610,30 @@ void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real
 	for(i=0; i<10; i++) printf(" %d", ct[i]);
 	printf("\n");
 	fflush(stdout);
+}
+
+/*	runoffForApprovalVoting(E):	returns the approval voting runoff Winner
+ *
+ *	E:				the election data
+ */
+EMETH runoffForApprovalVoting(edata *E)
+{
+	int i;
+	uint offset;
+	uint pwct=0, wct=0;
+	ASecond = -1;
+	ASecond = Arg2MaxUIntArr( E->NumCands, ApprovalVoteCount, (int*)RandCandPerm, ApprovalWinner );
+	assert(ASecond>=0);
+	for(i=0; i<(int)E->NumVoters; i++) {
+		offset = i*E->NumCands;
+		if( E->PerceivedUtility[offset+ApprovalWinner] > E->PerceivedUtility[offset+ASecond] ){
+			pwct++;
+		} else if( E->PerceivedUtility[offset+ApprovalWinner] < E->PerceivedUtility[offset+ASecond] ){
+			wct++;
+		}
+	}
+	if( pwct > wct || (pwct == wct && RandBool()) ) return(ApprovalWinner);
+	return(ASecond);
 }
 
 /*	Test(name, direction, func1, func2, mean_str, meansq_str):
