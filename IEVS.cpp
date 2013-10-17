@@ -148,7 +148,6 @@ David Cary's Changes (not listing ones WDS did anyhow) include:
 #define uint32 unsigned int
 #define uint64 unsigned long long
 #define uchar unsigned char
-#define schar signed char
 #define real double
 
 #define PI 3.14159265358979323844
