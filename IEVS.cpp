@@ -3890,34 +3890,29 @@ void PrintUtilName( int WhichMeth, bool Padding ){
 }
 
 /************ useful IO stuff... ***********/
-void PrintConsts(){
-  printf("\nConstants:\n");
-  printf("sizeof(uint)=%d bytes\t", (int)sizeof(uint));
-  printf("sizeof(uint32)=%d\t", (int)sizeof(uint32));
-  printf("sizeof(uint64)=%d\t", (int)sizeof(uint64));
-  printf("sizeof(real)=%d\n", (int)sizeof(real));
-  printf("sizeof(edata)=%d\t", (int)sizeof(edata));
-  printf("MaxNumCands=%d\t", MaxNumCands);
-  printf("MaxNumVoters=%d\t", MaxNumVoters);
-  printf("MaxNumIssues=%d\n", MaxNumIssues);
-  printf("NumMethods=%d\t", NumMethods);
-  printf("NumCoreMethods=%d\t", NumCoreMethods);
-  printf("TRUE=%d\t", (int)TRUE);
-  printf("FALSE=%d\n", (int)FALSE);
-  ARTINPRIME = FindArtinPrime(MaxNumCands*3*MaxNumVoters);
-  printf("ArtinPrime=%d\n", ARTINPRIME);
+void PrintConsts()
+{
+	printf("\nConstants:\n");
+	printf("sizeof(uint)=%d bytes\t", (int)sizeof(uint));
+	printf("sizeof(uint32)=%d\t", (int)sizeof(uint32));
+	printf("sizeof(uint64)=%d\t", (int)sizeof(uint64));
+	printf("sizeof(real)=%d\n", (int)sizeof(real));
+	printf("sizeof(edata)=%d\t", (int)sizeof(edata));
+	printf("MaxNumCands=%d\t", MaxNumCands);
+	printf("MaxNumVoters=%d\t", MaxNumVoters);
+	printf("MaxNumIssues=%d\n", MaxNumIssues);
+	printf("NumMethods=%d\t", NumMethods);
+	printf("NumCoreMethods=%d\t", NumCoreMethods);
+	printf("TRUE=%d\t", (int)TRUE);
+	printf("FALSE=%d\n", (int)FALSE);
+	ARTINPRIME = FindArtinPrime(MaxNumCands*3*MaxNumVoters);
+	printf("ArtinPrime=%d\n", ARTINPRIME);
 
-  printf("BROutputMode=%x\n", BROutputMode);
+	printf("BROutputMode=%x\n", BROutputMode);
 
-  if(sizeof(uint32)!=4){
-    printf("uint32 has wrong size - need to change defn so it is 4 bytes = 32 bits. Terminating\n");
-    exit(EXIT_FAILURE);
-  }
-  if(sizeof(uint64)!=8){
-    printf("uint64 has wrong size - need to change defn so it is 8 bytes = 64 bits. Terminating\n");
-    exit(EXIT_FAILURE);
-  }
-  fflush(stdout);
+	ensure(sizeof(uint32)==4, 24);
+	ensure(sizeof(uint64)==8, 25);
+	fflush(stdout);
 }
 
 /************ Bayesian Regret ***********/
