@@ -1664,6 +1664,7 @@ EMETH Sinkhorn(edata *E  /* candidate with max Sinkhorn rating (from all-positiv
 			}
 			if(minsum > sum) minsum = sum;
 			if(maxsum < sum) maxsum = sum;
+			ensure((sum!=0.0), 26);
 			SinkRow[k] /= sum;
 		}
 		ensure((minsum != 0.0), 1);
@@ -1676,6 +1677,7 @@ EMETH Sinkhorn(edata *E  /* candidate with max Sinkhorn rating (from all-positiv
 			}
 			if(minsum > sum) minsum = sum;
 			if(maxsum < sum) maxsum = sum;
+			ensure((sum!=0.0), 27);
 			SinkCol[k] /= sum;
 		}
 		ensure((minsum != 0.0), 2);
