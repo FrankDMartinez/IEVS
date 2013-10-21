@@ -175,16 +175,16 @@ David Cary's Changes (not listing ones WDS did anyhow) include:
 #define TOP10METHS 512
 uint BROutputMode=0;
 template< class T >
-		int ArgMinArr(uint N, T Arr[], int RandPerm[]);
+		int ArgMinArr(uint N, const T Arr[], int RandPerm[]);
 template< class T >
-		int ArgMaxArr(uint N, T Arr[], int RandPerm[]);
+		int ArgMaxArr(uint N, const T Arr[], int RandPerm[]);
 template<class T>
 		void PermShellSortDown( uint N, int Perm[], T Key[] );
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void));
 void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10]);
 void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str);
 template< class T1,
-		bool (*RightFunc)( uint, uint, uint, T1[] )>
+		bool (*RightFunc)( uint, uint, uint, const T1[] )>
 		T1 TwiceMedian(uint N, T1 A[] );
 #define NullFunction ((real(*)(void))NULL)
 
@@ -713,7 +713,7 @@ void TestsOfRand(){
   TestRadialNormalRand2();
 }
 
-bool IsPerm( uint N, uint Perm[] ){ /* true if is a perm of [0..N-1] */
+bool IsPerm( uint N, const uint Perm[] ){ /* true if is a perm of [0..N-1] */
   int i;
   int ct[MaxNumCands];
   assert(N<MaxNumCands);
@@ -740,12 +740,12 @@ void RandomlyPermute( uint N, uint RandPerm[] ){ /* randomly permutes RandPerm[0
 }
 
 /******* vector handling: **********/
-void CopyIntArray(uint N, int src[], int dest[] ){
+void CopyIntArray(uint N, const int src[], int dest[] ){
   int i;
   for(i=N-1; i>=0; i--) dest[i] = src[i];
 }
 
-void CopyRealArray(uint N, real src[], real dest[] ){
+void CopyRealArray(uint N, const real src[], real dest[] ){
   int i;
   for(i=N-1; i>=0; i--) dest[i] = src[i];
 }
@@ -774,7 +774,7 @@ void ZeroRealArray(uint N, real Arr[] ){ /* sets Arr[0..N-1] = 0 */
 }
 
 /* Assumes RandPerm[0..N-1] contains perm. Returns index of random max entry of Arr[0..N-1]. */
-int ArgMaxUIntArr(uint N, uint Arr[], int RandPerm[] ){
+int ArgMaxUIntArr(uint N, const uint Arr[], int RandPerm[] ){
   uint maxc;
   int i, r, winner;
   winner = -1;
@@ -793,7 +793,7 @@ int ArgMaxUIntArr(uint N, uint Arr[], int RandPerm[] ){
 
 /* Assumes RandPerm[0..N-1] contains random perm and MaxInd is index for Arr[] yielding max.
  * Returns index of second-max. */
-int Arg2MaxUIntArr(uint N, uint Arr[], int RandPerm[], int MaxInd ){
+int Arg2MaxUIntArr(uint N, const uint Arr[], const int RandPerm[], int MaxInd ){
   uint maxc;
   int i, r, winner;
   winner = -1;
@@ -811,7 +811,7 @@ int Arg2MaxUIntArr(uint N, uint Arr[], int RandPerm[], int MaxInd ){
 
 /* Assumes RandPerm[0..N-1] contains random perm and MaxInd is index for Arr[] yielding max.
  * Returns index of second-max. */
-int Arg2MaxRealArr(uint N, real Arr[], int RandPerm[], int MaxInd ){
+int Arg2MaxRealArr(uint N, const real Arr[], const int RandPerm[], int MaxInd ){
   real maxc;
   int i, r, winner;
   winner = -1;
@@ -854,21 +854,21 @@ void WelfordUpdateMeanSD(real NewDatum, int *Count, real *M, real *S){
   return;
 }
 
-real DistanceSquared(uint N, real a[], real b[] ){
+real DistanceSquared(uint N, const real a[], const real b[] ){
  real d = 0.0;
   int i;
   for(i=0; i<(int)N; i++) d += SquareReal( a[i]-b[i] );
   return d;
 }
 
-real L1Distance(uint N, real a[], real b[] ){
+real L1Distance(uint N, const real a[], const real b[] ){
   real d = 0.0;
   int i;
   for(i=0; i<(int)N; i++) d += fabs( a[i]-b[i] );
   return d;
 }
 
-real LpDistanceSquared(uint N, real a[], real b[], real Lp ){
+real LpDistanceSquared(uint N, const real a[], const real b[], real Lp ){
  real d = 0.0;
   int i;
   assert(Lp >= 1.0);
@@ -878,14 +878,14 @@ real LpDistanceSquared(uint N, real a[], real b[], real Lp ){
   return pow( d, 2.0/Lp );
 }
 
-real  SumRealArray( uint N, real a[] ){
+real  SumRealArray( uint N, const real a[] ){
   real s = 0.0;
   int i;
   for(i=0; i<(int)N; i++) s += a[i];
   return s;
 }
 
-real DotProd(uint N, real a[], real b[] ){
+real DotProd(uint N, const real a[], const real b[] ){
  real d = 0.0;
   int i;
   for(i=0; i<(int)N; i++) d += a[i]*b[i];
@@ -893,7 +893,7 @@ real DotProd(uint N, real a[], real b[] ){
 }
 
 /******* sorting: **********/
-int SortedRealKey( uint N, int Arr[], real Key[] ){
+int SortedRealKey( uint N, const int Arr[], const real Key[] ){
   int i,s;
   s = SignReal( Key[Arr[N-1]]-Key[Arr[0]] );
   for(i=1; i<(int)N; i++){
@@ -902,7 +902,7 @@ int SortedRealKey( uint N, int Arr[], real Key[] ){
   return s;
 }
 
-int SortedIntKey( uint N, int Arr[], int Key[] ){
+int SortedIntKey( uint N, const int Arr[], const int Key[] ){
   int i,s;
   s = SignInt( Key[Arr[N-1]]-Key[Arr[0]] );
   for(i=1; i<(int)N; i++){
@@ -920,7 +920,7 @@ Here 1750 is unsure and how the sequence continues past 1750 is unknown.
  ***/
 
 /* Rearranges Perm[0..N-1] so Key[Perm[0..N-1]] is in increasing order: */
-void RealPermShellSortUp(  uint N, int Perm[], real Key[] ){
+void RealPermShellSortUp(  uint N, int Perm[], const real Key[] ){
   int h,i,j,k;
   int x;
   for(k=0; (h=ShellIncs[k])>0; k++){
@@ -933,14 +933,14 @@ void RealPermShellSortUp(  uint N, int Perm[], real Key[] ){
   assert((SortedRealKey(N,Perm,Key)&(~1))==0);
 }
 
-bool SelectedRightInt( uint L, uint R, uint K, int A[] ){
+bool SelectedRightInt( uint L, uint R, uint K, const int A[] ){
   uint i;
   for(i=L; i<K; i++){ if( A[i]>A[K] ) return FALSE; }
   for(i=R; i>K; i--){ if( A[K]>A[i] ) return FALSE; }
   return TRUE;
 }
 
-bool SelectedRightReal( uint L, uint R, uint K, real A[] ){
+bool SelectedRightReal( uint L, uint R, uint K, const real A[] ){
   uint i;
   for(i=L; i<K; i++){ if( A[i]>A[K] ) return FALSE; }
   for(i=R; i>K; i--){ if( A[K]>A[i] ) return FALSE; }
@@ -1137,7 +1137,7 @@ typedef struct dum1 {
   real MargArmy[MaxNumCands*MaxNumCands];
 } edata;
 
-void PrintEdata(FILE *F, edata *E)
+void PrintEdata(FILE *F, const edata *E)
 { /* prints out the edata */
 	int v;
 	uint j;
@@ -1172,7 +1172,7 @@ void PrintEdata(FILE *F, edata *E)
 
 #define EMETH int  /* allows fgrep EMETH IEVS.c to find out what Election methods now available */
 
-EMETH runoffForApprovalVoting(edata *E);
+EMETH runoffForApprovalVoting(const edata *E);
 
 void BuildDefeatsMatrix(edata *E)
 { /* initializes  E->DefeatsMatrix[], E->MarginsMatrix[], RandCandPerm[], NauruWt[], WinCount[], DrawCt[], CondorcetWinner, CopeWinOnlyWinner, TrueCW */
@@ -1268,7 +1268,7 @@ void BuildDefeatsMatrix(edata *E)
 	}
 }
 
-EMETH SociallyBest(edata *E  /* greatest utility-sum winner */)
+EMETH SociallyBest(const edata *E  /* greatest utility-sum winner */)
 { /* side effects: UtilitySum[], BestWinner */
 	uint x;
 	int i,j;
@@ -1284,23 +1284,23 @@ EMETH SociallyBest(edata *E  /* greatest utility-sum winner */)
 	return BestWinner;
 }
 
-EMETH SociallyWorst(edata *E   /* least utility-sum winner */)
+EMETH SociallyWorst(const edata *E   /* least utility-sum winner */)
 { /* side effects: UtilitySum[], WorstWinner */
 	if(BestWinner<0) SociallyBest(E);
 	WorstWinner = ArgMinArr<real>(E->NumCands, UtilitySum, (int*)RandCandPerm);
 	return WorstWinner;
 }
 
-EMETH RandomWinner(edata *E){ return (int)RandInt( E->NumCands ); }
+EMETH RandomWinner(const edata *E){ return (int)RandInt( E->NumCands ); }
 
-EMETH RandomBallot(edata *E)
+EMETH RandomBallot(const edata *E)
 { /*honest top choice of a random voter is elected. Strategyproof.*/
 	int winner;
 	winner = ArgMaxArr<real>(E->NumCands, E->PerceivedUtility + RandInt(E->NumVoters)*E->NumCands, (int*)RandCandPerm);
 	return winner;
 }
 
-EMETH Hay(edata *E /*Strategyproof. Prob of election proportional to sum of sqrts of [normalized] utilities*/
+EMETH Hay(const edata *E /*Strategyproof. Prob of election proportional to sum of sqrts of [normalized] utilities*/
 ){ /* side effects: UtilityRootSum[] */
   uint x;
   int i,j,winner;
@@ -1337,7 +1337,7 @@ EMETH Hay(edata *E /*Strategyproof. Prob of election proportional to sum of sqrt
   return winner;
 }
 
-EMETH Plurality(edata *E   /* canddt with most top-rank votes wins */)
+EMETH Plurality(const edata *E   /* canddt with most top-rank votes wins */)
 { /* side effects: PlurVoteCount[], PlurWinner */
 	int i;
 	ZeroIntArray( E->NumCands, (int*)PlurVoteCount );
@@ -1348,7 +1348,7 @@ EMETH Plurality(edata *E   /* canddt with most top-rank votes wins */)
 	return PlurWinner;
 }
 
-EMETH AntiPlurality(edata *E   /* canddt with fewest bottom-rank votes wins */)
+EMETH AntiPlurality(const edata *E   /* canddt with fewest bottom-rank votes wins */)
 { /* side effects: AntiPlurVoteCount[], AntiPlurWinner */
 	int i;
 	ZeroIntArray( E->NumCands, (int*)AntiPlurVoteCount );
@@ -1360,7 +1360,7 @@ EMETH AntiPlurality(edata *E   /* canddt with fewest bottom-rank votes wins */)
 }
 
 /* Plurality needs to have already been run before running Dabagh.  */
-EMETH Dabagh(edata *E   /* canddt with greatest Dabagh = 2*#top-rank-votes + 1*#second-rank-votes, wins */)
+EMETH Dabagh(const edata *E   /* canddt with greatest Dabagh = 2*#top-rank-votes + 1*#second-rank-votes, wins */)
 { /* side effects: DabaghVoteCount[] */
 	int i, winner;
 	CopyIntArray( E->NumCands, (int*)PlurVoteCount, (int*)DabaghVoteCount );
@@ -1373,7 +1373,7 @@ EMETH Dabagh(edata *E   /* canddt with greatest Dabagh = 2*#top-rank-votes + 1*#
 }
 
 /* Plurality needs to have already been run before running VtForAgainst.  */
-EMETH VtForAgainst(edata *E   /* canddt with greatest score = #votesFor - #votesAgainst,  wins */)
+EMETH VtForAgainst(const edata *E   /* canddt with greatest score = #votesFor - #votesAgainst,  wins */)
 { /* side effects: VFAVoteCount[] */
 	int i, winner, last;
 	last = E->NumCands - 1;
@@ -1385,7 +1385,7 @@ EMETH VtForAgainst(edata *E   /* canddt with greatest score = #votesFor - #votes
 	return winner;
 }
 
-EMETH Top2Runoff(edata *E    /* Top2Runoff=top-2-runoff, 2nd round has fully-honest voting */
+EMETH Top2Runoff(const edata *E    /* Top2Runoff=top-2-runoff, 2nd round has fully-honest voting */
 ){ /* side effects: PSecond */
   int i;
   uint offset, pwct=0, wct=0;
@@ -1405,7 +1405,7 @@ EMETH Top2Runoff(edata *E    /* Top2Runoff=top-2-runoff, 2nd round has fully-hon
   return(PSecond);
 }
 
-EMETH VenzkeDisqPlur(edata *E   /* Plurality winner wins unless over 50% vote him bottom; then plurality 2nd-winner wins. */
+EMETH VenzkeDisqPlur(const edata *E   /* Plurality winner wins unless over 50% vote him bottom; then plurality 2nd-winner wins. */
 ){ /* side effects: VFAVoteCount[] */
   if(PlurWinner<0) Plurality(E);
   if(AntiPlurWinner<0) AntiPlurality(E);
@@ -1451,7 +1451,7 @@ EMETH Black(edata *E  /* Condorcet winner if exists, else use Borda */
   return BordaWinner;
 }
 
-EMETH RandomPair(edata *E){ /*pairwise honest-util winner among 2 random candidates is elected*/
+EMETH RandomPair(const edata *E){ /*pairwise honest-util winner among 2 random candidates is elected*/
   int x,y;
   x = (int)RandInt(E->NumCands);
   y = (int)RandInt(E->NumCands);
@@ -1547,7 +1547,7 @@ EMETH Rouse(edata *E  /*like Nanson-Baldwin but with an extra level of recursion
 	return winner;
 }
 
-EMETH IterCopeland( edata *E  /*iterate Copeland on tied-winner set from previous iter until fixpt*/
+EMETH IterCopeland( const edata *E  /*iterate Copeland on tied-winner set from previous iter until fixpt*/
  ){ /*Idea of this is due to Alex Small. side effects: summ[] */
   int i, r, j, z, maxc, winner, tiect, oldtiect, x, mxs;
 	assert(E->NumCands >= 2);
@@ -1584,7 +1584,7 @@ EMETH IterCopeland( edata *E  /*iterate Copeland on tied-winner set from previou
   return(-1);
 }
 
-EMETH Nauru(edata *E  /* weighted positional with weights 1, 1/2, 1/3, 1/4,... */
+EMETH Nauru(const edata *E  /* weighted positional with weights 1, 1/2, 1/3, 1/4,... */
 ){	    /* side effects: NauruVoteCount[] */
   int i,j,x,winner;
   ZeroIntArray( E->NumCands, (int*)NauruVoteCount );
@@ -1598,7 +1598,7 @@ EMETH Nauru(edata *E  /* weighted positional with weights 1, 1/2, 1/3, 1/4,... *
   return(winner);
 }
 
-EMETH HeismanTrophy(edata *E  /* Heisman: weighted positional with weights 3, 2, 1, 0,...,0 */
+EMETH HeismanTrophy(const edata *E  /* Heisman: weighted positional with weights 3, 2, 1, 0,...,0 */
 ){  /* side effects: HeismanVoteCount[] */
   int i,j,x,winner;
   ZeroIntArray( E->NumCands, (int*)HeismanVoteCount );
@@ -1612,7 +1612,7 @@ EMETH HeismanTrophy(edata *E  /* Heisman: weighted positional with weights 3, 2,
   return(winner);
 }
 
-EMETH BaseballMVP(edata *E  /* weighted positional with weights 14,9,8,7,6,5,4,3,2,1,0,...,0 */
+EMETH BaseballMVP(const edata *E  /* weighted positional with weights 14,9,8,7,6,5,4,3,2,1,0,...,0 */
 ){	    /* side effects: BaseballVoteCount[] */
   int i,j,x,winner;
   ZeroIntArray( E->NumCands, (int*)BaseballVoteCount );
@@ -2003,7 +2003,7 @@ EMETH UncoveredSet(edata *E /*A "covers" B if A beats a strict superset of those
 	return(-1);
 }
 
-EMETH Bucklin(edata *E   /* canddt with over half the voters ranking him in top-k wins (for k minimal) */)
+EMETH Bucklin(const edata *E   /* canddt with over half the voters ranking him in top-k wins (for k minimal) */)
 { /* side effects: RdVoteCount[] */
 	int rnd,i,best,winner;
 	winner = -1;
@@ -2226,7 +2226,7 @@ EMETH Top3IRV(edata *E  /* Top-3-choices-only IRV */
   return w;
 }
 
-EMETH BTRIRV(edata *E  /* Repeatedly eliminate either plur loser or 2nd-loser (whoever loses pairwise) */
+EMETH BTRIRV(const edata *E  /* Repeatedly eliminate either plur loser or 2nd-loser (whoever loses pairwise) */
 ){ /* side effects: Eliminated[], IFav[], RdVoteCount[], FavListNext[], HeadFav[], */
 	int Iround,x,i,RdLoser,RdLoser2,NextI,j,minc,r;
 	assert(E->NumCands <= MaxNumCands);
@@ -2301,7 +2301,7 @@ EMETH BTRIRV(edata *E  /* Repeatedly eliminate either plur loser or 2nd-loser (w
 	return(-1); /*error*/
 }
 
-EMETH Coombs(edata *E /*repeatedly eliminate antiplurality loser (with most bottom-rank votes)*/
+EMETH Coombs(const edata *E /*repeatedly eliminate antiplurality loser (with most bottom-rank votes)*/
 ){ /*side effects: Eliminated[], IFav[], RdVoteCount[], FavListNext[], HeadFav[] */
 	int Iround,i,RdLoser,NextI,j,x,maxc,r;
 	assert(E->NumCands <= MaxNumCands);
@@ -2372,7 +2372,7 @@ EMETH Coombs(edata *E /*repeatedly eliminate antiplurality loser (with most bott
 	return(-1); /*error*/
 }
 
-EMETH Approval(edata *E   /* canddt with most-approvals wins */
+EMETH Approval(const edata *E   /* canddt with most-approvals wins */
 ){ /* side effects: ApprovalVoteCount[], ApprovalWinner */
   int i,j,x;
   ZeroIntArray( E->NumCands, (int*)ApprovalVoteCount );
@@ -2387,7 +2387,7 @@ EMETH Approval(edata *E   /* canddt with most-approvals wins */
   return(ApprovalWinner);
 }
 
-EMETH App2Runoff(edata *E    /*top-2-runoff, 1stRd=approval, 2nd round has fully-honest voting*/)
+EMETH App2Runoff(const edata *E    /*top-2-runoff, 1stRd=approval, 2nd round has fully-honest voting*/)
 { /* side effects: ASecond */
 	EMETH winner;
 	if(ApprovalWinner<0) Approval(E);
@@ -2395,7 +2395,7 @@ EMETH App2Runoff(edata *E    /*top-2-runoff, 1stRd=approval, 2nd round has fully
 	return winner;
 }
 
-EMETH HeitzigDFC(edata *E)
+EMETH HeitzigDFC(const edata *E)
 { /*winner of honest runoff between ApprovalWinner and RandomBallot winner*/
 	int i, Rwnr;
 	uint offset, pwct=0, wct=0;
@@ -2413,7 +2413,7 @@ EMETH HeitzigDFC(edata *E)
 	return(Rwnr);
 }
 
-EMETH HeitzigLFC(edata *E){ /*random canddt who is not "strongly beat" wins; y strongly beats x if Approval(y)>Approval(x) and less than Approval(x)/2 voters prefer x>y.*/
+EMETH HeitzigLFC(const edata *E){ /*random canddt who is not "strongly beat" wins; y strongly beats x if Approval(y)>Approval(x) and less than Approval(x)/2 voters prefer x>y.*/
   /*Side effects: Eliminated[] */
   int i,j;
   FillBoolArray(E->NumCands, Eliminated, FALSE);
@@ -2448,7 +2448,7 @@ Brian Olson's IRNR system:
 7. It wins.
 ***/
 real IRNRPOWER=2.0;
-EMETH IRNR(edata *E  /*Brian Olson's voting method described above*/
+EMETH IRNR(const edata *E  /*Brian Olson's voting method described above*/
 ){ /* side effects: Eliminated[], SumNormedRatings[]*/
 	int rd,i,j,x,r,loser;
 	real s,t,minc;
@@ -2498,7 +2498,7 @@ EMETH IRNR(edata *E  /*Brian Olson's voting method described above*/
 
 /* Like IRNR based on squares, but when "renomalizing" it now does a TWO-parameter
  * linear transformation so mean=0 and variance=1. */
-EMETH IRNRv(edata *E  /*Brian Olson's voting method but with 2-param renorm*/
+EMETH IRNRv(const edata *E  /*Brian Olson's voting method but with 2-param renorm*/
 ){ /* side effects: Eliminated[], SumNormedRatings[]*/
 	int rd,i,j,x,r,loser,ct;
 	real s,t,minc,avg;
@@ -2554,7 +2554,7 @@ EMETH IRNRv(edata *E  /*Brian Olson's voting method but with 2-param renorm*/
 
 /* Like IRNR based on squares, but when "renomalizing" it now does a TWO-parameter
  * linear transformation so max=1 and min=0. */
-EMETH IRNRm(edata *E  /*Brian Olson's voting method but with 2-param renorm*/
+EMETH IRNRm(const edata *E  /*Brian Olson's voting method but with 2-param renorm*/
 ){ /* side effects: Eliminated[], SumNormedRatings[]*/
 	int rd,i,j,x,r,loser;
 	real s,t,minc,mx,mn;
@@ -2603,7 +2603,7 @@ EMETH IRNRm(edata *E  /*Brian Olson's voting method but with 2-param renorm*/
 	return(-1); /*error*/
 }
 
-EMETH MCA(edata *E  /*canddt with most-2approvals wins if gets >50%, else regular approval-winner wins*/
+EMETH MCA(const edata *E  /*canddt with most-2approvals wins if gets >50%, else regular approval-winner wins*/
 ){ /* side effects: MCAVoteCount[] */
   int i,j,x,winner;
   if(ApprovalWinner<0) Approval(E);
@@ -2644,7 +2644,7 @@ Commentary by Me:
  *	E:		the election data
  *	alwaysRunoff:	whether to always do a run-off election or not
 ***/
-EMETH Benham2AppRunoff(edata *E, bool alwaysRunoff)
+EMETH Benham2AppRunoff(const edata *E, bool alwaysRunoff)
 {
 	int i,j,y,r,maxc;
 	uint jct, awct, offset;
@@ -2694,7 +2694,7 @@ EMETH CondorcetApproval(edata *E  /*Condorcet winner if exists, else use Approva
   return ApprovalWinner;
 }
 
-EMETH Range(edata *E    /* canddt with highest average Score wins */)
+EMETH Range(const edata *E    /* canddt with highest average Score wins */)
 { /* side effects:   RangeVoteCount[], RangeWinner  */
 	int i,j,x;
 	ZeroRealArray( E->NumCands, RangeVoteCount );
@@ -2708,7 +2708,7 @@ EMETH Range(edata *E    /* canddt with highest average Score wins */)
 	return(RangeWinner);
 }
 
-EMETH RangeN(edata *E /*highest average rounded Score [rded to integer in 0..RangeGranul-1] wins*/
+EMETH RangeN(const edata *E /*highest average rounded Score [rded to integer in 0..RangeGranul-1] wins*/
 ){ /* side effects:   RangeNVoteCount[], uses global integer RangeGranul  */
   int i,j,x,winner;
   assert(RangeGranul>=2);
@@ -2724,7 +2724,7 @@ EMETH RangeN(edata *E /*highest average rounded Score [rded to integer in 0..Ran
   return(winner);
 }
 
-EMETH Range2Runoff(edata *E    /*top-2-runoff, 1stRd=range, 2nd round has fully-honest voting*/
+EMETH Range2Runoff(const edata *E    /*top-2-runoff, 1stRd=range, 2nd round has fully-honest voting*/
 ){ /* side effects: RSecond */
   int i;
   uint offset, pwct=0, wct=0;
@@ -2745,7 +2745,7 @@ EMETH Range2Runoff(edata *E    /*top-2-runoff, 1stRd=range, 2nd round has fully-
   return(RSecond);
 }
 
-EMETH ContinCumul(edata *E    /* Renormalize scores so sum(over canddts)=1; then canddt with highest average Score wins */)
+EMETH ContinCumul(const edata *E    /* Renormalize scores so sum(over canddts)=1; then canddt with highest average Score wins */)
 { /* side effects:   CCumVoteCount[] */
 	int i,j,x,winner;
 	real sum;
@@ -2765,7 +2765,7 @@ EMETH ContinCumul(edata *E    /* Renormalize scores so sum(over canddts)=1; then
 	return(winner);
 }
 
-EMETH TopMedianRating(edata *E    /* canddt with highest median Score wins */)
+EMETH TopMedianRating(const edata *E    /* canddt with highest median Score wins */)
 { /* side effects:   MedianRating[], CScoreVec[]  */
 	int i,j,x,winner;
 	for(j=E->NumCands -1; j>=0; j--) {
@@ -2779,7 +2779,7 @@ EMETH TopMedianRating(edata *E    /* canddt with highest median Score wins */)
 	return(winner);
 }
 
-EMETH LoMedianRank(edata *E    /* canddt with best median ranking wins */)
+EMETH LoMedianRank(const edata *E    /* canddt with best median ranking wins */)
 { /* side effects:   MedianRank[], CRankVec[]  */
 	int i,j,x,winner;
 	for(j=E->NumCands -1; j>=0; j--) {
@@ -2807,7 +2807,7 @@ EMETH LoMedianRank(edata *E    /* canddt with best median ranking wins */)
  * and runs in order N^4 time with N candidates, i.e slow.  It is possible to speed it
  * up to Otilde(N^2) steps with the use of fast data structures...):
  ******************************************/
-EMETH TidemanRankedPairs(edata *E  /*lock in comparisons with largest margins not yielding cycle*/
+EMETH TidemanRankedPairs(const edata *E  /*lock in comparisons with largest margins not yielding cycle*/
 ){  /*side effects: Tpath[] is used as a changeable copy of MarginsMatrix.*/
 	int i,r,j,winner;
 #if CWSPEEDUP
@@ -2864,7 +2864,7 @@ EMETH TidemanRankedPairs(edata *E  /*lock in comparisons with largest margins no
   return(winner);
 }
 
-EMETH HeitzigRiver(edata *E /*http://lists.electorama.com/pipermail/election-methods-electorama.com/2004-October/013971.html*/
+EMETH HeitzigRiver(const edata *E /*http://lists.electorama.com/pipermail/election-methods-electorama.com/2004-October/013971.html*/
 ){ /* side effects: Hpotpar[], Hpar[], Hrot[] */
 	int r,z,i,j,k,pp,oldroot,newroot,maxc;
 #if CWSPEEDUP
@@ -3116,7 +3116,7 @@ would disqualify all remaining candidates (i.e. would result in the empty set).
 Continue until only one candidate
 is not disqualified; he is the winner.
 *****************************************/
-EMETH WoodallDAC(edata *E  /*Woodall: Monotonocity of single-seat preferential election rules, Discrete Applied Maths 77 (1997) 81-98.*/)
+EMETH WoodallDAC(const edata *E  /*Woodall: Monotonocity of single-seat preferential election rules, Discrete Applied Maths 77 (1997) 81-98.*/)
 { /*side effects: WoodHashCount[],  WoodHashSet[], WoodSetPerm[] */
 	/* Hash Tab entries contain counter and set-code which is a single machine word. */
 	int v,c,k,r;
@@ -3375,10 +3375,10 @@ typedef struct dum2 {
    int Winners[NumMethods];
 } brdata;
 
-void EDataPrep(edata &E, brdata *B);
+void EDataPrep(edata &E, const brdata *B);
 
 /* all arrays here have NumMethods entries */
-int FindWinnersAndRegrets( edata *E,  brdata *B,  bool Methods[] )
+int FindWinnersAndRegrets( edata *E,  brdata *B,  const bool Methods[] )
 {
 	int m,w,j;
 	real r;
@@ -3930,7 +3930,7 @@ void PrintConsts()
 }
 
 /************ Bayesian Regret ***********/
-void ComputeBRs( brdata *B, bool VotMethods[], int UtilMeth )
+void ComputeBRs( brdata *B, const bool VotMethods[], int UtilMeth )
 {
 	uint elnum;
 	edata E;
@@ -3955,7 +3955,7 @@ void ComputeBRs( brdata *B, bool VotMethods[], int UtilMeth )
 	ScaleRealVec(NumMethods, B->SRegret, 1.0/((B->NumElections - 1.0)*B->NumElections) ); /*StdDev/sqrt(#) = StdErr.*/
 }
 
-void TestEDataStructs( brdata *B )
+void TestEDataStructs( const brdata *B )
 {
 	uint elnum;
 	edata E;
@@ -4078,13 +4078,13 @@ void OutputLittleEndianUint16( uint x, FILE *F ){
   putc( x%256, F);
 }
 
-void OutputBarray( uint imgsize, uchar Barray[], FILE *F ){
+void OutputBarray( uint imgsize, const uchar Barray[], FILE *F ){
   int i;
   assert(imgsize == 20000);
   for(i=0; i<20000; i++) putc( Barray[i], F );
 }
 
-uint ReadPixel( uint x, uint y, uchar Barray[] ){ /*assumes 200x200, 4bits per pixel*/
+uint ReadPixel( uint x, uint y, const uchar Barray[] ){ /*assumes 200x200, 4bits per pixel*/
   int addr;
   uint q;
   addr = 100*y + x/2;
@@ -4093,7 +4093,7 @@ uint ReadPixel( uint x, uint y, uchar Barray[] ){ /*assumes 200x200, 4bits per p
   return(q&15);
 }
 
-uint OutputCompressedBarray( uint imgsize, uchar Barray[], bool really, FILE *F ){
+uint OutputCompressedBarray( uint imgsize, const uchar Barray[], bool really, FILE *F ){
   int j,N;
   uint bc, pix, oldpix;
   assert(imgsize <= 20000);
@@ -4128,7 +4128,7 @@ uint OutputCompressedBarray( uint imgsize, uchar Barray[], bool really, FILE *F 
   return bc;
 }
 
-uint OutputBMPHead( uint width, uint height, uint bitsperpixel, uint compression, uchar Barray[], FILE *F ){
+uint OutputBMPHead( uint width, uint height, uint bitsperpixel, uint compression, const uchar Barray[], FILE *F ){
   uint sf, roundedwidth, colors, colortabsize, offset, imgsize, compressedsize;
   assert(bitsperpixel==1 || bitsperpixel==4 || bitsperpixel==8 || bitsperpixel==24);
   putc(66, F); /*B*/
@@ -4255,7 +4255,7 @@ void DrawCircle(int x, int y, uint radius, uint BorderColor, uint FillColor, uch
   }
 }
 
-void DrawVoronoi(uint NumSites, int xx[], int yy[], uchar Barray[20000], int LpPow)
+void DrawVoronoi(uint NumSites, const int xx[], const int yy[], uchar Barray[20000], int LpPow)
 {
 	int x,y,ds,min;
 	uint col,i;
@@ -4277,7 +4277,7 @@ void DrawVoronoi(uint NumSites, int xx[], int yy[], uchar Barray[20000], int LpP
 	}
 }
 
-void DrawFPvor(uint NumSites, int xx[], int yy[], uchar Barray[20000], int LpPow)
+void DrawFPvor(uint NumSites, const int xx[], const int yy[], uchar Barray[20000], int LpPow)
 {
 	uint x,y,ds,mx,col,i;
 	if(NumSites>16) NumSites=16;
@@ -4309,7 +4309,7 @@ increase voters 10% each time until too many voters, or until
 some weight exceeds runnerup by factor 5 or more.
 CreatePixel for winner with maxweight.
 ***/
-void YeePicture( uint NumSites, int MaxK, int xx[], int yy[], int WhichMeth,
+void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int WhichMeth,
 		 edata *E, uchar Barray[], uint GaussStdDev, real honfrac, int LpPow ){
   int x,y,k,v,j,ja,i,m,jo,s,maxw,col,w,pass,x0,x1,y_0,y_1,PreColor;
   uint p0,p1,p2,p3;
@@ -4402,7 +4402,7 @@ void YeePicture( uint NumSites, int MaxK, int xx[], int yy[], int WhichMeth,
   }
 }
 
-void MakeYeePict( char filename[], int xx[], int yy[], int NumSites, int WhichMeth,
+void MakeYeePict( char filename[], const int xx[], const int yy[], int NumSites, int WhichMeth,
 		  uint TopYeeVoters, uint GaussStdDev, real honfrac, int LpPow ){
   FILE *F;
   uchar Barray[20000];
@@ -4418,8 +4418,8 @@ void MakeYeePict( char filename[], int xx[], int yy[], int NumSites, int WhichMe
     printf("failed to open %s\n", filename);
     fflush(stdout); exit(EXIT_FAILURE);
   }
-  if(WhichMeth==0 && LpPow==2) DrawVoronoi( NumSites, (int*)xx, (int*)yy, Barray, LpPow );
-  else if(WhichMeth==1 && LpPow==2) DrawFPvor( NumSites, (int*)xx, (int*)yy, Barray, LpPow );
+  if(WhichMeth==0 && LpPow==2) DrawVoronoi( NumSites, (const int*)xx, (const int*)yy, Barray, LpPow );
+  else if(WhichMeth==1 && LpPow==2) DrawFPvor( NumSites, (const int*)xx, (const int*)yy, Barray, LpPow );
   else YeePicture( NumSites, (TopYeeVoters-1)/2, xx, yy, WhichMeth, &E, Barray,
 		   GaussStdDev, honfrac, LpPow );
   imgsize = OutputBMPHead(200, 200, 4, TRUE, Barray, F);
@@ -4437,7 +4437,7 @@ void MakeYeePict( char filename[], int xx[], int yy[], int NumSites, int WhichMe
   printf("\n");
 }
 
-real ColorContrastScore( uint NumSites, int xx[], int yy[] ){
+real ColorContrastScore( uint NumSites, const int xx[], const int yy[] ){
   int i,j;
   real s;
   assert(NumSites <= 16);
@@ -4924,7 +4924,7 @@ void RWBRDriver()
 
 /*************************** MAIN CODE: ***************************/
 
-int main(int argc, char **argv)
+int main(int argc, const char *const *argv)
 {
 	uint seed, choice, ch2, ch3;
 	int ihonfrac, TopYeeVoters, GaussStdDev, subsqsideX, subsqsideY, LpPow;
@@ -5307,7 +5307,7 @@ void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], con
  *	RandPerm:	array of perm.
  */
 template< class T >
-int ArgMaxArr(uint N, T Arr[], int RandPerm[])
+int ArgMaxArr(uint N, const T Arr[], int RandPerm[])
 {
 	T maxc;
 	int i, r, winner;
@@ -5332,7 +5332,7 @@ int ArgMaxArr(uint N, T Arr[], int RandPerm[])
  *	RandPerm:	array of perm.
  */
 template< class T >
-int ArgMinArr(uint N, T Arr[], int RandPerm[])
+int ArgMinArr(uint N, const T Arr[], int RandPerm[])
 {
 	T minc;
 	int i,r,winner;
@@ -5494,7 +5494,7 @@ void ensure(bool good, int number)
  *	B:			the information for initializing
  *				'E'
  */
-void EDataPrep(edata &E, brdata *B)
+void EDataPrep(edata &E, const brdata *B)
 {
 	E.NumVoters = B->NumVoters;
 	E.NumCands = B->NumCands;
@@ -5636,7 +5636,7 @@ void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real
  *
  *	E:				the election data
  */
-EMETH runoffForApprovalVoting(edata *E)
+EMETH runoffForApprovalVoting(const edata *E)
 {
 	int i;
 	uint offset;
@@ -5687,7 +5687,7 @@ void Test(const char *name, const char *direction, real (*func1)(void), real (*f
  *	A:	the set of values to examine
  */
 template< class T1,
-		bool (*RightFunc)( uint, uint, uint, T1[] )>
+		bool (*RightFunc)( uint, uint, uint, const T1[] )>
 		T1 TwiceMedian(uint N, T1 A[] )
 {
 	T1 M,T;
