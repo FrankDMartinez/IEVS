@@ -4928,11 +4928,12 @@ int main(int argc, char **argv)
 {
 	uint seed, choice, ch2, ch3;
 	int ihonfrac, TopYeeVoters, GaussStdDev, subsqsideX, subsqsideY, LpPow;
-	int WhichMeth, NumSites, i,j;
+	int WhichMeth, NumSites, i;
 	int xx[16], yy[16];
 	real cscore;
 	char fname[100];
 	extern void runSelfTests(void);
+	extern void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], const int &subsqsideX, const int &subsqsideY);
 
 	if((argc > 1) && !strcmp(argv[1], "--test")) {
 		extern void runTests(void);
@@ -5152,17 +5153,7 @@ int main(int argc, char **argv)
 				if(subsqsideX <=0 || subsqsideX>=200) {  subsqsideX = 200;  }
 				if(subsqsideY <=0 || subsqsideY>=200) {  subsqsideY = 200;  }
 				printf("using %dx%d centered subrectangle\n", subsqsideX, subsqsideY);
-				for(i=0; i<NumSites; i++) {
-				REGEN:
-					xx[i] = (int)(100 - subsqsideX*0.5 + Rand01()*(subsqsideX-0.001));
-					yy[i] = (int)(100 - subsqsideY*0.5 + Rand01()*(subsqsideY-0.001));
-					for(j=0; j<i; j++) {
-						if( AbsInt(xx[i]-xx[j]) + AbsInt(yy[i]-yy[j]) <= (7*subsqsideX+7*subsqsideY)/400 ) {
-				/*too close to some previous point*/
-							goto REGEN;
-						}
-					}
-				}
+				adjustYeeCoordinates(NumSites, xx, yy, subsqsideX, subsqsideY);
 				cscore = ReorderForColorContrast(  NumSites, xx, yy );
 				printf("Color score %f (big=more constrast); Your coords are:\n", cscore);
 				for(i=0; i<NumSites; i++) {
@@ -5278,6 +5269,35 @@ int main(int argc, char **argv)
 *****/
 
 /*	Additions by Me		*/
+
+/*	adjustYeeCoordinates(numSites, xx, yy, subsqsideX, subsqsideY):	adjusts (I
+ *									think) the 'x'
+ *									and 'y' values
+ *									created for a
+ *									Yee picture
+ *	numSites:	the number of point sites for the Yee picture
+ *	xx:		the set of x-coordinates to adjust
+ *	yy:		the set of y-coordinates to adjust
+ *	subsqsideX:	the length of one side of the Yee picture
+ *	subsqsideY:	the length of the other side of the Yee picture
+ */
+void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], const int &subsqsideX, const int &subsqsideY)
+{
+	int i;
+	int j;
+	for(i=0; i<numSites; i++) {
+	REGEN:
+		xx[i] = (int)(100 - subsqsideX*0.5 + Rand01()*(subsqsideX-0.001));
+		yy[i] = (int)(100 - subsqsideY*0.5 + Rand01()*(subsqsideY-0.001));
+		for(j=0; j<i; j++) {
+			if( AbsInt(xx[i]-xx[j]) + AbsInt(yy[i]-yy[j]) <= (7*subsqsideX+7*subsqsideY)/400 ) {
+	/*too close to some previous point*/
+				goto REGEN;
+			}
+		}
+	}
+}
+
 
 /*	ArgMaxArr(N, Arr[], RandPerm[]):	returns index of random max entry of
  *						Arr[0..N-1]
@@ -5559,22 +5579,11 @@ void runSingleYeeTest(uint aSeed)
 	int subsqsideY=200;
 	int i;
 	int xx[16], yy[16];
-	int j;
 	real cscore;
 	int TopYeeVoters=26;
 	int GaussStdDev=200;
 
-	for(i=0; i<NumSites; i++) {
-	REGEN:
-		xx[i] = (int)(100 - subsqsideX*0.5 + Rand01()*(subsqsideX-0.001));
-		yy[i] = (int)(100 - subsqsideY*0.5 + Rand01()*(subsqsideY-0.001));
-		for(j=0; j<i; j++) {
-			if( AbsInt(xx[i]-xx[j]) + AbsInt(yy[i]-yy[j]) <= (7*subsqsideX+7*subsqsideY)/400 ) {
-	/*too close to some previous point*/
-				goto REGEN;
-			}
-		}
-	}
+	adjustYeeCoordinates(NumSites, xx, yy, subsqsideX, subsqsideY);
 	cscore = ReorderForColorContrast(  NumSites, xx, yy );
 	printf("Color score %f (big=more constrast); Your coords are:\n", cscore);
 	for(i=0; i<NumSites; i++) {
