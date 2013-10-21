@@ -1849,35 +1849,38 @@ EMETH ArrowRaynaud(edata *E  /* repeatedly eliminate canddt with smallest {large
 }
 
 /* O(N^3) algorithm, but it is known how to speed it up to O(N^2) */
-EMETH SchulzeBeatpaths(edata *E  /* winner = X so BeatPathStrength over rivals Y exceeds strength from Y */
-){ /* Side effects: BeatPathStrength[] */
-  int i,j,k,minc,winner;
-  if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
-  for(i=E->NumCands -1; i>=0; i--){
-    for(j=E->NumCands -1; j>=0; j--) if(i != j){
-      BeatPathStrength[i*E->NumCands +j] = E->MarginsMatrix[i*E->NumCands +j];
-    }
-  }
-  for(i=E->NumCands -1; i>=0; i--){
-    for(j=E->NumCands -1; j>=0; j--) if(i != j){
-      for(k=0; k<(int)E->NumCands; k++) if(k != j && k != i){
-	minc = BeatPathStrength[j*E->NumCands+i];
-	if( BeatPathStrength[i*E->NumCands +k] < minc ) minc = BeatPathStrength[i*E->NumCands +k];
-	if( BeatPathStrength[j*E->NumCands +k] < minc ) BeatPathStrength[j*E->NumCands +k] = minc;
-      }
-    }
-  }
-  for(i=E->NumCands -1; i>=0; i--){
-    k = RandCandPerm[i];
-    for(j=E->NumCands -1; j>=0; j--) if(k != j){
-      if( BeatPathStrength[j*E->NumCands +k] > BeatPathStrength[k*E->NumCands +j] ){
-	goto KNOTSCHULZEWINNER;
-      }
-    }
-    winner = k;   return winner;
-    KNOTSCHULZEWINNER: ;
-  }
-  return(-1);
+EMETH SchulzeBeatpaths(edata *E  /* winner = X so BeatPathStrength over rivals Y exceeds strength from Y */)
+{ /* Side effects: BeatPathStrength[] */
+	int i,j,k,minc,winner;
+	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	for(i=E->NumCands -1; i>=0; i--) {
+		for(j=E->NumCands -1; j>=0; j--) if(i != j) {
+			BeatPathStrength[i*E->NumCands +j] = E->MarginsMatrix[i*E->NumCands +j];
+		}
+	}
+	for(i=E->NumCands -1; i>=0; i--) {
+		for(j=E->NumCands -1; j>=0; j--) if(i != j) {
+			for(k=0; k<(int)E->NumCands; k++) if(k != j && k != i) {
+				minc = BeatPathStrength[j*E->NumCands+i];
+				if( BeatPathStrength[i*E->NumCands +k] < minc ) minc = BeatPathStrength[i*E->NumCands +k];
+				if( BeatPathStrength[j*E->NumCands +k] < minc ) BeatPathStrength[j*E->NumCands +k] = minc;
+			}
+		}
+	}
+	for(i=E->NumCands -1; i>=0; i--) {
+		bool haveAWinner = true;
+		k = RandCandPerm[i];
+		for(j=E->NumCands -1; j>=0; j--) if(k != j) {
+			if( BeatPathStrength[j*E->NumCands +k] > BeatPathStrength[k*E->NumCands +j] ) {
+				haveAWinner = false;
+				break;
+			}
+		}
+		if( haveAWinner ) {
+			winner = k;   return winner;
+		}
+	}
+	return(-1);
 }
 
 /* Note about Smith and Schwartz sets:
@@ -2037,36 +2040,39 @@ I recommend the ranked pairs, beatpath, and river methods.
 WDS: IEVS will use beatpaths.  What is good voter strategy in this method?
 *********/
 
-EMETH ArmytagePCSchulze(edata *E  /*Armytage pairwise comparison based on Schulze*/
-){ /* Side effects: ArmyBPS[] */
-  int i,j,k,winner;
-  real minc;
-  if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
-  for(i=E->NumCands -1; i>=0; i--){
-    for(j=E->NumCands -1; j>=0; j--) if(i != j){
-      ArmyBPS[i*E->NumCands +j] = E->MargArmy[i*E->NumCands +j];
-    }
-  }
-  for(i=E->NumCands -1; i>=0; i--){
-    for(j=E->NumCands -1; j>=0; j--) if(i != j){
-      for(k=0; k<(int)E->NumCands; k++) if(k != j && k != i){
-	minc = ArmyBPS[j*E->NumCands+i];
-	if( ArmyBPS[i*E->NumCands +k] < minc ) minc = ArmyBPS[i*E->NumCands +k];
-	if( ArmyBPS[j*E->NumCands +k] < minc ) ArmyBPS[j*E->NumCands +k] = minc;
-      }
-    }
-  }
-  for(i=E->NumCands -1; i>=0; i--){
-    k = RandCandPerm[i];
-    for(j=E->NumCands -1; j>=0; j--) if(k != j){
-      if( ArmyBPS[j*E->NumCands +k] > ArmyBPS[k*E->NumCands +j] ){
-	goto KNOTSW;
-      }
-    }
-    winner = k;   return winner;
-    KNOTSW: ;
-  }
-  return(-1);
+EMETH ArmytagePCSchulze(edata *E  /*Armytage pairwise comparison based on Schulze*/)
+{ /* Side effects: ArmyBPS[] */
+	int i,j,k,winner;
+	real minc;
+	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	for(i=E->NumCands -1; i>=0; i--) {
+		for(j=E->NumCands -1; j>=0; j--) if(i != j) {
+			ArmyBPS[i*E->NumCands +j] = E->MargArmy[i*E->NumCands +j];
+		}
+	}
+	for(i=E->NumCands -1; i>=0; i--) {
+		for(j=E->NumCands -1; j>=0; j--) if(i != j) {
+			for(k=0; k<(int)E->NumCands; k++) if(k != j && k != i) {
+				minc = ArmyBPS[j*E->NumCands+i];
+				if( ArmyBPS[i*E->NumCands +k] < minc ) minc = ArmyBPS[i*E->NumCands +k];
+				if( ArmyBPS[j*E->NumCands +k] < minc ) ArmyBPS[j*E->NumCands +k] = minc;
+			}
+		}
+	}
+	for(i=E->NumCands -1; i>=0; i--) {
+		bool haveAWinner = true;
+		k = RandCandPerm[i];
+		for(j=E->NumCands -1; j>=0; j--) if(k != j) {
+			if( ArmyBPS[j*E->NumCands +k] > ArmyBPS[k*E->NumCands +j] ) {
+				haveAWinner = false;
+				break;
+			}
+		}
+		if(haveAWinner) {
+			winner = k;   return winner;
+		}
+	}
+	return(-1);
 }
 
 EMETH Copeland(edata *E   /* canddt with largest number of pairwise-wins elected (tie counts as win/2) BUGGY */)
@@ -2958,41 +2964,46 @@ void BSbeatDFS( int x, int diff, bool Set[], bool OK[], int Mat[], int N ){
   }
 }
 
-EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Combine Approval and Preference,2006*/
-){ /* side effects: MajApproved[] */
+EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Combine Approval and Preference,2006*/)
+{ /* side effects: MajApproved[] */
 	int i,j,winner,ctm,CopeWinr,r;
 	uint t,maxt;
 	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
 	if(ApprovalWinner<0) Approval(E);
 	ctm=0;
-	for(i=E->NumCands -1; i>=0; i--){
-		if(2*ApprovalVoteCount[i] > E->NumVoters){
+	for(i=E->NumCands -1; i>=0; i--) {
+		if(2*ApprovalVoteCount[i] > E->NumVoters) {
 			MajApproved[i] = TRUE; ctm++;
 		}else{  MajApproved[i] = FALSE;  }
 	}
-	if(ctm<=1){
+	if(ctm<=1) {
 		/*if exactly 0 or 1 canddt majority-approved, ApprovalWinner wins*/
 		return ApprovalWinner;
 	}
 	assert(ctm>=2);  /*Two or more majority-approved:*/
-	for(i=E->NumCands -1; i>=0; i--) if(MajApproved[i]){
-		for(j=E->NumCands -1; j>=0; j--) if(j!=i && MajApproved[j]){
-			if( E->MarginsMatrix[i*E->NumCands + j] <= 0 ){ goto BADi; }
+	for(i=E->NumCands -1; i>=0; i--) if(MajApproved[i]) {
+		bool haveAWinner = true;
+		for(j=E->NumCands -1; j>=0; j--) if(j!=i && MajApproved[j]) {
+			if( E->MarginsMatrix[i*E->NumCands + j] <= 0 ) {
+				haveAWinner = false;
+				break;
+			}
 		}
-		winner = i; /*beats-all winner among >=2 majority-approved canddts wins*/
-		return winner;
-	BADi: ;
+		if(haveAWinner) {
+			winner = i; /*beats-all winner among >=2 majority-approved canddts wins*/
+			return winner;
+		}
 	}
 	/*now Brams&Sanver want the most-approved member of the
 	 *top-cycle among the majority-approved canddts, to win: */
 	maxt = 0;
 	CopeWinr = -1;
-	for(i=E->NumCands -1; i>=0; i--) if(MajApproved[i]){
+	for(i=E->NumCands -1; i>=0; i--) if(MajApproved[i]) {
 		t = 0;
-		for(j=E->NumCands -1; j>=0; j--) if(j!=i && MajApproved[j]){
-			if( E->MarginsMatrix[i*E->NumCands + j] > 0 ){ t++; }
+		for(j=E->NumCands -1; j>=0; j--) if(j!=i && MajApproved[j]) {
+			if( E->MarginsMatrix[i*E->NumCands + j] > 0 ) { t++; }
 		}
-		if(t >= maxt){ maxt=t; CopeWinr=i; }
+		if(t >= maxt) { maxt=t; CopeWinr=i; }
 	}
 	assert(CopeWinr >= 0);
 	ensure(CopeWinr >= 0, 19);
@@ -3004,9 +3015,9 @@ EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 	RandomlyPermute( E->NumCands, RandCandPerm );
 	winner = -1;
 	maxt = 0;
-	for(i=E->NumCands -1; i>=0; i--){
+	for(i=E->NumCands -1; i>=0; i--) {
 		r = RandCandPerm[i];
-		if(BSSmithMembs[r] && ApprovalVoteCount[r]>maxt){ maxt=ApprovalVoteCount[r]; winner=r; }
+		if(BSSmithMembs[r] && ApprovalVoteCount[r]>maxt) { maxt=ApprovalVoteCount[r]; winner=r; }
 	}
 	return winner;
 }
@@ -3117,8 +3128,8 @@ EMETH WoodallDAC(edata *E  /*Woodall: Monotonocity of single-seat preferential e
 		printf("You could rewrite the code to use uint128s to try allow up to 128 canddts\n");
 		exit(EXIT_FAILURE);
 	}
-	for(v=ARTINPRIME-1; v>=0; v--){ WoodHashCount[v] = 0; WoodHashSet[v] = 0; }
-	for(v=E->NumVoters-1; v>=0; v--){
+	for(v=ARTINPRIME-1; v>=0; v--) { WoodHashCount[v] = 0; WoodHashSet[v] = 0; }
+	for(v=E->NumVoters-1; v>=0; v--) {
 			s = 0;
 			offset = v*E->NumCands;
 			for(c=0; c < (int)E->NumCands; c++) {
@@ -3127,9 +3138,9 @@ EMETH WoodallDAC(edata *E  /*Woodall: Monotonocity of single-seat preferential e
 				assert( !EmptySet(s) );
 				for(;;) {
 					x = WoodHashSet[h];
-					if( EmptySet(x) ){ /* insert new set s into hash table */
+					if( EmptySet(x) ) { /* insert new set s into hash table */
 						WoodHashSet[h] = s;  WoodHashCount[h] = 1;  break;
-					}else if( x==s ){ /* already there so increment count */
+					}else if( x==s ) { /* already there so increment count */
 						WoodHashCount[h]++;  break;
 					}
 					h++; /* hash table collision so walk ("linear probing") */
@@ -3137,8 +3148,8 @@ EMETH WoodallDAC(edata *E  /*Woodall: Monotonocity of single-seat preferential e
 			}
 	}
 	numsets=0;
-	for(v=ARTINPRIME-1; v>=0; v--){
-		if( !EmptySet(WoodHashSet[v]) ){
+	for(v=ARTINPRIME-1; v>=0; v--) {
+		if( !EmptySet(WoodHashSet[v]) ) {
 			WoodSetPerm[numsets] = v;
 			numsets++;
 		}
@@ -3147,22 +3158,22 @@ EMETH WoodallDAC(edata *E  /*Woodall: Monotonocity of single-seat preferential e
 	PermShellSortDown<int>(numsets, (int*)WoodSetPerm, (int*)WoodHashCount);
 	s = WoodHashSet[WoodSetPerm[0]];
 	assert( !EmptySet(s) );
-	if(SingletonSet(s)){  goto DONE;  }
-	for(k=1; k<(int)numsets; k++){ /*decreasing order!*/
+	if(SingletonSet(s) == false) {
+		for(k=1; k<(int)numsets; k++) { /*decreasing order!*/
 			h = WoodSetPerm[k];
 			x = s & WoodHashSet[h];
 			if(!EmptySet(x)) {
 				s = x;
-				if(SingletonSet(s)){  goto DONE;  }
+				if(SingletonSet(s)) {  break;  }
 			}
+		}
 	}
- DONE: ;
 	/*printf("C%d/%d\n", CardinalitySet(s), E->NumCands);*/
 	/*It is extremely rare that s is not a singleton set.  In fact may never happen.*/
 	RandomlyPermute( E->NumCands, RandCandPerm );
-	for(k=E->NumCands -1; k>=0; k--){
+	for(k=E->NumCands -1; k>=0; k--) {
 		r = RandCandPerm[k];
-		if( (s>>r)&1 ){
+		if( (s>>r)&1 ) {
 			return r; /* return random set-element */
 		}
 	}
