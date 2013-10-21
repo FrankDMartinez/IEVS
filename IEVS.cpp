@@ -5285,14 +5285,15 @@ void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], con
 {
 	int i;
 	int j;
-	for(i=0; i<numSites; i++) {
-	REGEN:
+	bool advance;
+	for(i=0; i<numSites; (advance ? i++ : i)) {
 		xx[i] = (int)(100 - subsqsideX*0.5 + Rand01()*(subsqsideX-0.001));
 		yy[i] = (int)(100 - subsqsideY*0.5 + Rand01()*(subsqsideY-0.001));
+		advance = true;
 		for(j=0; j<i; j++) {
 			if( AbsInt(xx[i]-xx[j]) + AbsInt(yy[i]-yy[j]) <= (7*subsqsideX+7*subsqsideY)/400 ) {
-	/*too close to some previous point*/
-				goto REGEN;
+				/*too close to some previous point*/
+				advance = false;
 			}
 		}
 	}
