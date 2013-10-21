@@ -183,8 +183,7 @@ template<class T>
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void));
 void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10]);
 void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str);
-template< class T1,
-		bool (*RightFunc)( uint, uint, uint, const T1[] )>
+template< class T1 >
 		T1 TwiceMedian(uint N, T1 A[] );
 #define NullFunction ((real(*)(void))NULL)
 
@@ -932,21 +931,6 @@ void RealPermShellSortUp(  uint N, int Perm[], const real Key[] ){
   }
   assert((SortedRealKey(N,Perm,Key)&(~1))==0);
 }
-
-bool SelectedRightInt( uint L, uint R, uint K, const int A[] ){
-  uint i;
-  for(i=L; i<K; i++){ if( A[i]>A[K] ) return FALSE; }
-  for(i=R; i>K; i--){ if( A[K]>A[i] ) return FALSE; }
-  return TRUE;
-}
-
-bool SelectedRightReal( uint L, uint R, uint K, const real A[] ){
-  uint i;
-  for(i=L; i<K; i++){ if( A[i]>A[K] ) return FALSE; }
-  for(i=R; i>K; i--){ if( A[K]>A[i] ) return FALSE; }
-  return TRUE;
-}
-
 /*************************** VOTING METHODS:  ********
 all are subroutines with a common format - here is the format (which is all subsumed in
 the convenient data structure "edata"):
@@ -2773,7 +2757,7 @@ EMETH TopMedianRating(const edata *E    /* canddt with highest median Score wins
 			x = i*E->NumCands + j;
 			CScoreVec[i] = E->Score[x];
 		}
-		MedianRating[j] = TwiceMedian<real, SelectedRightReal>(E->NumVoters, CScoreVec);
+		MedianRating[j] = TwiceMedian<real>(E->NumVoters, CScoreVec);
 	}
 	winner = ArgMaxArr<real>(E->NumCands, MedianRating, (int*)RandCandPerm);
 	return(winner);
@@ -2787,7 +2771,7 @@ EMETH LoMedianRank(const edata *E    /* canddt with best median ranking wins */)
 			x = i*E->NumCands + j;
 			CRankVec[i] = E->CandRankings[x];
 		}
-		MedianRank[j] = TwiceMedian<int, SelectedRightInt>(E->NumVoters, CRankVec);
+		MedianRank[j] = TwiceMedian<int>(E->NumVoters, CRankVec);
 		assert( MedianRank[j] >= 0 );
 		assert( MedianRank[j] <= 2*((int)E->NumCands - 1) );
 	}
@@ -5656,6 +5640,21 @@ EMETH runoffForApprovalVoting(const edata *E)
 	return(ASecond);
 }
 
+/*	SelectedRight(L, R, K, A[]):	verifies all entries in 'A[]' from index 'L'
+ *					thru 'R' are sorted as expected
+ *	L:	the lowest index of entries to examine
+ *	R:	the highest index of entries to examine
+ *	K:	an index of entries around which the others are to be sorted; a "pivot
+ *			index", so to speak
+ *	A:	an array of values to examine
+ */
+template< class T > bool SelectedRight( uint L, uint R, uint K, const T A[] ){
+  uint i;
+  for(i=L; i<K; i++){ if( A[i]>A[K] ) return FALSE; }
+  for(i=R; i>K; i--){ if( A[K]>A[i] ) return FALSE; }
+  return TRUE;
+}
+
 /*	Test(name, direction, func1, func2, mean_str, meansq_str):
  *				runs a 'random' number generation
  *				test involving 'func1' and 'func2'
@@ -5686,15 +5685,14 @@ void Test(const char *name, const char *direction, real (*func1)(void), real (*f
  *	N:	the expected number of elements in 'A'
  *	A:	the set of values to examine
  */
-template< class T1,
-		bool (*RightFunc)( uint, uint, uint, const T1[] )>
+template< class T1 >
 		T1 TwiceMedian(uint N, T1 A[] )
 {
 	T1 M,T;
 	int i;
 	assert(N>0);
 	M = FloydRivestSelect<T1>( 0, N-1, N/2, A );
-	assert( RightFunc( 0, N-1, N/2, A ) );
+	assert( SelectedRight<T1>( 0, N-1, N/2, A ) );
 	if((N&1)==0) { /*N is even*/
 		T = A[N/2 - 1];
 		for(i=N/2 - 2; i>=0; i--) {
