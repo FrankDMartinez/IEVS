@@ -3830,7 +3830,7 @@ UTGEN GenRealWorldUtils( edata *E ){  /** based on Tideman election dataset **/
     VV = RandInt(V);  /* choose random voter in the real world election */
     VV *= C;
     for(y=0; y < E->NumCands; y++){
-      E->Utility[ff+y] = (E->NumCands - (real)ElData[offset+VV+y] + RandNormal())*scalefac;
+      E->Utility[ff+y] = ((E->NumCands - (real)ElData[offset+VV+y]) + RandNormal())*scalefac;
     }
   }
   offset += NVotersData[WhichElection]*NCandsData[WhichElection];
@@ -4213,10 +4213,10 @@ void DrawCircle(int x, int y, uint radius, uint BorderColor, uint FillColor, uch
     d = 3 - (2 * yd);
     while(yd >= xd){
       if(mode==0){ /*fill:*/
-	for(i=x-xd+1; i<x+xd; i++){ CreatePixel(i, y + yd, FillColor, Barray); }
-	for(i=x-xd+1; i<x+xd; i++){ CreatePixel(i, y - yd, FillColor, Barray); }
-	for(i=x-yd+1; i<x+yd; i++){ CreatePixel(i, y + xd, FillColor, Barray); }
-	for(i=x-yd+1; i<x+yd; i++){ CreatePixel(i, y - xd, FillColor, Barray); }
+	for(i=(x-xd)+1; i<x+xd; i++){ CreatePixel(i, y + yd, FillColor, Barray); }
+	for(i=(x-xd)+1; i<x+xd; i++){ CreatePixel(i, y - yd, FillColor, Barray); }
+	for(i=(x-yd)+1; i<x+yd; i++){ CreatePixel(i, y + xd, FillColor, Barray); }
+	for(i=(x-yd)+1; i<x+yd; i++){ CreatePixel(i, y - xd, FillColor, Barray); }
       }else{	/*border points in 8 octants:*/
 	CreatePixel(x - xd, y + yd, BorderColor, Barray);
 	CreatePixel(x + xd, y + yd, BorderColor, Barray);
@@ -5271,8 +5271,8 @@ void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], con
 	int j;
 	bool advance;
 	for(i=0; i<numSites; (advance ? i++ : i)) {
-		xx[i] = (int)(100 - subsqsideX*0.5 + Rand01()*(subsqsideX-0.001));
-		yy[i] = (int)(100 - subsqsideY*0.5 + Rand01()*(subsqsideY-0.001));
+		xx[i] = (int)((100 - subsqsideX*0.5) + Rand01()*(subsqsideX-0.001));
+		yy[i] = (int)((100 - subsqsideY*0.5) + Rand01()*(subsqsideY-0.001));
 		advance = true;
 		for(j=0; j<i; j++) {
 			if( AbsInt(xx[i]-xx[j]) + AbsInt(yy[i]-yy[j]) <= (7*subsqsideX+7*subsqsideY)/400 ) {
@@ -5369,13 +5369,13 @@ template< class T1 > T1 FloydRivestSelect(uint L, uint R, uint K, T1 A[])
 	real Z;
 	T1 T,W;
 	while( R > L ) {
-		N = R - L + 1;
+		N = (R - L) + 1;
 		if( N > 601 ) { /* big enough so worth doing FR-type subsampling to find strong splitter */
-			I = K - L + 1;
+			I = (K - L) + 1;
 			Z = log((real)(N));
 			S = (int)(0.5 * exp(Z * 2.0/3));
 			SD = (int)(0.5 * sqrt(Z * S * (N - S)/N) * SignInt(2*I - N));
-			LL = MaxInt(L, K - ((I * S) / N) + SD);
+			LL = MaxInt(L, (K - ((I * S) / N)) + SD);
 			RR = MinInt(R, K + (((N - I) * S) / N) + SD);
 			/* Recursively select inside small subsample to find an element A[K] usually very
 			 * near the desired one: */
