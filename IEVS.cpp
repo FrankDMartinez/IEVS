@@ -4077,39 +4077,42 @@ uint ReadPixel( uint x, uint y, const uchar Barray[] ){ /*assumes 200x200, 4bits
   return(q&15);
 }
 
-uint OutputCompressedBarray( uint imgsize, const uchar Barray[], bool really, FILE *F ){
-  int j,N;
-  uint bc, pix, oldpix;
-  assert(imgsize <= 20000);
-  j=0; N=1; bc=0;
-  oldpix = ((Barray[j/2] >> (4*(1-j%2)))&15);
-  for(j=1; j<40000; j++){
-    pix = ((Barray[j/2] >> (4*(1-j%2)))&15);
-    assert(pix<16);
-    if( pix == oldpix) {
-      N++;
-    }else{
-      assert(N<256);
-      if(really) putc(N, F); /*run length*/
-      assert(oldpix<16);
-      if(really) putc(oldpix | (oldpix<<4), F); /*color in both nybbles*/
-      N=1; bc+=2;
-    }
-    if(j%200==199){
-      assert(N<256);
-      if(really) putc(N, F); /*run length*/
-      assert(pix<16);
-      if(really) putc(pix | (pix<<4), F); /*color in both nybbles*/
-      N=1; bc+=4;
-      if(really) putc(0, F);
-      if(j>=39999){ if(really) putc(1, F); /*end of file*/ }
-      else{         if(really) putc(0, F); /*end of line*/
-	j++; pix=((Barray[j/2] >> (4*(1-j%2)))&15);
-      }
-    }
-    oldpix=pix;
-  } /*end for(j)*/
-  return bc;
+uint OutputCompressedBarray( uint imgsize, const uchar Barray[], bool really, FILE *F )
+{
+	int j,N;
+	uint bc, pix, oldpix;
+	extern uint shiftForCompressedBMP(const uchar [], const int &);
+	assert(imgsize <= 20000);
+	j=0; N=1; bc=0;
+	oldpix = shiftForCompressedBMP(Barray, j);
+	for(j=1; j<40000; j++) {
+		pix = shiftForCompressedBMP(Barray, j);
+		assert(pix<16);
+		if( pix == oldpix) {
+			N++;
+		}else{
+			assert(N<256);
+			if(really) putc(N, F); /*run length*/
+			assert(oldpix<16);
+			if(really) putc(oldpix | (oldpix<<4), F); /*color in both nybbles*/
+			N=1; bc+=2;
+		}
+		if(j%200==199) {
+			assert(N<256);
+			if(really) putc(N, F); /*run length*/
+			assert(pix<16);
+			if(really) putc(pix | (pix<<4), F); /*color in both nybbles*/
+			N=1; bc+=4;
+			if(really) putc(0, F);
+			if(j>=39999) { if(really) putc(1, F); /*end of file*/ }
+			else {         if(really) putc(0, F); /*end of line*/
+				j++;
+				pix = shiftForCompressedBMP(Barray, j);
+			}
+		}
+		oldpix=pix;
+	} /*end for(j)*/
+	return bc;
 }
 
 uint OutputBMPHead( uint width, uint height, uint bitsperpixel, uint compression, const uchar Barray[], FILE *F ){
@@ -5653,6 +5656,25 @@ template< class T > bool SelectedRight( uint L, uint R, uint K, const T A[] ){
   for(i=L; i<K; i++){ if( A[i]>A[K] ) return FALSE; }
   for(i=R; i>K; i--){ if( A[K]>A[i] ) return FALSE; }
   return TRUE;
+}
+
+/*	shiftForCompressedBMP(array, j):	performs an adjustment of an entry in
+ *						'array' based upon the value of 'j' and
+ *						returns the adjusted value; the value
+ *						stored in the array is not modified
+ *	array:	an array of values to be adjusted
+ *	j:	a 'pseudo-index' into 'array'; 'pseudo' in the sense the function
+ *		accesses the 'j/2'-th element of 'array', as oppose to the 'j'-th
+ *		element
+ */
+uint shiftForCompressedBMP(const uchar array[], const int &j)
+{
+    int shift = (4*(1-j%2));
+    const int psuedoIndex = j/2;
+    const uchar rawValue = array[psuedoIndex];
+    const uchar shiftedValue = rawValue >> shift;
+    const uint returnValue = shiftedValue & 15;
+    return returnValue;
 }
 
 /*	Test(name, direction, func1, func2, mean_str, meansq_str):
