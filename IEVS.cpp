@@ -3657,7 +3657,7 @@ UTGEN GenIssueDotprodUtils( edata *E, uint Issues ){  /* utility = canddt*voter 
 #define NumDebFiles 6
 #define MaxNumRanks 339999
 
-const char* electionHILnames[NumHilFiles] = {
+const char*const electionHILnames[NumHilFiles] = {
   "A1.HIL", "A2.HIL", "A3.HIL", "A4.HIL", "A5.HIL", "A6.HIL", "A7.HIL", "A8.HIL", "A9.HIL",
   "A10.HIL", "A11.HIL", "A12.HIL", "A13.HIL", "A14.HIL", "A15.HIL",
   "A16.HIL", "A17.HIL", "A18.HIL", "A19.HIL",
@@ -3676,7 +3676,7 @@ const char* electionHILnames[NumHilFiles] = {
   "A90.HIL", "A91.HIL", "A92.HIL", "A93.HIL", "A94.HIL", "A95.HIL",
   "A96.HIL", "A97.HIL", "A98.HIL", "A99.HIL" };
 
-const char* electionDEBnames[NumDebFiles] = {
+const char*const electionDEBnames[NumDebFiles] = {
   "DB2001.DEB",   "DB2002.DEB",   "DB2003.DEB",   "DB2004.DEB",   "DB2005.DEB",   "DB2006.DEB" };
 
 uint NVotersData[NumHilFiles+NumDebFiles],  NCandsData[NumHilFiles+NumDebFiles];
@@ -4469,8 +4469,8 @@ uint     candnumlower=2, candnumupper=7;
 int      votnumlower=2, votnumupper=MaxNumVoters;
 int      numelections2try = 59;
 int      utilnumlower=0,  utilnumupper = NumUtilGens;
-real HonLevels[] = {1.0, 0.5, 0.0, 0.75, 0.25};
-real IgnLevels[] = {0.001, 0.01, 0.1, 1.0, -1.0};
+const real HonLevels[] = {1.0, 0.5, 0.0, 0.75, 0.25};
+const real IgnLevels[] = {0.001, 0.01, 0.1, 1.0, -1.0};
 real RegretSum[NumMethods];
 int CoombCt[NumMethods];
 int MethPerm[NumMethods];
