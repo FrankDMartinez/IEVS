@@ -5561,18 +5561,18 @@ void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*fun
  */
 void runSingleYeeTest(uint aSeed)
 {
-	int LpPow=1;
-	int ihonfrac=50;
-	int WhichMeth=2;
+	const int LpPow=1;
+	const int ihonfrac=50;
+	const int WhichMeth=2;
 	char fname[100];
-	int NumSites=16;
-	int subsqsideX=200;
-	int subsqsideY=200;
+	const int NumSites=16;
+	const int subsqsideX=200;
+	const int subsqsideY=200;
 	int i;
 	int xx[16], yy[16];
 	real cscore;
-	int TopYeeVoters=26;
-	int GaussStdDev=200;
+	const int TopYeeVoters=26;
+	const int GaussStdDev=200;
 
 	adjustYeeCoordinates(NumSites, xx, yy, subsqsideX, subsqsideY);
 	cscore = ReorderForColorContrast(  NumSites, xx, yy );
@@ -5672,7 +5672,7 @@ template< class T > bool SelectedRight( uint L, uint R, uint K, const T A[] ){
  */
 uint shiftForCompressedBMP(const uchar array[], const int &j)
 {
-    int shift = (4*(1-j%2));
+    const int shift = (4*(1-j%2));
     const int psuedoIndex = j/2;
     const uchar rawValue = array[psuedoIndex];
     const uchar shiftedValue = rawValue >> shift;
