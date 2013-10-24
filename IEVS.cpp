@@ -2964,7 +2964,6 @@ EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 		/*if exactly 0 or 1 canddt majority-approved, ApprovalWinner wins*/
 		return ApprovalWinner;
 	}
-	assert(ctm>=2);  /*Two or more majority-approved:*/
 	for(i=E->NumCands -1; i>=0; i--) if(MajApproved[i]) {
 		bool haveAWinner = true;
 		for(j=E->NumCands -1; j>=0; j--) if(j!=i && MajApproved[j]) {
@@ -3746,7 +3745,7 @@ int LoadEldataFiles(){
 #endif
 			votcount++;
       v++;
-    }until(x==0 && y==0);
+    }until(y==0);
     /*Now do something re the election that just ended with v votes*/
     if(v<3){
       printf("bad #voters %d in %s - terminating\n", v, electionHILnames[i]);
