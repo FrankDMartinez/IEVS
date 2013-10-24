@@ -199,7 +199,6 @@ bool EmptySet(uint x){ return (x==0); }
 /****** convenient fns: *******/
 real SquareReal(real x){  return x*x; }
 int SquareInt(int x){  return x*x; }
-int AbsInt(int x){  if(x<0) return -x; else return x; }
 uint PosInt(int x){ if(x>0) return x; else return 0; }
 int SignInt(int x){ if(x>0) return 1; else if(x<0) return -1; else return 0; }
 int SignReal(real x){ if(x>0) return 1; else if(x<0) return -1; else return 0; }
@@ -561,29 +560,30 @@ void InitRand(uint seed){ /* initializes the randgen */
    printf("\n");
 }
 
-void TestRand01(){
-  int i,y, ct[10];
-   real x,s,mx,mn,v;
-   s=0.0; v=0.0;
-   mn = HUGE;
-   mx = -HUGE;
-   for(i=0; i<10; i++) ct[i]=0;
-   printf("Performing 100000 randgen calls to test that randgen[0,1] behaving ok:\n");
-   for(i=0; i<100000; i++){
-     x = Rand01();
-     s += x;
-     if(mx<x) mx=x;
-     if(x<mn) mn=x;
-     v += SquareReal(x-0.5);
-     y = (int)(x*10.0);
-     if(x>=0 && y<10) ct[y]++;
-   }
-   printf("mean=%g(should be 1/2)  min=%f  max=%g   variance=%g(should be 1/12=%g)\n",
-      s/100000.0, mn, mx, v/100000.0, 1/12.0);
-   printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
-   for(i=0; i<10; i++) printf(" %d", ct[i]);
-   printf("\n");
-   fflush(stdout);
+void TestRand01()
+{
+	int i,y, ct[10];
+	real x,s,mx,mn,v;
+	s=0.0; v=0.0;
+	mn = HUGE;
+	mx = -HUGE;
+	for(i=0; i<10; i++) ct[i]=0;
+	printf("Performing 100000 randgen calls to test that randgen[0,1] behaving ok:\n");
+	for(i=0; i<100000; i++) {
+		x = Rand01();
+		s += x;
+		if(mx<x) mx=x;
+		if(x<mn) mn=x;
+		v += pow((x-0.5), 2);
+		y = (int)(x*10.0);
+		if(x>=0 && y<10) ct[y]++;
+	}
+	printf("mean=%g(should be 1/2)  min=%f  max=%g   variance=%g(should be 1/12=%g)\n",
+			s/100000.0, mn, mx, v/100000.0, 1/12.0);
+	printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
+	for(i=0; i<10; i++) printf(" %d", ct[i]);
+	printf("\n");
+	fflush(stdout);
 }
 
 bool RandBool(){ /* returns random boolean */
@@ -853,11 +853,12 @@ void WelfordUpdateMeanSD(real NewDatum, int *Count, real *M, real *S){
   return;
 }
 
-real DistanceSquared(uint N, const real a[], const real b[] ){
- real d = 0.0;
-  int i;
-  for(i=0; i<(int)N; i++) d += SquareReal( a[i]-b[i] );
-  return d;
+real DistanceSquared(uint N, const real a[], const real b[] )
+{
+	real d = 0.0;
+	int i;
+	for(i=0; i<(int)N; i++) d += pow(( a[i]-b[i] ), 2);
+	return d;
 }
 
 real L1Distance(uint N, const real a[], const real b[] ){
@@ -867,14 +868,15 @@ real L1Distance(uint N, const real a[], const real b[] ){
   return d;
 }
 
-real LpDistanceSquared(uint N, const real a[], const real b[], real Lp ){
- real d = 0.0;
-  int i;
-  assert(Lp >= 1.0);
-  if(Lp==1.0) return SquareReal(L1Distance(N,a,b));
-  if(Lp==2.0) return DistanceSquared(N,a,b);
-  for(i=0; i<(int)N; i++) d += pow( fabs( a[i]-b[i] ), Lp );
-  return pow( d, 2.0/Lp );
+real LpDistanceSquared(uint N, const real a[], const real b[], real Lp )
+{
+	real d = 0.0;
+	int i;
+	assert(Lp >= 1.0);
+	if(Lp==1.0) return pow((L1Distance(N,a,b)), 2);
+	if(Lp==2.0) return DistanceSquared(N,a,b);
+	for(i=0; i<(int)N; i++) d += pow( fabs( a[i]-b[i] ), Lp );
+	return pow( d, 2.0/Lp );
 }
 
 real  SumRealArray( uint N, const real a[] ){
@@ -4250,7 +4252,7 @@ void DrawVoronoi(uint NumSites, const int xx[], const int yy[], uchar Barray[200
 		for(y=0; y<200; y++) {
 			min = 9999999; col=BIGINT;
 			for(i=0; i<NumSites; i++) {
-				if(LpPow==2) ds = (int)(SquareReal(x-xx[i]) + SquareReal(y-yy[i]));
+				if(LpPow==2) ds = (int)(pow((x-xx[i]) + SquareReal(y-yy[i]), 2));
 				else  /*1*/  ds = (int)(fabs(x-xx[i]) + fabs(y-yy[i]));
 				if(ds < min) { min=ds; col=i; }
 			}
@@ -4271,7 +4273,7 @@ void DrawFPvor(uint NumSites, const int xx[], const int yy[], uchar Barray[20000
 		for(y=0; y<200; y++) {
 			mx = 0; col=BIGINT;
 			for(i=0; i<NumSites; i++) {
-				if(LpPow==2) ds = (int)(SquareReal(x-xx[i]) + SquareReal(y-yy[i]));
+				if(LpPow==2) ds = (int)(pow((x-xx[i]) + SquareReal(y-yy[i]), 2));
 				else  /*1*/  ds = (int)(fabs(x-xx[i]) + fabs(y-yy[i]));
 				if(ds >= mx) { mx=ds; col=i; }
 			}
@@ -4296,96 +4298,97 @@ some weight exceeds runnerup by factor 5 or more.
 CreatePixel for winner with maxweight.
 ***/
 void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int WhichMeth,
-		 edata *E, uchar Barray[], uint GaussStdDev, real honfrac, int LpPow ){
-  int x,y,k,v,j,ja,i,m,jo,s,maxw,col,w,pass,x0,x1,y_0,y_1,PreColor;
-  uint p0,p1,p2,p3;
-  int weight[16];
-  uint RandPerm[16];
-  real xt, yt, xto, yto, th, ds, ut, rr;
-  assert(honfrac >= 0.0);
-  assert(honfrac <= 1.0);
-  if(NumSites>16) NumSites=16;
-  E->NumCands = NumSites;
-  MakeIdentityPerm(NumSites, RandPerm);
-  for(pass=8; pass>=1; pass /= 2){
-    for(y=0; y<200; y+=pass){
-      printf("[%d]", y);
-      if((pass==1 && y%10==9) ||
-	 (pass==2 && y%20==18) ||
-	 (pass==4 && y%40==36) ||
-	 (pass==8 && y%80==72) ) printf("\n");
-      for(x=0; x<200; x+=pass){
-	PreColor = -1;
-	if( pass>=8 || ((x&pass) || (y&pass)) ){
-	  if(x>0 && y>0 && x<200-pass && y<200-pass){
-	    if(pass<=4){
-	      /*speedup hack: examine previously-computed 4 neighbors*/
-	      if(x&pass){ x0 = x-pass; x1= x+pass; }else{ x0=x-pass; x1=x; }
-	      if(y&pass){ y_0 = y-pass; y_1= y+pass; }else{ y_0=y-pass; y_1=y; }
-	      p0 = ReadPixel(x0,y_0,Barray);
-	      p1 = ReadPixel(x0,y_1,Barray);
-	      p2 = ReadPixel(x1,y_0,Barray);
-	      p3 = ReadPixel(x1,y_1,Barray);
-	      if(p0==p1 && p0==p2 && p0==p3){ /*if all agree then use common color*/
-		PreColor = p0;
-	      }
-	    }/*end if(pass)*/
-	  }/*end if(x>0 &&..)*/
-	  ZeroIntArray( NumSites, weight );
-	  for(k=10; k<MaxK; k = (k*11)/10){ /*try k-voter election*/
-	    v = k+k+1;
-	    E->NumVoters = v;
-	    j=0; ja=0;
-	    while(ja<k){ /* generate voter locations and their candidate-utilities */
-	      th = (ja*PI)/k;
-	      xt = cos(th);
-	      yt = sin(th);
-	      rr = RandRadialNormal()*GaussStdDev;
-	      xt *= rr; yt *= rr;  /*xt, yt are offsets of voters from central pixel*/
-	      for(s = -1; s<=1; s++) if(s!=0 || ja==0){ /*centro-symmetric: s=sign*/
-		/*printf("k=%d v=%d j=%d ja=%d s=%d x=%f y=%f\n",k,v,j,ja,s,xt*s,yt*s);*/
-		xto = xt*s + x;
-		yto = yt*s + y;
-		jo = j*NumSites;
-		for(i=0; i<(int)NumSites; i++){ /*go thru canddts generating utils for voter j*/
-		  if(LpPow==2) ds = SquareReal(xto-xx[i]) + SquareReal(yto-yy[i]);
-                  else  /*1*/  ds = 0.7*SquareReal( fabs(xto-xx[i]) + fabs(yto-yy[i]) );
-		  ut = 1.0 / sqrt(12000.0 + ds);
-		  m = i+jo;
-		  E->Utility[m] = ut;
-		  E->PerceivedUtility[m] = ut;
-		}/*end for(i)*/
-		j++;
-	      }/*end for(s)*/
-	      ja++;
-	    }/*end while(ja)*/
-	    InitCoreElState();
-	    HonestyStrat(E, honfrac);
-	    BuildDefeatsMatrix(E);
-	    SmithIRVwinner = 0;
-	    w = GimmeWinner( E,  WhichMeth );
-	    assert(w>=0);
-	    weight[w] += v;
-	    maxw = -BIGINT;
-	    for(i=0; i<(int)NumSites; i++) if(i!=w){
-	      if( maxw<weight[i] ){ maxw=weight[i]; }
-	    }
-	    if((PreColor==w && k==10) || /*early break; precolor agree with first election pass*/
-	       (weight[w] >= 5*maxw && k>16) || /*early break - good confidence*/
-	       weight[w] - maxw > MaxK * log(((real)MaxK)/k)*10.1
-	       /*early break - futility*/ ){
-	      break;
-	    }
-	  } /*end for(k)*/
-	  col = ArgMaxUIntArr( NumSites, (uint*)weight, (int*)RandPerm );
-	  CreatePixel(x,y,col,Barray);
-	} /*end if(pass)*/
-      } /*end for(x)*/
-    } /*end for(y)*/
-  } /*end for(pass)*/
-  for(i=0; i<(int)NumSites; i++){
-    DrawCircle(xx[i], yy[i], 2, ((i!=15)?15:14), i, Barray);
-  }
+		 edata *E, uchar Barray[], uint GaussStdDev, real honfrac, int LpPow )
+{
+	int x,y,k,v,j,ja,i,m,jo,s,maxw,col,w,pass,x0,x1,y_0,y_1,PreColor;
+	uint p0,p1,p2,p3;
+	int weight[16];
+	uint RandPerm[16];
+	real xt, yt, xto, yto, th, ds, ut, rr;
+	assert(honfrac >= 0.0);
+	assert(honfrac <= 1.0);
+	if(NumSites>16) NumSites=16;
+	E->NumCands = NumSites;
+	MakeIdentityPerm(NumSites, RandPerm);
+	for(pass=8; pass>=1; pass /= 2) {
+		for(y=0; y<200; y+=pass) {
+			printf("[%d]", y);
+			if((pass==1 && y%10==9) ||
+			   (pass==2 && y%20==18) ||
+			   (pass==4 && y%40==36) ||
+			   (pass==8 && y%80==72) ) printf("\n");
+			for(x=0; x<200; x+=pass) {
+				PreColor = -1;
+				if( pass>=8 || ((x&pass) || (y&pass)) ) {
+					if(x>0 && y>0 && x<200-pass && y<200-pass) {
+						if(pass<=4) {
+							/*speedup hack: examine previously-computed 4 neighbors*/
+							if(x&pass) { x0 = x-pass; x1= x+pass; } else { x0=x-pass; x1=x; }
+							if(y&pass) { y_0 = y-pass; y_1= y+pass; } else { y_0=y-pass; y_1=y; }
+							p0 = ReadPixel(x0,y_0,Barray);
+							p1 = ReadPixel(x0,y_1,Barray);
+							p2 = ReadPixel(x1,y_0,Barray);
+							p3 = ReadPixel(x1,y_1,Barray);
+							if(p0==p1 && p0==p2 && p0==p3) { /*if all agree then use common color*/
+								PreColor = p0;
+							}
+						}/*end if(pass)*/
+					}/*end if(x>0 &&..)*/
+					ZeroIntArray( NumSites, weight );
+					for(k=10; k<MaxK; k = (k*11)/10) { /*try k-voter election*/
+						v = k+k+1;
+						E->NumVoters = v;
+						j=0; ja=0;
+						while(ja<k) { /* generate voter locations and their candidate-utilities */
+							th = (ja*PI)/k;
+							xt = cos(th);
+							yt = sin(th);
+							rr = RandRadialNormal()*GaussStdDev;
+							xt *= rr; yt *= rr;  /*xt, yt are offsets of voters from central pixel*/
+							for(s = -1; s<=1; s++) if(s!=0 || ja==0) { /*centro-symmetric: s=sign*/
+								/*printf("k=%d v=%d j=%d ja=%d s=%d x=%f y=%f\n",k,v,j,ja,s,xt*s,yt*s);*/
+								xto = xt*s + x;
+								yto = yt*s + y;
+								jo = j*NumSites;
+								for(i=0; i<(int)NumSites; i++) { /*go thru canddts generating utils for voter j*/
+									if(LpPow==2) ds = pow((xto-xx[i]) + SquareReal(yto-yy[i]), 2);
+															else  /*1*/  ds = 0.7*pow(( fabs(xto-xx[i]) + fabs(yto-yy[i]) ), 2);
+									ut = 1.0 / sqrt(12000.0 + ds);
+									m = i+jo;
+									E->Utility[m] = ut;
+									E->PerceivedUtility[m] = ut;
+								}/*end for(i)*/
+								j++;
+							}/*end for(s)*/
+							ja++;
+						}/*end while(ja)*/
+						InitCoreElState();
+						HonestyStrat(E, honfrac);
+						BuildDefeatsMatrix(E);
+						SmithIRVwinner = 0;
+						w = GimmeWinner( E,  WhichMeth );
+						assert(w>=0);
+						weight[w] += v;
+						maxw = -BIGINT;
+						for(i=0; i<(int)NumSites; i++) if(i!=w) {
+							if( maxw<weight[i] ) { maxw=weight[i]; }
+						}
+						if((PreColor==w && k==10) || /*early break; precolor agree with first election pass*/
+							(weight[w] >= 5*maxw && k>16) || /*early break - good confidence*/
+							weight[w] - maxw > MaxK * log(((real)MaxK)/k)*10.1
+							/*early break - futility*/ ) {
+							break;
+						}
+					} /*end for(k)*/
+					col = ArgMaxUIntArr( NumSites, (uint*)weight, (int*)RandPerm );
+					CreatePixel(x,y,col,Barray);
+				} /*end if(pass)*/
+			} /*end for(x)*/
+		} /*end for(y)*/
+	} /*end for(pass)*/
+	for(i=0; i<(int)NumSites; i++) {
+		DrawCircle(xx[i], yy[i], 2, ((i!=15)?15:14), i, Barray);
+	}
 }
 
 void MakeYeePict( char filename[], const int xx[], const int yy[], int NumSites, int WhichMeth,
@@ -4423,22 +4426,23 @@ void MakeYeePict( char filename[], const int xx[], const int yy[], int NumSites,
   printf("\n");
 }
 
-real ColorContrastScore( uint NumSites, const int xx[], const int yy[] ){
-  int i,j;
-  real s;
-  assert(NumSites <= 16);
-  s = 0;
-  for(i=0; i<(int)NumSites; i++){
-    for(j=NumSites-1; j>i; j--){
-      s += (
-	AbsInt( PaletteColorArray[i*4]-PaletteColorArray[j*4] ) +
-	AbsInt( PaletteColorArray[i*4+1]-PaletteColorArray[j*4+1] ) +
-	AbsInt( PaletteColorArray[i*4+2]-PaletteColorArray[j*4+2] )
-	) / (AbsInt(xx[i]-xx[j])+AbsInt(yy[j]-yy[j])+3.0);
-    }
-  }
-  assert(s>0.0);
-  return s;
+real ColorContrastScore( uint NumSites, const int xx[], const int yy[] )
+{
+	int i,j;
+	real s;
+	assert(NumSites <= 16);
+	s = 0;
+	for(i=0; i<(int)NumSites; i++) {
+		for(j=NumSites-1; j>i; j--) {
+			s += (
+				abs( PaletteColorArray[i*4]-PaletteColorArray[j*4] ) +
+				abs( PaletteColorArray[i*4+1]-PaletteColorArray[j*4+1] ) +
+				abs( PaletteColorArray[i*4+2]-PaletteColorArray[j*4+2] )
+				) / (abs(xx[i]-xx[j])+abs(yy[j]-yy[j])+3.0);
+		}
+	}
+	assert(s>0.0);
+	return s;
 }
 
 real ReorderForColorContrast( uint NumSites, int xx[], int yy[] ){
@@ -5277,7 +5281,7 @@ void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], con
 		yy[i] = (int)((100 - subsqsideY*0.5) + Rand01()*(subsqsideY-0.001));
 		advance = true;
 		for(j=0; j<i; j++) {
-			if( AbsInt(xx[i]-xx[j]) + AbsInt(yy[i]-yy[j]) <= (7*subsqsideX+7*subsqsideY)/400 ) {
+			if( abs(xx[i]-xx[j]) + abs(yy[i]-yy[j]) <= (7*subsqsideX+7*subsqsideY)/400 ) {
 				/*too close to some previous point*/
 				advance = false;
 			}
