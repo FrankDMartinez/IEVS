@@ -4101,7 +4101,6 @@ uint OutputCompressedBarray( uint imgsize, const uchar Barray[], bool really, FI
 		if(j%200==199) {
 			assert(N<256);
 			if(really) putc(N, F); /*run length*/
-			assert(pix<16);
 			if(really) putc(pix | (pix<<4), F); /*color in both nybbles*/
 			N=1; bc+=4;
 			if(really) putc(0, F);
