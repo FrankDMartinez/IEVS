@@ -9,7 +9,7 @@
  */
 #define TRUE (0<1)
 #define FALSE (1<0)
-#define MSWINDOWS FALSE
+#define MSWINDOWS 0
 #if MSWINDOWS
   #include "stdafx.h"  /*needed if Microsoft Windows OS, unwanted if LINUX; will be more of that*/
 #endif
@@ -149,7 +149,7 @@ David Cary's Changes (not listing ones WDS did anyhow) include:
 #define uchar unsigned char
 #define real double
 
-#define PI 3.14159265358979323844
+#define PI (3.14159265358979323844)
 
 #define MaxNumCands 32
 #define MaxNumVoters 2048
@@ -160,7 +160,7 @@ David Cary's Changes (not listing ones WDS did anyhow) include:
 #define NumFastMethods (NumMethods-NumSlowMethods)
 #define NumUtilGens 11  /*UTGEN the # in this line needs to change if add new util gen*/
 #define NumCoreMethods 12
-#define CWSPEEDUP FALSE   /* TRUE causes it to be faster, but FALSE better for diagnosing bugs */
+#define CWSPEEDUP 0	/* 1 causes it to be faster, but 0 better for diagnosing bugs */
 
 #define HTMLMODE 1  /*output adding "HTML table" formatting commands*/
 #define TEXMODE 2   /*output adding "TeX table" formatting commands*/
@@ -320,9 +320,9 @@ uint32_t BigLinCong32()
  * is a "good" primitive root mod P, if w=32.
  *****************************************************************/
 #define lohalf(x) (uint32_t)(x)
-#define A1 (uint64_t)1284507170
-#define A2 (uint64_t)847441413
-#define A3 (uint64_t)650134147
+#define A1 ((uint64_t)1284507170)
+#define A2 ((uint64_t)847441413)
+#define A3 ((uint64_t)650134147)
 		for(i=0; i<3; i++) {
 			y[i] = 0;
 		}
@@ -649,7 +649,7 @@ void TestRadialNormalRand2()
 	Test("normal randgen", " radially", RandNormal, RandNormal, "~1.25", "2");
 }
 
-#define RECIPRTPI 0.564189583547756286948079451560772585844050   /* 1/sqrt(pi) */
+#define RECIPRTPI (0.564189583547756286948079451560772585844050)   /* 1/sqrt(pi) */
 real RandSkew(){ /* returns mean=0 skewed deviate; the fact the mean is really 0, has been
 		  * confirmed by Monte Carlo to +-0.0001 */
   real x,y;
@@ -689,8 +689,8 @@ real wks(int a, int b){
  * voting method to be identical (and cause Condorcet winner always to exist)
  * with distance-based utilities...  which is not realistic.  Hence this.
  **********/
-#define RT85 1.264911064067351732799557417773  /* sqrt(8/5) */
-#define RT25 0.632455532033675866399778708886  /* sqrt(2/5) */
+#define RT85 (1.264911064067351732799557417773)  /* sqrt(8/5) */
+#define RT25 (0.632455532033675866399778708886)  /* sqrt(2/5) */
 void GenRandWackyArr(int N, real Arr[]){ /* returns Arr[0..N-1] of skew randoms */
   int k, which;
   which = (int)RandInt(3);
@@ -3684,7 +3684,7 @@ uchar ElData[MaxNumRanks];
 int NumElectionsLoaded = 0;
 
 #define TOOMANYELVOTERS 7000
-#define VERBOSELOAD FALSE
+#define VERBOSELOAD 0
 
 int LoadEldataFiles(){
   int c,i,j,v,x,y,elcount,votcount,prefcount,ncands,nvoters,nwinners,itcount;
