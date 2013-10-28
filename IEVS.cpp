@@ -27,6 +27,7 @@
   #include <sys/time.h>
   #include <unistd.h>
 #endif
+#include <stdint.h>
 #include <string.h>
 #include <typeinfo>
 
@@ -145,8 +146,6 @@ David Cary's Changes (not listing ones WDS did anyhow) include:
 ****************************/
 
 #define until(x) while(!(x))
-#define uint32 unsigned int
-#define uint64 unsigned long long
 #define uchar unsigned char
 #define real double
 
@@ -261,7 +260,7 @@ void PrintNSpaces(int N){
 /* defn works on 8,16,32, and 64-bit machines */
 
 
-uint32 BLC32x[60];  /* 32*60=1920 bits of state. Must be nonzero mod P. */
+uint32_t BLC32x[60];  /* 32*60=1920 bits of state. Must be nonzero mod P. */
 int BLC32NumLeft;
 
 /********************************************************
@@ -304,11 +303,11 @@ primitive root mod that P. A still more enormous prime is
 trivial) but doing arithmetic mod this P is (although still fairly
 easy) less pleasant because bit-shifting is required.
 *************************************************************/
-uint32 BigLinCong32()
+uint32_t BigLinCong32()
 {
-	uint32 y[120];
+	uint32_t y[120];
 	int i;
-	uint64 u;
+	uint64_t u;
 
 	if(BLC32NumLeft==0) {
 		/* Need to refill BLC32x[0..59] with 60 new random numbers: */
@@ -320,10 +319,10 @@ uint32 BigLinCong32()
  *  A = 1284507170 * 2^(w*3) + 847441413 * 2^(w*44) + 650134147 * 2^(w*59)
  * is a "good" primitive root mod P, if w=32.
  *****************************************************************/
-#define lohalf(x) (uint32)(x)
-#define A1 (uint64)1284507170
-#define A2 (uint64)847441413
-#define A3 (uint64)650134147
+#define lohalf(x) (uint32_t)(x)
+#define A1 (uint64_t)1284507170
+#define A2 (uint64_t)847441413
+#define A3 (uint64_t)650134147
 		for(i=0; i<3; i++) {
 			y[i] = 0;
 		}
@@ -373,14 +372,14 @@ uint32 BigLinCong32()
 		/* Step 1: y[0..72] = y[0..59] + y[60..119]shift12 - y[60..119]: */
 		for(i=0; i<12; i++) {
 			u += y[i];
-			u += (uint64)(uint32)~y[60+i];
+			u += (uint64_t)(uint32_t)~y[60+i];
 			y[i] = lohalf(u);
 			u = u>>32;
 		}
 		for(/*i=12*/; i<60; i++) {
 			u += y[i];
 			u += y[48+i];
-			u += (uint64)(uint32)~y[60+i];
+			u += (uint64_t)(uint32_t)~y[60+i];
 			y[i] = lohalf(u);
 			u = u>>32;
 		}
@@ -391,19 +390,19 @@ uint32 BigLinCong32()
 			u = u>>32;
 		}
 		assert(u>0);
-		y[72] = (uint32)(u-1); /*unborrow*/
+		y[72] = (uint32_t)(u-1); /*unborrow*/
 
 		/*  Step 2: y[0..60] = y[0..59] + y[60..72]shift12  - y[60..72]: */
 		u=1; /*borrow*/
 		for(i=0; i<12; i++) {
 			u += y[i];
-			u += (uint64)(uint32)~y[60+i];
+			u += (uint64_t)(uint32_t)~y[60+i];
 			y[i] = lohalf(u);
 			u = u>>32;
 		}
 		/*i=12*/
 		u += y[i] + y[48+i];
-		u += (uint64)(uint32)~y[60+i];
+		u += (uint64_t)(uint32_t)~y[60+i];
 		y[i] = lohalf(u);
 		u = u>>32;
 		i++;
@@ -422,7 +421,7 @@ uint32 BigLinCong32()
 		}
 		/*i=60*/
 		assert(u>0);
-		y[i] = (uint32)(u-1); /*unborrow*/
+		y[i] = (uint32_t)(u-1); /*unborrow*/
 
 	/*It is rare that any iterations of this loop are needed:*/
 		while(y[60]!=0) {
@@ -430,7 +429,7 @@ uint32 BigLinCong32()
 			/*Step 3+:  y[0..60] = y[0..59] + y[60]shift12 - y[60]:*/
 			u=1; /*borrow*/
 			u += y[0];
-			u += (uint64)(uint32)~y[60];
+			u += (uint64_t)(uint32_t)~y[60];
 			y[0] = lohalf(u);
 			u = u>>32;
 			for(i=1; i<12; i++) {
@@ -454,7 +453,7 @@ uint32 BigLinCong32()
 			}
 			/*i=60*/
 			assert(u>0);
-			y[i] = (uint32)(u-1); /*unborrow*/
+			y[i] = (uint32_t)(u-1); /*unborrow*/
 		}
 #undef AllF
 #undef lohalf
@@ -938,7 +937,7 @@ all are subroutines with a common format - here is the format (which is all subs
 the convenient data structure "edata"):
 input:
 uint NumVoters;
-uint64 NumCands;
+uint64_t NumCands;
 
 uint TopDownPrefs[NumVoters*NumCands];
 Entry x*NumCands+y says the candidate who is the (y-1)th choice of voter x, x=0..NumVoters-1.
@@ -1107,7 +1106,7 @@ void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have be
 
 typedef struct dum1 {
   uint NumVoters;
-  uint64 NumCands;
+  uint64_t NumCands;
   uint TopDownPrefs[MaxNumCands*MaxNumVoters];
   uint CandRankings[MaxNumCands*MaxNumVoters];
   real Score[MaxNumCands*MaxNumVoters];
@@ -3343,7 +3342,7 @@ int GimmeWinner( edata *E, int WhichMeth )
 
 typedef struct dum2 {
   uint NumVoters;
-  uint64 NumCands;
+  uint64_t NumCands;
   uint NumElections;
   real IgnoranceAmplitude;
   real Honfrac;
@@ -3421,7 +3420,7 @@ all are subroutines with a common format (embraced by the edata structure):
 
 input:
 uint NumVoters;
-uint64 NumCands;
+uint64_t NumCands;
 
 real PerceivedUtility[NumVoters*NumCands];
 Entry x*NumCands+y says the utility (a floating point real; greater means better candidate)
@@ -3553,7 +3552,7 @@ void HonestyStrat( edata *E, real honfrac )
 /*************************** VOTER IGNORANCE: ***********
 input:
 uint NumVoters;
-uint64 NumCands;
+uint64_t NumCands;
 real IgnoranceAmplitude;
 
 real Utility[NumVoters*NumCands];
@@ -3587,7 +3586,7 @@ void AddIgnorance( edata *E, real IgnoranceAmplitude ){
 /*************************** UTILITY GENERATORS: ***********
 input:
 uint NumVoters;
-uint64 NumCands;
+uint64_t NumCands;
 
 output:
 real Utility[NumVoters*NumCands];
@@ -3600,14 +3599,14 @@ real CandLocation[MaxNumCands*MaxNumIssues];
 
 #define UTGEN void /*allows fgrep UTGEN IEVS.c to find out what utility-generators now available*/
 
-void GenNormalLocations( /*input:*/ uint NumVoters, uint64 NumCands, uint Issues,
+void GenNormalLocations( /*input:*/ uint NumVoters, uint64_t NumCands, uint Issues,
 			 /*output:*/ real vLocation[], real cLocation[] )
 {
 	GenRandNormalArr(NumVoters*Issues, vLocation);
 	GenRandNormalArr(NumCands*Issues, cLocation);
 }
 
-void GenWackyLocations( /*input:*/ uint NumVoters, uint64 NumCands, uint Issues,
+void GenWackyLocations( /*input:*/ uint NumVoters, uint64_t NumCands, uint Issues,
 			 /*output:*/ real vLocation[], real cLocation[] )
 {
 	GenRandWackyArr(NumVoters*Issues, vLocation);
@@ -3893,8 +3892,8 @@ void PrintConsts()
 {
 	printf("\nConstants:\n");
 	printf("sizeof(uint)=%d bytes\t", (int)sizeof(uint));
-	printf("sizeof(uint32)=%d\t", (int)sizeof(uint32));
-	printf("sizeof(uint64)=%d\t", (int)sizeof(uint64));
+	printf("sizeof(uint32_t)=%d\t", (int)sizeof(uint32_t));
+	printf("sizeof(uint64_t)=%d\t", (int)sizeof(uint64_t));
 	printf("sizeof(real)=%d\n", (int)sizeof(real));
 	printf("sizeof(edata)=%d\t", (int)sizeof(edata));
 	printf("MaxNumCands=%d\t", MaxNumCands);
@@ -3909,8 +3908,8 @@ void PrintConsts()
 
 	printf("BROutputMode=%x\n", BROutputMode);
 
-	ensure(sizeof(uint32)==4, 24);
-	ensure(sizeof(uint64)==8, 25);
+	ensure(sizeof(uint32_t)==4, 24);
+	ensure(sizeof(uint64_t)==8, 25);
 	fflush(stdout);
 }
 
