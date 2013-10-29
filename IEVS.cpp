@@ -146,7 +146,6 @@ David Cary's Changes (not listing ones WDS did anyhow) include:
 ****************************/
 
 #define until(x) while(!(x))
-#define uchar unsigned char
 typedef double real;
 
 #define PI (3.14159265358979323844)
@@ -3680,7 +3679,7 @@ const char*const electionDEBnames[NumDebFiles] = {
   "DB2001.DEB",   "DB2002.DEB",   "DB2003.DEB",   "DB2004.DEB",   "DB2005.DEB",   "DB2006.DEB" };
 
 uint NVotersData[NumHilFiles+NumDebFiles],  NCandsData[NumHilFiles+NumDebFiles];
-uchar ElData[MaxNumRanks];
+uint8_t ElData[MaxNumRanks];
 int NumElectionsLoaded = 0;
 
 #define TOOMANYELVOTERS 7000
@@ -4062,13 +4061,13 @@ void OutputLittleEndianUint16( uint x, FILE *F ){
   putc( x%256, F);
 }
 
-void OutputBarray( uint imgsize, const uchar Barray[], FILE *F ){
+void OutputBarray( uint imgsize, const uint8_t Barray[], FILE *F ){
   int i;
   assert(imgsize == 20000);
   for(i=0; i<20000; i++) putc( Barray[i], F );
 }
 
-uint ReadPixel( uint x, uint y, const uchar Barray[] ){ /*assumes 200x200, 4bits per pixel*/
+uint ReadPixel( uint x, uint y, const uint8_t Barray[] ){ /*assumes 200x200, 4bits per pixel*/
   int addr;
   uint q;
   addr = 100*y + x/2;
@@ -4077,11 +4076,11 @@ uint ReadPixel( uint x, uint y, const uchar Barray[] ){ /*assumes 200x200, 4bits
   return(q&15);
 }
 
-uint OutputCompressedBarray( uint imgsize, const uchar Barray[], bool really, FILE *F )
+uint OutputCompressedBarray( uint imgsize, const uint8_t Barray[], bool really, FILE *F )
 {
 	int j,N;
 	uint bc, pix, oldpix;
-	extern uint shiftForCompressedBMP(const uchar [], const int &);
+	extern uint shiftForCompressedBMP(const uint8_t [], const int &);
 	assert(imgsize <= 20000);
 	j=0; N=1; bc=0;
 	oldpix = shiftForCompressedBMP(Barray, j);
@@ -4114,7 +4113,7 @@ uint OutputCompressedBarray( uint imgsize, const uchar Barray[], bool really, FI
 	return bc;
 }
 
-uint OutputBMPHead( uint width, uint height, uint bitsperpixel, uint compression, const uchar Barray[], FILE *F ){
+uint OutputBMPHead( uint width, uint height, uint bitsperpixel, uint compression, const uint8_t Barray[], FILE *F ){
   uint sf, roundedwidth, colors, colortabsize, offset, imgsize, compressedsize;
   assert(bitsperpixel==1 || bitsperpixel==4 || bitsperpixel==8 || bitsperpixel==24);
   putc(66, F); /*B*/
@@ -4155,9 +4154,9 @@ uint OutputBMPHead( uint width, uint height, uint bitsperpixel, uint compression
   return(imgsize);
 }
 
-uchar PaletteColorArray[64];
+uint8_t PaletteColorArray[64];
 
-void BogoPutc(uchar x, FILE *F){
+void BogoPutc(uint8_t x, FILE *F){
   static uint i=0;
   if(i>=64) i=0;
   PaletteColorArray[i] = x; i++;
@@ -4188,7 +4187,7 @@ void OutputFCC16ColorPalette( FILE *F ){
   BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(0, F); /*black*/
 }
 
-void CreatePixel(int x, int y, uint color, uchar Barray[]){ /*Create 16 color pixel at x,y*/
+void CreatePixel(int x, int y, uint color, uint8_t Barray[]){ /*Create 16 color pixel at x,y*/
   uint q, addr;
   if(x>=200 || y>=200 || x<0 || y<0) return;  /*auto-clipping to 200x200 region*/
   color &= 15; /*at most 16 colors, like it or not*/
@@ -4206,7 +4205,7 @@ void CreatePixel(int x, int y, uint color, uchar Barray[]){ /*Create 16 color pi
   }
 }
 
-void DrawCircle(int x, int y, uint radius, uint BorderColor, uint FillColor, uchar Barray[])
+void DrawCircle(int x, int y, uint radius, uint BorderColor, uint FillColor, uint8_t Barray[])
 { /*Bresenham alg.*/
   int xd, yd, i, d, mode;
   for(mode=0; mode<=1; mode++){
@@ -4241,7 +4240,7 @@ void DrawCircle(int x, int y, uint radius, uint BorderColor, uint FillColor, uch
   }
 }
 
-void DrawVoronoi(uint NumSites, const int xx[], const int yy[], uchar Barray[20000], int LpPow)
+void DrawVoronoi(uint NumSites, const int xx[], const int yy[], uint8_t Barray[20000], int LpPow)
 {
 	int x,y,ds,min;
 	uint col,i;
@@ -4263,7 +4262,7 @@ void DrawVoronoi(uint NumSites, const int xx[], const int yy[], uchar Barray[200
 	}
 }
 
-void DrawFPvor(uint NumSites, const int xx[], const int yy[], uchar Barray[20000], int LpPow)
+void DrawFPvor(uint NumSites, const int xx[], const int yy[], uint8_t Barray[20000], int LpPow)
 {
 	uint x,y,ds,mx,col,i;
 	if(NumSites>16) NumSites=16;
@@ -4296,7 +4295,7 @@ some weight exceeds runnerup by factor 5 or more.
 CreatePixel for winner with maxweight.
 ***/
 void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int WhichMeth,
-		 edata *E, uchar Barray[], uint GaussStdDev, real honfrac, int LpPow )
+		 edata *E, uint8_t Barray[], uint GaussStdDev, real honfrac, int LpPow )
 {
 	int x,y,k,v,j,ja,i,m,jo,s,maxw,col,w,pass,x0,x1,y_0,y_1,PreColor;
 	uint p0,p1,p2,p3;
@@ -4392,7 +4391,7 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 void MakeYeePict( char filename[], const int xx[], const int yy[], int NumSites, int WhichMeth,
 		  uint TopYeeVoters, uint GaussStdDev, real honfrac, int LpPow ){
   FILE *F;
-  uchar Barray[20000];
+  uint8_t Barray[20000];
   edata E;
   int i;
   uint imgsize;
@@ -5668,12 +5667,12 @@ template< class T > bool SelectedRight( uint L, uint R, uint K, const T A[] ){
  *		accesses the 'j/2'-th element of 'array', as oppose to the 'j'-th
  *		element
  */
-uint shiftForCompressedBMP(const uchar array[], const int &j)
+uint shiftForCompressedBMP(const uint8_t array[], const int &j)
 {
     const int shift = (4*(1-j%2));
     const int psuedoIndex = j/2;
-    const uchar rawValue = array[psuedoIndex];
-    const uchar shiftedValue = rawValue >> shift;
+    const uint8_t rawValue = array[psuedoIndex];
+    const uint8_t shiftedValue = rawValue >> shift;
     const uint returnValue = shiftedValue & 15;
     return returnValue;
 }
