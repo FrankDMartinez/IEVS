@@ -147,7 +147,7 @@ David Cary's Changes (not listing ones WDS did anyhow) include:
 
 #define until(x) while(!(x))
 #define uchar unsigned char
-#define real double
+typedef double real;
 
 #define PI (3.14159265358979323844)
 
@@ -3597,7 +3597,7 @@ of the yth candidate (y=0..NumCands-1) according to voter x, x=0..NumVoters-1.
 real VoterLocation[MaxNumVoters*MaxNumIssues];
 real CandLocation[MaxNumCands*MaxNumIssues];
 
-#define UTGEN void /*allows fgrep UTGEN IEVS.c to find out what utility-generators now available*/
+typedef void UTGEN;	/*allows fgrep UTGEN IEVS.c to find out what utility-generators now available*/
 
 void GenNormalLocations( /*input:*/ uint NumVoters, uint64_t NumCands, uint Issues,
 			 /*output:*/ real vLocation[], real cLocation[] )
