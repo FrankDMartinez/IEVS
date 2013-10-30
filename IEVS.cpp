@@ -1154,7 +1154,7 @@ void PrintEdata(FILE *F, const edata *E)
 	fflush(F);
 }
 
-#define EMETH int  /* allows fgrep EMETH IEVS.c to find out what Election methods now available */
+typedef int EMETH;  /* allows fgrep EMETH IEVS.c to find out what Election methods now available */
 
 EMETH runoffForApprovalVoting(const edata *E);
 
