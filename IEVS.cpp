@@ -5501,8 +5501,8 @@ void EDataPrep(edata &E, const brdata *B)
 template<class T>
 void PermShellSortDown(uint N, int Perm[], T Key[])
 {
-	typedef int (*fp)(uint, int[], T[]);
-	static const fp f = (typeid(T)==typeid(int)) ? (fp) SortedIntKey : (fp) SortedRealKey;
+	typedef int (*functionPointerType)(uint, int[], T[]);
+	static const functionPointerType f = (typeid(T)==typeid(int)) ? (functionPointerType) SortedIntKey : (functionPointerType) SortedRealKey;
 	int h,i,j,k;
 	int x;
 	for(k=0; (h=ShellIncs[k])>0; k++) {
