@@ -318,7 +318,7 @@ uint32_t BigLinCong32()
  *  A = 1284507170 * 2^(w*3) + 847441413 * 2^(w*44) + 650134147 * 2^(w*59)
  * is a "good" primitive root mod P, if w=32.
  *****************************************************************/
-#define lohalf(x) (uint32_t)(x)
+#define lohalf(x) ((uint32_t)(x))
 #define A1 ((uint64_t)1284507170)
 #define A2 ((uint64_t)847441413)
 #define A3 ((uint64_t)650134147)
