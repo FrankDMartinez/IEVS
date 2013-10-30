@@ -3686,7 +3686,8 @@ int NumElectionsLoaded = 0;
 #define VERBOSELOAD 0
 
 int LoadEldataFiles(){
-  int c,i,j,v,x,y,elcount,votcount,prefcount,ncands,nvoters,nwinners,itcount;
+  char c;
+  int i,j,v,x,y,elcount,votcount,prefcount,ncands,nvoters,nwinners,itcount;
   FILE *fp;
   elcount=0;  votcount=0;  prefcount=0;  itcount=0;
   printf("Loading %d HIL-format elections files...\n", NumHilFiles);
@@ -3714,10 +3715,10 @@ int LoadEldataFiles(){
       for(j=0; j<ncands; j++){ ElData[itcount+j] = ncands-1; }
       for(y=0;;){
 	x = 0;
-	do{ c = getc(fp); }until(isdigit(c));
+	do{ c = (char)getc(fp); }until(isdigit(c));
 	do {
-		x = x*10 + c-'0';
-		c = getc(fp);
+		x = x*10 + (int)(c-'0');
+		c = (char)getc(fp);
 	} while( isdigit(c) );
 #if VERBOSELOAD
 	printf("%d ", x);
@@ -3778,7 +3779,7 @@ int LoadEldataFiles(){
     for(v=0; v<nvoters; v++){
       for(j=0; j<ncands; j++){ ElData[itcount+j] = ncands-1; }
       for(j=0; j<ncands; j++){
-	do{ c = getc(fp); }while(c=='\n' || c==' ');
+	do{ c = (char)getc(fp); }while(c=='\n' || c==' ');
 	x = c-'0';  /* watch out for c=='-' */
 	/*Now do something with j>=0 which is preference x>0 for voter v>=0*/
 #if VERBOSELOAD
