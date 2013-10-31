@@ -364,7 +364,7 @@ uint32_t BigLinCong32()
  * be >P, but this does not matter; it will never be >=2^(w*60)).
  **************************************************************/
 		u=1; /*borrow*/
-#define AllF 0xffffffff
+#define AllF 0xffffffffU
 		/* Step 1: y[0..72] = y[0..59] + y[60..119]shift12 - y[60..119]: */
 		for(i=0; i<12; i++) {
 			u += y[i];
