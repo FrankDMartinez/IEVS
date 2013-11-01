@@ -177,9 +177,13 @@ template< class T >
 template< class T >
 		int ArgMaxArr(uint N, const T Arr[], int RandPerm[]);
 template<class T>
-		void PermShellSortDown( uint N, int Perm[], T Key[] );
+		void PermShellSortDown( uint N, int Perm[], const T Key[] );
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void));
 void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10]);
+template<class T>
+		int Sign(T x);
+template<class T>
+		int SortedKey(uint N, const int Arr[], const T Key[]);
 void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str);
 template< class T1 >
 		T1 TwiceMedian(uint N, T1 A[] );
@@ -195,8 +199,6 @@ bool EmptySet(uint x){ return (x==0); }
 real SquareReal(real x){  return x*x; }
 int SquareInt(int x){  return x*x; }
 uint PosInt(int x){ if(x>0) return x; else return 0; }
-int SignInt(int x){ if(x>0) return 1; else if(x<0) return -1; else return 0; }
-int SignReal(real x){ if(x>0) return 1; else if(x<0) return -1; else return 0; }
 int MaxInt(int a, int b){ return (((a)>(b)) ? (a):(b)); }
 int MinInt(int a, int b){ return (((a)<(b)) ? (a):(b)); }
 
@@ -888,25 +890,6 @@ real DotProd(uint N, const real a[], const real b[] ){
   return d;
 }
 
-/******* sorting: **********/
-int SortedRealKey( uint N, const int Arr[], const real Key[] ){
-  int i,s;
-  s = SignReal( Key[Arr[N-1]]-Key[Arr[0]] );
-  for(i=1; i<(int)N; i++){
-    if( s*SignReal( Key[Arr[i]] - Key[Arr[i-1]] ) < 0 ) return(2);
-  }
-  return s;
-}
-
-int SortedIntKey( uint N, const int Arr[], const int Key[] ){
-  int i,s;
-  s = SignInt( Key[Arr[N-1]]-Key[Arr[0]] );
-  for(i=1; i<(int)N; i++){
-    if( s*SignInt( Key[Arr[i]] - Key[Arr[i-1]] ) < 0 ) return(2);
-  }
-  return s;
-}
-
 const int ShellIncs[] = {1750, 701, 301, 132, 57, 23, 10, 4, 1, 0};
 /* Marcin Ciura: Best Increments for the Average Case of Shellsort,
    13th International Symposium on Fundamentals of Computation Theory,
@@ -916,17 +899,20 @@ Here 1750 is unsure and how the sequence continues past 1750 is unknown.
  ***/
 
 /* Rearranges Perm[0..N-1] so Key[Perm[0..N-1]] is in increasing order: */
-void RealPermShellSortUp(  uint N, int Perm[], const real Key[] ){
-  int h,i,j,k;
-  int x;
-  for(k=0; (h=ShellIncs[k])>0; k++){
-    for(i=h; i<(int)N; i++){
-      x=Perm[i];
-      for(j=i-h; j>=0 && Key[Perm[j]]>Key[x]; j -= h){ Perm[j+h]=Perm[j]; }
-      Perm[j+h]=x;
-    }
-  }
-  assert((SortedRealKey(N,Perm,Key)&(~1))==0);
+void RealPermShellSortUp(uint N, int Perm[], const real Key[])
+{
+	int h,i,j,k;
+	int x;
+	for(k=0; (h=ShellIncs[k])>0; k++) {
+		for(i=h; i<(int)N; i++) {
+			x=Perm[i];
+			for(j=i-h; j>=0 && Key[Perm[j]]>Key[x]; j -= h) {
+				Perm[j+h]=Perm[j];
+			}
+			Perm[j+h]=x;
+		}
+	}
+	assert((SortedKey<real>(N,Perm,Key)&(~1))==0);
 }
 /*************************** VOTING METHODS:  ********
 all are subroutines with a common format - here is the format (which is all subsumed in
@@ -1513,7 +1499,7 @@ EMETH IterCopeland( const edata *E  /*iterate Copeland on tied-winner set from p
 				x = r*E->NumCands;
 				for(j=E->NumCands -1; j>=0; j--) {
 					if(j!=r && summ[j]>=mxs) {
-						summ[r] += 1 + SignInt(E->MarginsMatrix[x+j]);
+						summ[r] += 1 + Sign<int>(E->MarginsMatrix[x+j]);
 					}
 				}
 				if(summ[r] >= maxc) {
@@ -5379,7 +5365,7 @@ template< class T1 > T1 FloydRivestSelect(uint L, uint R, uint K, T1 A[])
 			I = (K - L) + 1;
 			Z = log((real)(N));
 			S = (int)(0.5 * exp(Z * 2.0/3));
-			SD = (int)(0.5 * sqrt(Z * S * (N - S)/N) * SignInt(2*I - N));
+			SD = (int)(0.5 * sqrt(Z * S * (N - S)/N) * Sign<int>(2*I - N));
 			LL = MaxInt(L, (K - ((I * S) / N)) + SD);
 			RR = MinInt(R, K + (((N - I) * S) / N) + SD);
 			/* Recursively select inside small subsample to find an element A[K] usually very
@@ -5501,10 +5487,8 @@ void EDataPrep(edata &E, const brdata *B)
  *	Key:	a set of values to guide sorting
  */
 template<class T>
-void PermShellSortDown(uint N, int Perm[], T Key[])
+void PermShellSortDown(uint N, int Perm[], const T Key[])
 {
-	typedef int (*functionPointerType)(uint, int[], T[]);
-	static const functionPointerType f = (typeid(T)==typeid(int)) ? (functionPointerType) SortedIntKey : (functionPointerType) SortedRealKey;
 	int h,i,j,k;
 	int x;
 	for(k=0; (h=ShellIncs[k])>0; k++) {
@@ -5514,7 +5498,7 @@ void PermShellSortDown(uint N, int Perm[], T Key[])
 			Perm[j+h]=x;
 		}
 	}
-	assert(f(N,Perm,Key)<=0);
+	assert(SortedKey<T>(N,Perm,Key)<=0);
 }
 
 /*	RandomTest(s, mn, mx, v, ct, func1, func2):	performs a
@@ -5679,6 +5663,42 @@ uint shiftForCompressedBMP(const uint8_t array[], const int &j)
     const uint8_t shiftedValue = rawValue >> shift;
     const uint returnValue = shiftedValue & 15;
     return returnValue;
+}
+
+/*	Sign(x):	returns an indication value to signify whether 'x' is positive,
+ *			negative, or 0
+ *	x:	the value to compare
+ */
+template<class T> int Sign(T x)
+{
+	int rv;
+	const T zero = T(0);
+	if(x>zero) {
+		rv = 1;
+	}
+	else if(x<zero) {
+		rv = -1;
+	}
+	else {
+		rv = 0;
+	}
+	return rv;
+}
+
+/*	SortedKey(N, Arr, Key):	helps to verify 'Arr' is sorted in a manner which is
+ *				expected
+ *	N:	number of elements expected in Arr
+ *	Arr:	a set of values to have been sorted
+ *	Key:	a set of values which are expected to have guided the sorting
+ */
+template<class T> int SortedKey(uint N, const int Arr[], const T Key[])
+{
+	int i,s;
+	s = Sign<T>( Key[Arr[N-1]]-Key[Arr[0]] );
+	for(i=1; i<(int)N; i++) {
+		if( s*Sign<T>( Key[Arr[i]] - Key[Arr[i-1]] ) < 0 ) return(2);
+	}
+	return s;
 }
 
 /*	Test(name, direction, func1, func2, mean_str, meansq_str):
