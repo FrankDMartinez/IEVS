@@ -1312,24 +1312,30 @@ EMETH VtForAgainst(const edata *E   /* canddt with greatest score = #votesFor - 
 	return winner;
 }
 
-EMETH Top2Runoff(const edata *E    /* Top2Runoff=top-2-runoff, 2nd round has fully-honest voting */
-){ /* side effects: PSecond */
-  int i;
-  uint offset, pwct=0, wct=0;
-  PSecond = -1;
-  if(PlurWinner<0) Plurality(E);
-  PSecond = Arg2MaxUIntArr( E->NumCands, PlurVoteCount, (int*)RandCandPerm, PlurWinner );
-  assert(PSecond>=0);
-  for(i=0; i<(int)E->NumVoters; i++){
-    offset = i*E->NumCands;
-    if( E->PerceivedUtility[offset+PlurWinner] > E->PerceivedUtility[offset+PSecond] ){
-       pwct++;
-    }else if( E->PerceivedUtility[offset+PlurWinner] < E->PerceivedUtility[offset+PSecond] ){
-      wct++;
-    }
-  }
-  if( pwct > wct || (pwct == wct && RandBool()) ) return(PlurWinner);
-  return(PSecond);
+EMETH Top2Runoff(const edata *E    /* Top2Runoff=top-2-runoff, 2nd round has fully-honest voting */)
+{ /* side effects: PSecond */
+	int i;
+	uint offset, pwct=0, wct=0;
+	PSecond = -1;
+	if(PlurWinner<0) Plurality(E);
+	PSecond = Arg2MaxUIntArr( E->NumCands, PlurVoteCount, (int*)RandCandPerm, PlurWinner );
+	assert(PSecond>=0);
+	for(i=0; i<(int)E->NumVoters; i++) {
+		offset = i*E->NumCands;
+		if( E->PerceivedUtility[offset+PlurWinner] > E->PerceivedUtility[offset+PSecond] ) {
+			pwct++;
+		}else if( E->PerceivedUtility[offset+PlurWinner] < E->PerceivedUtility[offset+PSecond] ) {
+			wct++;
+		}
+	}
+	if(pwct > wct) {
+		return(PlurWinner);
+	}else if(pwct == wct) {
+		if(RandBool()) {
+			return(PlurWinner);
+		}
+	}
+	return(PSecond);
 }
 
 EMETH VenzkeDisqPlur(const edata *E   /* Plurality winner wins unless over 50% vote him bottom; then plurality 2nd-winner wins. */
@@ -1343,18 +1349,22 @@ EMETH VenzkeDisqPlur(const edata *E   /* Plurality winner wins unless over 50% v
   return PlurWinner;
 }
 
-EMETH PlurIR(edata *E    /* PlurIR=plur+immediate runoff (give ranking as vote) */
-){
-  int i;
-  if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
-  if(PSecond<0) Top2Runoff(E);
-  if(PlurWinner<0) Plurality(E);
-  if(PSecond<0) Top2Runoff(E);
-  assert(PSecond>=0);
-  i = E->MarginsMatrix[ PlurWinner*E->NumCands + PSecond ];
-  if(i>0) return(PlurWinner);
-  if(i<0 || RandBool()) return(PSecond);
-  return(PlurWinner);
+EMETH PlurIR(edata *E    /* PlurIR=plur+immediate runoff (give ranking as vote) */)
+{
+	int i;
+	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	if(PSecond<0) Top2Runoff(E);
+	if(PlurWinner<0) Plurality(E);
+	if(PSecond<0) Top2Runoff(E);
+	assert(PSecond>=0);
+	i = E->MarginsMatrix[ PlurWinner*E->NumCands + PSecond ];
+	if(i>0) return(PlurWinner);
+	if(i<0) {
+		return(PSecond);
+	}else if(RandBool()) {
+		return(PSecond);
+	}
+	return(PlurWinner);
 }
 
 EMETH Borda(edata *E  /* Borda: weighted positional with weights N-1, N-2, ..., 0  if N-canddts */)
@@ -2358,7 +2368,13 @@ EMETH HeitzigDFC(const edata *E)
 			wct++;
 		}
 	}
-	if( pwct > wct || (pwct == wct && RandBool()) ) return(ApprovalWinner);
+	if( pwct > wct ) {
+		return(ApprovalWinner);
+	}else if (pwct == wct) {
+		if (RandBool()) {
+			return(ApprovalWinner);
+		}
+	}
 	return(Rwnr);
 }
 
@@ -2632,7 +2648,13 @@ EMETH Benham2AppRunoff(const edata *E, bool alwaysRunoff)
 			jct++;
 		}
 	}
-	if( awct > jct || (awct == jct && RandBool()) ) return(ApprovalWinner);
+	if( awct > jct) {
+		return(ApprovalWinner);
+	} else if (awct == jct) {
+		if (RandBool()) {
+			return(ApprovalWinner);
+		}
+	}
 	return(j);
 }
 
@@ -2693,7 +2715,13 @@ EMETH Range2Runoff(const edata *E    /*top-2-runoff, 1stRd=range, 2nd round has 
 			wct++;
 		}
 	}
-	if( pwct > wct || (pwct == wct && RandBool()) ) return(RangeWinner);
+	if( pwct > wct) {
+		return(RangeWinner);
+	} else if (pwct == wct) {
+		if (RandBool()) {
+			return(RangeWinner);
+		}
+	}
 	return(RSecond);
 }
 
@@ -4355,10 +4383,11 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 						for(i=0; i<(int)NumSites; i++) if(i!=w) {
 							if( maxw<weight[i] ) { maxw=weight[i]; }
 						}
-						if((PreColor==w && k==10) || /*early break; precolor agree with first election pass*/
-							(weight[w] >= 5*maxw && k>16) || /*early break - good confidence*/
-							weight[w] - maxw > MaxK * log(((real)MaxK)/k)*10.1
-							/*early break - futility*/ ) {
+						if (PreColor==w && k==10) { /*early break; precolor agree with first election pass*/
+							break;
+						} else if (weight[w] >= 5*maxw && k>16) { /*early break - good confidence*/
+							break;
+						} else if (weight[w] - maxw > MaxK * log(((real)MaxK)/k)*10.1) { /*early break - futility*/
 							break;
 						}
 					} /*end for(k)*/
@@ -4910,11 +4939,13 @@ int main(int argc, const char *const *argv)
 	extern void runSelfTests(void);
 	extern void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], const int &subsqsideX, const int &subsqsideY);
 
-	if((argc > 1) && !strcmp(argv[1], "--test")) {
-		extern void runTests(void);
+	if (argc > 1) {
+		if (!strcmp(argv[1], "--test")) {
+			extern void runTests(void);
 
-		runTests();
-		exit(EXIT_SUCCESS);
+			runTests();
+			exit(EXIT_SUCCESS);
+		}
 	}
 	printf("IEVS (Warren D. Smith's infinitely extendible voting system comparator) at your service!\n");
 	printf("Version=%f  Year=%d  Month=%d\n", VERSION, VERSIONYEAR, VERSIONMONTH);
@@ -5626,7 +5657,13 @@ EMETH runoffForApprovalVoting(const edata *E)
 			wct++;
 		}
 	}
-	if( pwct > wct || (pwct == wct && RandBool()) ) return(ApprovalWinner);
+	if( pwct > wct) {
+		return(ApprovalWinner);
+	} else if (pwct == wct) {
+		if (RandBool()) {
+			return(ApprovalWinner);
+		}
+	}
 	return(ASecond);
 }
 
