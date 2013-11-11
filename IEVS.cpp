@@ -5722,20 +5722,49 @@ template<class T> int Sign(T x)
 	return rv;
 }
 
-/*	SortedKey(N, Arr, Key):	helps to verify 'Arr' is sorted in a manner which is
- *				expected
+/*	SortedKey(N, Arr, Key):	helps to verify 'Arr' is sorted in
+ *				a manner which is expected;
+ *				returns 1 if 'Key[Arr[i]]' is in
+ *				increasing order for all 'i' from
+ *				0 to 'N-1', -1 if 'Key[Arr[i]]' is
+ *				in decreasing order, 0 if
+ *				'Key[Arr[i]]' remains the same, or
+ *				2 for any other circumstance 
  *	N:	number of elements expected in Arr
  *	Arr:	a set of values to have been sorted
  *	Key:	a set of values which are expected to have guided the sorting
  */
 template<class T> int SortedKey(uint N, const int Arr[], const T Key[])
 {
-	int i,s;
-	s = Sign<T>( Key[Arr[N-1]]-Key[Arr[0]] );
+	int i;
+	int overallTrend;
+	T currentValue;
+	T nextValue;
+	overallTrend = Sign<T>( Key[Arr[N-1]]-Key[Arr[0]] );
 	for(i=1; i<(int)N; i++) {
-		if( s*Sign<T>( Key[Arr[i]] - Key[Arr[i-1]] ) < 0 ) return(2);
+		currentValue = Key[Arr[i-1]];
+		nextValue = Key[Arr[i]];
+		switch( overallTrend ) {
+		case 1:
+			if( nextValue < currentValue ) {
+				return 2;
+			}
+			break;
+		case 0:
+			if( nextValue != currentValue ) {
+				return 2;
+			}
+			break;
+		case -1:
+			if( nextValue > currentValue ) {
+				return 2;
+			}
+			break;
+		default:
+			ensure(false, 28);
+		}
 	}
-	return s;
+	return overallTrend;
 }
 
 /*	Test(name, direction, func1, func2, mean_str, meansq_str):
