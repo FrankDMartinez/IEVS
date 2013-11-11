@@ -161,16 +161,16 @@ typedef double real;
 #define NumCoreMethods 12
 #define CWSPEEDUP 0	/* 1 causes it to be faster, but 0 better for diagnosing bugs */
 
-#define HTMLMODE 1  /*output adding "HTML table" formatting commands*/
-#define TEXMODE 2   /*output adding "TeX table" formatting commands*/
-#define NORMALIZEREGRETS 4   /*Output "normalized" Regrets so RandomWinner=1, SociallyBest=0. */
-#define SORTMODE 8           /*Output with voting methods in sorted order by increasing regrets.*/
-#define SHENTRUPVSR 16   /*Output "Shentrup normalized" Regrets so RandomWinner=0%, SociallyBest=100%. */
-#define OMITERRORBARS 32
-#define VBCONDMODE 64  /*vote-based condorcet winner agreement counts; versus true utility based CWs*/
-#define DOAGREETABLES 128
-#define ALLMETHS 256
-#define TOP10METHS 512
+#define HTMLMODE 1U /*output adding "HTML table" formatting commands*/
+#define TEXMODE 2U  /*output adding "TeX table" formatting commands*/
+#define NORMALIZEREGRETS 4U  /*Output "normalized" Regrets so RandomWinner=1, SociallyBest=0. */
+#define SORTMODE 8U          /*Output with voting methods in sorted order by increasing regrets.*/
+#define SHENTRUPVSR 16U  /*Output "Shentrup normalized" Regrets so RandomWinner=0%, SociallyBest=100%. */
+#define OMITERRORBARS 32U
+#define VBCONDMODE 64U /*vote-based condorcet winner agreement counts; versus true utility based CWs*/
+#define DOAGREETABLES 128U
+#define ALLMETHS 256U
+#define TOP10METHS 512U
 uint BROutputMode=0;
 template< class T >
 		int ArgMinArr(uint N, const T Arr[], int RandPerm[]);
@@ -903,6 +903,7 @@ void RealPermShellSortUp(uint N, int Perm[], const real Key[])
 {
 	int h,i,j,k;
 	int x;
+	int sortedTrend;
 	for(k=0; (h=ShellIncs[k])>0; k++) {
 		for(i=h; i<(int)N; i++) {
 			x=Perm[i];
@@ -912,7 +913,9 @@ void RealPermShellSortUp(uint N, int Perm[], const real Key[])
 			Perm[j+h]=x;
 		}
 	}
-	assert((SortedKey<real>(N,Perm,Key)&(~1))==0);
+	sortedTrend = SortedKey<real>(N,Perm,Key);
+	assert(((sortedTrend == 0) || (sortedTrend == 1)));
+
 }
 /*************************** VOTING METHODS:  ********
 all are subroutines with a common format - here is the format (which is all subsumed in
@@ -1173,7 +1176,7 @@ void BuildDefeatsMatrix(edata *E)
 		x = 0;
 		for(j=(int)E->NumCands -1; j>=0; j--) {
 			if( E->MarginsMatrix[i*E->NumCands + j] > 0 ) {
-				x |= (1<<j);
+				x |= (1U<<j);
 			}
 		}
 		IBeat[i] = x;
@@ -3128,7 +3131,7 @@ EMETH WoodallDAC(const edata *E  /*Woodall: Monotonocity of single-seat preferen
 			s = 0;
 			offset = v*E->NumCands;
 			for(c=0; c < (int)E->NumCands; c++) {
-				s |= (1<<(E->TopDownPrefs[offset+c]));
+				s |= (1U<<(E->TopDownPrefs[offset+c]));
 				h = s%ARTINPRIME;
 				assert( !EmptySet(s) );
 				for(;;) {
@@ -3168,7 +3171,7 @@ EMETH WoodallDAC(const edata *E  /*Woodall: Monotonocity of single-seat preferen
 	RandomlyPermute( E->NumCands, RandCandPerm );
 	for(k=E->NumCands -1; k>=0; k--) {
 		r = RandCandPerm[k];
-		if( (s>>r)&1 ) {
+		if( (s>>r)&1U ) {
 			return r; /* return random set-element */
 		}
 	}
@@ -4086,7 +4089,7 @@ uint ReadPixel( uint x, uint y, const uint8_t Barray[] ){ /*assumes 200x200, 4bi
   addr = 100*y + x/2;
   q = Barray[addr];
   if(!(x%2)){ q >>= 4; }
-  return(q&15);
+  return(q&15U);
 }
 
 uint OutputCompressedBarray( uint imgsize, const uint8_t Barray[], bool really, FILE *F )
@@ -4133,7 +4136,7 @@ uint OutputBMPHead( uint width, uint height, uint bitsperpixel, uint compression
   putc(77, F); /*M*/
   roundedwidth = (width/2) + 2*(width%2);
   if(roundedwidth%4 != 0){ roundedwidth = (roundedwidth/4 + 1)*4; }
-  colors = 1<<bitsperpixel;
+  colors = 1U<<bitsperpixel;
   colortabsize = 4*colors;
   if(colortabsize > 1024) colortabsize=0;
   offset =54 + colortabsize;
@@ -4200,22 +4203,23 @@ void OutputFCC16ColorPalette( FILE *F ){
   BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(0, F); /*black*/
 }
 
-void CreatePixel(int x, int y, uint color, uint8_t Barray[]){ /*Create 16 color pixel at x,y*/
-  uint q, addr;
-  if(x>=200 || y>=200 || x<0 || y<0) return;  /*auto-clipping to 200x200 region*/
-  color &= 15; /*at most 16 colors, like it or not*/
-  addr = 100*y + x/2;
-  if(x%2){  /* use of !(x%2) would be wrong, experimentally verified. */
-    q = Barray[addr];
-    q &= 0xF0;
-    q |= color;
-    Barray[addr] = q;
-  }else{
-    q = Barray[addr];
-    q &= 0x0F;
-    q |= color<<4;
-    Barray[addr] = q;
-  }
+void CreatePixel(int x, int y, uint color, uint8_t Barray[])
+{ /*Create 16 color pixel at x,y*/
+	uint q, addr;
+	if(x>=200 || y>=200 || x<0 || y<0) return;  /*auto-clipping to 200x200 region*/
+	color &= 15U; /*at most 16 colors, like it or not*/
+	addr = 100*y + x/2;
+	if(x%2) {  /* use of !(x%2) would be wrong, experimentally verified. */
+		q = Barray[addr];
+		q &= 0xF0U;
+		q |= color;
+		Barray[addr] = q;
+	}else{
+		q = Barray[addr];
+		q &= 0x0FU;
+		q |= color<<4;
+		Barray[addr] = q;
+	}
 }
 
 void DrawCircle(int x, int y, uint radius, uint BorderColor, uint FillColor, uint8_t Barray[])
@@ -4310,7 +4314,11 @@ CreatePixel for winner with maxweight.
 void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int WhichMeth,
 		 edata *E, uint8_t Barray[], uint GaussStdDev, real honfrac, int LpPow )
 {
-	int x,y,k,v,j,ja,i,m,jo,s,maxw,col,w,pass,x0,x1,y_0,y_1,PreColor;
+	uint x;
+	uint y;
+	int k,v,j,ja,i,m,jo,s,maxw,col,w;
+	uint pass;
+	int x0,x1,y_0,y_1,PreColor;
 	uint p0,p1,p2,p3;
 	int weight[16];
 	uint RandPerm[16];
@@ -5694,12 +5702,12 @@ template< class T > bool SelectedRight( uint L, uint R, uint K, const T A[] )
  */
 uint shiftForCompressedBMP(const uint8_t array[], const int &j)
 {
-    const int shift = (4*(1-j%2));
-    const int psuedoIndex = j/2;
-    const uint8_t rawValue = array[psuedoIndex];
-    const uint8_t shiftedValue = rawValue >> shift;
-    const uint returnValue = shiftedValue & 15;
-    return returnValue;
+	const int shift = (4*(1-j%2));
+	const int psuedoIndex = j/2;
+	const uint8_t rawValue = array[psuedoIndex];
+	const uint8_t shiftedValue = rawValue >> shift;
+	const uint returnValue = shiftedValue & 15U;
+	return returnValue;
 }
 
 /*	Sign(x):	returns an indication value to signify whether 'x' is positive,
@@ -5805,7 +5813,7 @@ template< class T1 >
 	assert(N>0);
 	M = FloydRivestSelect<T1>( 0, N-1, N/2, A );
 	assert( SelectedRight<T1>( 0, N-1, N/2, A ) );
-	if((N&1)==0) { /*N is even*/
+	if((N%2)==0) { /*N is even*/
 		T = A[N/2 - 1];
 		for(i=N/2 - 2; i>=0; i--) {
 			if(A[i] > T) T=A[i];
