@@ -248,9 +248,15 @@ uint FindArtinPrime(uint x){
   exit(EXIT_FAILURE);
 }
 
-void PrintNSpaces(int N){
-  int i;
-  for(i=0; i<N; i++) putchar(' ');
+/*	PrintNSpaces(N):	prints 'N' space characters to stdout
+ *	N:	the number of space characters to print
+ */
+void PrintNSpaces(int N)
+{
+	int i;
+	for(i=0; i<N; i++) {
+		putchar(' ');
+	}
 }
 /****** convenient constants: *******/
 #define BIGINT 0x7FFFFFFF
@@ -557,6 +563,9 @@ void InitRand(uint seed){ /* initializes the randgen */
    printf("\n");
 }
 
+/*	TestRand01():	performs 100000 calls to 'randgen()' to test if 'randgen[0,1]'
+ *			is behaving as expected
+ */
 void TestRand01()
 {
 	int i,y, ct[10];
@@ -564,7 +573,9 @@ void TestRand01()
 	s=0.0; v=0.0;
 	mn = HUGE;
 	mx = -HUGE;
-	for(i=0; i<10; i++) ct[i]=0;
+	for(i=0; i<10; i++) {
+		ct[i]=0;
+	}
 	printf("Performing 100000 randgen calls to test that randgen[0,1] behaving ok:\n");
 	for(i=0; i<100000; i++) {
 		x = Rand01();
@@ -578,7 +589,9 @@ void TestRand01()
 	printf("mean=%g(should be 1/2)  min=%f  max=%g   variance=%g(should be 1/12=%g)\n",
 			s/100000.0, mn, mx, v/100000.0, 1/12.0);
 	printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
-	for(i=0; i<10; i++) printf(" %d", ct[i]);
+	for(i=0; i<10; i++) {
+		printf(" %d", ct[i]);
+	}
 	printf("\n");
 	fflush(stdout);
 }
@@ -736,29 +749,81 @@ void RandomlyPermute( uint N, uint RandPerm[] ){ /* randomly permutes RandPerm[0
 }
 
 /******* vector handling: **********/
-void CopyIntArray(uint N, const int src[], int dest[] ){
-  int i;
-  for(i=N-1; i>=0; i--) dest[i] = src[i];
+/*	CopyIntArray(N, src, dest):	copies 'N' elements from 'src[]' into 'dest[]';
+ *					only elements from index 0 to 'N-1' are copied;
+ *					both 'src[]' and 'dest[]' are expected to have
+ *					at least 'N' elements
+ *	N:	number of elements to copy
+ *	src:	the source array
+ *	dest:	the destination array
+ */
+void CopyIntArray(uint N, const int src[], int dest[] )
+{
+	int i;
+	for(i=N-1; i>=0; i--) {
+		dest[i] = src[i];
+	}
 }
 
-void CopyRealArray(uint N, const real src[], real dest[] ){
-  int i;
-  for(i=N-1; i>=0; i--) dest[i] = src[i];
+/*	CopyRealArray(N, src, dest):	copies 'N' elements from 'src[]' into 'dest[]';
+ *					only elements from index 0 to 'N-1' are copied;
+ *					both 'src[]' and 'dest[]' are expected to have
+ *					at least 'N' elements
+ *	N:	number of elements to copy
+ *	src:	the source array
+ *	dest:	the destination array
+ */
+void CopyRealArray(uint N, const real src[], real dest[] )
+{
+	int i;
+	for(i=N-1; i>=0; i--) {
+		dest[i] = src[i];
+	}
 }
 
-void FillBoolArray(uint N, bool Arr[], bool Filler ){ /* sets Arr[0..N-1] = Filler */
-  int i;
-  for(i=N-1; i>=0; i--) Arr[i] = Filler;
+/*	FillBoolArray(N, Arr, Filler):	assigns 'Filler' to 'N' elements of 'Arr[]';
+ *					only elements from index 0 to 'N-1' are filled;
+ *					Arr[]' is expected to have at least 'N' elements
+ *	N:	number of elements to copy
+ *	Arr:	the array to fill
+ *	Filler:	the value to assign to the alements of 'Arr[]'
+ */
+void FillBoolArray(uint N, bool Arr[], bool Filler )
+{ /* sets Arr[0..N-1] = Filler */
+	int i;
+	for(i=N-1; i>=0; i--) {
+		Arr[i] = Filler;
+	}
 }
 
-void FillRealArray(uint N, real Arr[], real Filler ){ /* sets Arr[0..N-1] = Filler */
-  int i;
-  for(i=N-1; i>=0; i--) Arr[i] = Filler;
+/*	FillRealArray(N, Arr, Filler):	assigns 'Filler' to 'N' elements of 'Arr[]';
+ *					only elements from index 0 to 'N-1' are filled;
+ *					Arr[]' is expected to have at least 'N' elements
+ *	N:	number of elements to copy
+ *	Arr:	the array to fill
+ *	Filler:	the value to assign to the alements of 'Arr[]'
+ */
+void FillRealArray(uint N, real Arr[], real Filler )
+{ /* sets Arr[0..N-1] = Filler */
+	int i;
+	for(i=N-1; i>=0; i--) {
+		Arr[i] = Filler;
+	}
 }
 
-void FillIntArray(uint N, int Arr[], int Filler ){ /* sets Arr[0..N-1] = Filler */
-  int i;
-  for(i=N-1; i>=0; i--) Arr[i] = Filler;
+/*	FillIntArray(N, Arr, Filler):	assigns 'Filler' to 'N' elements of 'Arr[]';
+ *					only elements from index 0 to 'N-1' are filled;
+ *					Arr[]' is expected to have at least 'N' elements
+ *	N:	number of elements to copy
+ *	Arr:	the array to fill
+ *	Filler:	the value to assign to the alements of 'Arr[]'
+ */
+void FillIntArray(uint N, int Arr[], int Filler )
+{ /* sets Arr[0..N-1] = Filler */
+	int i;
+	for(i=N-1; i>=0; i--) {
+		Arr[i] = Filler;
+	}
 }
 
 void ZeroIntArray(uint N, int Arr[] ){ /* sets Arr[0..N-1] = 0 */
@@ -823,14 +888,34 @@ int Arg2MaxRealArr(uint N, const real Arr[], const int RandPerm[], int MaxInd ){
   return(winner);
 }
 
-void ScaleRealVec(uint N, real a[], real scalefac){
-  int i;
-  for(i=0; i<(int)N; i++) a[i] *= scalefac;
+/*	ScaleRealVec(N, a, scalefac):	scales the first 'N' elements of 'a[]' by
+ *					'scalefac'; 'a[]' is expected to have at least
+ *					'N' elements
+ *	N:		the number of elements to scale
+ *	a:		the array of values to scale
+ *	scalefac:	the scaling factor
+ */
+void ScaleRealVec(uint N, real a[], real scalefac)
+{
+	int i;
+	for(i=0; i<(int)N; i++) {
+		a[i] *= scalefac;
+	}
 }
 
-void ScaleIntVec(uint N, int a[], int scalefac){
-  int i;
-  for(i=0; i<(int)N; i++) a[i] *= scalefac;
+/*	ScaleIntVec(N, a, scalefac):	scales the first 'N' elements of 'a[]' by
+ *					'scalefac'; 'a[]' is expected to have at least
+ *					'N' elements
+ *	N:		the number of elements to scale
+ *	a:		the array of values to scale
+ *	scalefac:	the scaling factor
+ */
+void ScaleIntVec(uint N, int a[], int scalefac)
+{
+	int i;
+	for(i=0; i<(int)N; i++) {
+		a[i] *= scalefac;
+	}
 }
 
 /*Donald Knuth's "The Art of Computer Programming, Volume 2: Seminumerical Algorithms", section 4.2.2
@@ -850,19 +935,39 @@ void WelfordUpdateMeanSD(real NewDatum, int *Count, real *M, real *S){
   return;
 }
 
+/*	DistanceSquared(N, a, b):	returns the sum of the square of the differences
+ *					between corresponding elements of 'a[]' and
+ *					'b[]'; both arrays are expected to have at least
+ *					'N' elements
+ *	N:	the number of elements to square and sum, in that order
+ *	a:	the first array of values
+ *	b:	the second array of values
+ */
 real DistanceSquared(uint N, const real a[], const real b[] )
 {
 	real d = 0.0;
 	int i;
-	for(i=0; i<(int)N; i++) d += pow(( a[i]-b[i] ), 2);
+	for(i=0; i<(int)N; i++) {
+		d += pow(( a[i]-b[i] ), 2);
+	}
 	return d;
 }
 
-real L1Distance(uint N, const real a[], const real b[] ){
-  real d = 0.0;
-  int i;
-  for(i=0; i<(int)N; i++) d += fabs( a[i]-b[i] );
-  return d;
+/*	L1Distance(N, a, b):	returns the sum of the magnitude of the differences
+ *				between corresponding elements of 'a[]' and 'b[]'; both
+ *				arrays are expected to have at least 'N' elements
+ *	N:	the number of magnitudes to sum
+ *	a:	the first array of values
+ *	b:	the second array of values
+ */
+real L1Distance(uint N, const real a[], const real b[] )
+{
+	real d = 0.0;
+	int i;
+	for(i=0; i<(int)N; i++) {
+		d += fabs( a[i]-b[i] );
+	}
+	return d;
 }
 
 real LpDistanceSquared(uint N, const real a[], const real b[], real Lp )
@@ -876,18 +981,36 @@ real LpDistanceSquared(uint N, const real a[], const real b[], real Lp )
 	return pow( d, 2.0/Lp );
 }
 
-real  SumRealArray( uint N, const real a[] ){
-  real s = 0.0;
-  int i;
-  for(i=0; i<(int)N; i++) s += a[i];
-  return s;
+/*	SumRealArray(N, a):	returns the sum of the first 'N' elements of 'a[]';
+ *				'a[]' is presumed to have at least 'N' elements
+ *	N:	the number of elements to sum
+ *	a:	the array of values to sum
+ */
+real  SumRealArray( uint N, const real a[] )
+{
+	real s = 0.0;
+	int i;
+	for(i=0; i<(int)N; i++) {
+		s += a[i];
+	}
+	return s;
 }
 
-real DotProd(uint N, const real a[], const real b[] ){
- real d = 0.0;
-  int i;
-  for(i=0; i<(int)N; i++) d += a[i]*b[i];
-  return d;
+/*	DotProd(N, a, b):	returns the dot product of the first 'N' elements of
+ *				'a[]' and 'b[]'; both 'a[]' and 'b[]' are presumed to
+ *				have at least 'N' elements
+ *	N:	the number of elements to use for the dot product
+ *	a:	the first array of values
+ *	b:	the second array of values
+ */
+real DotProd(uint N, const real a[], const real b[] )
+{
+	real d = 0.0;
+	int i;
+	for(i=0; i<(int)N; i++) {
+		d += a[i]*b[i];
+	}
+	return d;
 }
 
 const int ShellIncs[] = {1750, 701, 301, 132, 57, 23, 10, 4, 1, 0};
@@ -1401,6 +1524,15 @@ EMETH RandomPair(const edata *E){ /*pairwise honest-util winner among 2 random c
   return(x);
 }
 
+/*	NansonBaldwin(E):	returns the index of the Baldwin Winner, not necessarily
+ *				the Nanson Winner, and, even then, it looks as if the
+ *				Baldwin Winner may be calculated incorrectly by this
+ *				function; this function should be reviewed at some point
+ *				for algorithmic correctness; also, a separate procedure
+ *				should be created to determine the Nanson Winner; the
+ *				procedure returns -1 if an error occurs
+ *	E:	the election data used to determine the Baldwin Winner
+ */
 EMETH NansonBaldwin(edata *E  /* repeatedly eliminate Borda loser */)
 { /* side effects: Eliminated[] */
 	int NansonVoteCount[MaxNumCands];
@@ -1425,8 +1557,10 @@ EMETH NansonBaldwin(edata *E  /* repeatedly eliminate Borda loser */)
 		assert(BordaLoser>=0);
 		ensure(BordaLoser>=0, 7);
 		Eliminated[BordaLoser] = TRUE;
-		for(i=E->NumCands -1; i>=0; i--) if(!Eliminated[i]) {
-			NansonVoteCount[i] -= E->MarginsMatrix[i*E->NumCands + BordaLoser];
+		for(i=E->NumCands -1; i>=0; i--) {
+			if(!Eliminated[i]) {
+				NansonVoteCount[i] -= E->MarginsMatrix[i*E->NumCands + BordaLoser];
+			}
 		}
 	} /* end of for(rnd) */
 	for(i=E->NumCands -1; i>=0; i--) { /* find non-eliminated candidate... */
@@ -1490,6 +1624,13 @@ EMETH Rouse(edata *E  /*like Nanson-Baldwin but with an extra level of recursion
 	return winner;
 }
 
+/*	IterCopeland(E):	iterates Copeland on tied-winner set from previous
+ *				iteration until either no ties remain or no further
+ *				reduction of ties occurs; either the iterated Copeland
+ *				winner is returned or -1 is returned to indicate an
+ *				error
+ *	E:	the election data to use for iteration
+ */
 EMETH IterCopeland( const edata *E  /*iterate Copeland on tied-winner set from previous iter until fixpt*/)
 { /*Idea of this is due to Alex Small. */
 	int summ[MaxNumCands];
@@ -1504,7 +1645,11 @@ EMETH IterCopeland( const edata *E  /*iterate Copeland on tied-winner set from p
 	mxs = 0;
 	for(z=E->NumCands; z>0; z--) {
 		tiect = 0;
-		for(i=E->NumCands -1; i>=0; i--) if(summ[i] < mxs) { summ[i] = -BIGINT; }
+		for(i=E->NumCands -1; i>=0; i--) {
+			if(summ[i] < mxs) {
+				summ[i] = -BIGINT;
+			}
+		}
 		maxc = -BIGINT;
 		for(i=E->NumCands-1; i>=0; i--) {
 			r = RandCandPerm[i];
@@ -1689,6 +1834,11 @@ EMETH SimpsonKramer(edata *E  /* candidate with mildest worst-defeat wins */)
 	return winner;
 }
 
+/*	RaynaudElim(E):	repeatedly eliminates the Candidate suffering the
+ *			worst-margin-defeat until only one Candidate remains; the index
+ *			of the remaining Candidate is returned or -1 if an error occurs
+ *	E:	the election data used to determine the Raynaud Winner
+ */
 EMETH RaynaudElim(edata *E  /* repeatedly eliminate canddt who suffered the worst-margin-defeat */)
 { /* side effects: Eliminated[] */
 	int RayDefeatMargin[MaxNumCands]={0};
@@ -1726,19 +1876,21 @@ EMETH RaynaudElim(edata *E  /* repeatedly eliminate canddt who suffered the wors
 		ensure(RayLoser >= 0, 10);
 		if( maxc <= 0 ) { return RayLoser; } /*"loser" is undefeated*/
 		Eliminated[RayLoser] = TRUE;
-		for(i=E->NumCands -1; i>=0; i--) if(!Eliminated[i] && RayBeater[i]==RayLoser) {
-			t = -BIGINT; beater = -1;
-			RandomlyPermute( E->NumCands, RandCandPerm );
-			for(j=E->NumCands -1; j>=0; j--) {
-				r = RandCandPerm[j];
-				if(!Eliminated[r]) {
-					x = E->MarginsMatrix[r*E->NumCands+i];
-					if(x>t) { t=x; beater=r; }
+		for(i=E->NumCands -1; i>=0; i--) {
+			if(!Eliminated[i] && RayBeater[i]==RayLoser) {
+				t = -BIGINT; beater = -1;
+				RandomlyPermute( E->NumCands, RandCandPerm );
+				for(j=E->NumCands -1; j>=0; j--) {
+					r = RandCandPerm[j];
+					if(!Eliminated[r]) {
+						x = E->MarginsMatrix[r*E->NumCands+i];
+						if(x>t) { t=x; beater=r; }
+					}
 				}
+				assert(beater >= 0);
+				RayDefeatMargin[i] = t;
+				RayBeater[i] = beater;
 			}
-			assert(beater >= 0);
-			RayDefeatMargin[i] = t;
-			RayBeater[i] = beater;
 		}
 	} /* end of for(rnd) */
 	for(i=E->NumCands -1; i>=0; i--) { /* find non-eliminated candidate... */
@@ -1749,6 +1901,18 @@ EMETH RaynaudElim(edata *E  /* repeatedly eliminate canddt who suffered the wors
 	return(-1); /*error*/
 }
 
+/*	ArrowRaynaud(E):	repeatedly eliminates the Candidate with smallest
+ *				largest-margin-of-victory; the index of the remaining
+ *				Candidate, the Arrow-Raynaud Winner, is returned or -1
+ *				if an error occurs; cf., "Solving the Discrete
+ *				MultiCriterion Problem: An Overview of Lessons Learned
+ *				from Social Choice Literature" by Giuseppe Munda,
+ *				section 5, for a complete description of the algorithm;
+ *				note: this code may not accurately apply the
+ *				Arrow-Raynaud algorithm and should be examined for any
+ *				needed alterations
+ *	E:	the election data used to determine the Arrow-Raynaud Winner
+ */
 EMETH ArrowRaynaud(edata *E  /* repeatedly eliminate canddt with smallest {largest margin of victory, which is <=0 if never won} */)
 { /* side effects: Eliminated[], ArrowRaynaud can eliminate a Condorcet Winner in round #1. */
 	int ARVictMargin[MaxNumCands]={0};
@@ -1782,19 +1946,25 @@ EMETH ArrowRaynaud(edata *E  /* repeatedly eliminate canddt with smallest {large
 		assert(ARLoser >= 0);
 		ensure(ARLoser >= 0, 11);
 		Eliminated[ARLoser] = TRUE;
-		for(i=E->NumCands -1; i>=0; i--) if(!Eliminated[i] && ARchump[i]==ARLoser) {
-			t = -BIGINT; chump = -1;
-			RandomlyPermute( E->NumCands, RandCandPerm );
-			for(j=E->NumCands -1; j>=0; j--) {
-				r = RandCandPerm[j];
-				if(!Eliminated[r]) {
-					x = E->MarginsMatrix[i*E->NumCands+r];
-					if(x>t) { t=x; chump=r; }
+		for(i=E->NumCands -1; i>=0; i--) {
+			if(!Eliminated[i] && ARchump[i]==ARLoser) {
+				t = -BIGINT;
+				chump = -1;
+				RandomlyPermute( E->NumCands, RandCandPerm );
+				for(j=E->NumCands -1; j>=0; j--) {
+					r = RandCandPerm[j];
+					if(!Eliminated[r]) {
+						x = E->MarginsMatrix[i*E->NumCands+r];
+						if(x>t) {
+							t=x;
+							chump=r;
+						}
+					}
 				}
+				assert(chump >= 0);
+				ARVictMargin[i] = t;
+				ARchump[i] = chump;
 			}
-			assert(chump >= 0);
-			ARVictMargin[i] = t;
-			ARchump[i] = chump;
 		}
 	} /* end of for(rnd) */
 	for(i=E->NumCands -1; i>=0; i--) { /* find non-eliminated candidate... */
@@ -1805,33 +1975,97 @@ EMETH ArrowRaynaud(edata *E  /* repeatedly eliminate canddt with smallest {large
 	return(-1); /*error*/
 }
 
-/* O(N^3) algorithm, but it is known how to speed it up to O(N^2) */
+/*	SchulzeBeatpaths(E):	returns the index of the Schulze beatpaths Winner; this
+ *				implementation is an O(N^3) algorithm, but it is known
+ *				how to speed it up to O(N^2); the Schulze beatpath
+ *				algorithm is described below
+ *	E:	the election data used to determine the Schulze beatpaths Winner
+ *
+ *	===Algorith===
+ *	(1) "votes": are orderings of the candidates of the form A>B>C=D>E (equalities
+ *		are permitted). All candidates must be ordered and none omitted (if any
+ *		are omitted, the system either refuses to accept your vote, or tells you
+ *		it will assume all the unlisted candidates are ranked coequal last –
+ *      	either way you have no way to express ignorance about any candidate).
+ *	(2) For each pair of candidates (a,b) we compute the "winning vote count" for a
+ *		over b, which is the number of voters whose vote said a>b, assuming this
+ *		number exceeds the count for b>a. It would also be possible to base the
+ *		method on "margins" (the number of votes saying A>B, minus the number
+ *		saying B>A) but Schulze himself does not recommend that. The two are
+ *		equaivalent if there are no candidate-equalities in any votes. The
+ *		result is a "directed graph" with N vertices wheree winning-vote count
+ *		we just described.
+ *	(3) Now, in this directed graph, a "beatpath" is a directed path of edges,
+ *		always walking in the direction of an arrow, which leads from some
+ *		candidate L to some other W. The "strength" of this beatpath is the
+ *		minimum value of the numerical labels on its arrows. Non-obviously, it
+ *		is possible to compute all the beatpath strengths in polynomial time by
+ *		a modification, invented by Schulze, of R.W.Floyd's dynamic programming
+ *		algorithm for digraph all-shortest-paths.
+ *	(4) If the strongest path from L to W, is stronger than, or at least as strong
+ *		as, the strongest path from W to L, and if this is simultaneously true
+ *		for every L, then W is a "Schulze winner." Schulze proved the theorem
+ *		that such a W always exists (at least using "margins"; I am confused re
+ *		the "winning-votes" enhancement).
+ *	(5) Usually (i.e. in the absence of unlikely "ties"), W will be unique, but ties
+ *		for winner are possible. In that case, Schulze advocates breaking the
+ *		ties by a rather complicated procedure, below.
+ *	(6) In this procedure, it perhaps is possible or desirable to further enhance it
+ *		by permitting "partial-order-type" votes so voters can express
+ *		ignorance/no-opinion. Some such votes would be illegal since they
+ *		contain a "preference cycle" and hence make no logical sense. They would
+ *		have to be detected and rejected. That would add considerable additional
+ *		complexity to the algorithm.
+ *	===Tie Breaking===
+ *	If there is only one potential winner, then this potential winner is the unique
+ *	winner. If there is more than one potential winner, then a Tie Breaking Ranking
+ *	of the Candidates (TBRC) is calculated as follows:
+ *	1. Pick a random ballot and use its rankings; consider ties as unsorted with
+ *		regard to each other.
+ *	2. Continue picking ballots randomly from those that have not yet been picked.
+ *		When you find one that orders previously unsorted candidates, use the
+ *		ballot to sort them. Do not change the order of the already sorted.
+ *	3. If you go through all ballots, and some candidates are still not sorted,
+ *		order them randomly.
+ *	The winner is that potential winner who is ranked highest in this TBRC.
+ *
+ *	Note: However, if I read this implementation correctly, the TBRC approach is not
+ *	yet implemented.
+ */
 EMETH SchulzeBeatpaths(edata *E  /* winner = X so BeatPathStrength over rivals Y exceeds strength from Y */)
 {
 	int BeatPathStrength[MaxNumCands*MaxNumCands]={0};
 	int i,j,k,minc,winner;
 	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
 	for(i=E->NumCands -1; i>=0; i--) {
-		for(j=E->NumCands -1; j>=0; j--) if(i != j) {
-			BeatPathStrength[i*E->NumCands +j] = E->MarginsMatrix[i*E->NumCands +j];
+		for(j=E->NumCands -1; j>=0; j--) {
+			if(i != j) {
+				BeatPathStrength[i*E->NumCands +j] = E->MarginsMatrix[i*E->NumCands +j];
+			}
 		}
 	}
 	for(i=E->NumCands -1; i>=0; i--) {
-		for(j=E->NumCands -1; j>=0; j--) if(i != j) {
-			for(k=0; k<(int)E->NumCands; k++) if(k != j && k != i) {
-				minc = BeatPathStrength[j*E->NumCands+i];
-				if( BeatPathStrength[i*E->NumCands +k] < minc ) minc = BeatPathStrength[i*E->NumCands +k];
-				if( BeatPathStrength[j*E->NumCands +k] < minc ) BeatPathStrength[j*E->NumCands +k] = minc;
+		for(j=E->NumCands -1; j>=0; j--) {
+			if(i != j) {
+				for(k=0; k<(int)E->NumCands; k++) {
+					if(k != j && k != i) {
+						minc = BeatPathStrength[j*E->NumCands+i];
+						if( BeatPathStrength[i*E->NumCands +k] < minc ) minc = BeatPathStrength[i*E->NumCands +k];
+						if( BeatPathStrength[j*E->NumCands +k] < minc ) BeatPathStrength[j*E->NumCands +k] = minc;
+					}
+				}
 			}
 		}
 	}
 	for(i=E->NumCands -1; i>=0; i--) {
 		bool haveAWinner = true;
 		k = RandCandPerm[i];
-		for(j=E->NumCands -1; j>=0; j--) if(k != j) {
-			if( BeatPathStrength[j*E->NumCands +k] > BeatPathStrength[k*E->NumCands +j] ) {
-				haveAWinner = false;
-				break;
+		for(j=E->NumCands -1; j>=0; j--) {
+			if(k != j) {
+				if( BeatPathStrength[j*E->NumCands +k] > BeatPathStrength[k*E->NumCands +j] ) {
+					haveAWinner = false;
+					break;
+				}
 			}
 		}
 		if( haveAWinner ) {
@@ -2083,8 +2317,12 @@ EMETH SimmonsCond(edata *E  /* winner = X with least sum of top-rank-votes for r
  * voters only allowed to indicate their top 3 choices in order..
  * For normal IRV (or SmithIRV) set IRVTopLim=BIGINT before run.
  * For Top3-IRV set IRVTopLim=3 (or any other integer N for TopN-IRV). ***/
-EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */
-){ /* side effects: Eliminated[], IFav[], RdVoteCount[], FavListNext[], HeadFav[], LossCount[], SmithIRVwinner, IRVwinner  */
+/*	IRV(E):	returns the index of the instant runoff voting Winner or -1 if an error
+ *		occurs
+ *	E:	the election data used to determine the Winner
+ */
+EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */)
+{ /* side effects: Eliminated[], IFav[], RdVoteCount[], FavListNext[], HeadFav[], LossCount[], SmithIRVwinner, IRVwinner  */
 	int Iround,i,RdLoser,NextI,j,t,x,minc,r,stillthere,winner;
 	assert(E->NumCands <= MaxNumCands);
 	if(SmithIRVwinner<0 && IRVTopLim==BIGINT && CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
@@ -2094,7 +2332,11 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */
 		HeadFav[i] = -1; /*HeadFav[i] will be the first voter whose current favorite is i*/
 		if(SmithIRVwinner<0 && IRVTopLim==BIGINT) {
 			t=0;
-			for(j=E->NumCands -1; j>=0; j--) if(E->MarginsMatrix[j*E->NumCands + i] > 0) { t++; }
+			for(j=E->NumCands -1; j>=0; j--) {
+				if(E->MarginsMatrix[j*E->NumCands + i] > 0) {
+					t++;
+				}
+			}
 			LossCount[i] = t;
 		}
 	} /*end for(i)*/
@@ -2129,10 +2371,12 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */
 		ensure(RdLoser>=0, 12);
 		Eliminated[RdLoser] = TRUE; /* eliminate RdLoser */
 		if(IRVTopLim==BIGINT && SmithIRVwinner < 0) {
-			for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]) { /* update LossCount[j] */
-				t = E->MarginsMatrix[RdLoser*E->NumCands + j];
-				if(t>0) { LossCount[j] --; }
-				if( LossCount[j] <= 0 ) { SmithIRVwinner = j; break; }
+			for(j=E->NumCands -1; j>=0; j--) {
+				if(!Eliminated[j]) { /* update LossCount[j] */
+					t = E->MarginsMatrix[RdLoser*E->NumCands + j];
+					if(t>0) { LossCount[j] --; }
+					if( LossCount[j] <= 0 ) { SmithIRVwinner = j; break; }
+				}
 			}
 		}
 		for(i=HeadFav[RdLoser]; i>=0; i=NextI) {/*Go thru linked list of voters with favorite=RdLoser, adjust:*/
@@ -2416,36 +2660,44 @@ Brian Olson's IRNR system:
 7. It wins.
 ***/
 real IRNRPOWER=2.0;
-EMETH IRNR(const edata *E  /*Brian Olson's voting method described above*/
-){ /* side effects: Eliminated[], SumNormedRatings[]*/
+/*	IRNR(E):	returns the instant-runoff normalized-ratings Winner or -1 if an
+ *			error occurs
+ *	E:	the election data used to determine the Winner
+ */
+EMETH IRNR(const edata *E  /*Brian Olson's voting method described above*/)
+{ /* side effects: Eliminated[], SumNormedRatings[]*/
 	int rd,i,j,x,r,loser;
 	real s,t,minc;
 
 	FillBoolArray(E->NumCands, Eliminated, FALSE);
-	for(rd=E->NumCands; rd>1; rd--){
+	for(rd=E->NumCands; rd>1; rd--) {
 		ZeroRealArray( E->NumCands, SumNormedRating );
-		for(i=0; i<(int)E->NumVoters; i++){
+		for(i=0; i<(int)E->NumVoters; i++) {
 			x = i*E->NumCands;
 			s = 0.0;
-			for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]){
-				t = E->Score[x+j] - 0.5;
-				if(t < 0.0) t = -t;
-				s += pow(t, IRNRPOWER);
+			for(j=E->NumCands -1; j>=0; j--) {
+				if(!Eliminated[j]) {
+					t = E->Score[x+j] - 0.5;
+					if(t < 0.0) t = -t;
+					s += pow(t, IRNRPOWER);
+				}
 			}
-			if(s>0.0){
+			if(s>0.0) {
 				s = pow(s, -1.0/IRNRPOWER);
-				for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]){
-					SumNormedRating[j] += s * E->Score[x+j];
+				for(j=E->NumCands -1; j>=0; j--) {
+					if(!Eliminated[j]) {
+						SumNormedRating[j] += s * E->Score[x+j];
+					}
 				}
 			}
 		}
 		RandomlyPermute( E->NumCands, RandCandPerm );
 		loser = -1;
 		minc = HUGE;
-		for(j=E->NumCands -1; j>=0; j--){
+		for(j=E->NumCands -1; j>=0; j--) {
 			r = RandCandPerm[j];
-			if(!Eliminated[r]){
-				if( SumNormedRating[r] < minc ){
+			if(!Eliminated[r]) {
+				if( SumNormedRating[r] < minc ) {
 					minc = SumNormedRating[r];
 					loser = r;
 				}
@@ -2455,9 +2707,9 @@ EMETH IRNR(const edata *E  /*Brian Olson's voting method described above*/
 		ensure(loser>=0, 15);
 		Eliminated[loser] = TRUE;
 	}
-	for(i=E->NumCands -1; i>=0; i--){ /* find random non-eliminated candidate... */
+	for(i=E->NumCands -1; i>=0; i--) { /* find random non-eliminated candidate... */
 		j = RandCandPerm[i];
-		if(!Eliminated[j]){
+		if(!Eliminated[j]) {
 			return j; /*winner*/
 		}
 	}
@@ -2466,8 +2718,12 @@ EMETH IRNR(const edata *E  /*Brian Olson's voting method described above*/
 
 /* Like IRNR based on squares, but when "renomalizing" it now does a TWO-parameter
  * linear transformation so mean=0 and variance=1. */
-EMETH IRNRv(const edata *E  /*Brian Olson's voting method but with 2-param renorm*/
-){ /* side effects: Eliminated[], SumNormedRatings[]*/
+/*	IRNRv(E):	returns the instant-runoff normalized-ratings (2 parameter
+ *			renormalization) Winner or -1 if an error occurs
+ *	E:	the election data used to determine the Winner
+ */
+EMETH IRNRv(const edata *E  /*Brian Olson's voting method but with 2-param renorm*/)
+{ /* side effects: Eliminated[], SumNormedRatings[]*/
 	int rd,i,j,x,r,loser,ct;
 	real s,t,minc,avg;
 
@@ -2477,21 +2733,27 @@ EMETH IRNRv(const edata *E  /*Brian Olson's voting method but with 2-param renor
 		for(i=0; i<(int)E->NumVoters; i++) {
 			x = i*E->NumCands;
 			s = 0.0; ct=0;
-			for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]) {
-				s += E->Score[x+j]; ct++;
+			for(j=E->NumCands -1; j>=0; j--) {
+				if(!Eliminated[j]) {
+					s += E->Score[x+j]; ct++;
+				}
 			}
 			assert(ct>0);
 			ensure((ct>0), 5);
 			avg = s/ct; /*mean*/
 			s = 0.0;
-			for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]) {
-				t = E->Score[x+j] - avg;
-				s += t*t;
+			for(j=E->NumCands -1; j>=0; j--) {
+				if(!Eliminated[j]) {
+					t = E->Score[x+j] - avg;
+					s += t*t;
+				}
 			}
 			if(s>0.0) {
 				s = 1.0/sqrt(s);
-				for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]) {
-					SumNormedRating[j] += s * (E->Score[x+j] - avg);
+				for(j=E->NumCands -1; j>=0; j--) {
+					if(!Eliminated[j]) {
+						SumNormedRating[j] += s * (E->Score[x+j] - avg);
+					}
 				}
 			}
 		}
@@ -2522,37 +2784,46 @@ EMETH IRNRv(const edata *E  /*Brian Olson's voting method but with 2-param renor
 
 /* Like IRNR based on squares, but when "renomalizing" it now does a TWO-parameter
  * linear transformation so max=1 and min=0. */
-EMETH IRNRm(const edata *E  /*Brian Olson's voting method but with 2-param renorm*/
-){ /* side effects: Eliminated[], SumNormedRatings[]*/
+/*	IRNRm(E):	returns the instant-runoff normalized-ratings (2-parameter
+ *			linear transformation renormalization so the maximum equals 1
+ *			and the minimum equals 0) Winner or -1 if an error occurs
+ *	E:	the election data used to determine the Winner
+ */
+EMETH IRNRm(const edata *E  /*Brian Olson's voting method but with 2-param renorm*/)
+{ /* side effects: Eliminated[], SumNormedRatings[]*/
 	int rd,i,j,x,r,loser;
 	real s,t,minc,mx,mn;
 
 	FillBoolArray(E->NumCands, Eliminated, FALSE);
-	for(rd=E->NumCands; rd>1; rd--){
+	for(rd=E->NumCands; rd>1; rd--) {
 		ZeroRealArray( E->NumCands, SumNormedRating );
-		for(i=0; i<(int)E->NumVoters; i++){
+		for(i=0; i<(int)E->NumVoters; i++) {
 			x = i*E->NumCands;
 			mx = -HUGE; mn = HUGE;
-			for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]){
-				t = E->Score[x+j];
-				if(t<mn) mn=t;
-				if(t>mx) mx=t;
+			for(j=E->NumCands -1; j>=0; j--) {
+				if(!Eliminated[j]) {
+					t = E->Score[x+j];
+					if(t<mn) mn=t;
+					if(t>mx) mx=t;
+				}
 			}
 			s = mx-mn;
-			if(s>0.0){
+			if(s>0.0) {
 				s = 1.0/s;
-				for(j=E->NumCands -1; j>=0; j--) if(!Eliminated[j]){
-					SumNormedRating[j] += s * (E->Score[x+j] - mn);
+				for(j=E->NumCands -1; j>=0; j--) {
+					if(!Eliminated[j]) {
+						SumNormedRating[j] += s * (E->Score[x+j] - mn);
+					}
 				}
 			}
 		}
 		RandomlyPermute( E->NumCands, RandCandPerm );
 		loser = -1;
 		minc = HUGE;
-		for(j=E->NumCands -1; j>=0; j--){
+		for(j=E->NumCands -1; j>=0; j--) {
 			r = RandCandPerm[j];
-			if(!Eliminated[r]){
-				if( SumNormedRating[r] < minc ){
+			if(!Eliminated[r]) {
+				if( SumNormedRating[r] < minc ) {
 					minc = SumNormedRating[r];
 					loser = r;
 				}
@@ -2562,9 +2833,9 @@ EMETH IRNRm(const edata *E  /*Brian Olson's voting method but with 2-param renor
 		ensure(loser>=0, 17);
 		Eliminated[loser] = TRUE;
 	}
-	for(i=E->NumCands -1; i>=0; i--){ /* find random non-eliminated candidate... */
+	for(i=E->NumCands -1; i>=0; i--) { /* find random non-eliminated candidate... */
 		j = RandCandPerm[i];
-		if(!Eliminated[j]){
+		if(!Eliminated[j]) {
 			return j; /*winner*/
 		}
 	}
@@ -2795,6 +3066,10 @@ EMETH LoMedianRank(const edata *E    /* canddt with best median ranking wins */)
  * and runs in order N^4 time with N candidates, i.e slow.  It is possible to speed it
  * up to Otilde(N^2) steps with the use of fast data structures...):
  ******************************************/
+/*	TidemanRankedPairs(E):	returns the Tideman ranked pair Winner or -1 if an error
+ *				occurs
+ *	E:	the election data used to determine the Winner
+ */
 EMETH TidemanRankedPairs(const edata *E  /*lock in comparisons with largest margins not yielding cycle*/)
 {  /*side effects: Tpath[] is used as a changeable copy of MarginsMatrix.*/
 	int Tpath[MaxNumCands*MaxNumCands];
@@ -2830,9 +3105,11 @@ EMETH TidemanRankedPairs(const edata *E  /*lock in comparisons with largest marg
 			   printf("(%d %d) %d\n",i,j,maxp);
 		***********************/
 		/*lock in the pair and clobber future no-good pairs:*/
-		for(oi=0; oi < (int)E->NumCands; oi++) for(oj=0; oj < (int)E->NumCands; oj++) {
-			if(Tpath[oi*E->NumCands +i]==BIGINT && Tpath[j*E->NumCands +oj]==BIGINT) {
-				Tpath[oi*E->NumCands +oj]=BIGINT;
+		for(oi=0; oi < (int)E->NumCands; oi++) {
+			for(oj=0; oj < (int)E->NumCands; oj++) {
+				if(Tpath[oi*E->NumCands +i]==BIGINT && Tpath[j*E->NumCands +oj]==BIGINT) {
+					Tpath[oi*E->NumCands +oj]=BIGINT;
+				}
 			}
 		}
 	}
@@ -2920,6 +3197,12 @@ EMETH HeitzigRiver(const edata *E /*http://lists.electorama.com/pipermail/electi
 	return newroot;
 }
 
+/*	DMC(E):	returns the index of the Definite Majority Choice (a.k.a. Ranked
+ *		Approval Voting) Winner or -1 if an error occurs; the method is
+ *		summarized as "While no undefeated candidates exist, eliminate the
+ *		least-approved candidate"
+ *	E:	the election data used to determine the Winner
+ */
 EMETH DMC(edata *E  /* eliminate least-approved candidate until unbeaten winner exists */)
 { /* side effects: LossCount[] */
 	int i,j,t;
@@ -2929,7 +3212,9 @@ EMETH DMC(edata *E  /* eliminate least-approved candidate until unbeaten winner 
 #endif
 	for(i=E->NumCands -1; i>=0; i--) {
 		t=0;
-		for(j=E->NumCands -1; j>=0; j--) if(E->MarginsMatrix[j*E->NumCands + i]>0){ t++; }
+		for(j=E->NumCands -1; j>=0; j--) {
+			if(E->MarginsMatrix[j*E->NumCands + i]>0){ t++; }
+		}
 		LossCount[i] = t;
 	}
 	RandomlyPermute( E->NumCands, RandCandPerm );
@@ -2956,6 +3241,37 @@ void BSbeatDFS( int x, int diff, bool Set[], bool OK[], int Mat[], int N ){
   }
 }
 
+/*	BramsSanverPrAV(E):	Returns the index of the Winner according to Preference
+ *				Approval Voting, as described in the paper "Voting
+ *				Systems That Combine Approval and Preference" by Steven
+ *				J. Brams and M. Remzi Sanver (March 2006) or -1 if an
+ *				error occurs; the Winner under PAV is determined by two
+ *				rules, the second comprising two cases:
+ *					1. If no candidate, or exactly one candidate,
+ *						receives a majority of approval votes,
+ *						the PrAV winner is the AV Winner; that
+ *						is, the Candidate who receives the most
+ *						approval votes.
+ *					2. If two or more Candidates receive a majority
+ *						of approval votes, then
+ *						(i) If One of these Candidates is
+ *							preferred by a majority to every
+ *							other majority approved
+ *							Candidate, then He or She is the
+ *							PrAV Winner, even if not the AV
+ *							or Condorcet Winner.
+ *						(ii) If there is not One
+ *							majority-preferred Candidate
+ *							because of a cycle among the
+ *							majority-approved Candidates,
+ *							then the AV Winner among them is
+ *							the PrAV Winner, even if not the
+ *							AV or Condorcet Winner.
+ *				Note: Should see if the Brams/Sanver "Fallback Voting"
+ *				method from the same paper is implemented here and, if
+ *				not, do so.
+ *	E:	the election data used to determine the Winner
+ */
 EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Combine Approval and Preference,2006*/)
 {
 	bool MajApproved[MaxNumCands]={0};
@@ -2974,29 +3290,37 @@ EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 		/*if exactly 0 or 1 canddt majority-approved, ApprovalWinner wins*/
 		return ApprovalWinner;
 	}
-	for(i=E->NumCands -1; i>=0; i--) if(MajApproved[i]) {
-		bool haveAWinner = true;
-		for(j=E->NumCands -1; j>=0; j--) if(j!=i && MajApproved[j]) {
-			if( E->MarginsMatrix[i*E->NumCands + j] <= 0 ) {
-				haveAWinner = false;
-				break;
+	for(i=E->NumCands -1; i>=0; i--) {
+		if(MajApproved[i]) {
+			bool haveAWinner = true;
+			for(j=E->NumCands -1; j>=0; j--) {
+				if(j!=i && MajApproved[j]) {
+					if( E->MarginsMatrix[i*E->NumCands + j] <= 0 ) {
+						haveAWinner = false;
+						break;
+					}
+				}
 			}
-		}
-		if(haveAWinner) {
-			winner = i; /*beats-all winner among >=2 majority-approved canddts wins*/
-			return winner;
+			if(haveAWinner) {
+				winner = i; /*beats-all winner among >=2 majority-approved canddts wins*/
+				return winner;
+			}
 		}
 	}
 	/*now Brams&Sanver want the most-approved member of the
 	 *top-cycle among the majority-approved canddts, to win: */
 	maxt = 0;
 	CopeWinr = -1;
-	for(i=E->NumCands -1; i>=0; i--) if(MajApproved[i]) {
-		t = 0;
-		for(j=E->NumCands -1; j>=0; j--) if(j!=i && MajApproved[j]) {
-			if( E->MarginsMatrix[i*E->NumCands + j] > 0 ) { t++; }
+	for(i=E->NumCands -1; i>=0; i--) {
+		if(MajApproved[i]) {
+			t = 0;
+			for(j=E->NumCands -1; j>=0; j--) {
+				if(j!=i && MajApproved[j]) {
+					if( E->MarginsMatrix[i*E->NumCands + j] > 0 ) { t++; }
+				}
+			}
+			if(t >= maxt) { maxt=t; CopeWinr=i; }
 		}
-		if(t >= maxt) { maxt=t; CopeWinr=i; }
 	}
 	assert(CopeWinr >= 0);
 	ensure(CopeWinr >= 0, 19);
@@ -3015,6 +3339,21 @@ EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 	return winner;
 }
 
+/*	MDDA(E):	returns the majority defeat disqualification approval Winner or
+ *			-1 if an error occurs; the procedure for this voting method is
+ *			as follows:
+ *				(1) The Voter submits a ranking of the Candidates. The
+ *					Candidates explicitly ranked are considered
+ *					approved by that Voter.
+ *				(2) A Candidate is 'dominated' if more than half of the
+ *					Voters rank some other Candidate strictly above
+ *					Him/Her.
+ *				(3) All dominated Candidates are eliminated, unless this
+ *					would eliminate all the Candidates.
+ *				(4) Of remaining Candidates, the One approved by the
+ *					most Voters is elected.
+ *	E:	the election data used to determine the Winner
+ */
 EMETH MDDA(edata *E  /* approval-count winner among canddts not majority-defeated (or all, if all maj-defeated) */)
 {
 	bool MDdisquald[MaxNumCands]={0};
@@ -3026,10 +3365,12 @@ EMETH MDDA(edata *E  /* approval-count winner among canddts not majority-defeate
 	thresh = (E->NumVoters)/2;
 	for(i=E->NumCands -1; i>=0; i--) {
 		MDdisquald[i] = FALSE;
-		for(j=E->NumCands -1; j>=0; j--) if(E->DefeatsMatrix[j*E->NumCands + i] > thresh) {
-			MDdisquald[i] = TRUE;
-			dqct++;
-			break;
+		for(j=E->NumCands -1; j>=0; j--) {
+			if(E->DefeatsMatrix[j*E->NumCands + i] > thresh) {
+				MDdisquald[i] = TRUE;
+				dqct++;
+				break;
+			}
 		}
 	}
 	if( dqct >= (int)E->NumCands ) { /*If all disqualified, none are. */
@@ -3399,7 +3740,7 @@ int FindWinnersAndRegrets( edata *E,  brdata *B,  const bool Methods[] )
 			assert(r>=0.0); /*can only fail if somebody overwrites array...*/
 			B->Regret[m] = r;
 			WelfordUpdateMeanSD(r, (int*)&(B->RegCount[m]), &(B->MeanRegret[m]), &(B->SRegret[m]));
-			for(j=0; j<m; j++)
+			for(j=0; j<m; j++) {
 				if(Methods[j] || j<NumCoreMethods) {
 					if( B->Winners[j] == w ) {
 						B->Agree[m*NumMethods+j]=TRUE;
@@ -3409,6 +3750,7 @@ int FindWinnersAndRegrets( edata *E,  brdata *B,  const bool Methods[] )
 						assert( B->AgreeCount[j*NumMethods+m] == B->AgreeCount[m*NumMethods+j] );
 					}
 				}
+			}
 		}
 	}
 	if(CondorcetWinner >= 0) {
@@ -4077,10 +4419,19 @@ void OutputLittleEndianUint16( uint x, FILE *F ){
   putc( x%256, F);
 }
 
-void OutputBarray( uint imgsize, const uint8_t Barray[], FILE *F ){
-  int i;
-  assert(imgsize == 20000);
-  for(i=0; i<20000; i++) putc( Barray[i], F );
+/*	OutputBarray(imgsize, Barray, F):	outputs the byte array, 'Barray[]', to
+ *						the file, 'F'
+ *	imgsize:	the image size in bytes
+ *	Barray:		the byte array
+ *	F:		the output file
+ */
+void OutputBarray( uint imgsize, const uint8_t Barray[], FILE *F )
+{
+	int i;
+	assert(imgsize == 20000);
+	for(i=0; i<20000; i++) {
+		putc( Barray[i], F );
+	}
 }
 
 uint ReadPixel( uint x, uint y, const uint8_t Barray[] ){ /*assumes 200x200, 4bits per pixel*/
@@ -4508,6 +4859,8 @@ real RegretData[MaxScenarios*NumMethods];
  *In IEVS 2.59 and above we include a summarizer so that if
  *you ignore the voluminous output, you still get a nice summary of it at
  *the end:*/
+/*	BRDriver():	produces and outputs Bayesian Regret data
+ */
 void BRDriver()
 {
 	static const int Pow2Primes[] = {2, 3, 7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 8191, 16381};
@@ -4522,118 +4875,121 @@ void BRDriver()
 	brdata B;
 
 	for(iglevel=0; iglevel<5; iglevel++) {
-		for(UtilMeth=0; UtilMeth<NumUtilGens; UtilMeth++) if(UtilMeth>=utilnumlower && UtilMeth<=utilnumupper) {
-			for(whichhonlevel=0; whichhonlevel<5; whichhonlevel++) {
-				B.Honfrac = HonLevels[whichhonlevel];
-				if(B.Honfrac*100 < honfracupper + 0.0001 &&
-					B.Honfrac*100 > honfraclower - 0.0001 ) {
-						for(prind=0; Pow2Primes[prind]<MaxNumVoters; prind++)
-						if(Pow2Primes[prind]<=votnumupper && Pow2Primes[prind]>=votnumlower) {
-							B.NumVoters=Pow2Primes[prind];
-							for(B.NumCands=candnumlower; B.NumCands<=candnumupper; B.NumCands++) {
-								B.NumElections=numelections2try;
-								/*1299999=good enough to get all BRs accurate to at least 3 significant digits*/
-								/*2999=good enough for usually 2 sig figs, and is 400X faster*/
-								B.IgnoranceAmplitude = IgnLevels[iglevel];
-								FillBoolArray(NumMethods, VotMethods, TRUE); /*might want to only do a subset... ??*/
-								printf("\n"); fflush(stdout);
-								printf("(Scenario#%d:", ScenarioCount);
-								printf(" UtilMeth=");
-								PrintUtilName(UtilMeth, FALSE);
-								printf(" Honfrac=%.2f, NumVoters=%d, NumCands=%lld, NumElections=%d, IgnoranceAmplitude=%f)\n",
-									B.Honfrac, B.NumVoters, B.NumCands,
-									B.NumElections, B.IgnoranceAmplitude);
-								if(BROutputMode&(ALLMETHS|TOP10METHS)) {
-									if(BROutputMode&HTMLMODE)
-										printf("<tr><th>Voting Method</th><th>Regrets</th><th>#Agreements with ");
-									else printf("Voting Method & Regrets & #Agreements with ");
-									if(BROutputMode&VBCONDMODE) printf("(vote-based) ");
-									else printf("(true-utility-based) ");
-									printf("Condorcet Winner (when CW exists)");
-									if(BROutputMode&HTMLMODE) printf("</th></tr>");
-									printf("\n");
-								}
-								fflush(stdout);
-								ComputeBRs(&B, VotMethods, UtilMeth);
-								MakeIdentityPerm(NumMethods, (uint*)MethPerm);
-								RealPermShellSortUp(NumMethods, MethPerm, B.MeanRegret);
-								TopMeth = 0;
-								if(BROutputMode&ALLMETHS) TopMeth = NumMethods;
-								if(BROutputMode&TOP10METHS) TopMeth = 10;
-								for(i=0; i<TopMeth; i++) {
-									r=i;
-									if(BROutputMode&SORTMODE) r=MethPerm[i];
-									if(BROutputMode&HTMLMODE) printf("<tr><td>");
-									printf("%d=",r); PrintMethName(r,TRUE);
-									if(BROutputMode&HTMLMODE) printf("</td><td>");
-									else if(BROutputMode&TEXMODE) printf(" & ");
-									if(BROutputMode&NORMALIZEREGRETS) printf(" \t %8.5g", B.MeanRegret[r]/B.MeanRegret[2]);
-									else if(BROutputMode&SHENTRUPVSR) printf(" \t %8.5g", 100.0*(1.0 - B.MeanRegret[r]/B.MeanRegret[2]));
-									else printf(" \t %8.5g", B.MeanRegret[r]);
-									if(!(BROutputMode&OMITERRORBARS)) {
-										if(BROutputMode&HTMLMODE) printf("&plusmn;");
-										else if(BROutputMode&TEXMODE) printf("\\pm");
-										else printf("+-");
-										if(BROutputMode&NORMALIZEREGRETS) reb = sqrt(B.SRegret[r])/B.MeanRegret[2];
-										else if(BROutputMode&SHENTRUPVSR) reb = 100.0*sqrt(B.SRegret[r])/B.MeanRegret[2];
-										else reb = sqrt(B.SRegret[r]);
-										printf("%5.2g", reb);
-									}
-									if(BROutputMode&HTMLMODE) printf("</td><td>");
-									else if(BROutputMode&TEXMODE) printf(" & ");
-									if(BROutputMode&VBCONDMODE) printf(" \t  %7d", B.CondAgreeCount[r]);
-									else printf(" \t  %7d", B.TrueCondAgreeCount[r]);
-									if(BROutputMode&HTMLMODE) printf("</td></tr>\n");
-									else if(BROutputMode&TEXMODE) printf(" \\\\ \n");
-									else printf("\n");
-								}/*end for(i)*/
-								for(i=0; i<NumMethods; i++) {  /*accumulate regret data for later summary*/
-									RegretData[ScenarioCount*NumMethods + i] =
-										(B.MeanRegret[i] + 0.00000000001*Rand01())/( B.MeanRegret[2]+0.00000000001 );
-								}
-								ScenarioCount++;
-								if(ScenarioCount > MaxScenarios) {
-									printf("ScenarioCount=%d exceeded upper limit; terminating\n", ScenarioCount);
-									fflush(stdout);
-									exit(EXIT_FAILURE);
-								}
-								if(BROutputMode&HTMLMODE) printf("</td></tr>");
-								else if(BROutputMode&TEXMODE) printf(" \\\\ ");
-								printf("\n");
-								if( (BROutputMode&OMITERRORBARS) && (BROutputMode&(ALLMETHS|TOP10METHS)) ) {
-									if(BROutputMode&NORMALIZEREGRETS) reb = sqrt(B.SRegret[2])/B.MeanRegret[2];
-									else if(BROutputMode&SHENTRUPVSR) reb = 100.0*sqrt(B.SRegret[2])/B.MeanRegret[2];
-									else reb = sqrt(B.SRegret[2]);
-									printf("ErrorBar for RandomWinner's regret=");
-									if(BROutputMode&HTMLMODE) printf("&plusmn;");
-									else if(BROutputMode&TEXMODE) printf("\\pm");
-									else printf("+-");
-									printf("%5.2g;\n", reb);
-									printf("This (experimentally always?) upperbounds the error bar for every other regret.\n");
-								}
-								fflush(stdout);
-
-								if(BROutputMode&DOAGREETABLES) {
-									scalefac = 1.0;
-									if(B.NumElections > 999) {
-										scalefac = 999.5/B.NumElections;
-										printf("\nScaling AgreeCounts into 0-999.");
-									}
-									printf("\nAGREE 0 ");
-									for(i=1; i<NumMethods; i++) { printf(" %3d ", i); }
-									for(i=0; i<NumMethods; i++) {
-										printf("\n%2d ", i);
-										for(j=0; j<NumMethods; j++) {
-											if(j==i) printf("  *  ");
-											else printf(" %4d", (int)(0.4999 + B.AgreeCount[i*NumMethods+j] * scalefac));
+		for(UtilMeth=0; UtilMeth<NumUtilGens; UtilMeth++) {
+			if(UtilMeth>=utilnumlower && UtilMeth<=utilnumupper) {
+				for(whichhonlevel=0; whichhonlevel<5; whichhonlevel++) {
+					B.Honfrac = HonLevels[whichhonlevel];
+					if(B.Honfrac*100 < honfracupper + 0.0001 &&
+						B.Honfrac*100 > honfraclower - 0.0001 ) {
+							for(prind=0; Pow2Primes[prind]<MaxNumVoters; prind++) {
+								if(Pow2Primes[prind]<=votnumupper && Pow2Primes[prind]>=votnumlower) {
+									B.NumVoters=Pow2Primes[prind];
+									for(B.NumCands=candnumlower; B.NumCands<=candnumupper; B.NumCands++) {
+										B.NumElections=numelections2try;
+										/*1299999=good enough to get all BRs accurate to at least 3 significant digits*/
+										/*2999=good enough for usually 2 sig figs, and is 400X faster*/
+										B.IgnoranceAmplitude = IgnLevels[iglevel];
+										FillBoolArray(NumMethods, VotMethods, TRUE); /*might want to only do a subset... ??*/
+										printf("\n"); fflush(stdout);
+										printf("(Scenario#%d:", ScenarioCount);
+										printf(" UtilMeth=");
+										PrintUtilName(UtilMeth, FALSE);
+										printf(" Honfrac=%.2f, NumVoters=%d, NumCands=%lld, NumElections=%d, IgnoranceAmplitude=%f)\n",
+											B.Honfrac, B.NumVoters, B.NumCands,
+											B.NumElections, B.IgnoranceAmplitude);
+										if(BROutputMode&(ALLMETHS|TOP10METHS)) {
+											if(BROutputMode&HTMLMODE)
+												printf("<tr><th>Voting Method</th><th>Regrets</th><th>#Agreements with ");
+											else printf("Voting Method & Regrets & #Agreements with ");
+											if(BROutputMode&VBCONDMODE) printf("(vote-based) ");
+											else printf("(true-utility-based) ");
+											printf("Condorcet Winner (when CW exists)");
+											if(BROutputMode&HTMLMODE) printf("</th></tr>");
+											printf("\n");
 										}
-									}
-									printf("\n");
-									fflush(stdout);
+										fflush(stdout);
+										ComputeBRs(&B, VotMethods, UtilMeth);
+										MakeIdentityPerm(NumMethods, (uint*)MethPerm);
+										RealPermShellSortUp(NumMethods, MethPerm, B.MeanRegret);
+										TopMeth = 0;
+										if(BROutputMode&ALLMETHS) TopMeth = NumMethods;
+										if(BROutputMode&TOP10METHS) TopMeth = 10;
+										for(i=0; i<TopMeth; i++) {
+											r=i;
+											if(BROutputMode&SORTMODE) r=MethPerm[i];
+											if(BROutputMode&HTMLMODE) printf("<tr><td>");
+											printf("%d=",r); PrintMethName(r,TRUE);
+											if(BROutputMode&HTMLMODE) printf("</td><td>");
+											else if(BROutputMode&TEXMODE) printf(" & ");
+											if(BROutputMode&NORMALIZEREGRETS) printf(" \t %8.5g", B.MeanRegret[r]/B.MeanRegret[2]);
+											else if(BROutputMode&SHENTRUPVSR) printf(" \t %8.5g", 100.0*(1.0 - B.MeanRegret[r]/B.MeanRegret[2]));
+											else printf(" \t %8.5g", B.MeanRegret[r]);
+											if(!(BROutputMode&OMITERRORBARS)) {
+												if(BROutputMode&HTMLMODE) printf("&plusmn;");
+												else if(BROutputMode&TEXMODE) printf("\\pm");
+												else printf("+-");
+												if(BROutputMode&NORMALIZEREGRETS) reb = sqrt(B.SRegret[r])/B.MeanRegret[2];
+												else if(BROutputMode&SHENTRUPVSR) reb = 100.0*sqrt(B.SRegret[r])/B.MeanRegret[2];
+												else reb = sqrt(B.SRegret[r]);
+												printf("%5.2g", reb);
+											}
+											if(BROutputMode&HTMLMODE) printf("</td><td>");
+											else if(BROutputMode&TEXMODE) printf(" & ");
+											if(BROutputMode&VBCONDMODE) printf(" \t  %7d", B.CondAgreeCount[r]);
+											else printf(" \t  %7d", B.TrueCondAgreeCount[r]);
+											if(BROutputMode&HTMLMODE) printf("</td></tr>\n");
+											else if(BROutputMode&TEXMODE) printf(" \\\\ \n");
+											else printf("\n");
+										}/*end for(i)*/
+										for(i=0; i<NumMethods; i++) {  /*accumulate regret data for later summary*/
+											RegretData[ScenarioCount*NumMethods + i] =
+												(B.MeanRegret[i] + 0.00000000001*Rand01())/( B.MeanRegret[2]+0.00000000001 );
+										}
+										ScenarioCount++;
+										if(ScenarioCount > MaxScenarios) {
+											printf("ScenarioCount=%d exceeded upper limit; terminating\n", ScenarioCount);
+											fflush(stdout);
+											exit(EXIT_FAILURE);
+										}
+										if(BROutputMode&HTMLMODE) printf("</td></tr>");
+										else if(BROutputMode&TEXMODE) printf(" \\\\ ");
+										printf("\n");
+										if( (BROutputMode&OMITERRORBARS) && (BROutputMode&(ALLMETHS|TOP10METHS)) ) {
+											if(BROutputMode&NORMALIZEREGRETS) reb = sqrt(B.SRegret[2])/B.MeanRegret[2];
+											else if(BROutputMode&SHENTRUPVSR) reb = 100.0*sqrt(B.SRegret[2])/B.MeanRegret[2];
+											else reb = sqrt(B.SRegret[2]);
+											printf("ErrorBar for RandomWinner's regret=");
+											if(BROutputMode&HTMLMODE) printf("&plusmn;");
+											else if(BROutputMode&TEXMODE) printf("\\pm");
+											else printf("+-");
+											printf("%5.2g;\n", reb);
+											printf("This (experimentally always?) upperbounds the error bar for every other regret.\n");
+										}
+										fflush(stdout);
+
+										if(BROutputMode&DOAGREETABLES) {
+											scalefac = 1.0;
+											if(B.NumElections > 999) {
+												scalefac = 999.5/B.NumElections;
+												printf("\nScaling AgreeCounts into 0-999.");
+											}
+											printf("\nAGREE 0 ");
+											for(i=1; i<NumMethods; i++) { printf(" %3d ", i); }
+											for(i=0; i<NumMethods; i++) {
+												printf("\n%2d ", i);
+												for(j=0; j<NumMethods; j++) {
+													if(j==i) printf("  *  ");
+													else printf(" %4d", (int)(0.4999 + B.AgreeCount[i*NumMethods+j] * scalefac));
+												}
+											}
+											printf("\n");
+											fflush(stdout);
+										}
+									} /*end for(prind)*/
 								}
-							} /*end for(prind)*/
-						}
-				} /*end for(whichhonlevel)*/
+							}
+					} /*end for(whichhonlevel)*/
+				}
 			}
 		}
 	}
@@ -4667,8 +5023,10 @@ void BRDriver()
 			k = -1;
 			r = j*NumMethods;
 			maxc = -HUGE;
-			for(i=0; i<NumMethods; i++) if(!CoombElimination[i]) {
-				if(RegretData[r+i] >= maxc) { maxc=RegretData[r+i]; k=i; }
+			for(i=0; i<NumMethods; i++) {
+				if(!CoombElimination[i]) {
+					if(RegretData[r+i] >= maxc) { maxc=RegretData[r+i]; k=i; }
+				}
 			}
 			assert(k>=0);
 			ensure(k>=0, 20);
@@ -4685,29 +5043,41 @@ void BRDriver()
 		printf("%d=",j); PrintMethName(j,TRUE);
 		printf("\n"); fflush(stdout);
 	}
-	for(i=0; i<NumMethods; i++) if(!CoombElimination[i]) {
-		printf("Coombs Winner: %d=",i); PrintMethName(i,TRUE);
-		printf("\n"); fflush(stdout); break;
+	for(i=0; i<NumMethods; i++) {
+		if(!CoombElimination[i]) {
+			printf("Coombs Winner: %d=",i); PrintMethName(i,TRUE);
+			printf("\n"); fflush(stdout); break;
+		}
 	}
 
 	printf("\n3. voting methods sorted via Schulze beatpaths ordering (best first):\n");
 	fflush(stdout);
-	for(i=NumMethods -1; i>=0; i--) { for(j=NumMethods -1; j>=0; j--) BPStrength[i*NumMethods +j]=0; }
+	for(i=NumMethods -1; i>=0; i--) {
+		for(j=NumMethods -1; j>=0; j--) {
+			BPStrength[i*NumMethods +j]=0;
+		}
+	}
 	for(r=0; r<(int)ScenarioCount; r++) {
 		k = r*NumMethods;
 		for(i=NumMethods -1; i>=0; i--) {
-			for(j=NumMethods -1; j>=0; j--) if(i != j) {
-				BPStrength[i*NumMethods +j] += (RegretData[k+i] < RegretData[k+j]) ? 1 : -1;
+			for(j=NumMethods -1; j>=0; j--) {
+				if(i != j) {
+					BPStrength[i*NumMethods +j] += (RegretData[k+i] < RegretData[k+j]) ? 1 : -1;
+				}
 			}
 		}
 	}
 
 	for(i=NumMethods -1; i>=0; i--) {
-		for(j=NumMethods -1; j>=0; j--) if(i != j) {
-			for(k=0; k<NumMethods; k++) if(k != j && k != i) {
-				minc = (int)(BPStrength[j*NumMethods+i]);
-				if( BPStrength[i*NumMethods +k] < minc ) minc = (int)BPStrength[i*NumMethods +k];
-				if( BPStrength[j*NumMethods +k] < minc ) BPStrength[j*NumMethods +k] = minc;
+		for(j=NumMethods -1; j>=0; j--) {
+			if(i != j) {
+				for(k=0; k<NumMethods; k++) {
+					if(k != j && k != i) {
+						minc = (int)(BPStrength[j*NumMethods+i]);
+						if( BPStrength[i*NumMethods +k] < minc ) minc = (int)BPStrength[i*NumMethods +k];
+						if( BPStrength[j*NumMethods +k] < minc ) BPStrength[j*NumMethods +k] = minc;
+					}
+				}
 			}
 		}
 	}
@@ -4729,6 +5099,9 @@ void BRDriver()
 
 
 /* Like BRDriver only based on the real world election dataset: */
+/*	RWBRDriver():	produces and outputs Bayesian Regret data based upon the real
+ *			world election dataset
+ */
 void RWBRDriver()
 {
 	real BPStrength[NumMethods*NumMethods];
@@ -4757,7 +5130,7 @@ void RWBRDriver()
 				printf(" Honfrac=%.2f, NumVoters=%d, NumCands=%lld, NumElections=%d, IgnoranceAmplitude=%f)\n",
 					B.Honfrac, B.NumVoters, B.NumCands,
 					B.NumElections, B.IgnoranceAmplitude);
-				if(BROutputMode&(ALLMETHS|TOP10METHS)){
+				if(BROutputMode&(ALLMETHS|TOP10METHS)) {
 					if(BROutputMode&HTMLMODE)
 						printf("<tr><th>Voting Method</th><th>Regrets</th><th>#Agreements with ");
 					else printf("Voting Method & Regrets & #Agreements with ");
@@ -4781,7 +5154,7 @@ void RWBRDriver()
 					if(BROutputMode&NORMALIZEREGRETS) printf(" \t %8.5g", B.MeanRegret[r]/B.MeanRegret[2]);
 					else if(BROutputMode&SHENTRUPVSR) printf(" \t %8.5g", 100.0*(1.0 - B.MeanRegret[r]/B.MeanRegret[2]));
 					else printf(" \t %8.5g", B.MeanRegret[r]);
-					if(!(BROutputMode&OMITERRORBARS)){
+					if(!(BROutputMode&OMITERRORBARS)) {
 						if(BROutputMode&HTMLMODE) printf("&plusmn;");
 						else if(BROutputMode&TEXMODE) printf("\\pm");
 						else printf("+-");
@@ -4824,17 +5197,17 @@ void RWBRDriver()
 				}
 				fflush(stdout);
 
-				if(BROutputMode&DOAGREETABLES){
+				if(BROutputMode&DOAGREETABLES) {
 					scalefac = 1.0;
-					if(B.NumElections > 999){
+					if(B.NumElections > 999) {
 						scalefac = 999.5/B.NumElections;
 						printf("\nScaling AgreeCounts into 0-999.");
 					}
 					printf("\nAGREE 0 ");
-					for(i=1; i<NumMethods; i++){ printf(" %3d ", i); }
-					for(i=0; i<NumMethods; i++){
+					for(i=1; i<NumMethods; i++) { printf(" %3d ", i); }
+					for(i=0; i<NumMethods; i++) {
 						printf("\n%2d ", i);
-						for(j=0; j<NumMethods; j++){
+						for(j=0; j<NumMethods; j++) {
 							if(j==i) printf("  *  ");
 							else printf(" %4d", (int)(0.4999 + B.AgreeCount[i*NumMethods+j] * scalefac));
 						}
@@ -4850,16 +5223,16 @@ void RWBRDriver()
 	 * since are good for honest voters and cloneproof. */
 	printf("1. voting methods sorted by sum of (normalized so RandWinner=1) regrets (best first):\n");
 	fflush(stdout);
-	for(i=0; i<NumMethods; i++){ RegretSum[i] = 0.0; }
-	for(j=0; j<(int)ScenarioCount; j++){
+	for(i=0; i<NumMethods; i++) { RegretSum[i] = 0.0; }
+	for(j=0; j<(int)ScenarioCount; j++) {
 		r = j*NumMethods;
-		for(i=0; i<NumMethods; i++){
+		for(i=0; i<NumMethods; i++) {
 			RegretSum[i] += RegretData[r+i];
 		}
 	}
-	for(i=0; i<NumMethods; i++){ VMPerm[i] = i; MethPerm[i] = i; }
+	for(i=0; i<NumMethods; i++) { VMPerm[i] = i; MethPerm[i] = i; }
 	RealPermShellSortUp( NumMethods, VMPerm, RegretSum );
-	for(i=0; i<NumMethods; i++){
+	for(i=0; i<NumMethods; i++) {
 		r = VMPerm[i];
 		printf("%d=", r); PrintMethName(r,TRUE);
 		printf("\t %g\n", RegretSum[r]);
@@ -4867,23 +5240,25 @@ void RWBRDriver()
 
 	printf("\n2. in order of elimination by the Coombs method (worst first):\n");
 	fflush(stdout);
-	for(i=NumMethods -1; i>=0; i--){ CoombElimination[i] = FALSE; }
-	for(coombrd=NumMethods-2; coombrd>=0; coombrd--){
-		for(i=NumMethods -1; i>=0; i--){ CoombCt[i] = 0; }
-		for(j=0; j<(int)ScenarioCount; j++){
+	for(i=NumMethods -1; i>=0; i--) { CoombElimination[i] = FALSE; }
+	for(coombrd=NumMethods-2; coombrd>=0; coombrd--) {
+		for(i=NumMethods -1; i>=0; i--) { CoombCt[i] = 0; }
+		for(j=0; j<(int)ScenarioCount; j++) {
 			k = -1;
 			r = j*NumMethods;
 			maxc = -HUGE;
-			for(i=0; i<NumMethods; i++) if(!CoombElimination[i]){
-				if(RegretData[r+i] >= maxc){ maxc=RegretData[r+i]; k=i; }
+			for(i=0; i<NumMethods; i++) {
+				if(!CoombElimination[i]) {
+					if(RegretData[r+i] >= maxc) { maxc=RegretData[r+i]; k=i; }
+				}
 			}
 			assert(k>=0);
 			ensure(k>=0, 22);
 			CoombCt[k]++;
 		}
 		k = -1; j = -1;
-		for(i=0; i<NumMethods; i++){
-			if(CoombCt[i] > k){ k=CoombCt[i]; j=i; }
+		for(i=0; i<NumMethods; i++) {
+			if(CoombCt[i] > k) { k=CoombCt[i]; j=i; }
 		}
 		assert(j>=0);
 		ensure(j>=0, 23);
@@ -4892,37 +5267,52 @@ void RWBRDriver()
 		printf("%d=",j); PrintMethName(j,TRUE);
 		printf("\n"); fflush(stdout);
 	}
-	for(i=0; i<NumMethods; i++) if(!CoombElimination[i]){
-		printf("Coombs Winner: %d=",i); PrintMethName(i,TRUE);
-		printf("\n"); fflush(stdout); break;
+	for(i=0; i<NumMethods; i++) {
+		if(!CoombElimination[i]) {
+			printf("Coombs Winner: %d=",i);
+			PrintMethName(i,TRUE);
+			printf("\n");
+			fflush(stdout);
+			break;
+		}
 	}
 
 	printf("\n3. voting methods sorted via Schulze beatpaths ordering (best first):\n");
 	fflush(stdout);
-	for(i=NumMethods -1; i>=0; i--){ for(j=NumMethods -1; j>=0; j--) BPStrength[i*NumMethods +j]=0; }
-	for(r=0; r<(int)ScenarioCount; r++){
+	for(i=NumMethods -1; i>=0; i--) {
+		for(j=NumMethods -1; j>=0; j--) {
+			BPStrength[i*NumMethods +j]=0;
+		}
+	}
+	for(r=0; r<(int)ScenarioCount; r++) {
 		k = r*NumMethods;
-		for(i=NumMethods -1; i>=0; i--){
-			for(j=NumMethods -1; j>=0; j--) if(i != j){
-				BPStrength[i*NumMethods +j] += (RegretData[k+i] < RegretData[k+j]) ? 1 : -1;
+		for(i=NumMethods -1; i>=0; i--) {
+			for(j=NumMethods -1; j>=0; j--) {
+				if(i != j) {
+					BPStrength[i*NumMethods +j] += (RegretData[k+i] < RegretData[k+j]) ? 1 : -1;
+				}
 			}
 		}
 	}
 
-	for(i=NumMethods -1; i>=0; i--){
-		for(j=NumMethods -1; j>=0; j--) if(i != j){
-			for(k=0; k<NumMethods; k++) if(k != j && k != i) {
-				minc = (int)BPStrength[j*NumMethods+i];
-				if( BPStrength[i*NumMethods +k] < minc ) minc = (int)BPStrength[i*NumMethods +k];
-				if( BPStrength[j*NumMethods +k] < minc ) BPStrength[j*NumMethods +k] = minc;
+	for(i=NumMethods -1; i>=0; i--) {
+		for(j=NumMethods -1; j>=0; j--) {
+			if(i != j) {
+				for(k=0; k<NumMethods; k++) {
+					if(k != j && k != i) {
+						minc = (int)BPStrength[j*NumMethods+i];
+						if( BPStrength[i*NumMethods +k] < minc ) minc = (int)BPStrength[i*NumMethods +k];
+						if( BPStrength[j*NumMethods +k] < minc ) BPStrength[j*NumMethods +k] = minc;
+					}
+				}
 			}
 		}
 	}
 
-	for(i=0; i<NumMethods; i++){
-		for(j=i+1; j<NumMethods; j++){
+	for(i=0; i<NumMethods; i++) {
+		for(j=i+1; j<NumMethods; j++) {
 			if( BPStrength[MethPerm[j]*NumMethods +MethPerm[i]] >
-					BPStrength[MethPerm[i]*NumMethods +MethPerm[j]] ){
+					BPStrength[MethPerm[i]*NumMethods +MethPerm[j]] ) {
 	/*i is not as good as j, so swap:*/
 				r = MethPerm[i]; MethPerm[i] = MethPerm[j]; MethPerm[j] = r;
 			}
@@ -5639,7 +6029,9 @@ void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real
 	       v/100000.0,
 	       meansq_str);
 	printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
-	for(i=0; i<10; i++) printf(" %d", ct[i]);
+	for(i=0; i<10; i++) {
+		printf(" %d", ct[i]);
+	}
 	printf("\n");
 	fflush(stdout);
 }
@@ -5737,7 +6129,7 @@ template<class T> int Sign(T x)
  *				0 to 'N-1', -1 if 'Key[Arr[i]]' is
  *				in decreasing order, 0 if
  *				'Key[Arr[i]]' remains the same, or
- *				2 for any other circumstance 
+ *				2 for any other circumstance
  *	N:	number of elements expected in Arr
  *	Arr:	a set of values to have been sorted
  *	Key:	a set of values which are expected to have guided the sorting
@@ -5794,7 +6186,9 @@ void Test(const char *name, const char *direction, real (*func1)(void), real (*f
 	s=0.0; v=0.0;
 	mn = HUGE;
 	mx = -HUGE;
-	for(i=0; i<10; i++) ct[i]=0;
+	for(i=0; i<10; i++) {
+		ct[i]=0;
+	}
 	printf("Performing 100000 randgen calls to test that %s behaving ok%s:\n", name, direction);
 	RandomTest(s, mn, mx, v, ct, func1, func2);
 	RandomTestReport(mean_str, meansq_str, s, mn, mx, v, ct);
