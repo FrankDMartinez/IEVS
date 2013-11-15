@@ -176,6 +176,7 @@ template< class T >
 		int ArgMinArr(uint N, const T Arr[], int RandPerm[]);
 template< class T >
 		int ArgMaxArr(uint N, const T Arr[], int RandPerm[]);
+int flipACoin(int choice1, int choice2);
 template<class T>
 		void PermShellSortDown( uint N, int Perm[], const T Key[] );
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void));
@@ -1522,11 +1523,7 @@ EMETH Top2Runoff(const edata *E    /* Top2Runoff=top-2-runoff, 2nd round has ful
 	if(pwct > wct) {
 		return(PlurWinner);
 	}else if(pwct == wct) {
-		if(RandBool()) {
-			return(PlurWinner);
-		} else {
-			return PSecond;
-		}
+		return flipACoin(PlurWinner, PSecond);
 	} else {
 		return(PSecond);
 	}
@@ -1622,10 +1619,7 @@ EMETH RandomPair(const edata *E)
 	if( UtilitySum[x] < UtilitySum[y] ) {
 		return y;
 	}
-	if(RandBool()) {
-		return(y);
-	}
-	return(x);
+	return flipACoin(y, x);
 }
 
 /*	NansonBaldwin(E):	returns the index of the Baldwin Winner, not necessarily
@@ -3123,11 +3117,7 @@ EMETH Benham2AppRunoff(const edata *E, bool alwaysRunoff)
 	if( awct > jct) {
 		return(ApprovalWinner);
 	} else if (awct == jct) {
-		if (RandBool()) {
-			return(ApprovalWinner);
-		} else {
-			return j;
-		}
+		return flipACoin(ApprovalWinner, j);
 	} else {
 		return(j);
 	}
@@ -3209,11 +3199,7 @@ EMETH Range2Runoff(const edata *E    /*top-2-runoff, 1stRd=range, 2nd round has 
 	if( pwct > wct) {
 		return(RangeWinner);
 	} else if (pwct == wct) {
-		if (RandBool()) {
-			return(RangeWinner);
-		} else {
-			return RSecond;
-		}
+		return flipACoin(RangeWinner, RSecond);
 	} else {
 		return(RSecond);
 	}
@@ -6156,6 +6142,24 @@ void EDataPrep(edata &E, const brdata *B)
 	}
 }
 
+/*	flipACoin(choice1, choice2):	makes a psuedo-random choice between 'choice1'
+ *					and 'choice2'; the selected choice is returned;
+ *					the probability of selecting either choice is
+ *					the same as selecting the other choice
+ *	choice1:	one possible choice
+ *	choice2:	the other possible choice
+ */
+int flipACoin(int choice1, int choice2)
+{
+	int selected;
+	if(RandBool()) {
+		selected = choice1;
+	} else {
+		selected = choice2;
+	}
+	return selected;
+}
+
 /*	PermShellSortDown(N, Perm, Key):	rearranges 'Perm[0..N-1]' so
  *						'Key[Perm[0..N-1]]' is in decreasing
  *						order
@@ -6314,11 +6318,7 @@ EMETH runoffForApprovalVoting(const edata *E)
 	if( pwct > wct) {
 		return(ApprovalWinner);
 	} else if (pwct == wct) {
-		if (RandBool()) {
-			return(ApprovalWinner);
-		} else {
-			return ASecond;
-		}
+		return flipACoin(ApprovalWinner, ASecond);
 	} else {
 		return(ASecond);
 	}
