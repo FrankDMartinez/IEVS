@@ -179,6 +179,7 @@ template< class T >
 int flipACoin(int choice1, int choice2);
 template<class T>
 		void PermShellSortDown( uint N, int Perm[], const T Key[] );
+void printName(const char *name, bool padding, int spaces);
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void));
 void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10]);
 template<class T>
@@ -3702,82 +3703,296 @@ EMETH WoodallDAC(const edata *E  /*Woodall: Monotonocity of single-seat preferen
 
 /******** uber-routines which package many voting methods into one: **********/
 
-void PrintMethName( int WhichMeth, bool Padding ){
-  switch(WhichMeth){
-  case(0) : printf("SociallyBest"); if(Padding) PrintNSpaces(3); break;
-  case(1) : printf("SociallyWorst"); if(Padding) PrintNSpaces(2); break;
-  case(2) : printf("RandomWinner"); if(Padding) PrintNSpaces(3); break;
-  case(3) : printf("Plurality"); if(Padding) PrintNSpaces(5); break;
-  case(4) : printf("Borda"); if(Padding) PrintNSpaces(8); break;
-  case(5) : printf("IRV"); if(Padding) PrintNSpaces(10); break;
-  case(6) : printf("Approval"); if(Padding) PrintNSpaces(9); break;
-  case(7) : printf("Range"); if(Padding) PrintNSpaces(8); break;
-  case(8) : printf("SmithSet"); if(Padding) PrintNSpaces(8); break;
-  case(9) : printf("SchwartzSet"); if(Padding) PrintNSpaces(6); break;
-  case(10) : printf("AntiPlurality"); if(Padding) PrintNSpaces(3); break;
-  case(11) : printf("Top2Runoff"); if(Padding) PrintNSpaces(3); break;
-    /****** above methods were "Core"; below are optional *****/
-  case(12) : printf("CondorcetLR"); if(Padding) PrintNSpaces(7); break;
-  case(13) : printf("SimpsonKramer"); if(Padding) PrintNSpaces(3); break;
-  case(14) : printf("Bucklin"); if(Padding) PrintNSpaces(7); break;
-  case(15) : printf("Copeland"); if(Padding) PrintNSpaces(6); break;
-  case(16) : printf("SimmonsCond"); if(Padding) PrintNSpaces(3); break;
-  case(17) : printf("SmithIRV"); if(Padding) PrintNSpaces(8); break;
-  case(18) : printf("BTRIRV"); if(Padding) PrintNSpaces(7); break;
-  case(19) : printf("DMC"); if(Padding) PrintNSpaces(10); break;
-  case(20) : printf("Dabagh"); if(Padding) PrintNSpaces(7); break;
-  case(21) : printf("VtForAgainst"); if(Padding) PrintNSpaces(3); break;
-  case(22) : printf("SchulzeBeatpaths"); if(Padding) PrintNSpaces(0); break;
-  case(23) : printf("PlurIR"); if(Padding) PrintNSpaces(9); break;
-  case(24) : printf("Black"); if(Padding) PrintNSpaces(8); break;
-  case(25) : printf("RandomBallot"); if(Padding) PrintNSpaces(1); break;
-  case(26) : printf("RandomPair"); if(Padding) PrintNSpaces(3); break;
-  case(27) : printf("NansonBaldwin"); if(Padding) PrintNSpaces(0); break;
-  case(28) : printf("Nauru"); if(Padding) PrintNSpaces(8); break;
-  case(29) : printf("TopMedianRating"); if(Padding) PrintNSpaces(0); break;
-  case(30) : printf("LoMedianRank"); if(Padding) PrintNSpaces(3); break;
-  case(31) : printf("RaynaudElim"); if(Padding) PrintNSpaces(4); break;
-  case(32) : printf("ArrowRaynaud"); if(Padding) PrintNSpaces(3); break;
-  case(33) : printf("Sinkhorn"); if(Padding) PrintNSpaces(7); break;
-  case(34) : printf("KeenerEig"); if(Padding) PrintNSpaces(7); break;
-  case(35) : printf("MDDA"); if(Padding) PrintNSpaces(12); break;
-  case(36) : printf("VenzkeDisqPlur"); if(Padding) PrintNSpaces(2); break;
-  case(37) : printf("CondorcetApproval"); if(Padding) PrintNSpaces(0); break;
-  case(38) : printf("UncoveredSet"); if(Padding) PrintNSpaces(4); break;
-  case(39) : printf("BramsSanverPrAV"); if(Padding) PrintNSpaces(3); break;
-  case(40) : printf("Coombs"); if(Padding) PrintNSpaces(12); break;
-  case(41) : printf("Top3IRV"); if(Padding) PrintNSpaces(11); break;
-  case(42) : printf("ContinCumul"); if(Padding) PrintNSpaces(7); break;
-  case(43) : printf("IterCopeland"); if(Padding) PrintNSpaces(6); break;
-  case(44) : printf("HeitzigRiver"); if(Padding) PrintNSpaces(6); break;
-  case(45) : printf("MCA"); if(Padding) PrintNSpaces(15); break;
-  case(46) : printf("Range3"); if(Padding) PrintNSpaces(12); break;
-  case(47) : printf("Range10"); if(Padding) PrintNSpaces(11); break;
-  case(48) : printf("HeismanTrophy"); if(Padding) PrintNSpaces(2); break;
-  case(49) : printf("BaseballMVP"); if(Padding) PrintNSpaces(4); break;
-  case(50) : printf("App2Runoff"); if(Padding) PrintNSpaces(5); break;
-  case(51) : printf("Range2Runoff"); if(Padding) PrintNSpaces(3); break;
-  case(52) : printf("HeitzigDFC"); if(Padding) PrintNSpaces(5); break;
-  case(53) : printf("ArmytagePCSchulze"); if(Padding) PrintNSpaces(0); break;
-  case(54) : printf("Hay"); if(Padding) PrintNSpaces(12); break;
-  case(55) : printf("HeitzigLFC"); if(Padding) PrintNSpaces(5); break;
-  case(56) : printf("Benham2AppRunoff"); if(Padding) PrintNSpaces(0); break;
-  case(57) : printf("Benham2AppRunB"); if(Padding) PrintNSpaces(0); break;
-  case(58) : printf("WoodallDAC"); if(Padding) PrintNSpaces(5); break;
-  case(59) : printf("UncAAO"); if(Padding) PrintNSpaces(9); break;
-    /****** below methods are "Slow": *****/
-  case(NumFastMethods+0) : printf("TidemanRankedPairs"); if(Padding) PrintNSpaces(0); break;
-  case(NumFastMethods+1) : printf("IRNR2"); if(Padding) PrintNSpaces(10); break;
-  case(NumFastMethods+2) : printf("IRNR1"); if(Padding) PrintNSpaces(10); break;
-  case(NumFastMethods+3) : printf("IRNR3"); if(Padding) PrintNSpaces(10); break;
-  case(NumFastMethods+4) : printf("IRNR9"); if(Padding) PrintNSpaces(10); break;
-  case(NumFastMethods+5) : printf("IRNRv"); if(Padding) PrintNSpaces(10); break;
-  case(NumFastMethods+6) : printf("IRNRm"); if(Padding) PrintNSpaces(10); break;
-  case(NumFastMethods+7) : printf("Rouse"); if(Padding) PrintNSpaces(13); break;
-  default :
-    printf("[Unsupported voting method %d]", WhichMeth);
-    fflush(stdout); exit(EXIT_FAILURE);
-  }
+/*	PrintMethName(WhichMeth, Padding):	prints an electoral method name and
+ *						potentially some padding
+ *	WhichMeth:	an integer indicating the electoral method
+ *	Padding:	whether to output some padding
+ */
+void PrintMethName( int WhichMeth, bool Padding )
+{
+	const char *name;
+	int spaces;
+	switch(WhichMeth) {
+	case(0) :
+		name = "SociallyBest";
+		spaces = 3;
+		break;
+	case(1) :
+		name = "SociallyWorst";
+		spaces = 2;
+		break;
+	case(2) :
+		name = "RandomWinner";
+		spaces = 3;
+		break;
+	case(3) :
+		name = "Plurality";
+		spaces = 5;
+		break;
+	case(4) :
+		name = "Borda";
+		spaces = 8;
+		break;
+	case(5) :
+		name = "IRV";
+		spaces = 10;
+		break;
+	case(6) :
+		name = "Approval";
+		spaces = 9;
+		break;
+	case(7) :
+		name = "Range";
+		spaces = 8;
+		break;
+	case(8) :
+		name = "SmithSet";
+		spaces = 8;
+		break;
+	case(9) :
+		name = "SchwartzSet";
+		spaces = 6;
+		break;
+	case(10) :
+		name = "AntiPlurality";
+		spaces = 3;
+		break;
+	case(11) :
+		name = "Top2Runoff";
+		spaces = 3;
+		break;
+		/****** above methods were "Core"; below are optional *****/
+	case(12) :
+		name = "CondorcetLR";
+		spaces = 7;
+		break;
+	case(13) :
+		name = "SimpsonKramer";
+		spaces = 3;
+		break;
+	case(14) :
+		name = "Bucklin";
+		spaces = 7;
+		break;
+	case(15) :
+		name = "Copeland";
+		spaces = 6;
+		break;
+	case(16) :
+		name = "SimmonsCond";
+		spaces = 3;
+		break;
+	case(17) :
+		name = "SmithIRV";
+		spaces = 8;
+		break;
+	case(18) :
+		name = "BTRIRV";
+		spaces = 7;
+		break;
+	case(19) :
+		name = "DMC";
+		spaces = 10;
+		break;
+	case(20) :
+		name = "Dabagh";
+		spaces = 7;
+		break;
+	case(21) :
+		name = "VtForAgainst";
+		spaces = 3;
+		break;
+	case(22) :
+		name = "SchulzeBeatpaths";
+		spaces = 0;
+		break;
+	case(23) :
+		name = "PlurIR";
+		spaces = 9;
+		break;
+	case(24) :
+		name = "Black";
+		spaces = 8;
+		break;
+	case(25) :
+		name = "RandomBallot";
+		spaces = 1;
+		break;
+	case(26) :
+		name = "RandomPair";
+		spaces = 3;
+		break;
+	case(27) :
+		name = "NansonBaldwin";
+		spaces = 0;
+		break;
+	case(28) :
+		name = "Nauru";
+		spaces = 8;
+		break;
+	case(29) :
+		name = "TopMedianRating";
+		spaces = 0;
+		break;
+	case(30) :
+		name = "LoMedianRank";
+		spaces = 3;
+		break;
+	case(31) :
+		name = "RaynaudElim";
+		spaces = 4;
+		break;
+	case(32) :
+		name = "ArrowRaynaud";
+		spaces = 3;
+		break;
+	case(33) :
+		name = "Sinkhorn";
+		spaces = 7;
+		break;
+	case(34) :
+		name = "KeenerEig";
+		spaces = 7;
+		break;
+	case(35) :
+		name = "MDDA";
+		spaces = 12;
+		break;
+	case(36) :
+		name = "VenzkeDisqPlur";
+		spaces = 2;
+		break;
+	case(37) :
+		name = "CondorcetApproval";
+		spaces = 0;
+		break;
+	case(38) :
+		name = "UncoveredSet";
+		spaces = 4;
+		break;
+	case(39) :
+		name = "BramsSanverPrAV";
+		spaces = 3;
+		break;
+	case(40) :
+		name = "Coombs";
+		spaces = 12;
+		break;
+	case(41) :
+		name = "Top3IRV";
+		spaces = 11;
+		break;
+	case(42) :
+		name = "ContinCumul";
+		spaces = 7;
+		break;
+	case(43) :
+		name = "IterCopeland";
+		spaces = 6;
+		break;
+	case(44) :
+		name = "HeitzigRiver";
+		spaces = 6;
+		break;
+	case(45) :
+		name = "MCA";
+		spaces = 15;
+		break;
+	case(46) :
+		name = "Range3";
+		spaces = 12;
+		break;
+	case(47) :
+		name = "Range10";
+		spaces = 11;
+		break;
+	case(48) :
+		name = "HeismanTrophy";
+		spaces = 2;
+		break;
+	case(49) :
+		name = "BaseballMVP";
+		spaces = 4;
+		break;
+	case(50) :
+		name = "App2Runoff";
+		spaces = 5;
+		break;
+	case(51) :
+		name = "Range2Runoff";
+		spaces = 3;
+		break;
+	case(52) :
+		name = "HeitzigDFC";
+		spaces = 5;
+		break;
+	case(53) :
+		name = "ArmytagePCSchulze";
+		spaces = 0;
+		break;
+	case(54) :
+		name = "Hay";
+		spaces = 12;
+		break;
+	case(55) :
+		name = "HeitzigLFC";
+		spaces = 5;
+		break;
+	case(56) :
+		name = "Benham2AppRunoff";
+		spaces = 0;
+		break;
+	case(57) :
+		name = "Benham2AppRunB";
+		spaces = 0;
+		break;
+	case(58) :
+		name = "WoodallDAC";
+		spaces = 5;
+		break;
+	case(59) :
+		name = "UncAAO";
+		spaces = 9;
+		break;
+		/****** below methods are "Slow": *****/
+	case(NumFastMethods+0) :
+		name = "TidemanRankedPairs";
+		spaces = 0;
+		break;
+	case(NumFastMethods+1) :
+		name = "IRNR2";
+		spaces = 10;
+		break;
+	case(NumFastMethods+2) :
+		name = "IRNR1";
+		spaces = 10;
+		break;
+	case(NumFastMethods+3) :
+		name = "IRNR3";
+		spaces = 10;
+		break;
+	case(NumFastMethods+4) :
+		name = "IRNR9";
+		spaces = 10;
+		break;
+	case(NumFastMethods+5) :
+		name = "IRNRv";
+		spaces = 10;
+		break;
+	case(NumFastMethods+6) :
+		name = "IRNRm";
+		spaces = 10;
+		break;
+	case(NumFastMethods+7) :
+		name = "Rouse";
+		spaces = 13;
+		break;
+	default :
+		printf("[Unsupported voting method %d]", WhichMeth);
+		fflush(stdout);
+		exit(EXIT_FAILURE);
+	}
+	printName(name, Padding, spaces);
 }
 
 void PrintAvailableVMethods(){
@@ -4407,28 +4622,88 @@ void UtilDispatcher( edata *E, int WhichMeth ){   /*WhichMeth = -1 ==> real worl
   } /*end switch*/
 }
 
-void PrintUtilName( int WhichMeth, bool Padding ){
-  switch(WhichMeth){
-  case(-1) : printf("RealWorld");  if(Padding) PrintNSpaces(9); break;
-  case(0) : printf("RandomNormalUtils"); if(Padding) PrintNSpaces(0); break;
-  case(1) : printf("IssueDotProd[1]"); if(Padding) PrintNSpaces(2); break;
-  case(2) : printf("IssueDotProd[2]"); if(Padding) PrintNSpaces(2); break;
-  case(3) : printf("IssueDotProd[3]"); if(Padding) PrintNSpaces(2); break;
-  case(4) : printf("IssueDotProd[4]"); if(Padding) PrintNSpaces(2); break;
-  case(5) : printf("IssueDotProd[5]"); if(Padding) PrintNSpaces(2); break;
-  case(6) : printf("IssueDistance[1]");  if(Padding) PrintNSpaces(0); break;
-  case(7) : printf("IssueDistance[2]");  if(Padding) PrintNSpaces(0); break;
-  case(8) : printf("IssueDistance[3]");  if(Padding) PrintNSpaces(0); break;
-  case(9) : printf("IssueDistance[4]");  if(Padding) PrintNSpaces(0); break;
-  case(10) : printf("IssueDistance[5]");  if(Padding) PrintNSpaces(0); break;
-  case(11) :  printf("IssueDistance[-1]"); if(Padding) PrintNSpaces(1); break;
-  case(12) :  printf("IssueDistance[-2]"); if(Padding) PrintNSpaces(1); break;
-  case(13) :  printf("IssueDistance[-3]"); if(Padding) PrintNSpaces(1); break;
-  case(14) :  printf("IssueDistance[-4]"); if(Padding) PrintNSpaces(1); break;
-  case(15):  printf("IssueDistance[-5]"); if(Padding) PrintNSpaces(1); break;
+/*	PrintUtilName(WhichMeth, Padding):	prints a utility method name and
+ *						potentially some padding
+ *	WhichMeth:	an integer indicating the electoral method
+ *	Padding:	whether to output some padding
+ */
+void PrintUtilName( int WhichMeth, bool Padding )
+{
+	const char *name;
+	int spaces;
+	switch(WhichMeth) {
+	case(-1) :
+		name = "RealWorld";
+		spaces = 9;
+		break;
+	case(0) :
+		name = "RandomNormalUtils";
+		spaces = 0;
+		break;
+	case(1) :
+		name = "IssueDotProd[1]";
+		spaces = 2;
+		break;
+	case(2) :
+		name = "IssueDotProd[2]";
+		spaces = 2;
+		break;
+	case(3) :
+		name = "IssueDotProd[3]";
+		spaces = 2;
+		break;
+	case(4) :
+		name = "IssueDotProd[4]";
+		spaces = 2;
+		break;
+	case(5) :
+		name = "IssueDotProd[5]";
+		spaces = 2;
+		break;
+	case(6) :
+		name = "IssueDistance[1]";
+		spaces = 0;
+		break;
+	case(7) :
+		name = "IssueDistance[2]";
+		spaces = 0;
+		break;
+	case(8) :
+		name = "IssueDistance[3]";
+		spaces = 0;
+		break;
+	case(9) :
+		name = "IssueDistance[4]";
+		spaces = 0;
+		break;
+	case(10) :
+		name = "IssueDistance[5]";
+		spaces = 0;
+		break;
+	case(11) :
+		name = "IssueDistance[-1]";
+		spaces = 1;
+		break;
+	case(12) :
+		name = "IssueDistance[-2]";
+		spaces = 1;
+		break;
+	case(13) :
+		name = "IssueDistance[-3]";
+		spaces = 1;
+		break;
+	case(14) :
+		name = "IssueDistance[-4]";
+		spaces = 1;
+		break;
+	case(15):
+		name = "IssueDistance[-5]";
+		spaces = 1;
+		break;
 
-  default : printf("UnsupportedUtilGen[%d]\n", WhichMeth); fflush(stdout); exit(EXIT_FAILURE);
-  } /*end switch*/
+	default : printf("UnsupportedUtilGen[%d]\n", WhichMeth); fflush(stdout); exit(EXIT_FAILURE);
+	} /*end switch*/
+	printName(name, Padding, spaces);
 }
 
 /************ useful IO stuff... ***********/
@@ -6173,6 +6448,21 @@ void PermShellSortDown(uint N, int Perm[], const T Key[])
 		}
 	}
 	assert(SortedKey<T>(N,Perm,Key)<=0);
+}
+
+/*	printName(name, padding, spaces):	prints the given name of a utility
+ *						generator or electoral method and
+ *						potentially some padding blanks
+ *	name:		the name to print
+ *	padding:	whether to print padding blanks
+ *	spaces:		number of padding blanks to print if 'padding' is 'true'
+ */
+void printName(const char *name, bool padding, int spaces)
+{
+	printf("%s", name);
+	if(padding) {
+		PrintNSpaces(spaces);
+	}
 }
 
 /*	RandomTest(s, mn, mx, v, ct, func1, func2):	performs a
