@@ -1237,6 +1237,8 @@ typedef struct dum1 {
   real MargArmy[MaxNumCands*MaxNumCands];
 } edata;
 
+int calculateForRunoff(const edata *E, int first, int second);
+
 void PrintEdata(FILE *F, const edata *E)
 { /* prints out the edata */
 	int v;
@@ -1504,29 +1506,13 @@ EMETH VtForAgainst(const edata *E   /* canddt with greatest score = #votesFor - 
  */
 EMETH Top2Runoff(const edata *E    /* Top2Runoff=top-2-runoff, 2nd round has fully-honest voting */)
 { /* side effects: PSecond */
-	int i;
-	uint offset, pwct=0, wct=0;
 	PSecond = -1;
 	if(PlurWinner<0) {
 		Plurality(E);
 	}
 	PSecond = Arg2MaxUIntArr( E->NumCands, PlurVoteCount, (int*)RandCandPerm, PlurWinner );
 	assert(PSecond>=0);
-	for(i=0; i<(int)E->NumVoters; i++) {
-		offset = i*E->NumCands;
-		if( E->PerceivedUtility[offset+PlurWinner] > E->PerceivedUtility[offset+PSecond] ) {
-			pwct++;
-		}else if( E->PerceivedUtility[offset+PlurWinner] < E->PerceivedUtility[offset+PSecond] ) {
-			wct++;
-		}
-	}
-	if(pwct > wct) {
-		return(PlurWinner);
-	}else if(pwct == wct) {
-		return flipACoin(PlurWinner, PSecond);
-	} else {
-		return(PSecond);
-	}
+	return calculateForRunoff(E, PlurWinner, PSecond);
 }
 
 /*	VenzkeDisqPlur(E):	returns the Venzke disqualified plurality Winner; with
@@ -3077,7 +3063,6 @@ Commentary by Me:
 EMETH Benham2AppRunoff(const edata *E, bool alwaysRunoff)
 {
 	int i,j,y,r,maxc;
-	uint jct, awct, offset;
 	if(ApprovalWinner<0) {
 		Approval(E);
 	}
@@ -3104,23 +3089,7 @@ EMETH Benham2AppRunoff(const edata *E, bool alwaysRunoff)
 		}
 	}
 	/* now for honest runoff between ApprovalWinner and j */
-	awct=0;
-	jct=0;
-	for(i=0; i<(int)E->NumVoters; i++) {
-		offset = i*E->NumCands;
-		if( E->PerceivedUtility[offset+ApprovalWinner] > E->PerceivedUtility[offset+j] ) {
-			awct++;
-		} else if( E->PerceivedUtility[offset+ApprovalWinner] < E->PerceivedUtility[offset+j] ) {
-			jct++;
-		}
-	}
-	if( awct > jct) {
-		return(ApprovalWinner);
-	} else if (awct == jct) {
-		return flipACoin(ApprovalWinner, j);
-	} else {
-		return(j);
-	}
+	return calculateForRunoff(E, ApprovalWinner, j);
 }
 
 /*	CondorcetApproval(E):	returns the index of the Condorcet Winner, if any, and
@@ -3179,8 +3148,6 @@ EMETH RangeN(const edata *E /*highest average rounded Score [rded to integer in 
 EMETH Range2Runoff(const edata *E    /*top-2-runoff, 1stRd=range, 2nd round has fully-honest voting*/)
 {
 	int RSecond;
-	int i;
-	uint offset, pwct=0, wct=0;
 	RSecond = -1;
 	if(RangeWinner<0) {
 		Range(E);
@@ -3188,21 +3155,7 @@ EMETH Range2Runoff(const edata *E    /*top-2-runoff, 1stRd=range, 2nd round has 
 	RandomlyPermute( E->NumCands, RandCandPerm );
 	RSecond = Arg2MaxRealArr( E->NumCands, RangeVoteCount, (int*)RandCandPerm, RangeWinner );
 	assert(RSecond>=0);
-	for(i=0; i < (int)E->NumVoters; i++) {
-		offset = i*E->NumCands;
-		if( E->PerceivedUtility[offset+RangeWinner] > E->PerceivedUtility[offset+RSecond] ) {
-			pwct++;
-		}else if( E->PerceivedUtility[offset+RangeWinner] < E->PerceivedUtility[offset+RSecond] ) {
-			wct++;
-		}
-	}
-	if( pwct > wct) {
-		return(RangeWinner);
-	} else if (pwct == wct) {
-		return flipACoin(RangeWinner, RSecond);
-	} else {
-		return(RSecond);
-	}
+	return calculateForRunoff(E, RangeWinner, RSecond);
 }
 
 EMETH ContinCumul(const edata *E    /* Renormalize scores so sum(over canddts)=1; then canddt with highest average Score wins */)
@@ -5990,6 +5943,46 @@ int ArgMinArr(uint N, const T Arr[], int RandPerm[])
 	return(winner);
 }
 
+/*	calculateForRunoff(E, first, second):	uses 'E' to perform a 'runoff' between 'first' and
+ *						'second'; the Winner is returned;
+ *						'first' and 'second' are expected to be
+ *						different
+ *	E:	the election data used to determine the Winner
+ *	first:	an index representing one particular Candidate, such as the plurality
+ *		winner or the approval Winner for example
+ *	second:	an index representing an alternate Candidate with respect to 'first'
+ */
+int calculateForRunoff(const edata *E, int first, int second)
+{
+	uint i;
+	uint offset;
+	uint pwct=0;
+	uint wct=0;
+	const uint numberOfVoters = E->NumVoters;
+	const uint64_t numberOfCandidates = E->NumCands;
+	real perceivedUtilityOfFirst;
+	real perceivedUtilityOfSecond;
+	for(i=0; i<numberOfVoters; i++) {
+		offset = i*numberOfCandidates;
+		perceivedUtilityOfFirst = E->PerceivedUtility[offset+first];
+		perceivedUtilityOfSecond = E->PerceivedUtility[offset+second];
+		if( perceivedUtilityOfFirst > perceivedUtilityOfSecond ) {
+			pwct++;
+		}else if( perceivedUtilityOfFirst < perceivedUtilityOfSecond ) {
+			wct++;
+		} else {
+		    /* do nothing */
+		}
+	}
+	if(pwct > wct) {
+		return first;
+	} else if(pwct < wct) {
+		return second;
+	} else {
+		return flipACoin(first, second);
+	}
+}
+
 /*	FloydRivestSelect(L, R, K, A[]):	rearranges A[L..R] so A[i]<=A[K]<= A[j]
  *						if L<=i<K<j<=R. Then returns A[K].
  *
@@ -6301,27 +6294,10 @@ void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real
 EMETH runoffForApprovalVoting(const edata *E)
 {
 	int ASecond;
-	int i;
-	uint offset;
-	uint pwct=0, wct=0;
 	ASecond = -1;
 	ASecond = Arg2MaxUIntArr( E->NumCands, ApprovalVoteCount, (int*)RandCandPerm, ApprovalWinner );
 	assert(ASecond>=0);
-	for(i=0; i<(int)E->NumVoters; i++) {
-		offset = i*E->NumCands;
-		if( E->PerceivedUtility[offset+ApprovalWinner] > E->PerceivedUtility[offset+ASecond] ) {
-			pwct++;
-		} else if( E->PerceivedUtility[offset+ApprovalWinner] < E->PerceivedUtility[offset+ASecond] ) {
-			wct++;
-		}
-	}
-	if( pwct > wct) {
-		return(ApprovalWinner);
-	} else if (pwct == wct) {
-		return flipACoin(ApprovalWinner, ASecond);
-	} else {
-		return(ASecond);
-	}
+	return calculateForRunoff(E, ApprovalWinner, ASecond);
 }
 
 /*	SelectedRight(L, R, K, A[]):	verifies all entries in 'A[]' from index 'L'
