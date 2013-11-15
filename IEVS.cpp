@@ -3440,8 +3440,8 @@ void BSbeatDFS( int x, int diff, bool Set[], bool OK[], int Mat[], int N ){
  */
 EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Combine Approval and Preference,2006*/)
 {
-	bool MajApproved[MaxNumCands]={0};
-	bool BSSmithMembs[MaxNumCands]={0};
+	bool MajApproved[MaxNumCands]={false};
+	bool BSSmithMembs[MaxNumCands]={false};
 	int i,j,winner,ctm,CopeWinr,r;
 	uint t,maxt;
 	if(CopeWinOnlyWinner<0) {
@@ -3526,7 +3526,7 @@ EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Comb
  */
 EMETH MDDA(edata *E  /* approval-count winner among canddts not majority-defeated (or all, if all maj-defeated) */)
 {
-	bool MDdisquald[MaxNumCands]={0};
+	bool MDdisquald[MaxNumCands]={false};
 	int i,j,r,dqct,thresh,maxc,winner;
 	/*if(CWSPEEDUP && CondorcetWinner >=0 ) return(CondorcetWinner); valid??*/
 	if(CopeWinOnlyWinner<0) {
