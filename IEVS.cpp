@@ -198,18 +198,42 @@ bool EmptySet(uint x){ return (x==0); }
 /****** convenient fns: *******/
 real SquareReal(real x){  return x*x; }
 int SquareInt(int x){  return x*x; }
-uint PosInt(int x){ if(x>0) return x; else return 0; }
+/*	PosInt(x):	returns 'x' if 'x' is positive and 0 otherwise
+ *	x:	the value to examine
+ */
+uint PosInt(int x)
+{
+	if(x>0) {
+		return x;
+	} else {
+		return 0;
+	}
+}
 int MaxInt(int a, int b){ return (((a)>(b)) ? (a):(b)); }
 int MinInt(int a, int b){ return (((a)<(b)) ? (a):(b)); }
 
-uint GCD(uint a, uint b){ /*Euclid alg*/
-  if(a>b){ a %= b; if(a==0) return b; }
-  for(;;){
-    b %= a;
-    if(b==0) return a;
-    a %= b;
-    if(a==0) return b;
-  }
+/*	GCD(a, b):	returns the greatest common divisor (or factor) of 'a' and 'b'
+ *	a:	one value to examine
+ *	b:	the other value to examine
+ */
+uint GCD(uint a, uint b)
+{ /*Euclid alg*/
+	if(a>b) {
+		a %= b;
+		if(a==0) {
+			return b;
+		}
+	}
+	for(;;) {
+		b %= a;
+		if(b==0) {
+			return a;
+		}
+		a %= b;
+		if(a==0) {
+			return b;
+		}
+	}
 }
 
 uint LCMfact[32];
@@ -235,17 +259,25 @@ i.e. these are primes which have 2 as a primitive root.
 This routine finds the greatest Artin prime P with P<=x.  (Not intended to be fast.)
   *******************************************/
 uint ARTINPRIME;
-uint FindArtinPrime(uint x){
-  uint j,p,k;
-  p = x;
-  if(p%2==0) p--;  /* make p be odd */
-  for(; p>2; p -= 2){
-    for(j=4, k=3; j!=2; j=(j*2)%p, k++){
-      if(k >= p){ return(p); }
-    }
-  }
-  printf("FindArtinPrime failed - terminating\n");
-  exit(EXIT_FAILURE);
+/*	FindArtinPrime(x): returns the largest Artin prime less than or equal to 'x'
+ *	x:	the maximum possible value for searching for Artin primes
+ */
+uint FindArtinPrime(uint x)
+{
+	uint j,p,k;
+	p = x;
+	if(p%2==0) {
+		p--;  /* make p be odd */
+	}
+	for(; p>2; p -= 2) {
+		for(j=4, k=3; j!=2; j=(j*2)%p, k++) {
+			if(k >= p) {
+				return(p);
+			}
+		}
+	}
+	printf("FindArtinPrime failed - terminating\n");
+	exit(EXIT_FAILURE);
 }
 
 /*	PrintNSpaces(N):	prints 'N' space characters to stdout
@@ -580,11 +612,17 @@ void TestRand01()
 	for(i=0; i<100000; i++) {
 		x = Rand01();
 		s += x;
-		if(mx<x) mx=x;
-		if(x<mn) mn=x;
+		if(mx<x) {
+			mx=x;
+		}
+		if(x<mn) {
+			mn=x;
+		}
 		v += pow((x-0.5), 2);
 		y = (int)(x*10.0);
-		if(x>=0 && y<10) ct[y]++;
+		if(x>=0 && y<10) {
+			ct[y]++;
+		}
 	}
 	printf("mean=%g(should be 1/2)  min=%f  max=%g   variance=%g(should be 1/12=%g)\n",
 			s/100000.0, mn, mx, v/100000.0, 1/12.0);
@@ -596,9 +634,14 @@ void TestRand01()
 	fflush(stdout);
 }
 
-bool RandBool(){ /* returns random boolean */
-  if( Rand01() > 0.5 ) return TRUE;
-  return FALSE;
+/*	RandBool():	returns a random bool value
+ */
+bool RandBool()
+{ /* returns random boolean */
+	if( Rand01() > 0.5 ) {
+		return TRUE;
+	}
+	return FALSE;
 }
 
 real RandExpl(){ /* returns standard exponential (density=exp(-x) for x>0) random deviate */
@@ -661,13 +704,19 @@ void TestRadialNormalRand2()
 }
 
 #define RECIPRTPI (0.564189583547756286948079451560772585844050)   /* 1/sqrt(pi) */
-real RandSkew(){ /* returns mean=0 skewed deviate; the fact the mean is really 0, has been
-		  * confirmed by Monte Carlo to +-0.0001 */
-  real x,y;
-  x = RandNormal();
-  y = RandNormal();
-  if(x<y) x=y;
-  return( 1.21129 * (x-RECIPRTPI) );  /*1.21129 chosen so that variance is 1*/
+/*	RandSkew():	returns the mean=0 skewed deviate
+ */
+real RandSkew()
+{ /* returns mean=0 skewed deviate; the fact the mean is really 0, has been confirmed by
+   * Monte Carlo to +-0.0001
+   */
+	real x,y;
+	x = RandNormal();
+	y = RandNormal();
+	if(x<y) {
+		x=y;
+	}
+	return( 1.21129 * (x-RECIPRTPI) );  /*1.21129 chosen so that variance is 1*/
 }
 
 void GenRandNormalArr(int N, real Arr[]){ /* returns Arr[0..N-1] of standard normal randoms */
@@ -1334,9 +1383,14 @@ EMETH SociallyBest(const edata *E  /* greatest utility-sum winner */)
 	return BestWinner;
 }
 
+/*	SociallyWorst(E):	returns the Candidate with the lowest utility sum
+ *	E:	the election data used to determine the socially worst Candidate
+ */
 EMETH SociallyWorst(const edata *E   /* least utility-sum winner */)
 { /* side effects: UtilitySum[], WorstWinner */
-	if(BestWinner<0) SociallyBest(E);
+	if(BestWinner<0) {
+		SociallyBest(E);
+	}
 	WorstWinner = ArgMinArr<real>(E->NumCands, UtilitySum, (int*)RandCandPerm);
 	return WorstWinner;
 }
@@ -1438,12 +1492,23 @@ EMETH VtForAgainst(const edata *E   /* canddt with greatest score = #votesFor - 
 	return winner;
 }
 
+/*	Top2Runoff(E):	returns the index of the Winner of a runoff between the top 2
+ *			Candidates; this implementation only compares perceived
+ *			utilities; if the Candidates are perceived to have the same
+ *			utility to the same Voter, this procedure acts as if said Voter
+ *			did not vote; this procedure also presumes honest voting, which
+ *			makes sense for this scenario; in the event of a tie between the
+ *			top 2 Candidates, the Winner is decided with a 'coin flip'
+ *	E:	the election data used to determine the Winner
+ */
 EMETH Top2Runoff(const edata *E    /* Top2Runoff=top-2-runoff, 2nd round has fully-honest voting */)
 { /* side effects: PSecond */
 	int i;
 	uint offset, pwct=0, wct=0;
 	PSecond = -1;
-	if(PlurWinner<0) Plurality(E);
+	if(PlurWinner<0) {
+		Plurality(E);
+	}
 	PSecond = Arg2MaxUIntArr( E->NumCands, PlurVoteCount, (int*)RandCandPerm, PlurWinner );
 	assert(PSecond>=0);
 	for(i=0; i<(int)E->NumVoters; i++) {
@@ -1464,15 +1529,29 @@ EMETH Top2Runoff(const edata *E    /* Top2Runoff=top-2-runoff, 2nd round has ful
 	return(PSecond);
 }
 
-EMETH VenzkeDisqPlur(const edata *E   /* Plurality winner wins unless over 50% vote him bottom; then plurality 2nd-winner wins. */
-){ /* side effects: VFAVoteCount[] */
-  if(PlurWinner<0) Plurality(E);
-  if(AntiPlurWinner<0) AntiPlurality(E);
-  if( 2*AntiPlurVoteCount[ PlurWinner ] > E->NumVoters ){
-    if(PSecond<0) Top2Runoff(E);
-    return PSecond;
-  }
-  return PlurWinner;
+/*	VenzkeDisqPlur(E):	returns the Venzke disqualified plurality Winner; with
+ *				this method, the Candidate with the most for votes is
+ *				elected unless that Candidate receives more than half of
+ *				the against votes, in which case said Candidate is not
+ *				eligible to be elected, in which case the 2nd place
+ *				Winner of the plurality vote wins
+ *	E:	the election data used to determine the Winner
+ */
+EMETH VenzkeDisqPlur(const edata *E   /* Plurality winner wins unless over 50% vote him bottom; then plurality 2nd-winner wins. */)
+{ /* side effects: VFAVoteCount[] */
+	if(PlurWinner<0) {
+		Plurality(E);
+	}
+	if(AntiPlurWinner<0) {
+		AntiPlurality(E);
+	}
+	if( 2*AntiPlurVoteCount[ PlurWinner ] > E->NumVoters ) {
+		if(PSecond<0) {
+			Top2Runoff(E);
+		}
+		return PSecond;
+	}
+	return PlurWinner;
 }
 
 EMETH PlurIR(edata *E    /* PlurIR=plur+immediate runoff (give ranking as vote) */)
@@ -1506,22 +1585,44 @@ EMETH Borda(edata *E  /* Borda: weighted positional with weights N-1, N-2, ..., 
 	return BordaWinner;
 }
 
-EMETH Black(edata *E  /* Condorcet winner if exists, else use Borda */
-){
-  if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
-  if(CondorcetWinner >= 0) return CondorcetWinner;
-  if(BordaWinner<0) Borda(E);
-  return BordaWinner;
+/*	Black(E):	returns the Condorcet Winner if One exists and the Borda Winner
+ *			otherwise
+ *	E:	the election data used to determine the Winner
+ */
+EMETH Black(edata *E  /* Condorcet winner if exists, else use Borda */)
+{
+	if(CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
+	if(CondorcetWinner >= 0) {
+		return CondorcetWinner;
+	}
+	if(BordaWinner<0) {
+		Borda(E);
+	}
+	return BordaWinner;
 }
 
-EMETH RandomPair(const edata *E){ /*pairwise honest-util winner among 2 random candidates is elected*/
-  int x,y;
-  x = (int)RandInt(E->NumCands);
-  y = (int)RandInt(E->NumCands);
-  if( UtilitySum[x] > UtilitySum[y] ) return x;
-  if( UtilitySum[x] < UtilitySum[y] ) return y;
-  if(RandBool()) return(y);
-  return(x);
+/*	RandomPair(E):	returns a pairwise honest-utility Winner from 2 randomly
+ *			selected Candidates; if the 2 Candidates have the same
+ *			honest-utility, the Winner is determined by a 'coin flip'
+ *	E:	the election data used to determine the Winner
+ */
+EMETH RandomPair(const edata *E)
+{ /*pairwise honest-util winner among 2 random candidates is elected*/
+	int x,y;
+	x = (int)RandInt(E->NumCands);
+	y = (int)RandInt(E->NumCands);
+	if( UtilitySum[x] > UtilitySum[y] ) {
+		return x;
+	}
+	if( UtilitySum[x] < UtilitySum[y] ) {
+		return y;
+	}
+	if(RandBool()) {
+		return(y);
+	}
+	return(x);
 }
 
 /*	NansonBaldwin(E):	returns the index of the Baldwin Winner, not necessarily
@@ -1540,7 +1641,9 @@ EMETH NansonBaldwin(edata *E  /* repeatedly eliminate Borda loser */)
 #if CWSPEEDUP
 	if(CondorcetWinner >= 0) return CondorcetWinner;
 #endif
-	if(BordaWinner<0) Borda(E);
+	if(BordaWinner<0) {
+		Borda(E);
+	}
 	FillBoolArray(E->NumCands, Eliminated, FALSE);
 	CopyIntArray(E->NumCands, (int*)BordaVoteCount, NansonVoteCount);
 	RandomlyPermute( E->NumCands, RandCandPerm );
@@ -1571,19 +1674,24 @@ EMETH NansonBaldwin(edata *E  /* repeatedly eliminate Borda loser */)
 	return(-1); /*error*/
 }
 
-/***
- * Rouse is like Nanson-Baldwin but with an extra level of recursion: it successively
- * pseudo-eliminates the candidate with the highest Borda score until one is left, then it
- * genuinely-eliminates that one from the
- * original list; this step is repeated until a single candidate is left.
- * Slow: O(N^4) steps to find winner for N candidates from pairwise matrix.
- ******/
+/*	Rouse(E):	returns the Rouse Winner; Rouse is like Nanson-Baldwin but with
+ *			an extra level of recursion: it successively pseudo-eliminates
+ *			the candidate with the highest Borda score until one is left,
+ *			then it genuinely-eliminates that one from the original list;
+ *			this step is repeated until a single candidate is left; this
+ *			implementation is both slow, O(N^4) steps to find winner for N
+ *			candidates from pairwise matrix, and according to commentary,
+ *			"buggy"
+ *	E:	the election data to used to determine the Winner
+ */
 EMETH Rouse(edata *E  /*like Nanson-Baldwin but with an extra level of recursion BUGGY*/)
 {
 	bool Rmark[MaxNumCands];
 	bool rRmark[MaxNumCands];
 	int i,j,k,m,r,highestb,bordsum, maxb, winner;
-	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	if(CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
 	FillBoolArray(E->NumCands, rRmark, TRUE); /* nobody eliminated initially */
 	for(m= E->NumCands; m>1; m--) { /* NumCands-1 elimination-rounds */
 		for(k=1; k<m; k++) {  /* m-1 pseudo-elimination rounds */
@@ -1595,7 +1703,9 @@ EMETH Rouse(edata *E  /*like Nanson-Baldwin but with an extra level of recursion
 				if(rRmark[r] && Rmark[r]) {
 					bordsum = 0;
 					for(j=E->NumCands -1; j>=0; j--) {
-						if(Rmark[j] && rRmark[j]) bordsum += E->MarginsMatrix[r*E->NumCands +j];
+						if(Rmark[j] && rRmark[j]) {
+							bordsum += E->MarginsMatrix[r*E->NumCands +j];
+						}
 					}
 					if(maxb < bordsum) { maxb = bordsum;  highestb = r; }
 				}
@@ -1667,7 +1777,9 @@ EMETH IterCopeland( const edata *E  /*iterate Copeland on tied-winner set from p
 			}
 		}
 		assert(tiect>=1);
-		if(tiect<=1 || tiect==oldtiect) return(winner);
+		if(tiect<=1 || tiect==oldtiect) {
+			return(winner);
+		}
 		oldtiect = tiect;
 	}
 	return(-1);
@@ -1735,6 +1847,14 @@ EMETH CondorcetLR(edata *E   /* candidate with least sum-of-pairwise-defeat-marg
 	return winner;
 }
 
+/*	Sinkhorn(E):	returns the index of the Candidate with the maximum Sinkhorn
+ *			rating from an all-positive DefeatsMatrix+1; the Sinkhorn rating
+ *			is described in "Sinkhorn ratings, and new strongly polynomial
+ *			time algorithms for Sinkhorn balancing, Perron eigenvectors, and
+ *			Markov chains" by Warren D. Smith, 21 Shore Oaks Drive, Stony
+ *			Brook, New York 11790
+ *	E:	the election data used to determine the Winner
+ */
 EMETH Sinkhorn(edata *E  /* candidate with max Sinkhorn rating (from all-positive DefeatsMatrix+1) */)
 {
 	real SinkRat[MaxNumCands]={0};
@@ -1742,7 +1862,9 @@ EMETH Sinkhorn(edata *E  /* candidate with max Sinkhorn rating (from all-positiv
 	real SinkMat[MaxNumCands*MaxNumCands]={0};
 	int j,k,winner;
 	real t,maxsum,minsum,sum,maxminRatio;
-	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	if(CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
 	FillRealArray( E->NumCands, SinkRow, 1.0 );
 	FillRealArray( E->NumCands, SinkCol, 1.0 );
 	do{
@@ -1758,8 +1880,12 @@ EMETH Sinkhorn(edata *E  /* candidate with max Sinkhorn rating (from all-positiv
 			for(j=E->NumCands -1; j>=0; j--) {
 				sum += SinkMat[k*E->NumCands + j];
 			}
-			if(minsum > sum) minsum = sum;
-			if(maxsum < sum) maxsum = sum;
+			if(minsum > sum) {
+				minsum = sum;
+			}
+			if(maxsum < sum) {
+				maxsum = sum;
+			}
 			ensure((sum!=0.0), 26);
 			SinkRow[k] /= sum;
 		}
@@ -1771,14 +1897,20 @@ EMETH Sinkhorn(edata *E  /* candidate with max Sinkhorn rating (from all-positiv
 			for(j=E->NumCands -1; j>=0; j--) {
 				sum += SinkMat[j*E->NumCands + k];
 			}
-			if(minsum > sum) minsum = sum;
-			if(maxsum < sum) maxsum = sum;
+			if(minsum > sum) {
+				minsum = sum;
+			}
+			if(maxsum < sum) {
+				maxsum = sum;
+			}
 			ensure((sum!=0.0), 27);
 			SinkCol[k] /= sum;
 		}
 		ensure((minsum != 0.0), 2);
 		t = maxsum/minsum;
-		if( maxminRatio < t ) maxminRatio = t;
+		if( maxminRatio < t ) {
+			maxminRatio = t;
+		}
 	}until(maxminRatio < 1.000003);
 	for(j=E->NumCands -1; j>=0; j--) {
 		SinkRat[j] = SinkCol[j]/SinkRow[j];
@@ -1844,7 +1976,9 @@ EMETH RaynaudElim(edata *E  /* repeatedly eliminate canddt who suffered the wors
 	int RayDefeatMargin[MaxNumCands]={0};
 	int RayBeater[MaxNumCands]={0};
 	int i, j, x, t, RayLoser, rnd, maxc, r, beater;
-	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	if(CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
 #if CWSPEEDUP
 	if(CondorcetWinner >= 0) return CondorcetWinner;
 #endif
@@ -1918,7 +2052,9 @@ EMETH ArrowRaynaud(edata *E  /* repeatedly eliminate canddt with smallest {large
 	int ARVictMargin[MaxNumCands]={0};
 	int ARchump[MaxNumCands]={0};
 	int i, j, x, t, ARLoser, rnd, minc, r, chump;
-	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	if(CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
 	for(i=E->NumCands -1; i>=0; i--) {
 		t = -BIGINT; chump = -1;
 		RandomlyPermute( E->NumCands, RandCandPerm );
@@ -2036,7 +2172,9 @@ EMETH SchulzeBeatpaths(edata *E  /* winner = X so BeatPathStrength over rivals Y
 {
 	int BeatPathStrength[MaxNumCands*MaxNumCands]={0};
 	int i,j,k,minc,winner;
-	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	if(CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
 	for(i=E->NumCands -1; i>=0; i--) {
 		for(j=E->NumCands -1; j>=0; j--) {
 			if(i != j) {
@@ -2050,8 +2188,12 @@ EMETH SchulzeBeatpaths(edata *E  /* winner = X so BeatPathStrength over rivals Y
 				for(k=0; k<(int)E->NumCands; k++) {
 					if(k != j && k != i) {
 						minc = BeatPathStrength[j*E->NumCands+i];
-						if( BeatPathStrength[i*E->NumCands +k] < minc ) minc = BeatPathStrength[i*E->NumCands +k];
-						if( BeatPathStrength[j*E->NumCands +k] < minc ) BeatPathStrength[j*E->NumCands +k] = minc;
+						if( BeatPathStrength[i*E->NumCands +k] < minc ) {
+							minc = BeatPathStrength[i*E->NumCands +k];
+						}
+						if( BeatPathStrength[j*E->NumCands +k] < minc ) {
+							BeatPathStrength[j*E->NumCands +k] = minc;
+						}
 					}
 				}
 			}
@@ -2092,36 +2234,48 @@ void beatDFS( int x, int diff, bool Set[], int Mat[], int N ){
   }
 }
 
-EMETH SmithSet(edata *E  /* Smith set = smallest nonempty set of canddts that pairwise-beat all nonmembers */
-){ /* side effects: SmithMembs[] */
-  int i,r;
-  FillBoolArray(E->NumCands, SmithMembs, FALSE);
-  assert(CopeWinOnlyWinner>=0);
-  assert(CopeWinOnlyWinner < (int)E->NumCands);
-  SmithMembs[CopeWinOnlyWinner] = TRUE;
-  beatDFS(CopeWinOnlyWinner, 1, SmithMembs, E->MarginsMatrix, E->NumCands);
-  RandomlyPermute( E->NumCands, RandCandPerm );
-  for(i=E->NumCands -1; i>=0; i--){
-    r = RandCandPerm[i];
-    if(SmithMembs[r]) return r; /*return random set member*/
-  }
-  return(-1);
+/*	SmithSet(E):	returns the index of a randomly selected Member of the Smith set
+ *			or -1 if an error occurs
+ *	E:	the election data used to determine the Smith set
+ */
+EMETH SmithSet(edata *E  /* Smith set = smallest nonempty set of canddts that pairwise-beat all nonmembers */)
+{ /* side effects: SmithMembs[] */
+	int i,r;
+	FillBoolArray(E->NumCands, SmithMembs, FALSE);
+	assert(CopeWinOnlyWinner>=0);
+	assert(CopeWinOnlyWinner < (int)E->NumCands);
+	SmithMembs[CopeWinOnlyWinner] = TRUE;
+	beatDFS(CopeWinOnlyWinner, 1, SmithMembs, E->MarginsMatrix, E->NumCands);
+	RandomlyPermute( E->NumCands, RandCandPerm );
+	for(i=E->NumCands -1; i>=0; i--) {
+		r = RandCandPerm[i];
+		if(SmithMembs[r]) {
+			return r; /*return random set member*/
+		}
+	}
+	return(-1);
 }
 
-EMETH SchwartzSet(edata *E  /* Schwartz set = smallest nonempty set of canddts undefeated by nonmembers */
-){ /* side effects: SchwartzMembs[] */
-  int i,r;
-  FillBoolArray(E->NumCands, SchwartzMembs, FALSE);
-  assert(CopeWinOnlyWinner>=0);
-  assert(CopeWinOnlyWinner < (int)E->NumCands);
-  SchwartzMembs[CopeWinOnlyWinner] = TRUE;
-  beatDFS(CopeWinOnlyWinner, 0, SchwartzMembs, E->MarginsMatrix, E->NumCands);
-  RandomlyPermute( E->NumCands, RandCandPerm );
-  for(i=E->NumCands -1; i>=0; i--){
-    r = RandCandPerm[i];
-    if(SchwartzMembs[r]) return r; /*return random set member*/
-  }
-  return(-1);
+/*	SchwartzSet(E):	returns the index of a randomly selected Member of the Schwartz set
+ *			or -1 if an error occurs
+ *	E:	the election data used to determine the Schwartz set
+ */
+EMETH SchwartzSet(edata *E  /* Schwartz set = smallest nonempty set of canddts undefeated by nonmembers */)
+{ /* side effects: SchwartzMembs[] */
+	int i,r;
+	FillBoolArray(E->NumCands, SchwartzMembs, FALSE);
+	assert(CopeWinOnlyWinner>=0);
+	assert(CopeWinOnlyWinner < (int)E->NumCands);
+	SchwartzMembs[CopeWinOnlyWinner] = TRUE;
+	beatDFS(CopeWinOnlyWinner, 0, SchwartzMembs, E->MarginsMatrix, E->NumCands);
+	RandomlyPermute( E->NumCands, RandCandPerm );
+	for(i=E->NumCands -1; i>=0; i--) {
+		r = RandCandPerm[i];
+		if(SchwartzMembs[r]) {
+			return r; /*return random set member*/
+		}
+	}
+	return(-1);
 }
 
 /* Uncovered set.  A "covers" B if the candidates A beats pairwise
@@ -2195,6 +2349,16 @@ EMETH UncoveredSet(edata *E /*A "covers" B if A beats a strict superset of those
 	return(-1);
 }
 
+/*	Bucklin(E):	returns the index of the Bucklin Winner	or -1 if an error
+ *			occurs; first choice votes are first counted; if a Candidate
+ *			has a majority, that Candidate wins; otherwise, the second
+ *			choices are added to the first choices; again, if a Candidate
+ *			with a majority vote is found, the Winner is the Candidate with
+ *			the most votes accumulated; lower rankings are added as needed;
+ *			yes, it is possible to find multiple Candidates with a majority
+ *			from the 2nd round on
+ *	E:	the election data used to determine the Winner
+ */
 EMETH Bucklin(const edata *E   /* canddt with over half the voters ranking him in top-k wins (for k minimal) */)
 { /* side effects: RdVoteCount[] */
 	int rnd,i,best,winner;
@@ -2206,7 +2370,9 @@ EMETH Bucklin(const edata *E   /* canddt with over half the voters ranking him i
 		}
 		winner = ArgMaxArr<int>(E->NumCands, RdVoteCount, (int*)RandCandPerm);
 		best = RdVoteCount[winner];
-		if(best*2 > (int)E->NumVoters)  break;
+		if(best*2 > (int)E->NumVoters) {
+			break;
+		}
 	}
 	return winner;
 }
@@ -2268,12 +2434,21 @@ EMETH ArmytagePCSchulze(edata *E  /*Armytage pairwise comparison based on Schulz
 	return(-1);
 }
 
+/*	Copeland(E):	returns the Copland Winner; Copeland's method or Copeland's
+ *			pair-wise aggregation method is a Condorcet method in which
+ *			Candidates are ordered by the number of pair-wise victories,
+ *			minus the number of pair-wise defeats; it is not entirely clear
+ *			whether this implementation takes into account pair-wise defeats
+ *	E:	the election data used to determine the Winner
+ */
 EMETH Copeland(edata *E   /* canddt with largest number of pairwise-wins elected (tie counts as win/2) BUGGY */)
 {
 	int CopelandWinner;
 	int CopeScore[MaxNumCands]={0};
 	int i;
-	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	if(CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
 #if CWSPEEDUP
 	if(CondorcetWinner >= 0) {
 		CopelandWinner = CondorcetWinner;
@@ -2325,7 +2500,9 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */)
 { /* side effects: Eliminated[], IFav[], RdVoteCount[], FavListNext[], HeadFav[], LossCount[], SmithIRVwinner, IRVwinner  */
 	int Iround,i,RdLoser,NextI,j,t,x,minc,r,stillthere,winner;
 	assert(E->NumCands <= MaxNumCands);
-	if(SmithIRVwinner<0 && IRVTopLim==BIGINT && CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	if(SmithIRVwinner<0 && IRVTopLim==BIGINT && CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
 	RandomlyPermute( E->NumCands, RandCandPerm );
 	for(i=E->NumCands -1; i>=0; i--) {
 		Eliminated[i] = FALSE;
@@ -2400,7 +2577,9 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */)
 		} /*end for(i)*/
 	}  /* end of for(Iround) */
 	stillthere = 0;
-	if(IRVTopLim >= (int)E->NumCands) IRVwinner = -1;
+	if(IRVTopLim >= (int)E->NumCands) {
+		IRVwinner = -1;
+	}
 	winner = -1;
 	for(i=E->NumCands -1; i>=0; i--) { /* find non-eliminated candidate... */
 		if(!Eliminated[i]) {
@@ -2408,7 +2587,9 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */)
 			stillthere++;
 		}
 	}
-	if(IRVTopLim >= (int)E->NumCands) IRVwinner=winner;
+	if(IRVTopLim >= (int)E->NumCands) {
+		IRVwinner=winner;
+	}
 	assert(stillthere==1);
 	ensure((stillthere==1), 3);
 	return(winner);
@@ -2593,10 +2774,16 @@ EMETH Approval(const edata *E   /* canddt with most-approvals wins */
   return(ApprovalWinner);
 }
 
+/*	App2Runoff(E):	returns the index of the Winner from a run-off between the top 2
+ *			Candidates as determined by approval voting
+ *	E:	the election data used to determine the Winner
+ */
 EMETH App2Runoff(const edata *E    /*top-2-runoff, 1stRd=approval, 2nd round has fully-honest voting*/)
 { /* side effects: ASecond */
 	EMETH winner;
-	if(ApprovalWinner<0) Approval(E);
+	if(ApprovalWinner<0) {
+		Approval(E);
+	}
 	winner = runoffForApprovalVoting(E);
 	return winner;
 }
@@ -2678,7 +2865,9 @@ EMETH IRNR(const edata *E  /*Brian Olson's voting method described above*/)
 			for(j=E->NumCands -1; j>=0; j--) {
 				if(!Eliminated[j]) {
 					t = E->Score[x+j] - 0.5;
-					if(t < 0.0) t = -t;
+					if(t < 0.0) {
+						t = -t;
+					}
 					s += pow(t, IRNRPOWER);
 				}
 			}
@@ -2803,8 +2992,12 @@ EMETH IRNRm(const edata *E  /*Brian Olson's voting method but with 2-param renor
 			for(j=E->NumCands -1; j>=0; j--) {
 				if(!Eliminated[j]) {
 					t = E->Score[x+j];
-					if(t<mn) mn=t;
-					if(t>mx) mx=t;
+					if(t<mn) {
+						mn=t;
+					}
+					if(t>mx) {
+						mx=t;
+					}
 				}
 			}
 			s = mx-mn;
@@ -2888,7 +3081,9 @@ EMETH Benham2AppRunoff(const edata *E, bool alwaysRunoff)
 {
 	int i,j,y,r,maxc;
 	uint jct, awct, offset;
-	if(ApprovalWinner<0) Approval(E);
+	if(ApprovalWinner<0) {
+		Approval(E);
+	}
 	RandomlyPermute( E->NumCands, RandCandPerm );
 	maxc = -BIGINT;
 	j = -1;
@@ -2932,12 +3127,22 @@ EMETH Benham2AppRunoff(const edata *E, bool alwaysRunoff)
 	return(j);
 }
 
-EMETH CondorcetApproval(edata *E  /*Condorcet winner if exists, else use Approval*/
-){
-  if(ApprovalWinner<0) Approval(E);
-  if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
-  if(CondorcetWinner >= 0) return CondorcetWinner;
-  return ApprovalWinner;
+/*	CondorcetApproval(E):	returns the index of the Condorcet Winner, if any, and
+ *				the Approval Winner otherwise
+ *	E:	the election data used to determine the Winner
+ */
+EMETH CondorcetApproval(edata *E  /*Condorcet winner if exists, else use Approval*/)
+{
+	if(ApprovalWinner<0) {
+		Approval(E);
+	}
+	if(CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
+	if(CondorcetWinner >= 0) {
+		return CondorcetWinner;
+	}
+	return ApprovalWinner;
 }
 
 EMETH Range(const edata *E    /* canddt with highest average Score wins */)
@@ -2971,13 +3176,19 @@ EMETH RangeN(const edata *E /*highest average rounded Score [rded to integer in 
 	return(winner);
 }
 
+/*	Range2Runoff(E):	returns the index of the Winner from a run-off between
+ *				the top 2 Candidates as determined by range voting
+ *	E:	the election data used to determine the Winner
+ */
 EMETH Range2Runoff(const edata *E    /*top-2-runoff, 1stRd=range, 2nd round has fully-honest voting*/)
 {
 	int RSecond;
 	int i;
 	uint offset, pwct=0, wct=0;
 	RSecond = -1;
-	if(RangeWinner<0) Range(E);
+	if(RangeWinner<0) {
+		Range(E);
+	}
 	RandomlyPermute( E->NumCands, RandCandPerm );
 	RSecond = Arg2MaxRealArr( E->NumCands, RangeVoteCount, (int*)RandCandPerm, RangeWinner );
 	assert(RSecond>=0);
@@ -3099,7 +3310,9 @@ EMETH TidemanRankedPairs(const edata *E  /*lock in comparisons with largest marg
 				}
 			}
 		}
-		if(maxp == -BIGINT) break;
+		if(maxp == -BIGINT) {
+			break;
+		}
 		assert(j>=0);
 		/********* print the pair and its margin:
 			   printf("(%d %d) %d\n",i,j,maxp);
@@ -3122,7 +3335,9 @@ EMETH TidemanRankedPairs(const edata *E  /*lock in comparisons with largest marg
 	for(i=0; i < (int)E->NumCands; i++) {
 		r = RandCandPerm[i];
 		for(j=0; j < (int)E->NumCands; j++) {
-			if(Tpath[r*E->NumCands +j] != BIGINT) break;
+			if(Tpath[r*E->NumCands +j] != BIGINT) {
+				break;
+			}
 		}
 		if(j >= (int)E->NumCands) { winner=r; break; }
 	}
@@ -3206,7 +3421,9 @@ EMETH HeitzigRiver(const edata *E /*http://lists.electorama.com/pipermail/electi
 EMETH DMC(edata *E  /* eliminate least-approved candidate until unbeaten winner exists */)
 { /* side effects: LossCount[] */
 	int i,j,t;
-	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	if(CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
 #if CWSPEEDUP
 	if(CondorcetWinner>=0) return(CondorcetWinner);
 #endif
@@ -3278,8 +3495,12 @@ EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 	bool BSSmithMembs[MaxNumCands]={0};
 	int i,j,winner,ctm,CopeWinr,r;
 	uint t,maxt;
-	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
-	if(ApprovalWinner<0) Approval(E);
+	if(CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
+	if(ApprovalWinner<0) {
+		Approval(E);
+	}
 	ctm=0;
 	for(i=E->NumCands -1; i>=0; i--) {
 		if(2*ApprovalVoteCount[i] > E->NumVoters) {
@@ -3359,8 +3580,12 @@ EMETH MDDA(edata *E  /* approval-count winner among canddts not majority-defeate
 	bool MDdisquald[MaxNumCands]={0};
 	int i,j,r,dqct,thresh,maxc,winner;
 	/*if(CWSPEEDUP && CondorcetWinner >=0 ) return(CondorcetWinner); valid??*/
-	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
-	if(ApprovalWinner<0) Approval(E);
+	if(CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
+	if(ApprovalWinner<0) {
+		Approval(E);
+	}
 	dqct=0;
 	thresh = (E->NumVoters)/2;
 	for(i=E->NumCands -1; i>=0; i--) {
@@ -3410,12 +3635,20 @@ Even perfect info incentives for burial and betrayal are practically  nil.
    As near as I can tell, the only bad thing about the method is the
 "tyranny of the majority" problem shared by most, if not all, deterministic methods.
 *****/
+/*	UncAAO(E):	returns the index of the "uncovered, approval, approval
+ *			opposition" method Winner, described above
+ *	E:	the election data used to determine the Winner
+ */
 EMETH UncAAO(edata *E)
 {
 	int UncAAOF[MaxNumCands]={0};
 	int i,j,ff,AppOpp,MnAO,r,winner;
-	if(ApprovalWinner<0) Approval(E);
-	if(RandomUncoveredMemb<0) UncoveredSet(E);
+	if(ApprovalWinner<0) {
+		Approval(E);
+	}
+	if(RandomUncoveredMemb<0) {
+		UncoveredSet(E);
+	}
 	RandomlyPermute( E->NumCands, RandCandPerm );
 	for(i=(int)E->NumCands -1; i>=0; i--) {
 		if( UncoveredSt[i] ) {
@@ -4020,6 +4253,10 @@ int NumElectionsLoaded = 0;
 #define TOOMANYELVOTERS 7000
 #define VERBOSELOAD 0
 
+/*	LoadEldataFiles():	loads real-world election data from a set files; the
+ *				value returned is the number of elections loaded and
+ *				processed
+ */
 int LoadEldataFiles()
 {
 	static const char*const electionDEBnames[NumDebFiles] = {
@@ -4142,7 +4379,9 @@ int LoadEldataFiles()
 #if VERBOSELOAD
 				putchar(c);
 #endif
-				if(c!='-') ElData[itcount+j] = x-1;
+				if(c!='-') {
+					ElData[itcount+j] = x-1;
+				}
 				prefcount++;
 			}
 			itcount += ncands;
@@ -5957,11 +6196,17 @@ void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*fun
 			x = sqrt(x*x+w*w);
 		}
 		s += x;
-		if(mx<x) mx=x;
-		if(x<mn) mn=x;
+		if(mx<x) {
+			mx=x;
+		}
+		if(x<mn) {
+			mn=x;
+		}
 		v += x*x;
 		y = (int)(x*10);
-		if(x>=0 && y<10) ct[y]++;
+		if(x>=0 && y<10) {
+			ct[y]++;
+		}
 	}
 }
 
@@ -6078,8 +6323,16 @@ EMETH runoffForApprovalVoting(const edata *E)
 template< class T > bool SelectedRight( uint L, uint R, uint K, const T A[] )
 {
 	uint i;
-	for(i=L; i<K; i++) { if( A[i]>A[K] ) return FALSE; }
-	for(i=R; i>K; i--) { if( A[K]>A[i] ) return FALSE; }
+	for(i=L; i<K; i++) {
+		if( A[i]>A[K] ) {
+			return FALSE;
+		}
+	}
+	for(i=R; i>K; i--) {
+		if( A[K]>A[i] ) {
+			return FALSE;
+		}
+	}
 	return TRUE;
 }
 
@@ -6210,7 +6463,9 @@ template< class T1 >
 	if((N%2)==0) { /*N is even*/
 		T = A[N/2 - 1];
 		for(i=N/2 - 2; i>=0; i--) {
-			if(A[i] > T) T=A[i];
+			if(A[i] > T) {
+				T=A[i];
+			}
 		}
 	}else{ T=M; }
 	return T+M;
