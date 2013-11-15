@@ -1524,9 +1524,12 @@ EMETH Top2Runoff(const edata *E    /* Top2Runoff=top-2-runoff, 2nd round has ful
 	}else if(pwct == wct) {
 		if(RandBool()) {
 			return(PlurWinner);
+		} else {
+			return PSecond;
 		}
+	} else {
+		return(PSecond);
 	}
-	return(PSecond);
 }
 
 /*	VenzkeDisqPlur(E):	returns the Venzke disqualified plurality Winner; with
@@ -3122,9 +3125,12 @@ EMETH Benham2AppRunoff(const edata *E, bool alwaysRunoff)
 	} else if (awct == jct) {
 		if (RandBool()) {
 			return(ApprovalWinner);
+		} else {
+			return j;
 		}
+	} else {
+		return(j);
 	}
-	return(j);
 }
 
 /*	CondorcetApproval(E):	returns the index of the Condorcet Winner, if any, and
@@ -3205,9 +3211,12 @@ EMETH Range2Runoff(const edata *E    /*top-2-runoff, 1stRd=range, 2nd round has 
 	} else if (pwct == wct) {
 		if (RandBool()) {
 			return(RangeWinner);
+		} else {
+			return RSecond;
 		}
+	} else {
+		return(RSecond);
 	}
-	return(RSecond);
 }
 
 EMETH ContinCumul(const edata *E    /* Renormalize scores so sum(over canddts)=1; then canddt with highest average Score wins */)
@@ -6307,9 +6316,12 @@ EMETH runoffForApprovalVoting(const edata *E)
 	} else if (pwct == wct) {
 		if (RandBool()) {
 			return(ApprovalWinner);
+		} else {
+			return ASecond;
 		}
+	} else {
+		return(ASecond);
 	}
-	return(ASecond);
 }
 
 /*	SelectedRight(L, R, K, A[]):	verifies all entries in 'A[]' from index 'L'
