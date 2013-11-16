@@ -287,8 +287,8 @@ uint FindArtinPrime(uint x)
  */
 void PrintNSpaces(int N)
 {
-	int i;
-	for(i=0; i<N; i++) {
+	int printed;
+	for(printed=0; printed<N; printed++) {
 		putchar(' ');
 	}
 }
@@ -6148,15 +6148,15 @@ int main(int argc, const char *const *argv)
  */
 void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], const int &subsqsideX, const int &subsqsideY)
 {
-	int i;
-	int j;
+	int a;
+	int b;
 	bool advance;
-	for(i=0; i<numSites; (advance ? i++ : i)) {
-		xx[i] = (int)((100 - subsqsideX*0.5) + Rand01()*(subsqsideX-0.001));
-		yy[i] = (int)((100 - subsqsideY*0.5) + Rand01()*(subsqsideY-0.001));
+	for(a=0; a<numSites; (advance ? a++ : a)) {
+		xx[a] = (int)((100 - subsqsideX*0.5) + Rand01()*(subsqsideX-0.001));
+		yy[a] = (int)((100 - subsqsideY*0.5) + Rand01()*(subsqsideY-0.001));
 		advance = true;
-		for(j=0; j<i; j++) {
-			if( abs(xx[i]-xx[j]) + abs(yy[i]-yy[j]) <= (7*subsqsideX+7*subsqsideY)/400 ) {
+		for(b=0; b<a; b++) {
+			if( abs(xx[a]-xx[b]) + abs(yy[a]-yy[b]) <= (7*subsqsideX+7*subsqsideY)/400 ) {
 				/*too close to some previous point*/
 				advance = false;
 			}
@@ -6175,12 +6175,14 @@ template< class T >
 int ArgMaxArr(uint N, const T Arr[], int RandPerm[])
 {
 	T maxc;
-	int i, r, winner;
+	int a;
+	int r;
+	int winner;
 	winner = -1;
 	maxc = (typeid(T)==typeid(int)) ? (T)(-BIGINT) : (T)(-HUGE);
 	RandomlyPermute( N, (uint*)RandPerm );
-	for(i=0; i<(int)N; i++) {
-		r = RandPerm[i];
+	for(a=0; a<(int)N; a++) {
+		r = RandPerm[a];
 		if(Arr[r] > maxc) {
 			maxc=Arr[r];
 			winner=r;
@@ -6200,12 +6202,14 @@ template< class T >
 int ArgMinArr(uint N, const T Arr[], int RandPerm[])
 {
 	T minc;
-	int i,r,winner;
+	int a;
+	int r;
+	int winner;
 	winner = -1;
 	minc = (typeid(T)==typeid(int)) ? (T)BIGINT : (T)HUGE;
 	RandomlyPermute( N, (uint*)RandPerm );
-	for(i=0; i<(int)N; i++) {
-		r = RandPerm[i];
+	for(a=0; a<(int)N; a++) {
+		r = RandPerm[a];
 		if(Arr[r]<minc) {
 			minc=Arr[r];
 			winner=r;
@@ -6228,7 +6232,7 @@ int ArgMinArr(uint N, const T Arr[], int RandPerm[])
  */
 int calculateForRunoff(const edata *E, int first, int second)
 {
-	uint i;
+	uint a;
 	uint offset;
 	uint pwct=0;
 	uint wct=0;
@@ -6236,8 +6240,8 @@ int calculateForRunoff(const edata *E, int first, int second)
 	const uint64_t numberOfCandidates = E->NumCands;
 	real perceivedUtilityOfFirst;
 	real perceivedUtilityOfSecond;
-	for(i=0; i<numberOfVoters; i++) {
-		offset = i*numberOfCandidates;
+	for(a=0; a<numberOfVoters; a++) {
+		offset = a*numberOfCandidates;
 		perceivedUtilityOfFirst = E->PerceivedUtility[offset+first];
 		perceivedUtilityOfSecond = E->PerceivedUtility[offset+second];
 		if( perceivedUtilityOfFirst > perceivedUtilityOfSecond ) {
@@ -6437,13 +6441,16 @@ int flipACoin(int choice1, int choice2)
 template<class T>
 void PermShellSortDown(uint N, int Perm[], const T Key[])
 {
-	int h,i,j,k;
+	int a;
+	int b;
+	int c;
+	int d;
 	int x;
-	for(k=0; (h=ShellIncs[k])>0; k++) {
-		for(i=h; i<(int)N; i++) {
-			x=Perm[i];
-			for(j=i-h; j>=0 && Key[Perm[j]]<Key[x]; j -= h){ Perm[j+h]=Perm[j]; }
-			Perm[j+h]=x;
+	for(d=0; (a=ShellIncs[d])>0; d++) {
+		for(b=a; b<(int)N; b++) {
+			x=Perm[b];
+			for(c=b-a; c>=0 && Key[Perm[c]]<Key[x]; c -= a){ Perm[c+a]=Perm[c]; }
+			Perm[c+a]=x;
 		}
 	}
 	assert(SortedKey<T>(N,Perm,Key)<=0);
@@ -6479,12 +6486,12 @@ void printName(const char *name, bool padding, int spaces)
  */
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void))
 {
-	int i;
+	int a;
 	int y;
 	real w;
 	real x;
 
-	for(i=0; i<100000; i++){
+	for(a=0; a<100000; a++){
 		x = func1();
 		if( func2 != NullFunction ) {
 			w = func2();
@@ -6599,14 +6606,14 @@ EMETH runoffForApprovalVoting(const edata *E)
  */
 template< class T > bool SelectedRight( uint L, uint R, uint K, const T A[] )
 {
-	uint i;
-	for(i=L; i<K; i++) {
-		if( A[i]>A[K] ) {
+	uint a;
+	for(a=L; a<K; a++) {
+		if( A[a]>A[K] ) {
 			return FALSE;
 		}
 	}
-	for(i=R; i>K; i--) {
-		if( A[K]>A[i] ) {
+	for(a=R; a>K; a--) {
+		if( A[K]>A[a] ) {
 			return FALSE;
 		}
 	}
@@ -6666,14 +6673,14 @@ template<class T> int Sign(T x)
  */
 template<class T> int SortedKey(uint N, const int Arr[], const T Key[])
 {
-	int i;
+	int a;
 	int overallTrend;
 	T currentValue;
 	T nextValue;
 	overallTrend = Sign<T>( Key[Arr[N-1]]-Key[Arr[0]] );
-	for(i=1; i<(int)N; i++) {
-		currentValue = Key[Arr[i-1]];
-		nextValue = Key[Arr[i]];
+	for(a=1; a<(int)N; a++) {
+		currentValue = Key[Arr[a-1]];
+		nextValue = Key[Arr[a]];
 		switch( overallTrend ) {
 		case 1:
 			if( nextValue < currentValue ) {
@@ -6711,13 +6718,14 @@ template<class T> int SortedKey(uint N, const int Arr[], const T Key[])
  */
 void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str)
 {
-	int i, ct[10];
+	int a;
+	int ct[10];
 	real s,mx,mn,v;
 	s=0.0; v=0.0;
 	mn = HUGE;
 	mx = -HUGE;
-	for(i=0; i<10; i++) {
-		ct[i]=0;
+	for(a=0; a<10; a++) {
+		ct[a]=0;
 	}
 	printf("Performing 100000 randgen calls to test that %s behaving ok%s:\n", name, direction);
 	RandomTest(s, mn, mx, v, ct, func1, func2);
@@ -6733,15 +6741,15 @@ template< class T1 >
 		T1 TwiceMedian(uint N, T1 A[] )
 {
 	T1 M,T;
-	int i;
+	int b;
 	assert(N>0);
 	M = FloydRivestSelect<T1>( 0, N-1, N/2, A );
 	assert( SelectedRight<T1>( 0, N-1, N/2, A ) );
 	if((N%2)==0) { /*N is even*/
 		T = A[N/2 - 1];
-		for(i=N/2 - 2; i>=0; i--) {
-			if(A[i] > T) {
-				T=A[i];
+		for(b=N/2 - 2; b>=0; b--) {
+			if(A[b] > T) {
+				T=A[b];
 			}
 		}
 	}else{ T=M; }
