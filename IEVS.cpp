@@ -301,6 +301,11 @@ void PrintNSpaces(int N)
 uint32_t BLC32x[60];  /* 32*60=1920 bits of state. Must be nonzero mod P. */
 int BLC32NumLeft;
 
+#define lohalf(x) ((uint32_t)(x))
+#define A1 ((uint64_t)1284507170)
+#define A2 ((uint64_t)847441413)
+#define A3 ((uint64_t)650134147)
+#define AllF 0xffffffffU
 /********************************************************
 Warren D. Smith 2001
 **********************************************************
@@ -357,10 +362,6 @@ uint32_t BigLinCong32()
  *  A = 1284507170 * 2^(w*3) + 847441413 * 2^(w*44) + 650134147 * 2^(w*59)
  * is a "good" primitive root mod P, if w=32.
  *****************************************************************/
-#define lohalf(x) ((uint32_t)(x))
-#define A1 ((uint64_t)1284507170)
-#define A2 ((uint64_t)847441413)
-#define A3 ((uint64_t)650134147)
 		for(i=0; i<3; i++) {
 			y[i] = 0;
 		}
@@ -396,9 +397,6 @@ uint32_t BigLinCong32()
 		}
 		/*i=60+59=119*/
 		y[i] = lohalf(u);
-#undef A1
-#undef A2
-#undef A3
  /*************************************************************
  * If y[0..119] is the digits, LS..MS, of a number in base 2^w,
  * then the following code fragment replaces that number with
@@ -406,7 +404,6 @@ uint32_t BigLinCong32()
  * be >P, but this does not matter; it will never be >=2^(w*60)).
  **************************************************************/
 		u=1; /*borrow*/
-#define AllF 0xffffffffU
 		/* Step 1: y[0..72] = y[0..59] + y[60..119]shift12 - y[60..119]: */
 		for(i=0; i<12; i++) {
 			u += y[i];
@@ -493,8 +490,6 @@ uint32_t BigLinCong32()
 			assert(u>0);
 			y[i] = (uint32_t)(u-1); /*unborrow*/
 		}
-#undef AllF
-#undef lohalf
 
 		/* Copy y[0..59] into BLC32x[0..59]: */
 		for(i=0; i<60; i++) {
