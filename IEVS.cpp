@@ -1401,10 +1401,14 @@ EMETH SociallyWorst(const edata *E   /* least utility-sum winner */)
 
 EMETH RandomWinner(const edata *E){ return (int)RandInt( E->NumCands ); }
 
+/*	RandomBallot(E):	returns the honest top Candidate of a randomly selected
+ *				Voter; such a technique is considered 'strategy-proof'
+ *	E:	the election data used to determine thw Winner
+ */
 EMETH RandomBallot(const edata *E)
 { /*honest top choice of a random voter is elected. Strategyproof.*/
 	int winner;
-	winner = ArgMaxArr<real>(E->NumCands, E->PerceivedUtility + RandInt(E->NumVoters)*E->NumCands, (int*)RandCandPerm);
+	winner = ArgMaxArr<real>(E->NumCands, &(E->PerceivedUtility[RandInt(E->NumVoters)*E->NumCands]), (int*)RandCandPerm);
 	return winner;
 }
 
