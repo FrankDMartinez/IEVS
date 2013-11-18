@@ -272,7 +272,7 @@ uint FindArtinPrime(uint x)
 		p--;  /* make p be odd */
 	}
 	for(; p>2; p -= 2) {
-		for(j=4, k=3; j!=2; j=(j*2)%p, k++) {
+		for(j=4, k=3; j!=2; j=(j*2)%p, (k += 1)) {
 			if(k >= p) {
 				return(p);
 			}
@@ -5985,7 +5985,7 @@ int main(int argc, const char *const *argv)
 				printf("filename too long, moron\n");
 				fflush(stdout); exit(EXIT_FAILURE);
 			}
-			fname[i++] = '.'; fname[i++] = 'b'; fname[i++] = 'm'; fname[i++] = 'p'; fname[i++] = 0;
+			strcat(fname, ".bmp");
 			printf("how many point-sites do you want [1 to 16]?\n");
 			fflush(stdout);
 			scanf("%d", &NumSites);
@@ -6151,7 +6151,7 @@ void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], con
 	int a;
 	int b;
 	bool advance;
-	for(a=0; a<numSites; (advance ? a++ : a)) {
+	for(a=0; a<numSites; a += (advance ? 1 : 0)) {
 		xx[a] = (int)((100 - subsqsideX*0.5) + Rand01()*(subsqsideX-0.001));
 		yy[a] = (int)((100 - subsqsideY*0.5) + Rand01()*(subsqsideY-0.001));
 		advance = true;
