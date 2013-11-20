@@ -267,12 +267,14 @@ uint ARTINPRIME;
 uint FindArtinPrime(uint x)
 {
 	uint j,p,k;
+	int mod2;
 	p = x;
-	if(p%2==0) {
+	mod2 = p%2;
+	if(mod2==0) {
 		p--;  /* make p be odd */
 	}
 	for(; p>2; p -= 2) {
-		for(j=4, k=3; j!=2; j=(j*2)%p, (k += 1)) {
+		for((j=4), (k=3); j!=2; j=(j*2)%p, (k += 1)) {
 			if(k >= p) {
 				return(p);
 			}
@@ -551,45 +553,53 @@ real Rand01(){ /* returns random uniform in [0,1] */
   return ((BigLinCong32()+0.5)/(1.0 + MAXUINT) + BigLinCong32())/(1.0 + MAXUINT);
 }
 
-void InitRand(uint seed){ /* initializes the randgen */
-   int i;
-   int seed_sec=0, processId=0;
-   uint seed_usec=0;
+/*	InitRand(seed):	initializes the psuedo-random number generator
+ *	seed:	the seed value for the generator
+ */
+void InitRand(uint seed)
+{ /* initializes the randgen */
+	int i;
+	int seed_sec=0, processId=0;
+	uint seed_usec=0;
 #if     MSWINDOWS
-   tm* locTime;
-   _timeb currTime;
-   time_t now;
+	tm* locTime;
+	_timeb currTime;
+	time_t now;
 #else
-   struct timeval tv;
+	struct timeval tv;
 #endif
-   if(seed==0){
-     printf("using time of day and PID to generate seed");
+	if(seed==0) {
+		printf("using time of day and PID to generate seed");
 #if MSWINDOWS
-     now = time(NULL);
-     locTime = localtime(&now);
-     _ftime(&currTime);
-     seed_usec = currTime.millitm*1001;
-     seed_sec = locTime->tm_sec + 60*(locTime->tm_min + 60*locTime->tm_hour);
-     processId = _getpid();
+		now = time(NULL);
+		locTime = localtime(&now);
+		_ftime(&currTime);
+		seed_usec = currTime.millitm*1001;
+		seed_sec = locTime->tm_sec + 60*(locTime->tm_min + 60*locTime->tm_hour);
+		processId = _getpid();
 #else
-     gettimeofday(&tv,0);
-     seed_sec = tv.tv_sec;
-     seed_usec = tv.tv_usec;
-     processId = getpid();
+		gettimeofday(&tv,0);
+		seed_sec = tv.tv_sec;
+		seed_usec = tv.tv_usec;
+		processId = getpid();
 #endif
-     seed = 1000000*(uint)seed_sec + (uint)seed_usec +
-       (((uint)processId)<<20) + (((uint)processId)<<10);
-     printf("=%u\n", seed);
-   }
-   for(i=0; i<60; i++){ BLC32x[i]=0; }
-   BLC32x[0] = seed;
-   BLC32NumLeft = 0;
-   for(i=0; i<599; i++){ BigLinCong32(); }
-   printf("Random generator initialized with seed=%u:\n", seed);
-   for(i=0; i<7; i++){
-     printf("%.6f ", Rand01());
-   }
-   printf("\n");
+		seed = (1000000*(uint)seed_sec) + (uint)seed_usec +
+			(((uint)processId)<<20) + (((uint)processId)<<10);
+		printf("=%u\n", seed);
+	}
+	for(i=0; i<60; i++) {
+		BLC32x[i]=0;
+	}
+	BLC32x[0] = seed;
+	BLC32NumLeft = 0;
+	for(i=0; i<599; i++) {
+		BigLinCong32();
+	}
+	printf("Random generator initialized with seed=%u:\n", seed);
+	for(i=0; i<7; i++) {
+		printf("%.6f ", Rand01());
+	}
+	printf("\n");
 }
 
 /*	TestRand01():	performs 100000 calls to 'randgen()' to test if 'randgen[0,1]'
@@ -617,7 +627,7 @@ void TestRand01()
 		}
 		v += pow((x-0.5), 2);
 		y = (int)(x*10.0);
-		if(x>=0 && y<10) {
+		if((x>=0) && (y<10)) {
 			ct[y]++;
 		}
 	}
@@ -1531,7 +1541,7 @@ EMETH VenzkeDisqPlur(const edata *E   /* Plurality winner wins unless over 50% v
 	if(AntiPlurWinner<0) {
 		AntiPlurality(E);
 	}
-	if( 2*AntiPlurVoteCount[ PlurWinner ] > E->NumVoters ) {
+	if( (2*AntiPlurVoteCount[ PlurWinner ]) > E->NumVoters ) {
 		if(PSecond<0) {
 			Top2Runoff(E);
 		}
@@ -1635,7 +1645,7 @@ EMETH NansonBaldwin(edata *E  /* repeatedly eliminate Borda loser */)
 		minc = BIGINT;
 		for(i=E->NumCands -1; i>=0; i--) {
 			r = RandCandPerm[i];
-			if(!Eliminated[r] && NansonVoteCount[r]<minc) {
+			if(!Eliminated[r] && (NansonVoteCount[r]<minc)) {
 				minc=NansonVoteCount[r];
 				BordaLoser=r;
 			}
@@ -1708,7 +1718,7 @@ EMETH Rouse(edata *E  /*like Nanson-Baldwin but with an extra level of recursion
 	}
 	winner = -1;
 	for(k=0; k< (int)E->NumCands; k++) { if(rRmark[k]) { winner = k;  break; }}
-	assert(winner==0 || !rRmark[0]);
+	assert((winner==0) || !rRmark[0]);
 	/***???
 	if(winner != CondorcetWinner && CondorcetWinner>=0) { *???*
 		printf("Rouse aint Condorcet (RW=%d CW=%d):\n", winner, CondorcetWinner);
@@ -1749,7 +1759,7 @@ EMETH IterCopeland( const edata *E  /*iterate Copeland on tied-winner set from p
 			if(summ[r] >= mxs) {
 				x = r*E->NumCands;
 				for(j=E->NumCands -1; j>=0; j--) {
-					if(j!=r && summ[j]>=mxs) {
+					if((j!=r) && (summ[j]>=mxs)) {
 						summ[r] += 1 + Sign<int>(E->MarginsMatrix[x+j]);
 					}
 				}
@@ -1760,7 +1770,7 @@ EMETH IterCopeland( const edata *E  /*iterate Copeland on tied-winner set from p
 			}
 		}
 		assert(tiect>=1);
-		if(tiect<=1 || tiect==oldtiect) {
+		if((tiect<=1) || (tiect==oldtiect)) {
 			return(winner);
 		}
 		oldtiect = tiect;
@@ -1984,7 +1994,7 @@ EMETH RaynaudElim(edata *E  /* repeatedly eliminate canddt who suffered the wors
 		RandomlyPermute( E->NumCands, RandCandPerm );
 		for(i=E->NumCands -1; i>=0; i--) {
 			r = RandCandPerm[i];
-			if(!Eliminated[r] && RayDefeatMargin[r]>maxc) {
+			if(!Eliminated[r] && (RayDefeatMargin[r]>maxc)) {
 				maxc=RayDefeatMargin[r];
 				RayLoser=r;
 			}
@@ -1994,8 +2004,9 @@ EMETH RaynaudElim(edata *E  /* repeatedly eliminate canddt who suffered the wors
 		if( maxc <= 0 ) { return RayLoser; } /*"loser" is undefeated*/
 		Eliminated[RayLoser] = TRUE;
 		for(i=E->NumCands -1; i>=0; i--) {
-			if(!Eliminated[i] && RayBeater[i]==RayLoser) {
-				t = -BIGINT; beater = -1;
+			if(!Eliminated[i] && (RayBeater[i]==RayLoser)) {
+				t = -BIGINT;
+				beater = -1;
 				RandomlyPermute( E->NumCands, RandCandPerm );
 				for(j=E->NumCands -1; j>=0; j--) {
 					r = RandCandPerm[j];
@@ -2057,7 +2068,7 @@ EMETH ArrowRaynaud(edata *E  /* repeatedly eliminate canddt with smallest {large
 		RandomlyPermute( E->NumCands, RandCandPerm );
 		for(i=E->NumCands -1; i>=0; i--) {
 			r = RandCandPerm[i];
-			if(!Eliminated[r] && ARVictMargin[r]<minc) {
+			if(!Eliminated[r] && (ARVictMargin[r]<minc)) {
 				minc=ARVictMargin[r];
 				ARLoser=r;
 			}
@@ -2066,7 +2077,7 @@ EMETH ArrowRaynaud(edata *E  /* repeatedly eliminate canddt with smallest {large
 		ensure(ARLoser >= 0, 11);
 		Eliminated[ARLoser] = TRUE;
 		for(i=E->NumCands -1; i>=0; i--) {
-			if(!Eliminated[i] && ARchump[i]==ARLoser) {
+			if(!Eliminated[i] && (ARchump[i]==ARLoser)) {
 				t = -BIGINT;
 				chump = -1;
 				RandomlyPermute( E->NumCands, RandCandPerm );
@@ -2169,7 +2180,7 @@ EMETH SchulzeBeatpaths(edata *E  /* winner = X so BeatPathStrength over rivals Y
 		for(j=E->NumCands -1; j>=0; j--) {
 			if(i != j) {
 				for(k=0; k<(int)E->NumCands; k++) {
-					if(k != j && k != i) {
+					if((k != j) && (k != i)) {
 						minc = BeatPathStrength[j*E->NumCands+i];
 						if( BeatPathStrength[i*E->NumCands +k] < minc ) {
 							minc = BeatPathStrength[i*E->NumCands +k];
@@ -2353,7 +2364,7 @@ EMETH Bucklin(const edata *E   /* canddt with over half the voters ranking him i
 		}
 		winner = ArgMaxArr<int>(E->NumCands, RdVoteCount, (int*)RandCandPerm);
 		best = RdVoteCount[winner];
-		if(best*2 > (int)E->NumVoters) {
+		if((best*2) > (int)E->NumVoters) {
 			break;
 		}
 	}
@@ -2438,7 +2449,9 @@ EMETH Copeland(edata *E   /* canddt with largest number of pairwise-wins elected
 		return CopelandWinner;
 	}
 #endif
-	for(i=E->NumCands -1; i>=0; i--) { CopeScore[i] = 2*WinCount[i]+DrawCt[i]; }
+	for(i=E->NumCands -1; i>=0; i--) {
+		CopeScore[i] = (2*WinCount[i])+DrawCt[i];
+	}
 	CopelandWinner = ArgMaxArr<int>(E->NumCands, CopeScore, (int*)RandCandPerm);
 	/* Currently just break ties randomly, return random highest-scorer */
 	return CopelandWinner;
@@ -2483,14 +2496,14 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */)
 { /* side effects: Eliminated[], IFav[], RdVoteCount[], FavListNext[], HeadFav[], LossCount[], SmithIRVwinner, IRVwinner  */
 	int Iround,i,RdLoser,NextI,j,t,x,minc,r,stillthere,winner;
 	assert(E->NumCands <= MaxNumCands);
-	if(SmithIRVwinner<0 && IRVTopLim==BIGINT && CopeWinOnlyWinner<0) {
+	if((SmithIRVwinner<0) && (IRVTopLim==BIGINT) && (CopeWinOnlyWinner<0)) {
 		BuildDefeatsMatrix(E);
 	}
 	RandomlyPermute( E->NumCands, RandCandPerm );
 	for(i=E->NumCands -1; i>=0; i--) {
 		Eliminated[i] = FALSE;
 		HeadFav[i] = -1; /*HeadFav[i] will be the first voter whose current favorite is i*/
-		if(SmithIRVwinner<0 && IRVTopLim==BIGINT) {
+		if((SmithIRVwinner<0) && (IRVTopLim==BIGINT)) {
 			t=0;
 			for(j=E->NumCands -1; j>=0; j--) {
 				if(E->MarginsMatrix[j*E->NumCands + i] > 0) {
@@ -2505,7 +2518,9 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */)
 	/* IFav[i] is the rank of the 1st noneliminated canddt in voter i's topdownpref list (initially 0) */
 	FillIntArray(E->NumVoters, FavListNext, -1);
 	/* FavListNext is "next" indices in linked list of voters with common current favorite; -1 terminated. */
-	if(SmithIRVwinner<0 && IRVTopLim==BIGINT) { SmithIRVwinner = CondorcetWinner; }
+	if((SmithIRVwinner<0) && (IRVTopLim==BIGINT)) {
+		SmithIRVwinner = CondorcetWinner;
+	}
 	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
 	for(i=E->NumVoters -1; i>=0; i--) {
 		x = E->TopDownPrefs[i*E->NumCands+IFav[i]]; /* the initial favorite of voter i */
@@ -2521,7 +2536,7 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */)
 		minc = BIGINT;
 		for(i=E->NumCands -1; i>=0; i--) {
 			r = RandCandPerm[i];
-			if(!Eliminated[r] && RdVoteCount[r]<minc) {
+			if(!Eliminated[r] && (RdVoteCount[r]<minc)) {
 				minc=RdVoteCount[r];
 				RdLoser=r;
 			}
@@ -2530,7 +2545,7 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */)
 		assert(RdLoser < (int)E->NumCands);
 		ensure(RdLoser>=0, 12);
 		Eliminated[RdLoser] = TRUE; /* eliminate RdLoser */
-		if(IRVTopLim==BIGINT && SmithIRVwinner < 0) {
+		if((IRVTopLim==BIGINT) && (SmithIRVwinner < 0)) {
 			for(j=E->NumCands -1; j>=0; j--) {
 				if(!Eliminated[j]) { /* update LossCount[j] */
 					t = E->MarginsMatrix[RdLoser*E->NumCands + j];
@@ -3072,8 +3087,8 @@ EMETH Benham2AppRunoff(const edata *E, bool alwaysRunoff)
 	for(i=0; i<(int)E->NumCands; i++) {
 		r = RandCandPerm[i];
 		y = PairApproval[ApprovalWinner*E->NumCands +r];
-		if( ApprovalVoteCount[r] + y > ApprovalVoteCount[ApprovalWinner] ) {
-			if( (int)ApprovalVoteCount[r] - y > maxc ) {
+		if( (ApprovalVoteCount[r] + y) > ApprovalVoteCount[ApprovalWinner] ) {
+			if( ((int)ApprovalVoteCount[r] - y) > maxc ) {
 				maxc = ApprovalVoteCount[r] - y;
 				j = r;
 			}
@@ -3251,8 +3266,8 @@ EMETH TidemanRankedPairs(const edata *E  /*lock in comparisons with largest marg
 			oi=RandCandPerm[pi];
 			for(pj=pi+1; pj < (int)E->NumCands; pj++) {
 				oj=RandCandPerm[pj];
-				if(Tpath[oi*E->NumCands +oj]!=BIGINT
-					&& Tpath[oj*E->NumCands +oi]!=BIGINT) {/*not locked-out*/
+				if((Tpath[oi*E->NumCands +oj]!=BIGINT)
+					&& (Tpath[oj*E->NumCands +oi]!=BIGINT)) {/*not locked-out*/
 						if(Tpath[oi*E->NumCands +oj]>maxp) { maxp=Tpath[oi*E->NumCands +oj]; i=oi; j=oj; }
 						if(Tpath[oj*E->NumCands +oi]>maxp) { maxp=Tpath[oj*E->NumCands +oi]; i=oj; j=oi; }
 				}
@@ -3268,7 +3283,7 @@ EMETH TidemanRankedPairs(const edata *E  /*lock in comparisons with largest marg
 		/*lock in the pair and clobber future no-good pairs:*/
 		for(oi=0; oi < (int)E->NumCands; oi++) {
 			for(oj=0; oj < (int)E->NumCands; oj++) {
-				if(Tpath[oi*E->NumCands +i]==BIGINT && Tpath[j*E->NumCands +oj]==BIGINT) {
+				if((Tpath[oi*E->NumCands +i]==BIGINT) && (Tpath[j*E->NumCands +oj]==BIGINT)) {
 					Tpath[oi*E->NumCands +oj]=BIGINT;
 				}
 			}
@@ -3451,7 +3466,7 @@ EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 	}
 	ctm=0;
 	for(i=E->NumCands -1; i>=0; i--) {
-		if(2*ApprovalVoteCount[i] > E->NumVoters) {
+		if((2*ApprovalVoteCount[i]) > E->NumVoters) {
 			MajApproved[i] = TRUE; ctm++;
 		}else{  MajApproved[i] = FALSE;  }
 	}
@@ -3463,7 +3478,7 @@ EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 		if(MajApproved[i]) {
 			bool haveAWinner = true;
 			for(j=E->NumCands -1; j>=0; j--) {
-				if(j!=i && MajApproved[j]) {
+				if((j!=i) && MajApproved[j]) {
 					if( E->MarginsMatrix[i*E->NumCands + j] <= 0 ) {
 						haveAWinner = false;
 						break;
@@ -3484,7 +3499,7 @@ EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 		if(MajApproved[i]) {
 			t = 0;
 			for(j=E->NumCands -1; j>=0; j--) {
-				if(j!=i && MajApproved[j]) {
+				if((j!=i) && MajApproved[j]) {
 					if( E->MarginsMatrix[i*E->NumCands + j] > 0 ) { t++; }
 				}
 			}
@@ -3503,7 +3518,7 @@ EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 	maxt = 0;
 	for(i=E->NumCands -1; i>=0; i--) {
 		r = RandCandPerm[i];
-		if(BSSmithMembs[r] && ApprovalVoteCount[r]>maxt) { maxt=ApprovalVoteCount[r]; winner=r; }
+		if(BSSmithMembs[r] && (ApprovalVoteCount[r]>maxt)) { maxt=ApprovalVoteCount[r]; winner=r; }
 	}
 	return winner;
 }
@@ -3554,7 +3569,7 @@ EMETH MDDA(edata *E  /* approval-count winner among canddts not majority-defeate
 	RandomlyPermute( E->NumCands, RandCandPerm );
 	for(i=E->NumCands -1; i>=0; i--) {
 		r = RandCandPerm[i];
-		if(!MDdisquald[r] && (int)ApprovalVoteCount[r] >= maxc) {
+		if(!MDdisquald[r] && ((int)ApprovalVoteCount[r] >= maxc)) {
 			maxc=ApprovalVoteCount[r];
 			winner=r;
 		}
@@ -4003,6 +4018,11 @@ void PrintAvailableVMethods(){
   fflush(stdout);
 }
 
+/*	GimmeWinner(E, WhichMeth):	returns the Winner of the election as determined
+ *					by a specific method
+ *	E:		the election data used to determine the Winner
+ *	WhichMeth:	the method to use to determine the Winner
+ */
 int GimmeWinner( edata *E, int WhichMeth )
 {
 	int w;
@@ -4081,7 +4101,7 @@ int GimmeWinner( edata *E, int WhichMeth )
 		printf("Unsupported voting method %d\n", WhichMeth);
 		fflush(stdout); exit(EXIT_FAILURE);
 	} /*end switch*/
-	if(w<0 || w>=(int)E->NumCands) {
+	if((w<0) || (w>=(int)E->NumCands)) {
 		printf("Voting method %d=", WhichMeth); PrintMethName(WhichMeth,FALSE);
 		printf(" returned erroneous winner %d\n", w);
 		fflush(stdout);
@@ -4317,21 +4337,33 @@ Same thing but adjusted by adding voter ignorance
 (everything is embraced inside the edata structure)
 ***************************/
 
-void AddIgnorance( edata *E, real IgnoranceAmplitude ){
-  int i;
-  if(IgnoranceAmplitude < 0.0){
-    /* negative is flag to cause VARIABLE levels of ignorance depending on voter (stratified) */
-    for(i=E->NumVoters*E->NumCands-1; i>=0; i--){
-      E->PerceivedUtility[i] = ((IgnoranceAmplitude * (2*i+1)) / E->NumCands) * RandNormal()
-	+ E->Utility[i];
-    }
-  }else{
-    /* positive is flag to cause CONSTANT level of ignorance across all voters */
-    for(i=E->NumVoters*E->NumCands-1; i>=0; i--){
-      E->PerceivedUtility[i] = IgnoranceAmplitude * RandNormal() + E->Utility[i];
-    }
-  }
-  /* Both positive & negative modes have the same mean ignorance amplitude */
+/*	AddIgnorance(E, IgnoranceAmplitude):	adds a certain degree of ignorance to
+ *						Voters
+ *	E:			the election data to which ignorance is to be added
+ *	IgnoranceAmplitude:	a scaling factor for the degree of ignorance added to
+ *				the Voters; a negative value indicates a variable level
+ *				of ignorance is to be added depending on the Voter
+ *				(stratified); a positive value indicates a constant
+ *				level of ignorance across all Voters
+ */
+void AddIgnorance( edata *E, real IgnoranceAmplitude )
+{
+	int i;
+	real ignorance;
+	if(IgnoranceAmplitude < 0.0) {
+		/* negative is flag to cause VARIABLE levels of ignorance depending on voter (stratified) */
+		for(i=E->NumVoters*E->NumCands-1; i>=0; i--) {
+			ignorance = ((IgnoranceAmplitude * ((2*i)+1)) / E->NumCands) * RandNormal();
+			E->PerceivedUtility[i] = ignorance + E->Utility[i];
+		}
+	} else {
+		/* positive is flag to cause CONSTANT level of ignorance across all voters */
+		for(i=E->NumVoters*E->NumCands-1; i>=0; i--) {
+			ignorance = IgnoranceAmplitude * RandNormal();
+			E->PerceivedUtility[i] = ignorance + E->Utility[i];
+		}
+	}
+	/* Both positive & negative modes have the same mean ignorance amplitude */
 }
 
 /*************************** UTILITY GENERATORS: ***********
@@ -4458,13 +4490,15 @@ int LoadEldataFiles()
 			exit(EXIT_FAILURE);
 		}
 		fscanf(fp, "%d %d", &ncands, &nwinners);
-		if(ncands<3 || ncands>MaxNumCands) {
+		if((ncands<3) || (ncands>MaxNumCands)) {
 			printf("bad #candidates %d in %s - terminating\n", ncands, electionHILnames[i]);
-			fflush(stdout);      exit(EXIT_FAILURE);
+			fflush(stdout);
+			exit(EXIT_FAILURE);
 		}
-		if(nwinners<1 || nwinners>=ncands) {
+		if((nwinners<1) || (nwinners>=ncands)) {
 			printf("bad #winners %d in %s - terminating\n", nwinners, electionHILnames[i]);
-			fflush(stdout);      exit(EXIT_FAILURE);
+			fflush(stdout);
+			exit(EXIT_FAILURE);
 		}
 		v = 0;
 		do{
@@ -4473,7 +4507,7 @@ int LoadEldataFiles()
 				x = 0;
 				do{ c = (char)getc(fp); }until(isdigit(c));
 				do {
-					x = x*10 + (int)(c-'0');
+					x = (x*10) + (int)(c-'0');
 					c = (char)getc(fp);
 				} while( isdigit(c) );
 #if VERBOSELOAD
@@ -4488,12 +4522,12 @@ int LoadEldataFiles()
 					exit(EXIT_FAILURE);
 				}
 				assert(x>0);
-				ElData[itcount+x-1] = y;
+				ElData[(itcount+x)-1] = y;
 				prefcount++;
 				y++;
 			}
 			itcount += ncands;
-			if(itcount+ncands >= MaxNumRanks) {
+			if((itcount+ncands) >= MaxNumRanks) {
 				printf("ran out of space (MaxNumRanks) for rank %d - terminating\n", itcount);
 				exit(EXIT_FAILURE);
 			}
@@ -4506,7 +4540,8 @@ int LoadEldataFiles()
 		/*Now do something re the election that just ended with v votes*/
 		if(v<3) {
 			printf("bad #voters %d in %s - terminating\n", v, electionHILnames[i]);
-			fflush(stdout);      exit(EXIT_FAILURE);
+			fflush(stdout);
+			exit(EXIT_FAILURE);
 		}
 		NVotersData[elcount] = v;
 		NCandsData[elcount] = ncands;
@@ -4521,21 +4556,24 @@ int LoadEldataFiles()
 			printf("failure to open file %s for read - terminating\n", electionDEBnames[i]);
 			printf("Tideman election data files can be got from\n");
 			printf("  http://rangevoting.org/TidemanData.html\n");
-			fflush(stdout);      exit(EXIT_FAILURE);
+			fflush(stdout);
+			exit(EXIT_FAILURE);
 		}
 		fscanf(fp, "%d %d", &nvoters, &ncands);
-		if(nvoters<4 || nvoters>TOOMANYELVOTERS) {
+		if((nvoters<4) || (nvoters>TOOMANYELVOTERS)) {
 			printf("bad #voters %d in %s - terminating\n", nvoters, electionDEBnames[i]);
-			fflush(stdout);      exit(EXIT_FAILURE);
+			fflush(stdout);
+			exit(EXIT_FAILURE);
 		}
-		if(ncands<3 || ncands>MaxNumCands || ncands>9) {
+		if((ncands<3) || (ncands>MaxNumCands) || (ncands>9)) {
 			printf("bad #candidates %d in %s - terminating\n", ncands, electionDEBnames[i]);
-			fflush(stdout);      exit(EXIT_FAILURE);
+			fflush(stdout);
+			exit(EXIT_FAILURE);
 		}
 		for(v=0; v<nvoters; v++) {
 			for(j=0; j<ncands; j++) { ElData[itcount+j] = ncands-1; }
 			for(j=0; j<ncands; j++) {
-				do{ c = (char)getc(fp); }while(c=='\n' || c==' ');
+				do{ c = (char)getc(fp); }while((c=='\n') || (c==' '));
 				x = c-'0';  /* watch out for c=='-' */
 				/*Now do something with j>=0 which is preference x>0 for voter v>=0*/
 #if VERBOSELOAD
@@ -4547,9 +4585,10 @@ int LoadEldataFiles()
 				prefcount++;
 			}
 			itcount += ncands;
-			if(itcount+ncands >= MaxNumRanks) {
+			if((itcount+ncands) >= MaxNumRanks) {
 				printf("ran out of space (MaxNumRanks) for rank %d - terminating\n", itcount);
-				fflush(stdout);	  exit(EXIT_FAILURE);
+				fflush(stdout);
+				exit(EXIT_FAILURE);
 			}
 #if VERBOSELOAD
 			printf("[%d]\n", v);
@@ -5989,7 +6028,7 @@ int main(int argc, const char *const *argv)
 			printf("how many point-sites do you want [1 to 16]?\n");
 			fflush(stdout);
 			scanf("%d", &NumSites);
-			if(NumSites<1 || NumSites>16) {
+			if((NumSites<1) || (NumSites>16)) {
 				printf("out of bounds value %d moron, using 16 instead\n",NumSites);
 				NumSites=16;
 			}
@@ -6015,8 +6054,8 @@ int main(int argc, const char *const *argv)
 				printf("X Y sidelengths of subsquare in which you want the random points (200 for full square):\n");
 				fflush(stdout);
 				scanf("%d %d", &subsqsideX,  &subsqsideY);
-				if(subsqsideX <=0 || subsqsideX>=200) {  subsqsideX = 200;  }
-				if(subsqsideY <=0 || subsqsideY>=200) {  subsqsideY = 200;  }
+				if((subsqsideX <=0) || (subsqsideX>=200)) {  subsqsideX = 200;  }
+				if((subsqsideY <=0) || (subsqsideY>=200)) {  subsqsideY = 200;  }
 				printf("using %dx%d centered subrectangle\n", subsqsideX, subsqsideY);
 				adjustYeeCoordinates(NumSites, xx, yy, subsqsideX, subsqsideY);
 				cscore = ReorderForColorContrast(  NumSites, xx, yy );
@@ -6054,14 +6093,14 @@ int main(int argc, const char *const *argv)
 			printf("either confident know the winner, or reach this voter# bound.\n");
 			fflush(stdout);
 			scanf("%d", &TopYeeVoters);
-			if(TopYeeVoters<=0 || TopYeeVoters>MaxNumVoters) {
+			if((TopYeeVoters<=0) || (TopYeeVoters>MaxNumVoters)) {
 				printf("%d out of range, moron - try again\n", TopYeeVoters); continue;
 			}
 			printf("Using TopYeeVoters=%d.\n", TopYeeVoters);
 			printf("What standard deviation on the 1D gaussian do you want? (Whole picture width is 200.)\n");
 			fflush(stdout);
 			scanf("%d", &GaussStdDev);
-			if(GaussStdDev<=0 || GaussStdDev>999) {
+			if((GaussStdDev<=0) || (GaussStdDev>999)) {
 				printf("%d out of range, moron - try again\n", GaussStdDev);
 				continue;
 			}
@@ -6069,7 +6108,7 @@ int main(int argc, const char *const *argv)
 			printf("What honesty-percentage do you want? (0 to 100.)\n");
 			fflush(stdout);
 			scanf("%d", &ihonfrac);
-			if(ihonfrac<=0 || ihonfrac>100) {
+			if((ihonfrac<=0) || (ihonfrac>100)) {
 				printf("%d out of range, moron - try again\n", ihonfrac);
 				continue;
 			}
@@ -6077,7 +6116,7 @@ int main(int argc, const char *const *argv)
 			printf("Utilities based on (1) L1 or (2) L2 distance?\n");
 			fflush(stdout);
 			scanf("%d", &LpPow);
-			if(LpPow<=0 || LpPow>2) {
+			if((LpPow<=0) || (LpPow>2)) {
 				printf("%d out of range, moron - try again\n", LpPow);
 				continue;
 			}
@@ -6152,11 +6191,11 @@ void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], con
 	int b;
 	bool advance;
 	for(a=0; a<numSites; a += (advance ? 1 : 0)) {
-		xx[a] = (int)((100 - subsqsideX*0.5) + Rand01()*(subsqsideX-0.001));
-		yy[a] = (int)((100 - subsqsideY*0.5) + Rand01()*(subsqsideY-0.001));
+		xx[a] = (int)((100 - (subsqsideX*0.5)) + (Rand01()*(subsqsideX-0.001)));
+		yy[a] = (int)((100 - (subsqsideY*0.5)) + (Rand01()*(subsqsideY-0.001)));
 		advance = true;
 		for(b=0; b<a; b++) {
-			if( abs(xx[a]-xx[b]) + abs(yy[a]-yy[b]) <= (7*subsqsideX+7*subsqsideY)/400 ) {
+			if( (abs(xx[a]-xx[b]) + abs(yy[a]-yy[b])) <= (((7*subsqsideX)+(7*subsqsideY))/400) ) {
 				/*too close to some previous point*/
 				advance = false;
 			}
@@ -6298,14 +6337,14 @@ template< class T1 > T1 FloydRivestSelect(uint L, uint R, uint K, T1 A[])
 		if( N > 601 ) { /* big enough so worth doing FR-type subsampling to find strong splitter */
 			I = (K - L) + 1;
 			Z = log((real)(N));
-			S = (int)(0.5 * exp(Z * 2.0/3));
-			SD = (int)(0.5 * sqrt(Z * S * (N - S)/N) * Sign<int>(2*I - N));
+			S = (int)(0.5 * exp((Z * 2.0)/3));
+			SD = (int)(0.5 * sqrt((Z * S * (N - S))/N) * Sign<int>((2*I) - N));
 			LL = MaxInt(L, (K - ((I * S) / N)) + SD);
 			RR = MinInt(R, K + (((N - I) * S) / N) + SD);
 			/* Recursively select inside small subsample to find an element A[K] usually very
 			 * near the desired one: */
 			FloydRivestSelect<T1>( LL, RR, K, A );
-		}else if( N > 20 && (int)(5*(K-L)) > N && (int)(5*(R-K)) > N) {
+		}else if( (N > 20) && ((int)(5*(K-L)) > N) && ((int)(5*(R-K)) > N)) {
 				/* not big enough to be worth evaluating those expensive logs etc;
 				 * but big enough so random splitter is poor; so use median-of-3 */
 			I = K-1; if(A[K] < A[I]) { W = A[I]; A[I] = A[K]; A[K] = W; }
@@ -6449,7 +6488,9 @@ void PermShellSortDown(uint N, int Perm[], const T Key[])
 	for(d=0; (a=ShellIncs[d])>0; d++) {
 		for(b=a; b<(int)N; b++) {
 			x=Perm[b];
-			for(c=b-a; c>=0 && Key[Perm[c]]<Key[x]; c -= a){ Perm[c+a]=Perm[c]; }
+			for(c=b-a; (c>=0) && (Key[Perm[c]]<Key[x]); c -= a) {
+				Perm[c+a]=Perm[c];
+			}
 			Perm[c+a]=x;
 		}
 	}
@@ -6495,7 +6536,7 @@ void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*fun
 		x = func1();
 		if( func2 != NullFunction ) {
 			w = func2();
-			x = sqrt(x*x+w*w);
+			x = sqrt((x*x)+(w*w));
 		}
 		s += x;
 		if(mx<x) {
@@ -6506,7 +6547,7 @@ void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*fun
 		}
 		v += x*x;
 		y = (int)(x*10);
-		if(x>=0 && y<10) {
+		if((x>=0) && (y<10)) {
 			ct[y]++;
 		}
 	}
@@ -6631,7 +6672,7 @@ template< class T > bool SelectedRight( uint L, uint R, uint K, const T A[] )
  */
 uint shiftForCompressedBMP(const uint8_t array[], const int &j)
 {
-	const int shift = (4*(1-j%2));
+	const int shift = (4*(1-(j%2)));
 	const int psuedoIndex = j/2;
 	const uint8_t rawValue = array[psuedoIndex];
 	const uint8_t shiftedValue = rawValue >> shift;
@@ -6746,8 +6787,8 @@ template< class T1 >
 	M = FloydRivestSelect<T1>( 0, N-1, N/2, A );
 	assert( SelectedRight<T1>( 0, N-1, N/2, A ) );
 	if((N%2)==0) { /*N is even*/
-		T = A[N/2 - 1];
-		for(b=N/2 - 2; b>=0; b--) {
+		T = A[(N/2) - 1];
+		for(b=(N/2) - 2; b>=0; b--) {
 			if(A[b] > T) {
 				T=A[b];
 			}
