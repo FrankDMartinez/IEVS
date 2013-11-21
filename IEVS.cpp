@@ -3648,6 +3648,123 @@ would disqualify all remaining candidates (i.e. would result in the empty set).
 Continue until only one candidate
 is not disqualified; he is the winner.
 *****************************************/
+/*	WoodallDAC(E):	returns an index corresponding to the Winner according to
+ *			Woodall's "descending acquiescing coalitions" method or -1 if an
+ *			error occurs
+ *	E:	the election data used to determin the Winner
+ *
+ *	According to "Monotonicity and Single-Seat Election Rules" by Douglas R. Woodall, the
+ *	Descending Acquiescing Coalitions (DAC) approach works like so:
+ *		1. Voters rank each Candidate in decreasing order of preference.
+ *		2. The number of times each possible combination of rank appears amongst all
+ *		   votes is counted.
+ *		3. Define the "set of eligible Candidates" to be all Candidates.
+ *		4. Determine all possible subsets of Candidates without regards to ordering.
+ *		5. Define an "acquiescing coalition" of any subset of Candidates as "all Votes
+ *		   which do not indicated a preference for any candidate not in that set to any
+ *		   candidate in that set"; by definition, all Votes are within the acquiescing
+ *		   coalition with respect to all Candidates.
+ *		6. The number of occurences of each possible acquiescing coalition is
+ *		   determined.
+ *		7. The acquiescing coalitions are ordered by decreasing coalition size; by
+ *		   definition, the coalition acquiescing to all Candidates is the largest.
+ *		8. Begining with the largest coalition, each next largest coalition is used to
+ *		   eliminated Candidates from the set of eligible Candidates until only 1
+ *		   Candidate remains in the set; if the subset of Candidates associated with a
+ *		   given coalition contains no Candidates in the set of eligible Candidates,
+ *		   that coalition is ignored; otherwise, all Candidates not in both the set of
+ *		   eligible Candidates and the given subset are removed from the set of eligible
+ *		   Candidates.
+ *
+ *	For illustration purposes, consider the following election involing 4 Candidates and 30
+ *	Voters, casting the following rankings:
+ *
+ *			Rankings	Votes
+ *			--------	-----
+ *			  adcb		  5
+ *			  bcad		  5
+ *			  cabd		  8
+ *			  dabc		  4
+ *			  dbca		  8
+ *
+ *	The set of eligible Candidates are {a, b, c, d}.
+ *	The possible subsets are:
+ *
+ *		{a}
+ *		{b}
+ *		{c}
+ *		{d}
+ *		{a, b}
+ *		{a, c}
+ *		{a, d}
+ *		{b, c}
+ *		{b, d}
+ *		{c, d}
+ *		{a, b, c}
+ *		{a, b, d}
+ *		{a, c, d}
+ *		{b, c, d}
+ *		{a, b, c, d}
+ *
+ *	The acquiescing coalition for each subset is:
+ *
+ *		   Subset	Coalition
+ *		------------	---------
+ *		{a}		5
+ *		{b}		5
+ *		{c}		8
+ *		{d}		12
+ *		{a, b}		0
+ *		{a, c}		8
+ *		{a, d}		9
+ *		{b, c}		5
+ *		{b, d}		8
+ *		{c, d}		0
+ *		{a, b, c}	13
+ *		{a, b, d}	4
+ *		{a, c, d}	5
+ *		{b, c, d}	8
+ *		{a, b, c, d}	30
+ *
+ *	Ordering the acquiescing coalitions by descending size gives:
+ *
+ *		   Subset	Coalition
+ *		------------	---------
+ *		{a, b, c, d}	30
+ *		{a, b, c}	13
+ *		{d}		12
+ *		{a, d}		9
+ *		{c}		8
+ *		{a, c}		8
+ *		{b, d}		8
+ *		{b, c, d}	8
+ *		{a}		5
+ *		{b}		5
+ *		{b, c}		5
+ *		{a, c, d}	5
+ *		{a, b, d}	4
+ *		{a, b}		0
+ *		{c, d}		0
+ *
+ *	(Woodall's paper does not specify what to do in the event coalitions are the same size.
+ *	This may or may not be an issue.)
+ *
+ *	Beginning with the set of eligible Candidates, {a, b, c, d}, and the largest acquiescing
+ *	coalitions, We compare for Candidates to eliminated. The subset of Candidates
+ *	corresponding to the first coalition consists of all Candidates, leaving the set of
+ *	eligible Candidates unchanged.
+ *
+ *	The next largest coalition corresponds to subset {a, b, c}. Since Candidate 'd' is not
+ *	part of this subset, that Candidate is eliminated from the set of eligible Candidates,
+ *	leaving {a, b, c}.
+ *
+ *	The next largest coalition corresponds to subset {d}. Since no eligible Candidates are
+ *	in this subset, it is ignored.
+ *
+ *	The next largest coalition corresponds to subset {a, d}. Of the 3 remaining eligible
+ *	Candidates, 'a', 'b', and 'c', only 'a' appears in the subset, resulting in the
+ *	elimination of 'b' and 'c' and electing 'a'.
+ */
 EMETH WoodallDAC(const edata *E  /*Woodall: Monotonocity of single-seat preferential election rules, Discrete Applied Maths 77 (1997) 81-98.*/)
 {
 	uint WoodHashCount[3*MaxNumCands*MaxNumVoters]={0};
@@ -3656,7 +3773,7 @@ EMETH WoodallDAC(const edata *E  /*Woodall: Monotonocity of single-seat preferen
 	/* Hash Tab entries contain counter and set-code which is a single machine word. */
 	int v,c,k,r;
 	uint offset, s, x, h, numsets;
-	if( E->NumCands > 4*sizeof(E->NumCands) ) {
+	if( (E->NumCands) > (4*sizeof(E->NumCands)) ) {
 		printf("WoodallDAC: too many candidates %lld to use machine words(%d) to represent sets\n",
 			E->NumCands,
 			(int)(4*sizeof(E->NumCands)) );
@@ -3689,7 +3806,7 @@ EMETH WoodallDAC(const edata *E  /*Woodall: Monotonocity of single-seat preferen
 			numsets++;
 		}
 	}
-	assert(numsets <= E->NumCands * E->NumVoters);
+	assert(numsets <= (E->NumCands * E->NumVoters));
 	PermShellSortDown<int>(numsets, (int*)WoodSetPerm, (int*)WoodHashCount);
 	s = WoodHashSet[WoodSetPerm[0]];
 	assert( !EmptySet(s) );
