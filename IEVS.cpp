@@ -1225,12 +1225,28 @@ void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have be
   IRVTopLim = BIGINT;
 }
 
+struct oneCandidate
+{
+	real actualUtility;
+	bool approve;
+	bool approve2;
+	real perceivedUtility;
+	uint ranking;
+	real score;
+};
+
+struct oneVoter
+{
+	uint topDownPrefs[MaxNumCands];
+	oneCandidate Candidates[MaxNumCands];
+};
+
 typedef struct dum1 {
   uint NumVoters;
   uint64_t NumCands;
+	oneVoter Voters[MaxNumVoters];
   uint TopDownPrefs[MaxNumCands*MaxNumVoters];
   uint CandRankings[MaxNumCands*MaxNumVoters];
-  real Score[MaxNumCands*MaxNumVoters];
   bool Approve[MaxNumCands*MaxNumVoters];
   bool Approve2[MaxNumCands*MaxNumVoters];
   real PerceivedUtility[MaxNumCands*MaxNumVoters];
@@ -1245,12 +1261,19 @@ typedef struct dum1 {
 
 int calculateForRunoff(const edata *E, int first, int second);
 
+/*	PrintEdata(F, E):	prints election data to a file
+ *	F:	a pointer to a FILE structure representing the file to which the data is
+ *		to be written
+ *	E:	the election data to write
+ */
 void PrintEdata(FILE *F, const edata *E)
 { /* prints out the edata */
 	int v;
 	uint j;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	fprintf(F, "NumVoters=%d  NumCands=%lld\n", E->NumVoters, E->NumCands);
 	for(v=0; v<(int)E->NumVoters; v++){
+		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[v].Candidates;
 		fprintf(F, "Voter %2d:\n",v);
 		fprintf(F, "Utility: ");
 		for(j=0; j < E->NumCands; j++){  fprintf(F, "%6.3f", E->Utility[v*E->NumCands + j]);  }
@@ -1259,7 +1282,9 @@ void PrintEdata(FILE *F, const edata *E)
 		for(j=0; j < E->NumCands; j++){  fprintf(F, "%6.3f", E->PerceivedUtility[v*E->NumCands + j]);  }
 		fprintf(F, "\n");
 		fprintf(F, "RangeScore: ");
-		for(j=0; j < E->NumCands; j++){  fprintf(F, "%6.3f", E->Score[v*E->NumCands + j]);  }
+		for(j=0; j < E->NumCands; j++) {
+			fprintf(F, "%6.3f", allCandidates[j].score);
+		}
 		fprintf(F, "\n");
 		fprintf(F, "CandRank: ");
 		for(j=0; j < E->NumCands; j++){  fprintf(F, "%2d", E->CandRankings[v*E->NumCands + j]);  }
@@ -1288,6 +1313,7 @@ void BuildDefeatsMatrix(edata *E)
 	uint x;
 	real t;
 	bool CondWin, TrueCondWin;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	MakeIdentityPerm( E->NumCands, RandCandPerm );
 	RandomlyPermute( E->NumCands, RandCandPerm );
 
@@ -1301,16 +1327,19 @@ void BuildDefeatsMatrix(edata *E)
 	ZeroIntArray(  SquareInt(E->NumCands),  E->ArmyDef );
 	ZeroIntArray(  SquareInt(E->NumCands),  E->TrueDefMatrix );
 	for(k=0; k<(int)E->NumVoters; k++) {
+		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[k].Candidates;
 		x = k*E->NumCands;
 		for(i=E->NumCands -1; i>=0; i--) {
+			const oneCandidate &firstCandidate = allCandidates[i];
 			for(j=i-1; j>=0; j--) {
+				const oneCandidate &secondCandidate = allCandidates[j];
 				y = E->CandRankings[x+j]; y -= E->CandRankings[x+i];
 				if( y>0 ) {
 					E->DefeatsMatrix[i*E->NumCands + j]++; /*i preferred above j*/
 				}else{
 					E->DefeatsMatrix[j*E->NumCands + i]++;
 				}
-				t = E->Score[x+i] - E->Score[x+j];
+				t = firstCandidate.score - secondCandidate.score;
 				if(t > 0.0) {
 					E->Armytage[i*E->NumCands + j] += t; /*i preferred above j*/
 					E->ArmyDef[i*E->NumCands + j] ++;
@@ -2851,18 +2880,23 @@ real IRNRPOWER=2.0;
  */
 EMETH IRNR(const edata *E  /*Brian Olson's voting method described above*/)
 { /* side effects: Eliminated[], SumNormedRatings[]*/
-	int rd,i,j,x,r,loser;
+	int rd;
+	int i;
+	int j;
+	int r;
+	int loser;
 	real s,t,minc;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 
 	FillBoolArray(E->NumCands, Eliminated, FALSE);
 	for(rd=E->NumCands; rd>1; rd--) {
 		ZeroRealArray( E->NumCands, SumNormedRating );
 		for(i=0; i<(int)E->NumVoters; i++) {
-			x = i*E->NumCands;
+			const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 			s = 0.0;
 			for(j=E->NumCands -1; j>=0; j--) {
 				if(!Eliminated[j]) {
-					t = E->Score[x+j] - 0.5;
+					t = allCandidates[j].score - 0.5;
 					if(t < 0.0) {
 						t = -t;
 					}
@@ -2873,7 +2907,7 @@ EMETH IRNR(const edata *E  /*Brian Olson's voting method described above*/)
 				s = pow(s, -1.0/IRNRPOWER);
 				for(j=E->NumCands -1; j>=0; j--) {
 					if(!Eliminated[j]) {
-						SumNormedRating[j] += s * E->Score[x+j];
+						SumNormedRating[j] += s * allCandidates[j].score;
 					}
 				}
 			}
@@ -2911,18 +2945,26 @@ EMETH IRNR(const edata *E  /*Brian Olson's voting method described above*/)
  */
 EMETH IRNRv(const edata *E  /*Brian Olson's voting method but with 2-param renorm*/)
 { /* side effects: Eliminated[], SumNormedRatings[]*/
-	int rd,i,j,x,r,loser,ct;
+	int rd;
+	int i;
+	int j;
+	int r;
+	int loser;
+	int ct;
 	real s,t,minc,avg;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 
 	FillBoolArray(E->NumCands, Eliminated, FALSE);
 	for(rd=E->NumCands; rd>1; rd--) {
 		ZeroRealArray( E->NumCands, SumNormedRating );
 		for(i=0; i<(int)E->NumVoters; i++) {
-			x = i*E->NumCands;
-			s = 0.0; ct=0;
+			const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+			s = 0.0;
+			ct=0;
 			for(j=E->NumCands -1; j>=0; j--) {
 				if(!Eliminated[j]) {
-					s += E->Score[x+j]; ct++;
+					s += allCandidates[j].score;
+					ct++;
 				}
 			}
 			assert(ct>0);
@@ -2931,7 +2973,7 @@ EMETH IRNRv(const edata *E  /*Brian Olson's voting method but with 2-param renor
 			s = 0.0;
 			for(j=E->NumCands -1; j>=0; j--) {
 				if(!Eliminated[j]) {
-					t = E->Score[x+j] - avg;
+					t = allCandidates[j].score - avg;
 					s += t*t;
 				}
 			}
@@ -2939,7 +2981,7 @@ EMETH IRNRv(const edata *E  /*Brian Olson's voting method but with 2-param renor
 				s = 1.0/sqrt(s);
 				for(j=E->NumCands -1; j>=0; j--) {
 					if(!Eliminated[j]) {
-						SumNormedRating[j] += s * (E->Score[x+j] - avg);
+						SumNormedRating[j] += s * (allCandidates[j].score - avg);
 					}
 				}
 			}
@@ -2978,18 +3020,24 @@ EMETH IRNRv(const edata *E  /*Brian Olson's voting method but with 2-param renor
  */
 EMETH IRNRm(const edata *E  /*Brian Olson's voting method but with 2-param renorm*/)
 { /* side effects: Eliminated[], SumNormedRatings[]*/
-	int rd,i,j,x,r,loser;
+	int rd;
+	int i;
+	int j;
+	int r;
+	int loser;
 	real s,t,minc,mx,mn;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 
 	FillBoolArray(E->NumCands, Eliminated, FALSE);
 	for(rd=E->NumCands; rd>1; rd--) {
 		ZeroRealArray( E->NumCands, SumNormedRating );
 		for(i=0; i<(int)E->NumVoters; i++) {
-			x = i*E->NumCands;
-			mx = -HUGE; mn = HUGE;
+			const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+			mx = -HUGE;
+			mn = HUGE;
 			for(j=E->NumCands -1; j>=0; j--) {
 				if(!Eliminated[j]) {
-					t = E->Score[x+j];
+					t = allCandidates[j].score;
 					if(t<mn) {
 						mn=t;
 					}
@@ -3003,7 +3051,7 @@ EMETH IRNRm(const edata *E  /*Brian Olson's voting method but with 2-param renor
 				s = 1.0/s;
 				for(j=E->NumCands -1; j>=0; j--) {
 					if(!Eliminated[j]) {
-						SumNormedRating[j] += s * (E->Score[x+j] - mn);
+						SumNormedRating[j] += s * (allCandidates[j].score - mn);
 					}
 				}
 			}
@@ -3127,12 +3175,14 @@ EMETH CondorcetApproval(edata *E  /*Condorcet winner if exists, else use Approva
 
 EMETH Range(const edata *E    /* canddt with highest average Score wins */)
 { /* side effects:   RangeVoteCount[], RangeWinner  */
-	int i,j,x;
+	int i;
+	int j;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	ZeroRealArray( E->NumCands, RangeVoteCount );
 	for(i=0; i<(int)E->NumVoters; i++) {
-		x = i*E->NumCands;
+		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 		for(j=E->NumCands -1; j>=0; j--) {
-				RangeVoteCount[j] += E->Score[x+j];
+			RangeVoteCount[j] += allCandidates[j].score;
 		}
 	}
 	RangeWinner = ArgMaxArr<real>(E->NumCands, RangeVoteCount, (int*)RandCandPerm);
@@ -3142,14 +3192,17 @@ EMETH Range(const edata *E    /* canddt with highest average Score wins */)
 EMETH RangeN(const edata *E /*highest average rounded Score [rded to integer in 0..RangeGranul-1] wins*/)
 { /* uses global integer RangeGranul  */
 	uint RangeNVoteCount[MaxNumCands];
-	int i,j,x,winner;
+	int i;
+	int j;
+	int winner;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	assert(RangeGranul>=2);
 	assert(RangeGranul<=10000000);
 	ZeroIntArray( E->NumCands, (int*)RangeNVoteCount );
 	for(i=0; i<(int)E->NumVoters; i++) {
-		x = i*E->NumCands;
+		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 		for(j=E->NumCands -1; j>=0; j--) {
-			RangeNVoteCount[j] += (uint)( (E->Score[x+j])*(RangeGranul-0.0000000001) );
+			RangeNVoteCount[j] += (uint)( (allCandidates[j].score)*(RangeGranul-0.0000000001) );
 		}
 	}
 	winner = ArgMaxUIntArr( E->NumCands, RangeNVoteCount, (int*)RandCandPerm );
@@ -3176,18 +3229,21 @@ EMETH Range2Runoff(const edata *E    /*top-2-runoff, 1stRd=range, 2nd round has 
 EMETH ContinCumul(const edata *E    /* Renormalize scores so sum(over canddts)=1; then canddt with highest average Score wins */)
 {
 	real CCumVoteCount[MaxNumCands];
-	int i,j,x,winner;
+	int i;
+	int j;
+	int winner;
 	real sum;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	ZeroRealArray( E->NumCands, CCumVoteCount );
 	for(i=0; i<(int)E->NumVoters; i++) {
-		x = i*E->NumCands;
+		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 		sum = 0.0;
 		for(j=E->NumCands -1; j>=0; j--) {
-				sum += E->Score[x+j];
+			sum += allCandidates[j].score;
 		}
 		if(sum > 0.0) sum = 1.0/sum; else sum=0.0;
 		for(j=E->NumCands -1; j>=0; j--) {
-				CCumVoteCount[j] += sum * E->Score[x+j];
+			CCumVoteCount[j] += sum * allCandidates[j].score;
 		}
 	}
 	winner = ArgMaxArr<real>(E->NumCands, CCumVoteCount, (int*)RandCandPerm);
@@ -3198,11 +3254,14 @@ EMETH TopMedianRating(const edata *E    /* canddt with highest median Score wins
 {
 	real MedianRating[MaxNumCands]={0};
 	real CScoreVec[MaxNumVoters];
-	int i,j,x,winner;
+	int i;
+	int j;
+	int winner;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	for(j=E->NumCands -1; j>=0; j--) {
 		for(i=E->NumVoters -1; i>=0; i--) {
-			x = i*E->NumCands + j;
-			CScoreVec[i] = E->Score[x];
+			const oneCandidate &theCandidate = allVoters[i].Candidates[j];
+			CScoreVec[i] = theCandidate.score;
 		}
 		MedianRating[j] = TwiceMedian<real>(E->NumVoters, CScoreVec);
 	}
@@ -4342,11 +4401,13 @@ void HonestyStrat( edata *E, real honfrac )
 	uint offi, offset;
 	bool rb;
 	real MovingAvg, tmp, MaxUtil, MinUtil, SumU, MeanU, Mean2U, ThisU, RecipDiffUtil;
+	oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	assert(E->NumVoters <= MaxNumVoters);
 	assert(E->NumCands <= MaxNumCands);
 	assert(honfrac >= 0.0);
 	assert(honfrac <= 1.0);
 	for(v=E->NumVoters -1; v>=0; v--) {
+		oneCandidate (&allCandidates)[MaxNumCands] = allVoters[v].Candidates;
 		offset = v*E->NumCands;
 		if( Rand01() < honfrac ) { /*honest voter*/
 			MakeIdentityPerm( E->NumCands, E->TopDownPrefs+offset );
@@ -4369,9 +4430,10 @@ void HonestyStrat( edata *E, real honfrac )
 			MeanU = SumU / E->NumCands;
 			Mean2U = 0.0; ACT=0;
 			for(i=E->NumCands -1; i>=0; i--) {
+				oneCandidate &theCandidate = allCandidates[i];
 				offi = offset+i;
 				ThisU = E->PerceivedUtility[offi];
-				E->Score[offi] = ( ThisU-MinUtil ) * RecipDiffUtil;
+				theCandidate.score = ( ThisU-MinUtil ) * RecipDiffUtil;
 				/* mean-based threshold (with coin toss if exactly at thresh) for approvals */
 				if( ThisU > MeanU ) { E->Approve[offi] = TRUE; Mean2U += ThisU; ACT++; }
 				else if( ThisU < MeanU ) E->Approve[offi] = FALSE;
@@ -4393,6 +4455,7 @@ void HonestyStrat( edata *E, real honfrac )
 			hibd = E->NumCands-1;
 			lobd = 0;
 			for(i=0; i<(int)E->NumCands; i++) {
+				oneCandidate &theCandidate = allCandidates[i];
 				offi = offset+i;
 				ThisU = E->PerceivedUtility[offi];
 				if(i > nexti) {
@@ -4409,16 +4472,20 @@ void HonestyStrat( edata *E, real honfrac )
 				assert(lobd < (int)E->NumCands);
 				assert(hibd < (int)E->NumCands);
 				if( ThisU > MovingAvg ) {
-					E->Approve[offi] = TRUE;  E->Score[offi] = 1.0;
+					E->Approve[offi] = TRUE;
+					theCandidate.score = 1.0;
 					Mean2U += ThisU; ACT++;
 					E->CandRankings[offi] = lobd;  lobd++;
 				}
 				else if( ThisU < MovingAvg ) {
-					E->Approve[offi] = FALSE; E->Score[offi] = 0.0;
+					E->Approve[offi] = FALSE;
+					theCandidate.score = 0.0;
 					E->CandRankings[offi] = hibd;  hibd--;
 				}
 				else{
-					rb = RandBool(); E->Approve[offi] = rb; E->Score[offi] = 0.5;
+					rb = RandBool();
+					E->Approve[offi] = rb;
+					theCandidate.score = 0.5;
 					if(rb) { E->CandRankings[offi] = lobd;  lobd++; }
 					else{   E->CandRankings[offi] = hibd;  hibd--; }
 				}
