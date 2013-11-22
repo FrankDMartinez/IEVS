@@ -1269,34 +1269,36 @@ void PrintEdata(FILE *F, const edata *E)
 	int v;
 	uint j;
 	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
-	fprintf(F, "NumVoters=%d  NumCands=%lld\n", E->NumVoters, E->NumCands);
-	for(v=0; v<(int)E->NumVoters; v++){
+	const uint numberOfVoters = E->NumVoters;
+	const uint64_t numberOfCandidates = E->NumCands;
+	fprintf(F, "numberOfVoters=%d  numberOfCandidates=%lld\n", numberOfVoters, numberOfCandidates);
+	for(v=0; v<(int)numberOfVoters; v++){
 		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[v].Candidates;
 		fprintf(F, "Voter %2d:\n",v);
 		fprintf(F, "Utility: ");
-		for(j=0; j < E->NumCands; j++){  fprintf(F, "%6.3f", E->Utility[v*E->NumCands + j]);  }
+		for(j=0; j < numberOfCandidates; j++){  fprintf(F, "%6.3f", E->Utility[v*numberOfCandidates + j]);  }
 		fprintf(F, "\n");
 		fprintf(F, "PercUti: ");
-		for(j=0; j < E->NumCands; j++){  fprintf(F, "%6.3f", E->PerceivedUtility[v*E->NumCands + j]);  }
+		for(j=0; j < numberOfCandidates; j++){  fprintf(F, "%6.3f", E->PerceivedUtility[v*numberOfCandidates + j]);  }
 		fprintf(F, "\n");
 		fprintf(F, "RangeScore: ");
-		for(j=0; j < E->NumCands; j++) {
+		for(j=0; j < numberOfCandidates; j++) {
 			fprintf(F, "%6.3f", allCandidates[j].score);
 		}
 		fprintf(F, "\n");
 		fprintf(F, "CandRank: ");
-		for(j=0; j < E->NumCands; j++){  fprintf(F, "%2d", E->CandRankings[v*E->NumCands + j]);  }
+		for(j=0; j < numberOfCandidates; j++){  fprintf(F, "%2d", E->CandRankings[v*numberOfCandidates + j]);  }
 		fprintf(F, "\n");
 		fprintf(F, "TopDown: ");
-		for(j=0; j < E->NumCands; j++){  fprintf(F, "%2d", E->TopDownPrefs[v*E->NumCands + j]);  }
+		for(j=0; j < numberOfCandidates; j++){  fprintf(F, "%2d", E->TopDownPrefs[v*numberOfCandidates + j]);  }
 		fprintf(F, "\n");
 		fprintf(F, "Approve: ");
-		for(j=0; j < E->NumCands; j++) {
+		for(j=0; j < numberOfCandidates; j++) {
 			fprintf(F, "%2d", allCandidates[j].approve ? 1:0);
 		}
 		fprintf(F, "\n");
 		fprintf(F, "Approve2: ");
-		for(j=0; j < E->NumCands; j++) {
+		for(j=0; j < numberOfCandidates; j++) {
 			fprintf(F, "%2d", allCandidates[j].approve2 ? 1:0);
 		}
 		fprintf(F, "\n");
