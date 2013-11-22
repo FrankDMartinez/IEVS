@@ -1247,7 +1247,6 @@ typedef struct dum1 {
 	oneVoter Voters[MaxNumVoters];
   uint TopDownPrefs[MaxNumCands*MaxNumVoters];
   uint CandRankings[MaxNumCands*MaxNumVoters];
-  bool Approve[MaxNumCands*MaxNumVoters];
   bool Approve2[MaxNumCands*MaxNumVoters];
   real PerceivedUtility[MaxNumCands*MaxNumVoters];
   real Utility[MaxNumCands*MaxNumVoters];
@@ -1293,7 +1292,9 @@ void PrintEdata(FILE *F, const edata *E)
 		for(j=0; j < E->NumCands; j++){  fprintf(F, "%2d", E->TopDownPrefs[v*E->NumCands + j]);  }
 		fprintf(F, "\n");
 		fprintf(F, "Approve: ");
-		for(j=0; j < E->NumCands; j++){  fprintf(F, "%2d", E->Approve[v*E->NumCands + j] ? 1:0);  }
+		for(j=0; j < E->NumCands; j++) {
+			fprintf(F, "%2d", allCandidates[j].approve ? 1:0);
+		}
 		fprintf(F, "\n");
 		fprintf(F, "Approve2: ");
 		for(j=0; j < E->NumCands; j++){  fprintf(F, "%2d", E->Approve2[v*E->NumCands + j] ? 1:0);  }
@@ -1394,10 +1395,12 @@ void BuildDefeatsMatrix(edata *E)
 	CopeWinOnlyWinner = ArgMaxArr<int>(E->NumCands, WinCount, (int*)RandCandPerm);
 	ZeroIntArray( SquareInt(E->NumCands), PairApproval );
 	for(i=0; i<(int)E->NumVoters; i++) {
-		x = i*E->NumCands;
+		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 		for(j=E->NumCands -1; j>=0; j--) {
+			const oneCandidate &firstCandidate = allCandidates[j];
 			for(k=E->NumCands -1; k>j; k--) {
-				y = ((E->Approve[x+j] && E->Approve[x+k]) ? 1:0);
+				const oneCandidate &secondCandidate = allCandidates[k];
+				y = ((firstCandidate.approve && secondCandidate.approve) ? 1:0);
 				PairApproval[j*E->NumCands +k] += y; /* count of voters who approve of both j and k */
 				PairApproval[k*E->NumCands +j] += y;
 			}
@@ -2786,19 +2789,27 @@ EMETH Coombs(const edata *E /*repeatedly eliminate antiplurality loser (with mos
 	return(-1); /*error*/
 }
 
-EMETH Approval(const edata *E   /* canddt with most-approvals wins */
-){ /* side effects: ApprovalVoteCount[], ApprovalWinner */
-  int i,j,x;
-  ZeroIntArray( E->NumCands, (int*)ApprovalVoteCount );
-  for(i=0; i<(int)E->NumVoters; i++){
-     x = i*E->NumCands;
-     for(j=E->NumCands -1; j>=0; j--){
-        ApprovalVoteCount[j] += E->Approve[x+j];
-     }
-  }
-  RandomlyPermute( E->NumCands, RandCandPerm );
-  ApprovalWinner = ArgMaxUIntArr( E->NumCands, (uint*)ApprovalVoteCount, (int*)RandCandPerm );
-  return(ApprovalWinner);
+/*	Approval(E):	returns an index corresponding to the Winner according to the
+ *			approval method; the Candidate with the most approvals wins
+ *	E:	the election data used to determine the Winner
+ */
+EMETH Approval(const edata *E   /* canddt with most-approvals wins */)
+{ /* side effects: ApprovalVoteCount[], ApprovalWinner */
+	int i;
+	int j;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
+	ZeroIntArray( E->NumCands, (int*)ApprovalVoteCount );
+	for(i=0; i<(int)E->NumVoters; i++) {
+		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+		for(j=E->NumCands -1; j>=0; j--) {
+			if(allCandidates[j].approve) {
+				ApprovalVoteCount[j] += 1;
+			}
+		}
+	}
+	RandomlyPermute( E->NumCands, RandCandPerm );
+	ApprovalWinner = ArgMaxUIntArr( E->NumCands, (uint*)ApprovalVoteCount, (int*)RandCandPerm );
+	return(ApprovalWinner);
 }
 
 /*	App2Runoff(E):	returns the index of the Winner from a run-off between the top 2
@@ -4435,9 +4446,15 @@ void HonestyStrat( edata *E, real honfrac )
 				ThisU = E->PerceivedUtility[offi];
 				theCandidate.score = ( ThisU-MinUtil ) * RecipDiffUtil;
 				/* mean-based threshold (with coin toss if exactly at thresh) for approvals */
-				if( ThisU > MeanU ) { E->Approve[offi] = TRUE; Mean2U += ThisU; ACT++; }
-				else if( ThisU < MeanU ) E->Approve[offi] = FALSE;
-				else E->Approve[offi] = RandBool();
+				if( ThisU > MeanU ) {
+					theCandidate.approve = TRUE;
+					Mean2U += ThisU;
+					ACT++;
+				} else if( ThisU < MeanU ) {
+					theCandidate.approve = FALSE;
+				} else {
+					theCandidate.approve = RandBool();
+				}
 			}
 			ensure((ACT!=0), 4);
 			Mean2U /= ACT;
@@ -4472,19 +4489,19 @@ void HonestyStrat( edata *E, real honfrac )
 				assert(lobd < (int)E->NumCands);
 				assert(hibd < (int)E->NumCands);
 				if( ThisU > MovingAvg ) {
-					E->Approve[offi] = TRUE;
+					theCandidate.approve = TRUE;
 					theCandidate.score = 1.0;
 					Mean2U += ThisU; ACT++;
 					E->CandRankings[offi] = lobd;  lobd++;
 				}
 				else if( ThisU < MovingAvg ) {
-					E->Approve[offi] = FALSE;
+					theCandidate.approve = FALSE;
 					theCandidate.score = 0.0;
 					E->CandRankings[offi] = hibd;  hibd--;
 				}
 				else{
 					rb = RandBool();
-					E->Approve[offi] = rb;
+					theCandidate.approve = rb;
 					theCandidate.score = 0.5;
 					if(rb) { E->CandRankings[offi] = lobd;  lobd++; }
 					else{   E->CandRankings[offi] = hibd;  hibd--; }
