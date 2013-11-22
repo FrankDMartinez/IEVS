@@ -1247,7 +1247,6 @@ typedef struct dum1 {
 	oneVoter Voters[MaxNumVoters];
   uint TopDownPrefs[MaxNumCands*MaxNumVoters];
   uint CandRankings[MaxNumCands*MaxNumVoters];
-  bool Approve2[MaxNumCands*MaxNumVoters];
   real PerceivedUtility[MaxNumCands*MaxNumVoters];
   real Utility[MaxNumCands*MaxNumVoters];
   int TrueDefMatrix[MaxNumCands*MaxNumCands];
@@ -1297,7 +1296,9 @@ void PrintEdata(FILE *F, const edata *E)
 		}
 		fprintf(F, "\n");
 		fprintf(F, "Approve2: ");
-		for(j=0; j < E->NumCands; j++){  fprintf(F, "%2d", E->Approve2[v*E->NumCands + j] ? 1:0);  }
+		for(j=0; j < E->NumCands; j++) {
+			fprintf(F, "%2d", allCandidates[j].approve2 ? 1:0);
+		}
 		fprintf(F, "\n");
 	}
 	/*???more?*/
@@ -3096,12 +3097,16 @@ EMETH MCA(const edata *E  /*canddt with most-2approvals wins if gets >50%, else 
 {
 	uint MCAVoteCount[MaxNumCands];
 	int i,j,x,winner;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	if(ApprovalWinner<0) Approval(E);
 	ZeroIntArray( E->NumCands, (int*)MCAVoteCount );
 	for(i=0; i<(int)E->NumVoters; i++) {
+		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 		x = i*E->NumCands;
 		for(j=E->NumCands -1; j>=0; j--) {
-				MCAVoteCount[j] += E->Approve2[x+j];
+			if(allCandidates[j].approve2) {
+				MCAVoteCount[j] += 1;
+			}
 		}
 	}
 	winner = ArgMaxUIntArr( E->NumCands, MCAVoteCount, (int*)RandCandPerm );
@@ -4459,10 +4464,14 @@ void HonestyStrat( edata *E, real honfrac )
 			ensure((ACT!=0), 4);
 			Mean2U /= ACT;
 			for(i=E->NumCands -1; i>=0; i--) {
+				oneCandidate &theCandidate = allCandidates[i];
 				offi = offset+i;
 				ThisU = E->PerceivedUtility[offi];
-				if( ThisU >= Mean2U ) E->Approve2[offi] = TRUE;
-				else E->Approve2[offi] = FALSE;
+				if( ThisU >= Mean2U ) {
+					theCandidate.approve2 = TRUE;
+				} else {
+					theCandidate.approve2 = FALSE;
+				}
 			}
 		}else{ /*strategic voter*/
 			ACT = 0;
@@ -4510,10 +4519,14 @@ void HonestyStrat( edata *E, real honfrac )
 			ensure((ACT!=0), 6);
 			Mean2U /= ACT;
 			for(i=E->NumCands -1; i>=0; i--) {
+				oneCandidate &theCandidate = allCandidates[i];
 				offi = offset+i;
 				ThisU = E->PerceivedUtility[offi];
-				if( ThisU >= Mean2U ) { E->Approve2[offi] = TRUE; }
-				else{                   E->Approve2[offi] = FALSE;}
+				if( ThisU >= Mean2U ) {
+					theCandidate.approve2 = TRUE;
+				} else {
+		  			theCandidate.approve2 = FALSE;
+				}
 				assert( E->CandRankings[offi] < E->NumCands );
 				E->TopDownPrefs[ offset + E->CandRankings[offi] ] = i;
 			}
