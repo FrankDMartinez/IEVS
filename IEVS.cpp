@@ -5380,8 +5380,9 @@ some weight exceeds runnerup by factor 5 or more.
 CreatePixel for winner with maxweight.
 ***/
 void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int WhichMeth,
-		 edata *E, uint8_t Barray[], uint GaussStdDev, real honfrac, int LpPow )
+		 uint8_t Barray[], uint GaussStdDev, real honfrac, int LpPow )
 {
+	edata E;
 	uint x;
 	uint y;
 	int k,v,j,ja,i,m,jo,s,maxw,col,w;
@@ -5394,7 +5395,7 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 	assert(honfrac >= 0.0);
 	assert(honfrac <= 1.0);
 	if(NumSites>16) NumSites=16;
-	E->NumCands = NumSites;
+	E.NumCands = NumSites;
 	MakeIdentityPerm(NumSites, RandPerm);
 	for(pass=8; pass>=1; pass /= 2) {
 		for(y=0; y<200; y+=pass) {
@@ -5423,7 +5424,7 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 					ZeroIntArray( NumSites, weight );
 					for(k=10; k<MaxK; k = (k*11)/10) { /*try k-voter election*/
 						v = k+k+1;
-						E->NumVoters = v;
+						E.NumVoters = v;
 						j=0; ja=0;
 						while(ja<k) { /* generate voter locations and their candidate-utilities */
 							th = (ja*PI)/k;
@@ -5441,18 +5442,18 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 															else  /*1*/  ds = 0.7*pow(( fabs(xto-xx[i]) + fabs(yto-yy[i]) ), 2);
 									ut = 1.0 / sqrt(12000.0 + ds);
 									m = i+jo;
-									E->Utility[m] = ut;
-									E->PerceivedUtility[m] = ut;
+									E.Utility[m] = ut;
+									E.PerceivedUtility[m] = ut;
 								}/*end for(i)*/
 								j++;
 							}/*end for(s)*/
 							ja++;
 						}/*end while(ja)*/
 						InitCoreElState();
-						HonestyStrat(E, honfrac);
-						BuildDefeatsMatrix(E);
+						HonestyStrat(&E, honfrac);
+						BuildDefeatsMatrix(&E);
 						SmithIRVwinner = 0;
-						w = GimmeWinner( E,  WhichMeth );
+						w = GimmeWinner( &E,  WhichMeth );
 						assert(w>=0);
 						weight[w] += v;
 						maxw = -BIGINT;
@@ -5482,7 +5483,6 @@ void MakeYeePict( char filename[], const int xx[], const int yy[], int NumSites,
 		  uint TopYeeVoters, uint GaussStdDev, real honfrac, int LpPow ){
   FILE *F;
   uint8_t Barray[20000];
-  edata E;
   int i;
   uint imgsize;
 #if MSWINDOWS
@@ -5496,7 +5496,7 @@ void MakeYeePict( char filename[], const int xx[], const int yy[], int NumSites,
   }
   if(WhichMeth==0 && LpPow==2) DrawVoronoi( NumSites, (const int*)xx, (const int*)yy, Barray, LpPow );
   else if(WhichMeth==1 && LpPow==2) DrawFPvor( NumSites, (const int*)xx, (const int*)yy, Barray, LpPow );
-  else YeePicture( NumSites, (TopYeeVoters-1)/2, xx, yy, WhichMeth, &E, Barray,
+  else YeePicture( NumSites, (TopYeeVoters-1)/2, xx, yy, WhichMeth, Barray,
 		   GaussStdDev, honfrac, LpPow );
   imgsize = OutputBMPHead(200, 200, 4, TRUE, Barray, F);
   OutputFCC16ColorPalette(F);
