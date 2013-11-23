@@ -3098,13 +3098,14 @@ EMETH IRNRm(const edata *E  /*Brian Olson's voting method but with 2-param renor
 EMETH MCA(const edata *E  /*canddt with most-2approvals wins if gets >50%, else regular approval-winner wins*/)
 {
 	uint MCAVoteCount[MaxNumCands];
-	int i,j,x,winner;
+	int i;
+	int j;
+	int winner;
 	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	if(ApprovalWinner<0) Approval(E);
 	ZeroIntArray( E->NumCands, (int*)MCAVoteCount );
 	for(i=0; i<(int)E->NumVoters; i++) {
 		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
-		x = i*E->NumCands;
 		for(j=E->NumCands -1; j>=0; j--) {
 			if(allCandidates[j].approve2) {
 				MCAVoteCount[j] += 1;
