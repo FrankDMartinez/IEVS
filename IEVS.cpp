@@ -3855,6 +3855,7 @@ EMETH WoodallDAC(const edata *E  /*Woodall: Monotonocity of single-seat preferen
 	uint WoodHashCount[3*MaxNumCands*MaxNumVoters]={0};
 	uint WoodHashSet[3*MaxNumCands*MaxNumVoters]={0};
 	uint WoodSetPerm[3*MaxNumCands*MaxNumVoters];
+	bool leave;
 	/* Hash Tab entries contain counter and set-code which is a single machine word. */
 	int v,c,k,r;
 	uint offset, s, x, h, numsets;
@@ -3873,12 +3874,19 @@ EMETH WoodallDAC(const edata *E  /*Woodall: Monotonocity of single-seat preferen
 				s |= (1U<<(E->TopDownPrefs[offset+c]));
 				h = s%ARTINPRIME;
 				assert( !EmptySet(s) );
+				leave = false;
 				for(;;) {
 					x = WoodHashSet[h];
 					if( EmptySet(x) ) { /* insert new set s into hash table */
-						WoodHashSet[h] = s;  WoodHashCount[h] = 1;  break;
+						WoodHashSet[h] = s;
+						WoodHashCount[h] = 1;
+						leave = true;
 					}else if( x==s ) { /* already there so increment count */
-						WoodHashCount[h]++;  break;
+						WoodHashCount[h]++;
+						leave = true;
+					}
+					if (leave) {
+						break;
 					}
 					h++; /* hash table collision so walk ("linear probing") */
 				}
@@ -5399,6 +5407,7 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 	int weight[16];
 	uint RandPerm[16];
 	real xt, yt, xto, yto, th, ds, ut, rr;
+	bool leave;
 	assert(honfrac >= 0.0);
 	assert(honfrac <= 1.0);
 	if(NumSites>16) NumSites=16;
@@ -5467,11 +5476,15 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 						for(i=0; i<(int)NumSites; i++) if(i!=w) {
 							if( maxw<weight[i] ) { maxw=weight[i]; }
 						}
+						leave = false;
 						if (PreColor==w && k==10) { /*early break; precolor agree with first election pass*/
-							break;
+							leave = true;
 						} else if (weight[w] >= 5*maxw && k>16) { /*early break - good confidence*/
-							break;
+							leave = true;
 						} else if (weight[w] - maxw > MaxK * log(((real)MaxK)/k)*10.1) { /*early break - futility*/
+							leave = true;
+						}
+						if (leave) {
 							break;
 						}
 					} /*end for(k)*/
