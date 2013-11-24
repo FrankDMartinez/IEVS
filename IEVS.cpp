@@ -704,13 +704,13 @@ void TestRadialNormalRand2()
 	Test("normal randgen", " radially", RandNormal, RandNormal, "~1.25", "2");
 }
 
-const real RECIPRTPI = 0.564189583547756286948079451560772585844050;   /* 1/sqrt(pi) */
 /*	RandSkew():	returns the mean=0 skewed deviate
  */
 real RandSkew()
 { /* returns mean=0 skewed deviate; the fact the mean is really 0, has been confirmed by
    * Monte Carlo to +-0.0001
    */
+	const real RECIPRTPI = 0.564189583547756286948079451560772585844050;   /* 1/sqrt(pi) */
 	real x,y;
 	x = RandNormal();
 	y = RandNormal();
@@ -750,20 +750,33 @@ real wks(int a, int b){
  * voting method to be identical (and cause Condorcet winner always to exist)
  * with distance-based utilities...  which is not realistic.  Hence this.
  **********/
-const real RT85 = 1.264911064067351732799557417773;  /* sqrt(8/5) */
-const real RT25 = 0.632455532033675866399778708886;  /* sqrt(2/5) */
-void GenRandWackyArr(int N, real Arr[]){ /* returns Arr[0..N-1] of skew randoms */
-  int k, which;
-  which = (int)RandInt(3);
-  switch(which){
-  case(0) : for(k=0; k<N; k++){ Arr[k] = RandSkew(); } break;
-  case(1) : for(k=0; k<N; k++){ Arr[k] =  wkc(k, N) + RT85*wks(k, N) * RandNormal(); } break;
-  case(2) : for(k=0; k<N; k++){ Arr[k] = -wkc(k, N) + RT25*wks(k, N) * RandNormal(); } break;
-  default :
-    printf("impossible case in GenRandWackyArr\n");
-    fflush(stdout);
-    exit(EXIT_FAILURE);
-  }
+void GenRandWackyArr(int N, real Arr[])
+{ /* returns Arr[0..N-1] of skew randoms */
+	const real RT85 = 1.264911064067351732799557417773;  /* sqrt(8/5) */
+	const real RT25 = 0.632455532033675866399778708886;  /* sqrt(2/5) */
+	int k, which;
+	which = (int)RandInt(3);
+	switch(which) {
+	case(0) :
+		for(k=0; k<N; k++) {
+			Arr[k] = RandSkew();
+		}
+		break;
+	case(1) :
+		for(k=0; k<N; k++) {
+			Arr[k] =  wkc(k, N) + RT85*wks(k, N) * RandNormal();
+		}
+		break;
+	case(2) :
+		for(k=0; k<N; k++) {
+			Arr[k] = -wkc(k, N) + RT25*wks(k, N) * RandNormal();
+		}
+		break;
+	default :
+		printf("impossible case in GenRandWackyArr\n");
+		fflush(stdout);
+		exit(EXIT_FAILURE);
+	}
 }
 
 void TestsOfRand(){
@@ -4655,7 +4668,6 @@ uint NVotersData[NumHilFiles+NumDebFiles],  NCandsData[NumHilFiles+NumDebFiles];
 uint8_t ElData[MaxNumRanks];
 int NumElectionsLoaded = 0;
 
-const int TOOMANYELVOTERS = 7000;
 #define VERBOSELOAD 0
 
 /*	LoadEldataFiles():	loads real-world election data from a set files; the
@@ -4685,6 +4697,7 @@ int LoadEldataFiles()
 		"A86.HIL", "A87.HIL", "A88.HIL", "A89.HIL",
 		"A90.HIL", "A91.HIL", "A92.HIL", "A93.HIL", "A94.HIL", "A95.HIL",
 		"A96.HIL", "A97.HIL", "A98.HIL", "A99.HIL" };
+	const int TOOMANYELVOTERS = 7000;
 	char c;
 	int i,j,v,x,y,elcount,votcount,prefcount,ncands,nvoters,nwinners,itcount;
 	FILE *fp;
