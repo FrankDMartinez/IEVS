@@ -234,16 +234,19 @@ uint GCD(uint a, uint b)
 
 uint LCMfact[32];
 
-void BuildLCMfact(){
-  uint j,x;
-  printf("\nComputing sequence LCM(1,2,...N) for N=1..22:\n");
-  LCMfact[0] = 1;
-   for(j=1; j<23; j++){ /*LCMfact[23]=5354228880 won't fit in 32 bit word*/
-     LCMfact[j] = LCMfact[j-1];
-     x = LCMfact[j]%j;
-     if(x) LCMfact[j] *= j/GCD(x,j);
-   }
-   printf("LCMfact[%d]=%u\n", j, LCMfact[j]);
+void BuildLCMfact()
+{
+	uint j,x;
+	printf("\nComputing sequence LCM(1,2,...N) for N=1..22:\n");
+	LCMfact[0] = 1;
+	for(j=1; j<23; j++) { /*LCMfact[23]=5354228880 won't fit in 32 bit word*/
+		LCMfact[j] = LCMfact[j-1];
+		x = LCMfact[j]%j;
+		if(x) {
+			LCMfact[j] *= j/GCD(x,j);
+		}
+	}
+	printf("LCMfact[%d]=%u\n", j, LCMfact[j]);
 }
 
 
@@ -785,14 +788,23 @@ void TestsOfRand(){
   TestRadialNormalRand2();
 }
 
-bool IsPerm( uint N, const uint Perm[] ){ /* true if is a perm of [0..N-1] */
-  int i;
-  int ct[MaxNumCands];
-  assert(N<MaxNumCands);
-  for(i=0; i<(int)N; i++){ ct[i] = 0; }
-  for(i=0; i<(int)N; i++){ ct[ Perm[i] ]++; }
-  for(i=0; i<(int)N; i++){ if(ct[i]!=1) return false; }
-  return true;
+bool IsPerm( uint N, const uint Perm[] )
+{ /* true if is a perm of [0..N-1] */
+	int i;
+	int ct[MaxNumCands];
+	assert(N<MaxNumCands);
+	for(i=0; i<(int)N; i++) {
+		ct[i] = 0;
+	}
+	for(i=0; i<(int)N; i++) {
+		ct[ Perm[i] ]++;
+	}
+	for(i=0; i<(int)N; i++) {
+		if(ct[i]!=1) {
+			return false;
+		}
+	}
+	return true;
 }
 
 void MakeIdentityPerm( uint N, uint Perm[] ){
@@ -1038,9 +1050,15 @@ real LpDistanceSquared(uint N, const real a[], const real b[], real Lp )
 	real d = 0.0;
 	int i;
 	assert(Lp >= 1.0);
-	if(Lp==1.0) return pow((L1Distance(N,a,b)), 2);
-	if(Lp==2.0) return DistanceSquared(N,a,b);
-	for(i=0; i<(int)N; i++) d += pow( fabs( a[i]-b[i] ), Lp );
+	if(Lp==1.0) {
+		return pow((L1Distance(N,a,b)), 2);
+	}
+	if(Lp==2.0) {
+		return DistanceSquared(N,a,b);
+	}
+	for(i=0; i<(int)N; i++) {
+		d += pow( fabs( a[i]-b[i] ), Lp );
+	}
 	return pow( d, 2.0/Lp );
 }
 
@@ -1378,19 +1396,32 @@ void BuildDefeatsMatrix(edata *E)
 			assert( E->DefeatsMatrix[i*E->NumCands+j] >= 0 );
 			assert( E->DefeatsMatrix[i*E->NumCands+j] + E->DefeatsMatrix[j*E->NumCands+i] <= (int)E->NumVoters );
 			y = E->ArmyDef[i*E->NumCands+j]; y -= E->ArmyDef[j*E->NumCands+i];
-			if(y>0) E->MargArmy[i*E->NumCands + j] = E->Armytage[i*E->NumCands+j];
-			else /*y<=0*/ E->MargArmy[i*E->NumCands + j] = 0;
+			if(y>0) {
+				E->MargArmy[i*E->NumCands + j] = E->Armytage[i*E->NumCands+j];
+			} else {/*y<=0*/
+				E->MargArmy[i*E->NumCands + j] = 0;
+			}
 			y = E->DefeatsMatrix[i*E->NumCands+j]; y -= E->DefeatsMatrix[j*E->NumCands+i];
 			E->MarginsMatrix[i*E->NumCands + j] = y;
 			assert(i!=j || E->MarginsMatrix[i*E->NumCands + j] == 0);
-			if(y > 0) WinCount[i]++;
-			if(y==0) DrawCt[i]++;
-			if(y<=0 && j!=i) { CondWin = false; } /* if beaten or tied, not a CondorcetWinner by this defn */
+			if(y > 0) {
+				WinCount[i]++;
+			}
+			if(y==0) {
+				DrawCt[i]++;
+			}
+			if(y<=0 && j!=i) {
+				CondWin = false;
+			} /* if beaten or tied, not a CondorcetWinner by this defn */
 			y = E->TrueDefMatrix[i*E->NumCands+j]; y -= E->TrueDefMatrix[j*E->NumCands+i];
 			if(y<=0 && j!=i) { TrueCondWin = false; }
 		}
-		if( CondWin ) CondorcetWinner = i;  /* i beats all opponents (unique Condorcet winner) */
-		if( TrueCondWin ) TrueCW = i;  /* i beats all opponents (unique Condorcet winner) */
+		if( CondWin ) {
+			CondorcetWinner = i;  /* i beats all opponents (unique Condorcet winner) */
+		}
+		if( TrueCondWin ) {
+			TrueCW = i;  /* i beats all opponents (unique Condorcet winner) */
+		}
 	}
 	/* find who-you-beat sets: */
 	for(i=E->NumCands -1; i>=0; i--) {
@@ -1470,7 +1501,9 @@ EMETH Hay(const edata *E /*Strategyproof. Prob of election proportional to sum o
 		x = i*E->NumCands;
 		minu = HUGE;
 		for(j=E->NumCands -1; j>=0; j--) {
-			if(minu > E->Utility[x+j]) minu = E->Utility[x+j];
+			if(minu > E->Utility[x+j]) {
+				minu = E->Utility[x+j];
+			}
 		}
 		sumrts = 0.0;
 		for(j=E->NumCands -1; j>=0; j--) {
@@ -1595,13 +1628,23 @@ EMETH VenzkeDisqPlur(const edata *E   /* Plurality winner wins unless over 50% v
 EMETH PlurIR(edata *E    /* PlurIR=plur+immediate runoff (give ranking as vote) */)
 {
 	int i;
-	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
-	if(PSecond<0) Top2Runoff(E);
-	if(PlurWinner<0) Plurality(E);
-	if(PSecond<0) Top2Runoff(E);
+	if(CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
+	if(PSecond<0) {
+		Top2Runoff(E);
+	}
+	if(PlurWinner<0) {
+		Plurality(E);
+	}
+	if(PSecond<0) {
+		Top2Runoff(E);
+	}
 	assert(PSecond>=0);
 	i = E->MarginsMatrix[ PlurWinner*E->NumCands + PSecond ];
-	if(i>0) return(PlurWinner);
+	if(i>0) {
+		return(PlurWinner);
+	}
 	if(i<0) {
 		return(PSecond);
 	}else if(RandBool()) {
@@ -1613,7 +1656,9 @@ EMETH PlurIR(edata *E    /* PlurIR=plur+immediate runoff (give ranking as vote) 
 EMETH Borda(edata *E  /* Borda: weighted positional with weights N-1, N-2, ..., 0  if N-canddts */)
 { /* side effects: BordaVoteCount[], BordaWinner */
 	int i,j,t;
-	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	if(CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
 	for(i=E->NumCands -1; i>=0; i--) {
 		t=0;
 		for(j=E->NumCands -1; j>=0; j--) {  t += E->MarginsMatrix[i*E->NumCands + j];  }
@@ -1869,7 +1914,9 @@ EMETH CondorcetLR(edata *E   /* candidate with least sum-of-pairwise-defeat-marg
 {
 	uint SumOfDefeatMargins[MaxNumCands]={0};
 	int i,j,t,winner;
-	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	if(CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner >= 0) return CondorcetWinner;
 #endif
@@ -1959,7 +2006,9 @@ EMETH KeenerEig(edata *E  /* winning canddt has max Frobenius eigenvector entry 
 	real EigVec[MaxNumCands], EigVec2[MaxNumCands];
 	int j,k,winner;
 	real t,sum,dist;
-	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	if(CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
 	FillRealArray( E->NumCands, EigVec, 1.0 );
 	FillRealArray( E->NumCands, EigVec2, 1.0 );
 	do{
@@ -1983,7 +2032,9 @@ EMETH SimpsonKramer(edata *E  /* candidate with mildest worst-defeat wins */)
 {
 	int WorstDefeatMargin[MaxNumCands]={0};
 	int i,r,x,t,j,winner;
-	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	if(CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner >= 0) return CondorcetWinner;
 #endif
@@ -1993,7 +2044,9 @@ EMETH SimpsonKramer(edata *E  /* candidate with mildest worst-defeat wins */)
 		for(j=E->NumCands -1; j>=0; j--) {
 			r = RandCandPerm[j];
 			x = E->MarginsMatrix[r*E->NumCands+i];
-			if(x>t) t=x;
+			if(x>t) {
+				t=x;
+			}
 		}
 		WorstDefeatMargin[i] = t;
 	}
@@ -2258,16 +2311,19 @@ BeatPathStrength[k*E->NumCands+j] > 0   for all k in the "Smith Set" and j outsi
 BeatPathStrength[k*E->NumCands+j] >= 0  for all k in the "Schwartz Set" and j outside it.
 *******/
 
-void beatDFS( int x, int diff, bool Set[], int Mat[], int N ){
-  int i;
-  for(i=N-1; i>=0; i--) if(i!=x){
-    if( Mat[i*N+x]>=diff ){
-      if( !Set[i] ){
-	Set[i] = true;
-	beatDFS( i, diff, Set, Mat, N );
-      }
-    }
-  }
+void beatDFS( int x, int diff, bool Set[], int Mat[], int N )
+{
+	int i;
+	for(i=N-1; i>=0; i--) {
+		if(i!=x) {
+			if( Mat[i*N+x]>=diff ) {
+				if( !Set[i] ) {
+					Set[i] = true;
+					beatDFS( i, diff, Set, Mat, N );
+				}
+			}
+		}
+	}
 }
 
 /*	SmithSet(E):	returns the index of a randomly selected Member of the Smith set
@@ -2331,24 +2387,30 @@ EMETH UncoveredSet(edata *E /*A "covers" B if A beats a strict superset of those
 		printf("You could rewrite the code to use uint128s to try allow up to 128 canddts\n");
 		exit(EXIT_FAILURE);
 	}
-	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
-	if(SchwartzWinner<0) SchwartzSet(E);
+	if(CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
+	if(SchwartzWinner<0) {
+		SchwartzSet(E);
+	}
 	/*find cover relation:*/
 	for(A=0; A < (int)E->NumCands; A++) {
-		for(B=0; B < (int)E->NumCands; B++)
+		for(B=0; B < (int)E->NumCands; B++) {
 			if(B!=A) {
 				CoverMatrix[A*E->NumCands + B] = StrictSuperset(IBeat[A], IBeat[B]);
 			}
+		}
 		UncoveredSt[A] = true; /*initialization*/
 	}
 	/*find UncoveredSt:*/
 	for(A=0; A < (int)E->NumCands; A++) {
-		for(B=0; B < (int)E->NumCands; B++)
+		for(B=0; B < (int)E->NumCands; B++) {
 			if(B!=A) {
 				if( CoverMatrix[B*E->NumCands+A] ) {
 					UncoveredSt[A] = false; break;
 				}
 			}
+		}
 	}
 	/*select random uncovered winner:*/
 	RandomlyPermute( E->NumCands, RandCandPerm );
@@ -2439,28 +2501,42 @@ EMETH ArmytagePCSchulze(edata *E  /*Armytage pairwise comparison based on Schulz
 	real ArmyBPS[MaxNumCands*MaxNumCands]={0};
 	int i,j,k,winner;
 	real minc;
-	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
+	if(CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
 	for(i=E->NumCands -1; i>=0; i--) {
-		for(j=E->NumCands -1; j>=0; j--) if(i != j) {
-			ArmyBPS[i*E->NumCands +j] = E->MargArmy[i*E->NumCands +j];
+		for(j=E->NumCands -1; j>=0; j--) {
+			if(i != j) {
+				ArmyBPS[i*E->NumCands +j] = E->MargArmy[i*E->NumCands +j];
+			}
 		}
 	}
 	for(i=E->NumCands -1; i>=0; i--) {
-		for(j=E->NumCands -1; j>=0; j--) if(i != j) {
-			for(k=0; k<(int)E->NumCands; k++) if(k != j && k != i) {
-				minc = ArmyBPS[j*E->NumCands+i];
-				if( ArmyBPS[i*E->NumCands +k] < minc ) minc = ArmyBPS[i*E->NumCands +k];
-				if( ArmyBPS[j*E->NumCands +k] < minc ) ArmyBPS[j*E->NumCands +k] = minc;
+		for(j=E->NumCands -1; j>=0; j--) {
+			if(i != j) {
+				for(k=0; k<(int)E->NumCands; k++) {
+					if(k != j && k != i) {
+						minc = ArmyBPS[j*E->NumCands+i];
+						if( ArmyBPS[i*E->NumCands +k] < minc ) {
+							minc = ArmyBPS[i*E->NumCands +k];
+						}
+						if( ArmyBPS[j*E->NumCands +k] < minc ) {
+							ArmyBPS[j*E->NumCands +k] = minc;
+						}
+					}
+				}
 			}
 		}
 	}
 	for(i=E->NumCands -1; i>=0; i--) {
 		bool haveAWinner = true;
 		k = RandCandPerm[i];
-		for(j=E->NumCands -1; j>=0; j--) if(k != j) {
-			if( ArmyBPS[j*E->NumCands +k] > ArmyBPS[k*E->NumCands +j] ) {
-				haveAWinner = false;
-				break;
+		for(j=E->NumCands -1; j>=0; j--) {
+			if(k != j) {
+				if( ArmyBPS[j*E->NumCands +k] > ArmyBPS[k*E->NumCands +j] ) {
+					haveAWinner = false;
+					break;
+				}
 			}
 		}
 		if(haveAWinner) {
@@ -2503,18 +2579,28 @@ EMETH SimmonsCond(edata *E  /* winner = X with least sum of top-rank-votes for r
 {
 	int SimmVotesAgainst[MaxNumCands]={0};
 	int i,j,t,winner;
-	if(CopeWinOnlyWinner<0) BuildDefeatsMatrix(E);
-	if(PlurWinner<0) Plurality(E);
-	if(SmithWinner<0) SmithSet(E);
-	if(SchwartzWinner<0) SchwartzSet(E);
+	if(CopeWinOnlyWinner<0) {
+		BuildDefeatsMatrix(E);
+	}
+	if(PlurWinner<0) {
+		Plurality(E);
+	}
+	if(SmithWinner<0) {
+		SmithSet(E);
+	}
+	if(SchwartzWinner<0) {
+		SchwartzSet(E);
+	}
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner>=0) return(CondorcetWinner);
 #endif
 	for(i=E->NumCands -1; i>=0; i--) {
 		t=0;
-		for(j=E->NumCands -1; j>=0; j--) if(E->MarginsMatrix[j*E->NumCands+i]>0) { /* j pairwise-beats i */
-			t += 3*PlurVoteCount[j] + (SchwartzMembs[j]?1:0) + (SmithMembs[j]?1:0);
-			/*Here I am adding 1/3 of a vote if in SmithSet, ditto SchwartzSet, to break Simmons ties*/
+		for(j=E->NumCands -1; j>=0; j--) {
+			if(E->MarginsMatrix[j*E->NumCands+i]>0) { /* j pairwise-beats i */
+				t += 3*PlurVoteCount[j] + (SchwartzMembs[j]?1:0) + (SmithMembs[j]?1:0);
+				/*Here I am adding 1/3 of a vote if in SmithSet, ditto SchwartzSet, to break Simmons ties*/
+			}
 		}
 		SimmVotesAgainst[i] = t;
 	}
@@ -2699,7 +2785,9 @@ EMETH BTRIRV(const edata *E  /* Repeatedly eliminate either plur loser or 2nd-lo
 			}
 		}
 		assert(RdLoser2>=0);
-		if( E->MarginsMatrix[ RdLoser*E->NumCands + RdLoser2 ] > 0 ) RdLoser = RdLoser2;
+		if( E->MarginsMatrix[ RdLoser*E->NumCands + RdLoser2 ] > 0 ) {
+			RdLoser = RdLoser2;
+		}
 		ensure(RdLoser>=0, 13);
 		Eliminated[RdLoser] = true; /* eliminate RdLoser */
 		for(i=HeadFav[RdLoser]; i>=0; i=NextI){ /* Go thru list of voters with favorite=RdLoser, adjust: */
@@ -2841,7 +2929,9 @@ EMETH HeitzigDFC(const edata *E)
 	int i, Rwnr;
 	uint offset, pwct=0, wct=0;
 	Rwnr = ArgMaxArr<real>(E->NumCands, E->PerceivedUtility + RandInt(E->NumVoters)*E->NumCands, (int*)RandCandPerm);
-	if(ApprovalWinner<0) Approval(E);
+	if(ApprovalWinner<0) {
+		Approval(E);
+	}
 	for(i=0; i<(int)E->NumVoters; i++) {
 		offset = i*E->NumCands;
 		if( E->PerceivedUtility[offset+ApprovalWinner] > E->PerceivedUtility[offset+Rwnr] ) {
@@ -3109,7 +3199,9 @@ EMETH MCA(const edata *E  /*canddt with most-2approvals wins if gets >50%, else 
 	int j;
 	int winner;
 	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
-	if(ApprovalWinner<0) Approval(E);
+	if(ApprovalWinner<0) {
+		Approval(E);
+	}
 	ZeroIntArray( E->NumCands, (int*)MCAVoteCount );
 	for(i=0; i<(int)E->NumVoters; i++) {
 		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
@@ -3120,7 +3212,9 @@ EMETH MCA(const edata *E  /*canddt with most-2approvals wins if gets >50%, else 
 		}
 	}
 	winner = ArgMaxUIntArr( E->NumCands, MCAVoteCount, (int*)RandCandPerm );
-	if(2*MCAVoteCount[winner] > E->NumVoters) return(winner);
+	if(2*MCAVoteCount[winner] > E->NumVoters) {
+		return(winner);
+	}
 	return(ApprovalWinner);
 }
 
@@ -3267,7 +3361,11 @@ EMETH ContinCumul(const edata *E    /* Renormalize scores so sum(over canddts)=1
 		for(j=E->NumCands -1; j>=0; j--) {
 			sum += allCandidates[j].score;
 		}
-		if(sum > 0.0) sum = 1.0/sum; else sum=0.0;
+		if(sum > 0.0) {
+			sum = 1.0/sum;
+		} else {
+			sum=0.0;
+		}
 		for(j=E->NumCands -1; j>=0; j--) {
 			CCumVoteCount[j] += sum * allCandidates[j].score;
 		}
@@ -3440,10 +3538,14 @@ EMETH HeitzigRiver(const edata *E /*http://lists.electorama.com/pipermail/electi
 		/* update roots: */
 		newroot = Hroot[pp];
 		z--;
-		if(z<=1) break;
+		if(z<=1) {
+			break;
+		}
 		oldroot = Hroot[k];
 		for(i=0; i < (int)E->NumCands; i++) {
-			if(Hroot[i] == oldroot) Hroot[i] = newroot;
+			if(Hroot[i] == oldroot) {
+				Hroot[i] = newroot;
+			}
 		}
 		/* update potential parent of newroot: */
 		maxc = -BIGINT; k = -1;
@@ -3494,16 +3596,19 @@ EMETH DMC(edata *E  /* eliminate least-approved candidate until unbeaten winner 
 	return(i);
 }
 
-void BSbeatDFS( int x, int diff, bool Set[], bool OK[], int Mat[], int N ){
-  int i;
-  for(i=0; i<N; i++) if(OK[i] && i!=x){
-    if( Mat[i*N+x]>=diff ){
-      if( !Set[i] ){
-	Set[i] = true;
-	BSbeatDFS( i, diff, Set, OK, Mat, N );
-      }
-    }
-  }
+void BSbeatDFS( int x, int diff, bool Set[], bool OK[], int Mat[], int N )
+{
+	int i;
+	for(i=0; i<N; i++) {
+		if(OK[i] && i!=x) {
+			if( Mat[i*N+x]>=diff ) {
+				if( !Set[i] ) {
+					Set[i] = true;
+					BSbeatDFS( i, diff, Set, OK, Mat, N );
+				}
+			}
+		}
+	}
 }
 
 /*	BramsSanverPrAV(E):	Returns the index of the Winner according to Preference
@@ -4460,7 +4565,9 @@ void HonestyStrat( edata *E, real honfrac )
 			}
 			assert(IsPerm(E->NumCands, E->CandRankings+offset));
 			RecipDiffUtil = MaxUtil-MinUtil;
-			if(RecipDiffUtil != 0.0) RecipDiffUtil = 1.0 / RecipDiffUtil;
+			if(RecipDiffUtil != 0.0) {
+				RecipDiffUtil = 1.0 / RecipDiffUtil;
+			}
 			MeanU = SumU / E->NumCands;
 			Mean2U = 0.0; ACT=0;
 			for(i=E->NumCands -1; i>=0; i--) {
@@ -4508,7 +4615,9 @@ void HonestyStrat( edata *E, real honfrac )
 					for( ; nexti<(int)E->NumCands; nexti++) {
 						tmp = E->PerceivedUtility[offset+nexti];
 						MovingAvg += (tmp-MovingAvg)/(nexti+1.0);
-						if( fabs(tmp-MovingAvg) > 0.000000000001 ) break;
+						if( fabs(tmp-MovingAvg) > 0.000000000001) {
+							break;
+						}
 					}
 				}
 				assert(lobd >= 0);
@@ -5190,19 +5299,35 @@ uint OutputCompressedBarray( uint imgsize, const uint8_t Barray[], bool really, 
 			N++;
 		}else{
 			assert(N<256);
-			if(really) putc(N, F); /*run length*/
+			if(really) {
+				putc(N, F); /*run length*/
+			}
 			assert(oldpix<16);
-			if(really) putc(oldpix | (oldpix<<4), F); /*color in both nybbles*/
+			if(really) {
+				putc(oldpix | (oldpix<<4), F); /*color in both nybbles*/
+			}
 			N=1; bc+=2;
 		}
 		if(j%200==199) {
 			assert(N<256);
-			if(really) putc(N, F); /*run length*/
-			if(really) putc(pix | (pix<<4), F); /*color in both nybbles*/
+			if(really) {
+				putc(N, F); /*run length*/
+			}
+			if(really) {
+				putc(pix | (pix<<4), F); /*color in both nybbles*/
+			}
 			N=1; bc+=4;
-			if(really) putc(0, F);
-			if(j>=39999) { if(really) putc(1, F); /*end of file*/ }
-			else {         if(really) putc(0, F); /*end of line*/
+			if(really) {
+				putc(0, F);
+			}
+			if(j>=39999) {
+				if(really) {
+					putc(1, F); /*end of file*/
+				}
+			} else {
+				if(really) {
+					putc(0, F); /*end of line*/
+				}
 				j++;
 				pix = shiftForCompressedBMP(Barray, j);
 			}
@@ -5221,7 +5346,9 @@ uint OutputBMPHead( uint width, uint height, uint bitsperpixel, uint compression
   if(roundedwidth%4 != 0){ roundedwidth = (roundedwidth/4 + 1)*4; }
   colors = 1U<<bitsperpixel;
   colortabsize = 4*colors;
-  if(colortabsize > 1024) colortabsize=0;
+  if(colortabsize > 1024) {
+  	colortabsize=0;
+  }
   offset =54 + colortabsize;
   imgsize = roundedwidth*height;
   if(imgsize==20000 && compression){
@@ -5257,9 +5384,13 @@ uint8_t PaletteColorArray[64];
 
 void BogoPutc(uint8_t x, FILE *F){
   static uint i=0;
-  if(i>=64) i=0;
+  if(i>=64) {
+  	i=0;
+  }
   PaletteColorArray[i] = x; i++;
-  if(F!=NULL) putc(x, F);
+  if(F!=NULL) {
+  	putc(x, F);
+  }
 }
 
 void OutputFCC16ColorPalette( FILE *F ){
@@ -5289,7 +5420,9 @@ void OutputFCC16ColorPalette( FILE *F ){
 void CreatePixel(int x, int y, uint color, uint8_t Barray[])
 { /*Create 16 color pixel at x,y*/
 	uint q, addr;
-	if(x>=200 || y>=200 || x<0 || y<0) return;  /*auto-clipping to 200x200 region*/
+	if(x>=200 || y>=200 || x<0 || y<0) {
+		return;  /*auto-clipping to 200x200 region*/
+	}
 	color &= 15U; /*at most 16 colors, like it or not*/
 	addr = 100*y + x/2;
 	if(x%2) {  /* use of !(x%2) would be wrong, experimentally verified. */
@@ -5344,13 +5477,18 @@ void DrawVoronoi(uint NumSites, const int xx[], const int yy[], uint8_t Barray[2
 {
 	int x,y,ds,min;
 	uint col,i;
-	if(NumSites>16) NumSites=16;
+	if(NumSites>16) {
+		NumSites=16;
+	}
 	for(x=0; x<200; x++) {
 		for(y=0; y<200; y++) {
 			min = 9999999; col=BIGINT;
 			for(i=0; i<NumSites; i++) {
-				if(LpPow==2) ds = (int)(pow((x-xx[i]) + SquareReal(y-yy[i]), 2));
-				else  /*1*/  ds = (int)(fabs(x-xx[i]) + fabs(y-yy[i]));
+				if(LpPow==2) {
+					ds = (int)(pow((x-xx[i]) + SquareReal(y-yy[i]), 2));
+				} else {/*1*/
+					ds = (int)(fabs(x-xx[i]) + fabs(y-yy[i]));
+				}
 				if(ds < min) { min=ds; col=i; }
 			}
 			assert(col<NumSites);
@@ -5365,13 +5503,18 @@ void DrawVoronoi(uint NumSites, const int xx[], const int yy[], uint8_t Barray[2
 void DrawFPvor(uint NumSites, const int xx[], const int yy[], uint8_t Barray[20000], int LpPow)
 {
 	uint x,y,ds,mx,col,i;
-	if(NumSites>16) NumSites=16;
+	if(NumSites>16) {
+		NumSites=16;
+	}
 	for(x=0; x<200; x++) {
 		for(y=0; y<200; y++) {
 			mx = 0; col=BIGINT;
 			for(i=0; i<NumSites; i++) {
-				if(LpPow==2) ds = (int)(pow((x-xx[i]) + SquareReal(y-yy[i]), 2));
-				else  /*1*/  ds = (int)(fabs(x-xx[i]) + fabs(y-yy[i]));
+				if(LpPow==2) {
+					ds = (int)(pow((x-xx[i]) + SquareReal(y-yy[i]), 2));
+				} else {/*1*/
+					ds = (int)(fabs(x-xx[i]) + fabs(y-yy[i]));
+				}
 				if(ds >= mx) { mx=ds; col=i; }
 			}
 			assert(col<NumSites);
@@ -5410,7 +5553,9 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 	bool leave;
 	assert(honfrac >= 0.0);
 	assert(honfrac <= 1.0);
-	if(NumSites>16) NumSites=16;
+	if(NumSites>16) {
+		NumSites=16;
+	}
 	E.NumCands = NumSites;
 	MakeIdentityPerm(NumSites, RandPerm);
 	for(pass=8; pass>=1; pass /= 2) {
@@ -5419,7 +5564,9 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 			if((pass==1 && y%10==9) ||
 			   (pass==2 && y%20==18) ||
 			   (pass==4 && y%40==36) ||
-			   (pass==8 && y%80==72) ) printf("\n");
+			   (pass==8 && y%80==72) ) {
+				printf("\n");
+			}
 			for(x=0; x<200; x+=pass) {
 				PreColor = -1;
 				if( pass>=8 || ((x&pass) || (y&pass)) ) {
@@ -5448,20 +5595,25 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 							yt = sin(th);
 							rr = RandRadialNormal()*GaussStdDev;
 							xt *= rr; yt *= rr;  /*xt, yt are offsets of voters from central pixel*/
-							for(s = -1; s<=1; s++) if(s!=0 || ja==0) { /*centro-symmetric: s=sign*/
-								/*printf("k=%d v=%d j=%d ja=%d s=%d x=%f y=%f\n",k,v,j,ja,s,xt*s,yt*s);*/
-								xto = xt*s + x;
-								yto = yt*s + y;
-								jo = j*NumSites;
-								for(i=0; i<(int)NumSites; i++) { /*go thru canddts generating utils for voter j*/
-									if(LpPow==2) ds = pow((xto-xx[i]) + SquareReal(yto-yy[i]), 2);
-															else  /*1*/  ds = 0.7*pow(( fabs(xto-xx[i]) + fabs(yto-yy[i]) ), 2);
-									ut = 1.0 / sqrt(12000.0 + ds);
-									m = i+jo;
-									E.Utility[m] = ut;
-									E.PerceivedUtility[m] = ut;
-								}/*end for(i)*/
-								j++;
+							for(s = -1; s<=1; s++) {
+								if(s!=0 || ja==0) { /*centro-symmetric: s=sign*/
+									/*printf("k=%d v=%d j=%d ja=%d s=%d x=%f y=%f\n",k,v,j,ja,s,xt*s,yt*s);*/
+									xto = xt*s + x;
+									yto = yt*s + y;
+									jo = j*NumSites;
+									for(i=0; i<(int)NumSites; i++) { /*go thru canddts generating utils for voter j*/
+										if(LpPow==2) {
+											ds = pow((xto-xx[i]) + SquareReal(yto-yy[i]), 2);
+										} else {/*1*/
+											ds = 0.7*pow(( fabs(xto-xx[i]) + fabs(yto-yy[i]) ), 2);
+										}
+										ut = 1.0 / sqrt(12000.0 + ds);
+										m = i+jo;
+										E.Utility[m] = ut;
+										E.PerceivedUtility[m] = ut;
+									}/*end for(i)*/
+									j++;
+								}
 							}/*end for(s)*/
 							ja++;
 						}/*end while(ja)*/
@@ -5473,8 +5625,10 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 						assert(w>=0);
 						weight[w] += v;
 						maxw = -BIGINT;
-						for(i=0; i<(int)NumSites; i++) if(i!=w) {
-							if( maxw<weight[i] ) { maxw=weight[i]; }
+						for(i=0; i<(int)NumSites; i++) {
+							if(i!=w) {
+								if( maxw<weight[i] ) { maxw=weight[i]; }
+							}
 						}
 						leave = false;
 						if (PreColor==w && k==10) { /*early break; precolor agree with first election pass*/
@@ -5514,21 +5668,31 @@ void MakeYeePict( char filename[], const int xx[], const int yy[], int NumSites,
     printf("failed to open %s\n", filename);
     fflush(stdout); exit(EXIT_FAILURE);
   }
-  if(WhichMeth==0 && LpPow==2) DrawVoronoi( NumSites, (const int*)xx, (const int*)yy, Barray, LpPow );
-  else if(WhichMeth==1 && LpPow==2) DrawFPvor( NumSites, (const int*)xx, (const int*)yy, Barray, LpPow );
-  else YeePicture( NumSites, (TopYeeVoters-1)/2, xx, yy, WhichMeth, Barray,
-		   GaussStdDev, honfrac, LpPow );
+  if(WhichMeth==0 && LpPow==2) {
+  	DrawVoronoi( NumSites, (const int*)xx, (const int*)yy, Barray, LpPow );
+  } else if(WhichMeth==1 && LpPow==2) {
+  	DrawFPvor( NumSites, (const int*)xx, (const int*)yy, Barray, LpPow );
+  } else {
+  	YeePicture( NumSites, (TopYeeVoters-1)/2, xx, yy, WhichMeth, Barray, GaussStdDev, honfrac, LpPow );
+  }
   imgsize = OutputBMPHead(200, 200, 4, true, Barray, F);
   OutputFCC16ColorPalette(F);
-  if(imgsize>=20000) OutputBarray(imgsize, Barray, F);
-  else imgsize=OutputCompressedBarray(imgsize, Barray, true, F);
+  if(imgsize>=20000) {
+  	OutputBarray(imgsize, Barray, F);
+  } else {
+  	imgsize=OutputCompressedBarray(imgsize, Barray, true, F);
+  }
   printf("%s: %d bytes\n", filename, imgsize);
   fclose(F);
   printf("coordinates:\n");
   for(i=0; i<NumSites; i++){
     printf("(%d,%d)", xx[i], yy[i]);
-    if(i<NumSites-1) printf(", ");
-    if(i%8==7) printf("\n");
+    if(i<NumSites-1) {
+	printf(", ");
+    }
+    if(i%8==7) {
+	printf("\n");
+    }
   }
   printf("\n");
 }
@@ -6192,24 +6356,40 @@ int main(int argc, const char *const *argv)
 				printf("Restricted Ranges...\n");
 				printf("Honesty fraction range - default is 0 100:\n");
 				scanf("%d %d", &honfraclower, &honfracupper);
-				if(honfraclower<0) honfraclower=0;
-				if(honfracupper>100) honfracupper=100;
+				if(honfraclower<0) {
+					honfraclower=0;
+				}
+				if(honfracupper>100) {
+					honfracupper=100;
+				}
 				printf("Honesty fraction range [%d, %d] chosen.\n", honfraclower, honfracupper);
 				printf("Candidate Number range - default is 2 7 [but this range ignored if real-world dataset]:\n");
 				scanf("%d %d", &candnumlower, &candnumupper);
-				if(candnumlower<2) candnumlower=2;
-				if(candnumupper>=MaxNumCands) candnumupper=MaxNumCands-1;
+				if(candnumlower<2) {
+					candnumlower=2;
+				}
+				if(candnumupper>=MaxNumCands) {
+					candnumupper=MaxNumCands-1;
+				}
 				printf("Candidate number range [%d, %d] chosen.\n", candnumlower, candnumupper);
 				printf("Voter Number range - default is 2 %d [but this range ignored if real-world dataset:\n",
 					votnumupper);
 				scanf("%d %d", &votnumlower, &votnumupper);
-				if(votnumlower<0) votnumlower=0;
-				if(votnumupper>=MaxNumVoters) votnumupper=MaxNumVoters;
+				if(votnumlower<0) {
+					votnumlower=0;
+				}
+				if(votnumupper>=MaxNumVoters) {
+					votnumupper=MaxNumVoters;
+				}
 				printf("Voter number range [%d, %d] chosen.\n", votnumlower, votnumupper);
 				printf("Number of elections to try per scenario - default is %d\n", numelections2try);
 				scanf("%d", &numelections2try);
-				if(numelections2try<29) numelections2try=29;
-				if(numelections2try>99999999) numelections2try=99999999;
+				if(numelections2try<29) {
+					numelections2try=29;
+				}
+				if(numelections2try>99999999) {
+					numelections2try=99999999;
+				}
 				printf("Trying %d elections per scenario.\n", numelections2try);
 				break;
 			default : printf("Wrong choice %d, moron - try again\n", ch2);
@@ -6229,8 +6409,12 @@ int main(int argc, const char *const *argv)
 						printf("\n");
 					}
 					scanf("%d %d", &utilnumlower, &utilnumupper);
-					if(utilnumlower<0) utilnumlower=0;
-					if(utilnumupper>=15) utilnumupper=15;
+					if(utilnumlower<0) {
+						utilnumlower=0;
+					}
+					if(utilnumupper>=15) {
+						utilnumupper=15;
+					}
 					printf("Utility gens  [%d, %d] chosen.\n", utilnumlower, utilnumupper);
 					/**** if ???
 					printf("Select LPpow???d):\n");
