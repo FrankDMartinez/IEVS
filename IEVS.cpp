@@ -1649,8 +1649,9 @@ EMETH PlurIR(edata *E    /* PlurIR=plur+immediate runoff (give ranking as vote) 
 		return(PSecond);
 	}else if(RandBool()) {
 		return(PSecond);
+	} else {
+		return(PlurWinner);
 	}
-	return(PlurWinner);
 }
 
 EMETH Borda(edata *E  /* Borda: weighted positional with weights N-1, N-2, ..., 0  if N-canddts */)
@@ -2938,6 +2939,8 @@ EMETH HeitzigDFC(const edata *E)
 			pwct++;
 		}else if( E->PerceivedUtility[offset+ApprovalWinner] < E->PerceivedUtility[offset+Rwnr] ) {
 			wct++;
+		} else {
+			/* tie, do nothing */
 		}
 	}
 	if( pwct > wct ) {
@@ -2946,6 +2949,8 @@ EMETH HeitzigDFC(const edata *E)
 		if (RandBool()) {
 			return(ApprovalWinner);
 		}
+	} else {
+		/* do nothing */
 	}
 	return(Rwnr);
 }
@@ -5637,6 +5642,8 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 							leave = true;
 						} else if (weight[w] - maxw > MaxK * log(((real)MaxK)/k)*10.1) { /*early break - futility*/
 							leave = true;
+						} else {
+							/* do nothing */
 						}
 						if (leave) {
 							break;
