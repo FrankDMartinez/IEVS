@@ -174,6 +174,7 @@ int flipACoin(int choice1, int choice2);
 template<class T>
 		void PermShellSortDown( uint N, int Perm[], const T Key[] );
 void printName(const char *name, bool padding, int spaces);
+void PrintSummaryOfNormalizedRegretData(uint scenarios);
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void));
 void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10]);
 template<class T>
@@ -5755,10 +5756,7 @@ int      numelections2try = 59;
 int      utilnumlower=0,  utilnumupper = NumUtilGens;
 const real HonLevels[] = {1.0, 0.5, 0.0, 0.75, 0.25};
 const real IgnLevels[] = {0.001, 0.01, 0.1, 1.0, -1.0};
-real RegretSum[NumMethods];
-int CoombCt[NumMethods];
 int MethPerm[NumMethods];
-int VMPerm[NumMethods];
 real RegretData[MaxScenarios*NumMethods];
 
 /*In IEVS 2.59 with NumElections=2999 and MaxNumVoters=3000,
@@ -5774,12 +5772,17 @@ void BRDriver()
 	static const int Pow2Primes[] = {2, 3, 7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 8191, 16381};
 	/** Greatest prime <=2^n. **/
 
-	real BPStrength[NumMethods*NumMethods];
 	bool VotMethods[NumMethods];
-	bool CoombElimination[NumMethods];
-	int i,j,k,r,prind,whichhonlevel,UtilMeth,minc,coombrd,iglevel,TopMeth;
+	int i;
+	int j;
+	int r;
+	int prind;
+	int whichhonlevel;
+	int UtilMeth;
+	int iglevel;
+	int TopMeth;
 	uint ScenarioCount=0;
-	real scalefac, reb, maxc;
+	real scalefac, reb;
 	brdata B;
 
 	for(iglevel=0; iglevel<5; iglevel++) {
@@ -5901,111 +5904,7 @@ void BRDriver()
 			}
 		}
 	}
-	printf("==================SUMMARY OF NORMALIZED REGRET DATA FROM %d SCENARIOS=============\n",
-		ScenarioCount);
-	/* regret-sum, Coombs, and Schulze beatpaths used as summarizers
-	 * since are good for honest voters and cloneproof. */
-	printf("1. voting methods sorted by sum of (normalized so RandWinner=1) regrets (best first):\n");
-	fflush(stdout);
-	for(i=0; i<NumMethods; i++) { RegretSum[i] = 0.0; }
-	for(j=0; j<(int)ScenarioCount; j++) {
-		r = j*NumMethods;
-		for(i=0; i<NumMethods; i++) {
-			RegretSum[i] += RegretData[r+i];
-		}
-	}
-	for(i=0; i<NumMethods; i++) { VMPerm[i] = i; MethPerm[i] = i; }
-	RealPermShellSortUp( NumMethods, VMPerm, RegretSum );
-	for(i=0; i<NumMethods; i++) {
-		r = VMPerm[i];
-		printf("%d=", r); PrintMethName(r,true);
-		printf("\t %g\n", RegretSum[r]);
-	}
-
-	printf("\n2. in order of elimination by the Coombs method (worst first):\n");
-	fflush(stdout);
-	for(i=NumMethods -1; i>=0; i--) { CoombElimination[i] = false; }
-	for(coombrd=NumMethods-2; coombrd>=0; coombrd--) {
-		for(i=NumMethods -1; i>=0; i--) { CoombCt[i] = 0; }
-		for(j=0; j<(int)ScenarioCount; j++) {
-			k = -1;
-			r = j*NumMethods;
-			maxc = -HUGE;
-			for(i=0; i<NumMethods; i++) {
-				if(!CoombElimination[i]) {
-					if(RegretData[r+i] >= maxc) { maxc=RegretData[r+i]; k=i; }
-				}
-			}
-			assert(k>=0);
-			ensure(k>=0, 20);
-			CoombCt[k]++;
-		}
-		k = -1; j = -1;
-		for(i=0; i<NumMethods; i++) {
-			if(CoombCt[i] > k) { k=CoombCt[i]; j=i; }
-		}
-		assert(j>=0);
-		ensure(j>=0, 21);
-		assert(!CoombElimination[j]);
-		CoombElimination[j] = true;
-		printf("%d=",j); PrintMethName(j,true);
-		printf("\n"); fflush(stdout);
-	}
-	for(i=0; i<NumMethods; i++) {
-		if(!CoombElimination[i]) {
-			printf("Coombs Winner: %d=",i);
-			PrintMethName(i,true);
-			printf("\n");
-			fflush(stdout);
-			break;
-		}
-	}
-
-	printf("\n3. voting methods sorted via Schulze beatpaths ordering (best first):\n");
-	fflush(stdout);
-	for(i=NumMethods -1; i>=0; i--) {
-		for(j=NumMethods -1; j>=0; j--) {
-			BPStrength[i*NumMethods +j]=0;
-		}
-	}
-	for(r=0; r<(int)ScenarioCount; r++) {
-		k = r*NumMethods;
-		for(i=NumMethods -1; i>=0; i--) {
-			for(j=NumMethods -1; j>=0; j--) {
-				if(i != j) {
-					BPStrength[i*NumMethods +j] += (RegretData[k+i] < RegretData[k+j]) ? 1 : -1;
-				}
-			}
-		}
-	}
-
-	for(i=NumMethods -1; i>=0; i--) {
-		for(j=NumMethods -1; j>=0; j--) {
-			if(i != j) {
-				for(k=0; k<NumMethods; k++) {
-					if(k != j && k != i) {
-						minc = (int)(BPStrength[j*NumMethods+i]);
-						if( BPStrength[i*NumMethods +k] < minc ) minc = (int)BPStrength[i*NumMethods +k];
-						if( BPStrength[j*NumMethods +k] < minc ) BPStrength[j*NumMethods +k] = minc;
-					}
-				}
-			}
-		}
-	}
-
-	for(i=0; i<NumMethods; i++) {
-		for(j=i+1; j<NumMethods; j++) {
-			if( BPStrength[MethPerm[j]*NumMethods +MethPerm[i]] >
-					BPStrength[MethPerm[i]*NumMethods +MethPerm[j]] ) {
-	/*i is not as good as j, so swap:*/
-				r = MethPerm[i]; MethPerm[i] = MethPerm[j]; MethPerm[j] = r;
-			}
-		}
-		printf("%d=",MethPerm[i]); PrintMethName(MethPerm[i], true);
-		printf("\n"); fflush(stdout);
-	}
-	printf("==========end of summary============\n");
-	fflush(stdout);
+	PrintSummaryOfNormalizedRegretData(ScenarioCount);
 }
 
 
@@ -6015,12 +5914,15 @@ void BRDriver()
  */
 void RWBRDriver()
 {
-	real BPStrength[NumMethods*NumMethods];
 	bool VotMethods[NumMethods];
-	bool CoombElimination[NumMethods];
-	int i,j,k,r,whichhonlevel,minc,coombrd,iglevel,TopMeth;
+	int i;
+	int j;
+	int r;
+	int whichhonlevel;
+	int iglevel;
+	int TopMeth;
 	uint ScenarioCount=0;
-	real scalefac, reb, maxc;
+	real scalefac, reb;
 	brdata B;
 
 	for(iglevel=0; iglevel<4; iglevel++) {
@@ -6128,111 +6030,7 @@ void RWBRDriver()
 				}
 		}} /*end for(whichhonlevel)*/
 	}/*end for(ignlevel)*/
-	printf("==================SUMMARY OF NORMALIZED REGRET DATA FROM %d SCENARIOS=============\n",
-		ScenarioCount);
-	/* regret-sum, Coombs, and Schulze beatpaths used as summarizers
-	 * since are good for honest voters and cloneproof. */
-	printf("1. voting methods sorted by sum of (normalized so RandWinner=1) regrets (best first):\n");
-	fflush(stdout);
-	for(i=0; i<NumMethods; i++) { RegretSum[i] = 0.0; }
-	for(j=0; j<(int)ScenarioCount; j++) {
-		r = j*NumMethods;
-		for(i=0; i<NumMethods; i++) {
-			RegretSum[i] += RegretData[r+i];
-		}
-	}
-	for(i=0; i<NumMethods; i++) { VMPerm[i] = i; MethPerm[i] = i; }
-	RealPermShellSortUp( NumMethods, VMPerm, RegretSum );
-	for(i=0; i<NumMethods; i++) {
-		r = VMPerm[i];
-		printf("%d=", r); PrintMethName(r,true);
-		printf("\t %g\n", RegretSum[r]);
-	}
-
-	printf("\n2. in order of elimination by the Coombs method (worst first):\n");
-	fflush(stdout);
-	for(i=NumMethods -1; i>=0; i--) { CoombElimination[i] = false; }
-	for(coombrd=NumMethods-2; coombrd>=0; coombrd--) {
-		for(i=NumMethods -1; i>=0; i--) { CoombCt[i] = 0; }
-		for(j=0; j<(int)ScenarioCount; j++) {
-			k = -1;
-			r = j*NumMethods;
-			maxc = -HUGE;
-			for(i=0; i<NumMethods; i++) {
-				if(!CoombElimination[i]) {
-					if(RegretData[r+i] >= maxc) { maxc=RegretData[r+i]; k=i; }
-				}
-			}
-			assert(k>=0);
-			ensure(k>=0, 22);
-			CoombCt[k]++;
-		}
-		k = -1; j = -1;
-		for(i=0; i<NumMethods; i++) {
-			if(CoombCt[i] > k) { k=CoombCt[i]; j=i; }
-		}
-		assert(j>=0);
-		ensure(j>=0, 23);
-		assert(!CoombElimination[j]);
-		CoombElimination[j] = true;
-		printf("%d=",j); PrintMethName(j,true);
-		printf("\n"); fflush(stdout);
-	}
-	for(i=0; i<NumMethods; i++) {
-		if(!CoombElimination[i]) {
-			printf("Coombs Winner: %d=",i);
-			PrintMethName(i,true);
-			printf("\n");
-			fflush(stdout);
-			break;
-		}
-	}
-
-	printf("\n3. voting methods sorted via Schulze beatpaths ordering (best first):\n");
-	fflush(stdout);
-	for(i=NumMethods -1; i>=0; i--) {
-		for(j=NumMethods -1; j>=0; j--) {
-			BPStrength[i*NumMethods +j]=0;
-		}
-	}
-	for(r=0; r<(int)ScenarioCount; r++) {
-		k = r*NumMethods;
-		for(i=NumMethods -1; i>=0; i--) {
-			for(j=NumMethods -1; j>=0; j--) {
-				if(i != j) {
-					BPStrength[i*NumMethods +j] += (RegretData[k+i] < RegretData[k+j]) ? 1 : -1;
-				}
-			}
-		}
-	}
-
-	for(i=NumMethods -1; i>=0; i--) {
-		for(j=NumMethods -1; j>=0; j--) {
-			if(i != j) {
-				for(k=0; k<NumMethods; k++) {
-					if(k != j && k != i) {
-						minc = (int)BPStrength[j*NumMethods+i];
-						if( BPStrength[i*NumMethods +k] < minc ) minc = (int)BPStrength[i*NumMethods +k];
-						if( BPStrength[j*NumMethods +k] < minc ) BPStrength[j*NumMethods +k] = minc;
-					}
-				}
-			}
-		}
-	}
-
-	for(i=0; i<NumMethods; i++) {
-		for(j=i+1; j<NumMethods; j++) {
-			if( BPStrength[MethPerm[j]*NumMethods +MethPerm[i]] >
-					BPStrength[MethPerm[i]*NumMethods +MethPerm[j]] ) {
-	/*i is not as good as j, so swap:*/
-				r = MethPerm[i]; MethPerm[i] = MethPerm[j]; MethPerm[j] = r;
-			}
-		}
-		printf("%d=",MethPerm[i]); PrintMethName(MethPerm[i], true);
-		printf("\n"); fflush(stdout);
-	}
-	printf("==========end of summary============\n");
-	fflush(stdout);
+	PrintSummaryOfNormalizedRegretData(ScenarioCount);
 }
 
 /*************************** MAIN CODE: ***************************/
@@ -7229,4 +7027,129 @@ template< class T1 >
 		}
 	}else{ T=M; }
 	return T+M;
+}
+
+/*	PrintSummaryOfNormalizedRegretData(scenarios):	does what it 'says on the tin'
+ *
+ *	scenarios:		the number of scenarios
+ */
+void PrintSummaryOfNormalizedRegretData(uint scenarios)
+{
+	real BPStrength[NumMethods*NumMethods];
+	int CoombCt[NumMethods];
+	bool coombElimination[NumMethods];
+	int coombrd;
+	int i;
+	int j;
+	int k;
+	int r;
+	int minc;
+	real maxc;
+	real RegretSum[NumMethods];
+	int VMPerm[NumMethods];
+	printf("==================SUMMARY OF NORMALIZED REGRET DATA FROM %d SCENARIOS=============\n",
+		scenarios);
+	/* regret-sum, Coombs, and Schulze beatpaths used as summarizers
+	 * since are good for honest voters and cloneproof. */
+	printf("1. voting methods sorted by sum of (normalized so RandWinner=1) regrets (best first):\n");
+	fflush(stdout);
+	for(i=0; i<NumMethods; i++) { RegretSum[i] = 0.0; }
+	for(j=0; j<(int)scenarios; j++) {
+		r = j*NumMethods;
+		for(i=0; i<NumMethods; i++) {
+			RegretSum[i] += RegretData[r+i];
+		}
+	}
+	for(i=0; i<NumMethods; i++) { VMPerm[i] = i; MethPerm[i] = i; }
+	RealPermShellSortUp( NumMethods, VMPerm, RegretSum );
+	for(i=0; i<NumMethods; i++) {
+		r = VMPerm[i];
+		printf("%d=", r); PrintMethName(r,true);
+		printf("\t %g\n", RegretSum[r]);
+	}
+
+	printf("\n2. in order of elimination by the Coombs method (worst first):\n");
+	fflush(stdout);
+	for(i=NumMethods -1; i>=0; i--) { coombElimination[i] = false; }
+	for(coombrd=NumMethods-2; coombrd>=0; coombrd--) {
+		for(i=NumMethods -1; i>=0; i--) { CoombCt[i] = 0; }
+		for(j=0; j<(int)scenarios; j++) {
+			k = -1;
+			r = j*NumMethods;
+			maxc = -HUGE;
+			for(i=0; i<NumMethods; i++) {
+				if(!coombElimination[i]) {
+					if(RegretData[r+i] >= maxc) { maxc=RegretData[r+i]; k=i; }
+				}
+			}
+			assert(k>=0);
+			ensure(k>=0, 20);
+			CoombCt[k]++;
+		}
+		k = -1; j = -1;
+		for(i=0; i<NumMethods; i++) {
+			if(CoombCt[i] > k) { k=CoombCt[i]; j=i; }
+		}
+		assert(j>=0);
+		ensure(j>=0, 21);
+		assert(!coombElimination[j]);
+		coombElimination[j] = true;
+		printf("%d=",j); PrintMethName(j,true);
+		printf("\n"); fflush(stdout);
+	}
+	for(i=0; i<NumMethods; i++) {
+		if(!coombElimination[i]) {
+			printf("Coombs Winner: %d=",i);
+			PrintMethName(i,true);
+			printf("\n");
+			fflush(stdout);
+			break;
+		}
+	}
+
+	printf("\n3. voting methods sorted via Schulze beatpaths ordering (best first):\n");
+	fflush(stdout);
+	for(i=NumMethods -1; i>=0; i--) {
+		for(j=NumMethods -1; j>=0; j--) {
+			BPStrength[i*NumMethods +j]=0;
+		}
+	}
+	for(r=0; r<(int)scenarios; r++) {
+		k = r*NumMethods;
+		for(i=NumMethods -1; i>=0; i--) {
+			for(j=NumMethods -1; j>=0; j--) {
+				if(i != j) {
+					BPStrength[i*NumMethods +j] += (RegretData[k+i] < RegretData[k+j]) ? 1 : -1;
+				}
+			}
+		}
+	}
+
+	for(i=NumMethods -1; i>=0; i--) {
+		for(j=NumMethods -1; j>=0; j--) {
+			if(i != j) {
+				for(k=0; k<NumMethods; k++) {
+					if(k != j && k != i) {
+						minc = (int)(BPStrength[j*NumMethods+i]);
+						if( BPStrength[i*NumMethods +k] < minc ) minc = (int)BPStrength[i*NumMethods +k];
+						if( BPStrength[j*NumMethods +k] < minc ) BPStrength[j*NumMethods +k] = minc;
+					}
+				}
+			}
+		}
+	}
+
+	for(i=0; i<NumMethods; i++) {
+		for(j=i+1; j<NumMethods; j++) {
+			if( BPStrength[MethPerm[j]*NumMethods +MethPerm[i]] >
+					BPStrength[MethPerm[i]*NumMethods +MethPerm[j]] ) {
+	/*i is not as good as j, so swap:*/
+				r = MethPerm[i]; MethPerm[i] = MethPerm[j]; MethPerm[j] = r;
+			}
+		}
+		printf("%d=",MethPerm[i]); PrintMethName(MethPerm[i], true);
+		printf("\n"); fflush(stdout);
+	}
+	printf("==========end of summary============\n");
+	fflush(stdout);
 }
