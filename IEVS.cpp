@@ -4520,7 +4520,7 @@ and note these are undistorted by strategies but are distorted by ignorance.
 
 output:
 same as the input for VOTING METHODS [other components of edata]
-Note, all strategies assume (truthfully???) that the pre-election
+Note, all strategies assume (truthfully?) that the pre-election
 polls are a statistical dead heat, i.e. all candidates equally likely to win.
 WELL NO: BIASED 1,2,3...
 That is done because pre-biased elections are exponentially well-predictable and result in
