@@ -5953,8 +5953,11 @@ void BRDriver()
 	}
 	for(i=0; i<NumMethods; i++) {
 		if(!CoombElimination[i]) {
-			printf("Coombs Winner: %d=",i); PrintMethName(i,true);
-			printf("\n"); fflush(stdout); break;
+			printf("Coombs Winner: %d=",i);
+			PrintMethName(i,true);
+			printf("\n");
+			fflush(stdout);
+			break;
 		}
 	}
 
