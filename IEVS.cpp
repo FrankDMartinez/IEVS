@@ -173,6 +173,7 @@ template< class T >
 int flipACoin(int choice1, int choice2);
 template<class T>
 		void PermShellSortDown( uint N, int Perm[], const T Key[] );
+void PrintBRPreamble(void);
 void printName(const char *name, bool padding, int spaces);
 void PrintSummaryOfNormalizedRegretData(uint scenarios);
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void));
@@ -5799,17 +5800,7 @@ void BRDriver()
 										printf(" Honfrac=%.2f, NumVoters=%d, NumCands=%lld, NumElections=%d, IgnoranceAmplitude=%f)\n",
 											B.Honfrac, B.NumVoters, B.NumCands,
 											B.NumElections, B.IgnoranceAmplitude);
-										if(BROutputMode&(ALLMETHS|TOP10METHS)) {
-											if(BROutputMode&HTMLMODE)
-												printf("<tr><th>Voting Method</th><th>Regrets</th><th>#Agreements with ");
-											else printf("Voting Method & Regrets & #Agreements with ");
-											if(BROutputMode&VBCONDMODE) printf("(vote-based) ");
-											else printf("(true-utility-based) ");
-											printf("Condorcet Winner (when CW exists)");
-											if(BROutputMode&HTMLMODE) printf("</th></tr>");
-											printf("\n");
-										}
-										fflush(stdout);
+										PrintBRPreamble();
 										ComputeBRs(&B, VotMethods, UtilMeth);
 										MakeIdentityPerm(NumMethods, (uint*)MethPerm);
 										RealPermShellSortUp(NumMethods, MethPerm, B.MeanRegret);
@@ -5851,17 +5842,7 @@ void RWBRDriver()
 				printf(" Honfrac=%.2f, NumVoters=%d, NumCands=%lld, NumElections=%d, IgnoranceAmplitude=%f)\n",
 					B.Honfrac, B.NumVoters, B.NumCands,
 					B.NumElections, B.IgnoranceAmplitude);
-				if(BROutputMode&(ALLMETHS|TOP10METHS)) {
-					if(BROutputMode&HTMLMODE)
-						printf("<tr><th>Voting Method</th><th>Regrets</th><th>#Agreements with ");
-					else printf("Voting Method & Regrets & #Agreements with ");
-					if(BROutputMode&VBCONDMODE) printf("(vote-based) ");
-					else printf("(true-utility-based) ");
-					printf("Condorcet Winner (when CW exists)");
-					if(BROutputMode&HTMLMODE) printf("</th></tr>");
-					printf("\n");
-				}
-				fflush(stdout);
+				PrintBRPreamble();
 				PrintBROutput(B, ScenarioCount);
 			}
 		} /*end for(whichhonlevel)*/
@@ -7100,5 +7081,29 @@ void PrepareForBayesianRegretOutput(brdata &regretObject, const int &iglevel, bo
 	regretObject.IgnoranceAmplitude = IgnLevels[iglevel];
 	FillBoolArray(NumMethods, VotMethods, true); /*might want to only do a subset... ??*/
 	printf("\n");
+	fflush(stdout);
+}
+
+/*	PrintBRPreamble():	prints some 'preambular' text for Bayesian regret output
+ */
+void PrintBRPreamble()
+{
+	if(BROutputMode&(ALLMETHS|TOP10METHS)) {
+		if(BROutputMode&HTMLMODE) {
+			printf("<tr><th>Voting Method</th><th>Regrets</th><th>#Agreements with ");
+		} else {
+			printf("Voting Method & Regrets & #Agreements with ");
+		}
+		if(BROutputMode&VBCONDMODE) {
+			printf("(vote-based) ");
+		} else {
+			printf("(true-utility-based) ");
+		}
+		printf("Condorcet Winner (when CW exists)");
+		if(BROutputMode&HTMLMODE) {
+			printf("</th></tr>");
+		}
+		printf("\n");
+	}
 	fflush(stdout);
 }
