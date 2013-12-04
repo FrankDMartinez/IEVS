@@ -4451,6 +4451,7 @@ typedef struct dum2 {
 } brdata;
 
 void EDataPrep(edata &E, const brdata *B);
+void PrepareForBayesianRegretOutput(brdata &regretObject, const int &iglevel, bool (&VotMethods)[NumMethods]);
 void PrintBROutput(const brdata &regretObject, uint &scenarios);
 
 /* all arrays here have NumMethods entries */
@@ -5756,7 +5757,6 @@ int      votnumlower=2, votnumupper=MaxNumVoters;
 int      numelections2try = 59;
 int      utilnumlower=0,  utilnumupper = NumUtilGens;
 const real HonLevels[] = {1.0, 0.5, 0.0, 0.75, 0.25};
-const real IgnLevels[] = {0.001, 0.01, 0.1, 1.0, -1.0};
 int MethPerm[NumMethods];
 real RegretData[MaxScenarios*NumMethods];
 
@@ -5792,12 +5792,7 @@ void BRDriver()
 								if(Pow2Primes[prind]<=votnumupper && Pow2Primes[prind]>=votnumlower) {
 									B.NumVoters=Pow2Primes[prind];
 									for(B.NumCands=candnumlower; B.NumCands<=candnumupper; B.NumCands++) {
-										B.NumElections=numelections2try;
-										/*1299999=good enough to get all BRs accurate to at least 3 significant digits*/
-										/*2999=good enough for usually 2 sig figs, and is 400X faster*/
-										B.IgnoranceAmplitude = IgnLevels[iglevel];
-										FillBoolArray(NumMethods, VotMethods, true); /*might want to only do a subset... ??*/
-										printf("\n"); fflush(stdout);
+										PrepareForBayesianRegretOutput(B, iglevel, VotMethods);
 										printf("(Scenario#%d:", ScenarioCount);
 										printf(" UtilMeth=");
 										PrintUtilName(UtilMeth, false);
@@ -5848,12 +5843,7 @@ void RWBRDriver()
 		B.Honfrac = HonLevels[whichhonlevel];
 		if(B.Honfrac*100 < honfracupper + 0.0001 &&
 			B.Honfrac*100 > honfraclower - 0.0001 ) {
-				B.NumElections=numelections2try;
-				/*1299999=good enough to get all BRs accurate to at least 3 significant digits*/
-				/*2999=good enough for usually 2 sig figs, and is 400X faster*/
-				B.IgnoranceAmplitude = IgnLevels[iglevel];
-				FillBoolArray(NumMethods, VotMethods, true); /*might want to only do a subset... ??*/
-				printf("\n"); fflush(stdout);
+				PrepareForBayesianRegretOutput(B, iglevel, VotMethods);
 				MakeIdentityPerm(NumMethods, (uint*)MethPerm);
 				ComputeBRs(&B, VotMethods, -1);
 				RealPermShellSortUp(NumMethods, MethPerm, B.MeanRegret);
@@ -5873,7 +5863,8 @@ void RWBRDriver()
 				}
 				fflush(stdout);
 				PrintBROutput(B, ScenarioCount);
-		}} /*end for(whichhonlevel)*/
+			}
+		} /*end for(whichhonlevel)*/
 	}/*end for(ignlevel)*/
 	PrintSummaryOfNormalizedRegretData(ScenarioCount);
 }
@@ -7088,4 +7079,26 @@ void PrintBROutput(const brdata &regretObject, uint &scenarios)
 		printf("\n");
 		fflush(stdout);
 	}
+}
+
+/*	PrepareForBayesianRegretOutput(regretObject, iglevel, VotMethods):	prepares 'regretObject'
+ *										and 'VotMethods' for the
+ *										outputting of Bayesian regret
+ *										information, based in
+ *										part on 'iglevel'
+ *	regretObject:	the Bayesian regret object to be prepared
+ *	iglevel:	the ignorance level
+ *	VotMethods:	an array to prepare which will show which voting methods to
+ *			perform
+ */
+void PrepareForBayesianRegretOutput(brdata &regretObject, const int &iglevel, bool (&VotMethods)[NumMethods])
+{
+	static const real IgnLevels[] = {0.001, 0.01, 0.1, 1.0, -1.0};
+	regretObject.NumElections=numelections2try;
+	/*1299999=good enough to get all BRs accurate to at least 3 significant digits*/
+	/*2999=good enough for usually 2 sig figs, and is 400X faster*/
+	regretObject.IgnoranceAmplitude = IgnLevels[iglevel];
+	FillBoolArray(NumMethods, VotMethods, true); /*might want to only do a subset... ??*/
+	printf("\n");
+	fflush(stdout);
 }
