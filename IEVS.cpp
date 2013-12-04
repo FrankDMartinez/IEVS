@@ -5744,6 +5744,7 @@ real ReorderForColorContrast( uint NumSites, int xx[], int yy[] ){
       if(cs2<cscore){
 	temp=xx[s1]; xx[s1]=xx[s2]; xx[s2]=temp;
 	temp=yy[s1]; yy[s1]=yy[s2]; yy[s2]=temp;
+
       }else{ cscore = cs2; }
     }
   }
@@ -5761,6 +5762,16 @@ const real HonLevels[] = {1.0, 0.5, 0.0, 0.75, 0.25};
 int MethPerm[NumMethods];
 real RegretData[MaxScenarios*NumMethods];
 
+struct PopulaceState_t
+{
+	bool realWorld;
+	int numberOfVoters;
+	int ignoranceLevel;
+	int utilityGeneratorMethod;
+};
+
+void PrintTheVotersBayesianRegret(brdata &regretObject, const PopulaceState_t&populaceState, uint &ScenarioCount);
+
 /*In IEVS 2.59 with NumElections=2999 and MaxNumVoters=3000,
  *this driver runs for 80-200 hours
  *on a 2003-era computer, producing several 100 Mbytes output.
@@ -5774,39 +5785,27 @@ void BRDriver()
 	static const int Pow2Primes[] = {2, 3, 7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 8191, 16381};
 	/** Greatest prime <=2^n. **/
 
-	bool VotMethods[NumMethods];
 	int prind;
 	int whichhonlevel;
 	int UtilMeth;
 	int iglevel;
 	uint ScenarioCount=0;
 	brdata B;
+	PopulaceState_t P;
 
+	P.realWorld = false;
 	for(iglevel=0; iglevel<5; iglevel++) {
+		P.ignoranceLevel = iglevel;
 		for(UtilMeth=0; UtilMeth<NumUtilGens; UtilMeth++) {
 			if(UtilMeth>=utilnumlower && UtilMeth<=utilnumupper) {
+				P.utilityGeneratorMethod = UtilMeth;
 				for(whichhonlevel=0; whichhonlevel<5; whichhonlevel++) {
 					B.Honfrac = HonLevels[whichhonlevel];
 					if(B.Honfrac*100 < honfracupper + 0.0001 &&
 						B.Honfrac*100 > honfraclower - 0.0001 ) {
 							for(prind=0; Pow2Primes[prind]<MaxNumVoters; prind++) {
-								if(Pow2Primes[prind]<=votnumupper && Pow2Primes[prind]>=votnumlower) {
-									B.NumVoters=Pow2Primes[prind];
-									for(B.NumCands=candnumlower; B.NumCands<=candnumupper; B.NumCands++) {
-										PrepareForBayesianRegretOutput(B, iglevel, VotMethods);
-										printf("(Scenario#%d:", ScenarioCount);
-										printf(" UtilMeth=");
-										PrintUtilName(UtilMeth, false);
-										printf(" Honfrac=%.2f, NumVoters=%d, NumCands=%lld, NumElections=%d, IgnoranceAmplitude=%f)\n",
-											B.Honfrac, B.NumVoters, B.NumCands,
-											B.NumElections, B.IgnoranceAmplitude);
-										PrintBRPreamble();
-										ComputeBRs(&B, VotMethods, UtilMeth);
-										MakeIdentityPerm(NumMethods, (uint*)MethPerm);
-										RealPermShellSortUp(NumMethods, MethPerm, B.MeanRegret);
-										PrintBROutput(B, ScenarioCount);
-									} /*end for(prind)*/
-								}
+								P.numberOfVoters = Pow2Primes[prind];
+								PrintTheVotersBayesianRegret(B, P, ScenarioCount);
 							}
 					} /*end for(whichhonlevel)*/
 				}
@@ -5823,27 +5822,19 @@ void BRDriver()
  */
 void RWBRDriver()
 {
-	bool VotMethods[NumMethods];
 	int whichhonlevel;
 	int iglevel;
 	uint ScenarioCount=0;
 	brdata B;
+	PopulaceState_t P;
 
+	P.realWorld = true;
 	for(iglevel=0; iglevel<4; iglevel++) {
-	for(whichhonlevel=0; whichhonlevel<5; whichhonlevel++) {
-		B.Honfrac = HonLevels[whichhonlevel];
-		if(B.Honfrac*100 < honfracupper + 0.0001 &&
-			B.Honfrac*100 > honfraclower - 0.0001 ) {
-				PrepareForBayesianRegretOutput(B, iglevel, VotMethods);
-				MakeIdentityPerm(NumMethods, (uint*)MethPerm);
-				ComputeBRs(&B, VotMethods, -1);
-				RealPermShellSortUp(NumMethods, MethPerm, B.MeanRegret);
-				printf("(Scenario#%d:", ScenarioCount);
-				printf(" Honfrac=%.2f, NumVoters=%d, NumCands=%lld, NumElections=%d, IgnoranceAmplitude=%f)\n",
-					B.Honfrac, B.NumVoters, B.NumCands,
-					B.NumElections, B.IgnoranceAmplitude);
-				PrintBRPreamble();
-				PrintBROutput(B, ScenarioCount);
+		P.ignoranceLevel = iglevel;
+		for(whichhonlevel=0; whichhonlevel<5; whichhonlevel++) {
+			B.Honfrac = HonLevels[whichhonlevel];
+			if(B.Honfrac*100 < honfracupper + 0.0001 && B.Honfrac*100 > honfraclower - 0.0001 ) {
+				PrintTheVotersBayesianRegret(B, P, ScenarioCount);
 			}
 		} /*end for(whichhonlevel)*/
 	}/*end for(ignlevel)*/
@@ -7119,4 +7110,63 @@ void PrintBRPreamble()
 		printf("\n");
 	}
 	fflush(stdout);
+}
+
+/*	PrintTheVotersBayesianRegret(regretObject, populaceState, ScenarioCount):	prints the
+ *											Bayesian regret
+ *											information for
+ *											Voters in either
+ *											a 'realWorld'
+ *											election of for
+ *											a given number
+ *											of hypothetical
+ *											Voters
+ *	regretObject:	the Bayesian regret data to analyze and print
+ *	populaceState:	the state of the polucate as a whole, ignorance, number of
+ *			Voters, etc.
+ *	ScenarioCount:	the number of election scenarios processed
+ */
+void PrintTheVotersBayesianRegret(brdata &regretObject, const PopulaceState_t &populaceState, uint &ScenarioCount)
+{
+	bool VotMethods[NumMethods];
+	const bool &realWorld = populaceState.realWorld;
+	const int &numberOfVoters = populaceState.numberOfVoters;
+	const int &iglevel = populaceState.ignoranceLevel;
+	const int &UtilMeth = populaceState.utilityGeneratorMethod;
+	if(realWorld || (numberOfVoters<=votnumupper && numberOfVoters>=votnumlower)) {
+		uint64_t completedLoops;
+		uint64_t maximumLoopCount;
+		if(not realWorld) {
+			regretObject.NumVoters=numberOfVoters;
+			maximumLoopCount = (candnumupper - candnumlower) + 1;
+		} else {
+			maximumLoopCount = 1;
+		}
+		for(completedLoops = 0; completedLoops < maximumLoopCount; completedLoops++) {
+			if(not realWorld) {
+				regretObject.NumCands = candnumlower + completedLoops;
+			}
+			PrepareForBayesianRegretOutput(regretObject, iglevel, VotMethods);
+			if(realWorld) {
+				MakeIdentityPerm(NumMethods, (uint*)MethPerm);
+				ComputeBRs(&regretObject, VotMethods, -1);
+				RealPermShellSortUp(NumMethods, MethPerm, regretObject.MeanRegret);
+			}
+			printf("(Scenario#%d:", ScenarioCount);
+			if(not realWorld) {
+				printf(" UtilMeth=");
+				PrintUtilName(UtilMeth, false);
+			}
+			printf(" Honfrac=%.2f, NumVoters=%d, NumCands=%lld, NumElections=%d, IgnoranceAmplitude=%f)\n",
+				regretObject.Honfrac, regretObject.NumVoters, regretObject.NumCands,
+				regretObject.NumElections, regretObject.IgnoranceAmplitude);
+			PrintBRPreamble();
+			if(not realWorld) {
+				ComputeBRs(&regretObject, VotMethods, UtilMeth);
+				MakeIdentityPerm(NumMethods, (uint*)MethPerm);
+				RealPermShellSortUp(NumMethods, MethPerm, regretObject.MeanRegret);
+			}
+			PrintBROutput(regretObject, ScenarioCount);
+		} /*end for(prind)*/
+	}
 }
