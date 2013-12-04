@@ -6960,7 +6960,7 @@ void PrintSummaryOfNormalizedRegretData(uint scenarios)
 		for(j=i+1; j<NumMethods; j++) {
 			if( BPStrength[MethPerm[j]*NumMethods +MethPerm[i]] >
 					BPStrength[MethPerm[i]*NumMethods +MethPerm[j]] ) {
-	/*i is not as good as j, so swap:*/
+				/*i is not as good as j, so swap:*/
 				r = MethPerm[i]; MethPerm[i] = MethPerm[j]; MethPerm[j] = r;
 			}
 		}
@@ -6987,38 +6987,49 @@ void PrintBROutput(const brdata &regretObject, uint &scenarios)
 	real reb;
 	real scalefac;
 	int TopMeth = 0;
-	if(BROutputMode&ALLMETHS) TopMeth = NumMethods;
-	if(BROutputMode&TOP10METHS) TopMeth = 10;
+	const bool allMethods = !!(BROutputMode&ALLMETHS);
+	const bool top10Methods = !!(BROutputMode&TOP10METHS);
+	const bool htmlMode = !!(BROutputMode&HTMLMODE);
+	const bool texMode = !!(BROutputMode&TEXMODE);
+	const bool normalizeRegrets = !!(BROutputMode&NORMALIZEREGRETS);
+	const bool normalizeRegretsByShentrup = !!(BROutputMode&SHENTRUPVSR);
+	const bool omitErrorBars = !!(BROutputMode&OMITERRORBARS);
+	const real meanRegretBase = regretObject.MeanRegret[2];
+	real currentMethodsMeanRegret;
+	if(allMethods) TopMeth = NumMethods;
+	if(top10Methods) TopMeth = 10;
 	for(i=0; i<TopMeth; i++) {
 		r=i;
 		if(BROutputMode&SORTMODE) r=MethPerm[i];
-		if(BROutputMode&HTMLMODE) printf("<tr><td>");
+		currentMethodsMeanRegret = regretObject.MeanRegret[r];
+		if(htmlMode) printf("<tr><td>");
 		printf("%d=",r); PrintMethName(r,true);
-		if(BROutputMode&HTMLMODE) printf("</td><td>");
-		else if(BROutputMode&TEXMODE) printf(" & ");
-		if(BROutputMode&NORMALIZEREGRETS) printf(" \t %8.5g", regretObject.MeanRegret[r]/regretObject.MeanRegret[2]);
-		else if(BROutputMode&SHENTRUPVSR) printf(" \t %8.5g", 100.0*(1.0 - regretObject.MeanRegret[r]/regretObject.MeanRegret[2]));
-		else printf(" \t %8.5g", regretObject.MeanRegret[r]);
-		if(!(BROutputMode&OMITERRORBARS)) {
-			if(BROutputMode&HTMLMODE) printf("&plusmn;");
-			else if(BROutputMode&TEXMODE) printf("\\pm");
+		if(htmlMode) printf("</td><td>");
+		else if(texMode) printf(" & ");
+		if(normalizeRegrets) printf(" \t %8.5g", currentMethodsMeanRegret/meanRegretBase);
+		else if(normalizeRegretsByShentrup) printf(" \t %8.5g", 100.0*(1.0 - currentMethodsMeanRegret/meanRegretBase));
+		else printf(" \t %8.5g", currentMethodsMeanRegret);
+		if(!omitErrorBars) {
+			const real currentMethodsSRegret = regretObject.SRegret[r];
+			if(htmlMode) printf("&plusmn;");
+			else if(texMode) printf("\\pm");
 			else printf("+-");
-			if(BROutputMode&NORMALIZEREGRETS) reb = sqrt(regretObject.SRegret[r])/regretObject.MeanRegret[2];
-			else if(BROutputMode&SHENTRUPVSR) reb = 100.0*sqrt(regretObject.SRegret[r])/regretObject.MeanRegret[2];
-			else reb = sqrt(regretObject.SRegret[r]);
+			if(normalizeRegrets) reb = sqrt(currentMethodsSRegret)/meanRegretBase;
+			else if(normalizeRegretsByShentrup) reb = 100.0*sqrt(currentMethodsSRegret)/meanRegretBase;
+			else reb = sqrt(currentMethodsSRegret);
 			printf("%5.2g", reb);
 		}
-		if(BROutputMode&HTMLMODE) printf("</td><td>");
-		else if(BROutputMode&TEXMODE) printf(" & ");
+		if(htmlMode) printf("</td><td>");
+		else if(texMode) printf(" & ");
 		if(BROutputMode&VBCONDMODE) printf(" \t  %7d", regretObject.CondAgreeCount[r]);
 		else printf(" \t  %7d", regretObject.TrueCondAgreeCount[r]);
-		if(BROutputMode&HTMLMODE) printf("</td></tr>\n");
-		else if(BROutputMode&TEXMODE) printf(" \\\\ \n");
+		if(htmlMode) printf("</td></tr>\n");
+		else if(texMode) printf(" \\\\ \n");
 		else printf("\n");
 	}/*end for(i)*/
 	for(i=0; i<NumMethods; i++) {  /*accumulate regret data for later summary*/
 		RegretData[scenarios*NumMethods + i] =
-			(regretObject.MeanRegret[i] + 0.00000000001*Rand01())/( regretObject.MeanRegret[2]+0.00000000001 );
+			(regretObject.MeanRegret[i] + 0.00000000001*Rand01())/( meanRegretBase+0.00000000001 );
 	}
 	scenarios++;
 	if(scenarios > MaxScenarios) {
@@ -7026,16 +7037,17 @@ void PrintBROutput(const brdata &regretObject, uint &scenarios)
 		fflush(stdout);
 		exit(EXIT_FAILURE);
 	}
-	if(BROutputMode&HTMLMODE) printf("</td></tr>");
-	else if(BROutputMode&TEXMODE) printf(" \\\\ ");
+	if(htmlMode) printf("</td></tr>");
+	else if(texMode) printf(" \\\\ ");
 	printf("\n");
-	if( (BROutputMode&OMITERRORBARS) && (BROutputMode&(ALLMETHS|TOP10METHS)) ) {
-		if(BROutputMode&NORMALIZEREGRETS) reb = sqrt(regretObject.SRegret[2])/regretObject.MeanRegret[2];
-		else if(BROutputMode&SHENTRUPVSR) reb = 100.0*sqrt(regretObject.SRegret[2])/regretObject.MeanRegret[2];
-		else reb = sqrt(regretObject.SRegret[2]);
+	if( omitErrorBars && (allMethods || top10Methods) ) {
+		const real SRegretBase = regretObject.SRegret[2];
+		if(normalizeRegrets) reb = sqrt(SRegretBase)/meanRegretBase;
+		else if(normalizeRegretsByShentrup) reb = 100.0*sqrt(SRegretBase)/meanRegretBase;
+		else reb = sqrt(SRegretBase);
 		printf("ErrorBar for RandomWinner's regret=");
-		if(BROutputMode&HTMLMODE) printf("&plusmn;");
-		else if(BROutputMode&TEXMODE) printf("\\pm");
+		if(htmlMode) printf("&plusmn;");
+		else if(texMode) printf("\\pm");
 		else printf("+-");
 		printf("%5.2g;\n", reb);
 		printf("This (experimentally always?) upperbounds the error bar for every other regret.\n");
@@ -7089,7 +7101,8 @@ void PrepareForBayesianRegretOutput(brdata &regretObject, const int &iglevel, bo
 void PrintBRPreamble()
 {
 	if(BROutputMode&(ALLMETHS|TOP10METHS)) {
-		if(BROutputMode&HTMLMODE) {
+		const bool htmlMode = !!(BROutputMode&HTMLMODE);
+		if(htmlMode) {
 			printf("<tr><th>Voting Method</th><th>Regrets</th><th>#Agreements with ");
 		} else {
 			printf("Voting Method & Regrets & #Agreements with ");
@@ -7100,7 +7113,7 @@ void PrintBRPreamble()
 			printf("(true-utility-based) ");
 		}
 		printf("Condorcet Winner (when CW exists)");
-		if(BROutputMode&HTMLMODE) {
+		if(htmlMode) {
 			printf("</th></tr>");
 		}
 		printf("\n");
