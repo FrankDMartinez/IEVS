@@ -170,18 +170,14 @@ template< class T >
 		int ArgMinArr(uint N, const T Arr[], int RandPerm[]);
 template< class T >
 		int ArgMaxArr(uint N, const T Arr[], int RandPerm[]);
-void ErectMainMenu(uint seed);
 int flipACoin(int choice1, int choice2);
-uint InitializeRandomNumberGenerator(void);
 template<class T>
 		void PermShellSortDown( uint N, int Perm[], const T Key[] );
 void PrintBRPreamble(void);
 void printName(const char *name, bool padding, int spaces);
-void PrintOpeningCredits(void);
 void PrintSummaryOfNormalizedRegretData(uint scenarios);
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void));
 void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10]);
-void RunBasicAssertionTests(void);
 template<class T>
 		int Sign(T x);
 template<class T>
@@ -5849,6 +5845,10 @@ void RWBRDriver()
 
 int main(int argc, const char *const *argv)
 {
+	extern void ErectMainMenu(uint seed);
+	uint InitializeRandomNumberGenerator(void);
+	void PrintOpeningCredits(void);
+	void RunBasicAssertionTests(void);
 	uint seed;
 	if (argc > 1) {
 		if (!strcmp(argv[1], "--test")) {
@@ -6913,12 +6913,15 @@ void ErectMainMenu(uint seed)
 	uint ch3;
 	uint choice;
 	real cscore;
+	extern void DisplayBayesianRegretMenuIntroduction(void);
+	extern void DisplayMainQuestion(void);
 	char fname[100];
 	int i;
 	int ihonfrac;
 	int GaussStdDev;
 	int LpPow;
 	int NumSites;
+	extern void RequestBayesianRegretSortingMethod(void);
 	extern void runSelfTests(void);
 	int subsqsideX;
 	int subsqsideY;
@@ -6926,26 +6929,14 @@ void ErectMainMenu(uint seed)
 	int WhichMeth;
 	int xx[16];
 	int yy[16];
-	printf("What do you want to do?\n1=BayesianRegrets\n2=YeePicture\n");
-	printf("3=Test RandGen (and other self-tests)\n");
-	printf("4=Tally an election with votes you enter\n");
+	DisplayMainQuestion();
 	do{
 		fflush(stdout);
 		scanf("%u", &choice);
 		switch(choice) {
 		case(1) :
-			printf("Answer a sequence of questions indicating what output format you want for\n");
-			printf("the regret tables:\n");
-			printf("I. voting methods (1) sorted-by-regret or (2) by voting-method-number?\n");
-			printf("[The latter, while arbitrary, has the advantage of invariance throughout the run.]\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) : printf("sorted by regrets.\n"); BROutputMode |= SORTMODE; break;
-			case(2) : printf("sorting by voting method number.\n"); break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
+			DisplayBayesianRegretMenuIntroduction();
+			RequestBayesianRegretSortingMethod();
 			printf("II. output (1) plain ASCII (2) TeX table formatting (3) HTML table formatting?\n");
 			fflush(stdout);
 			scanf("%u", &ch2);
@@ -7222,4 +7213,52 @@ void ErectMainMenu(uint seed)
 		}
 	} while(false); /* end switch */
 	fflush(stdout);
+}
+
+/*	DisplayMainQuestion(void):	asks the User what They want to do
+ */
+void DisplayMainQuestion(void)
+{
+	printf("What do you want to do?\n1=BayesianRegrets\n2=YeePicture\n");
+	printf("3=Test RandGen (and other self-tests)\n");
+	printf("4=Tally an election with votes you enter\n");
+}
+
+/*	DisplayBayesianRegretMenuIntroduction(void):	displays the opening text of the
+ *							Bayesian regret analysis menu
+ */
+void DisplayBayesianRegretMenuIntroduction(void)
+{
+	printf("Answer a sequence of questions indicating what output format you want for\n");
+	printf("the regret tables:\n");
+}
+
+/*	RequestBayesianRegretSortingMethod(void):	asks the User to choose a
+ *							sorting method for the outputted
+ *							results
+ */
+void RequestBayesianRegretSortingMethod(void)
+{
+	bool finished;
+	uint u;
+	printf("I. voting methods (1) sorted-by-regret or (2) by voting-method-number?\n");
+	printf("[The latter, while arbitrary, has the advantage of invariance throughout the run.]\n");
+	for( finished = false; not finished; ) {
+		fflush(stdout);
+		scanf("%u", &u);
+		switch(u) {
+		case(1) :
+			printf("sorted by regrets.\n");
+			BROutputMode |= SORTMODE;
+			finished = true;
+			break;
+		case(2) :
+			printf("sorting by voting method number.\n");
+			finished = true;
+			break;
+		default :
+			printf("Wrong choice %u, moron - try again\n", u);
+			break;
+		}
+	}
 }
