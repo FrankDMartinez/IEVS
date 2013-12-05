@@ -6925,6 +6925,7 @@ void ErectMainMenu(uint seed)
 	extern void RequestBayesianRegretNormalizationMethod(void);
 	extern void RequestBayesianRegretSortingMethod(void);
 	extern void RequestErrorBarStatus(void);
+	extern void RequestIntermethodWinnerAgreementCountDisplayStatus(void);
 	extern void RequestOutputFormat(void);
 	extern void runSelfTests(void);
 	int subsqsideX;
@@ -6945,15 +6946,7 @@ void ErectMainMenu(uint seed)
 			RequestBayesianRegretNormalizationMethod();
 			RequestErrorBarStatus();
 			RequestAgreementCountStatus();
-			printf("VI. Print out intermethod winner-agreement-count tables (1) no, (2) yes\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) : printf("NO agree-count tables.\n"); break;
-			case(2) : printf("Yes agree-count tables.\n"); BROutputMode |= DOAGREETABLES; break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
+			RequestIntermethodWinnerAgreementCountDisplayStatus();
 			printf("VII. Print out regrets for (1) no, (2) only best 10, (3) all methods\n");
 			fflush(stdout);
 			scanf("%u", &ch2);
@@ -7346,6 +7339,37 @@ void RequestAgreementCountStatus()
 		case(2) :
 			printf("vote-based CWs.\n");
 			BROutputMode |= VBCONDMODE;
+			finished = true;
+			break;
+		default :
+			printf("Wrong choice %u, moron - try again\n", u);
+			break;
+		}
+	}
+}
+
+/*	RequestIntermethodWinnerAgreementCountDisplayStatus():	asks the User if
+ *								intermethod
+ *								Winner-agreement-count
+ *								tables should be
+ *								produced
+ */
+void RequestIntermethodWinnerAgreementCountDisplayStatus(void)
+{
+	bool finished;
+	uint u;
+	printf("VI. Print out intermethod winner-agreement-count tables (1) no, (2) yes\n");
+	for( finished = false; not finished; ) {
+		fflush(stdout);
+		scanf("%u", &u);
+		switch(u) {
+		case(1) :
+			printf("NO agree-count tables.\n");
+			finished = true;
+			break;
+		case(2) :
+			printf("Yes agree-count tables.\n");
+			BROutputMode |= DOAGREETABLES;
 			finished = true;
 			break;
 		default :
