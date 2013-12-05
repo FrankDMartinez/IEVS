@@ -170,14 +170,18 @@ template< class T >
 		int ArgMinArr(uint N, const T Arr[], int RandPerm[]);
 template< class T >
 		int ArgMaxArr(uint N, const T Arr[], int RandPerm[]);
+void ErectMainMenu(uint seed);
 int flipACoin(int choice1, int choice2);
+uint InitializeRandomNumberGenerator(void);
 template<class T>
 		void PermShellSortDown( uint N, int Perm[], const T Key[] );
 void PrintBRPreamble(void);
 void printName(const char *name, bool padding, int spaces);
+void PrintOpeningCredits(void);
 void PrintSummaryOfNormalizedRegretData(uint scenarios);
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void));
 void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10]);
+void RunBasicAssertionTests(void);
 template<class T>
 		int Sign(T x);
 template<class T>
@@ -5845,18 +5849,7 @@ void RWBRDriver()
 
 int main(int argc, const char *const *argv)
 {
-	const real VERSION = 3.24;
-	const int VERSIONYEAR = 2007;
-	const int VERSIONMONTH = 2;
-	uint seed, choice, ch2, ch3;
-	int ihonfrac, TopYeeVoters, GaussStdDev, subsqsideX, subsqsideY, LpPow;
-	int WhichMeth, NumSites, i;
-	int xx[16], yy[16];
-	real cscore;
-	char fname[100];
-	extern void runSelfTests(void);
-	extern void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], const int &subsqsideX, const int &subsqsideY);
-
+	uint seed;
 	if (argc > 1) {
 		if (!strcmp(argv[1], "--test")) {
 			extern void runTests(void);
@@ -5865,318 +5858,14 @@ int main(int argc, const char *const *argv)
 			exit(EXIT_SUCCESS);
 		}
 	}
-	printf("IEVS (Warren D. Smith's infinitely extendible voting system comparator) at your service!\n");
-	printf("Version=%f  Year=%d  Month=%d\n", VERSION, VERSIONYEAR, VERSIONMONTH);
-	fflush(stdout);
+	PrintOpeningCredits();
 	PrintConsts();
-	printf("\nPlease enter random seed (0 causes machine to auto-generate from TimeOfDay)\n");
-	fflush(stdout);
-	scanf("%u", &seed);
-	InitRand(seed);
+	seed = InitializeRandomNumberGenerator();
 
 	BuildLCMfact();
-	assert(SingletonSet(8));       assert(SingletonSet(256));
-	assert(!SingletonSet(256+8));  assert(!SingletonSet(256+512));
-	assert(!SingletonSet(3));      assert(!SingletonSet(7));
-	assert(!SingletonSet(5));      assert(!SingletonSet(10));
-	assert(!EmptySet(5));          assert(EmptySet(0));
+	RunBasicAssertionTests();
 
-	printf("What do you want to do?\n1=BayesianRegrets\n2=YeePicture\n");
-	printf("3=Test RandGen (and other self-tests)\n");
-	printf("4=Tally an election with votes you enter\n");
-	do{
-		fflush(stdout);
-		scanf("%u", &choice);
-		switch(choice) {
-		case(1) :
-			printf("Answer a sequence of questions indicating what output format you want for\n");
-			printf("the regret tables:\n");
-			printf("I. voting methods (1) sorted-by-regret or (2) by voting-method-number?\n");
-			printf("[The latter, while arbitrary, has the advantage of invariance throughout the run.]\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) : printf("sorted by regrets.\n"); BROutputMode |= SORTMODE; break;
-			case(2) : printf("sorting by voting method number.\n"); break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
-			printf("II. output (1) plain ASCII (2) TeX table formatting (3) HTML table formatting?\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) : printf("plain ASCII.\n"); break;
-			case(2) : printf("TeX.\n"); BROutputMode |= TEXMODE; break;
-			case(3) : printf("HTML.\n"); BROutputMode |= HTMLMODE; break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
-			printf("III. BRs (1) plain (2) normalized so SociallyBest=0, RandomWinner=1\n");
-			printf("     (3) normalized so SociallyBest=100, RandomWinner=0, WorseThanRandom<0?\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) : printf("plain.\n"); break;
-			case(2) : printf("Best=0, Random=1.\n"); BROutputMode |= NORMALIZEREGRETS; break;
-			case(3) : printf("Best=100, Random=0.\n"); BROutputMode |= SHENTRUPVSR; break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
-			printf("IV. Error bars (1) on every BR value (2) omit & only compute for RandomWinner\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) : printf("all error bars.\n"); break;
-			case(2) : printf("omit error bars.\n"); BROutputMode |= OMITERRORBARS; break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
-			printf("V. Print Agreement counts with (1) true-utility(undistorted) Condorcet Winners, (2) vote-based CWs\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) : printf("true-utility CWs.\n"); break;
-			case(2) : printf("vote-based CWs.\n"); BROutputMode |= VBCONDMODE; break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
-			printf("VI. Print out intermethod winner-agreement-count tables (1) no, (2) yes\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) : printf("NO agree-count tables.\n"); break;
-			case(2) : printf("Yes agree-count tables.\n"); BROutputMode |= DOAGREETABLES; break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
-			printf("VII. Print out regrets for (1) no, (2) only best 10, (3) all methods\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) : printf("No regrets printed (minimum verbosity).\n"); break;
-			case(2) : printf("Top10 methods regrets only printed.\n"); BROutputMode |= TOP10METHS; break;
-			case(3) : printf("All regrets printed (maximum verbosity).\n"); BROutputMode |= ALLMETHS; break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
-			printf("VIII. (1) All parameter knob-settings, or (2) restricted ranges?\n");
-			honfraclower=0; honfracupper=100;
-			candnumlower=2; candnumupper=7;
-			votnumlower=2; votnumupper=MaxNumVoters;
-			numelections2try = 59;
-			fflush(stdout);
-			scanf("%u", &ch3);
-			switch(ch3) {
-			case(1) : printf("All settings.\n"); break;
-			case(2) :
-				printf("Restricted Ranges...\n");
-				printf("Honesty fraction range - default is 0 100:\n");
-				scanf("%d %d", &honfraclower, &honfracupper);
-				if(honfraclower<0) {
-					honfraclower=0;
-				}
-				if(honfracupper>100) {
-					honfracupper=100;
-				}
-				printf("Honesty fraction range [%d, %d] chosen.\n", honfraclower, honfracupper);
-				printf("Candidate Number range - default is 2 7 [but this range ignored if real-world dataset]:\n");
-				scanf("%d %d", &candnumlower, &candnumupper);
-				if(candnumlower<2) {
-					candnumlower=2;
-				}
-				if(candnumupper>=MaxNumCands) {
-					candnumupper=MaxNumCands-1;
-				}
-				printf("Candidate number range [%d, %d] chosen.\n", candnumlower, candnumupper);
-				printf("Voter Number range - default is 2 %d [but this range ignored if real-world dataset:\n",
-					votnumupper);
-				scanf("%d %d", &votnumlower, &votnumupper);
-				if(votnumlower<0) {
-					votnumlower=0;
-				}
-				if(votnumupper>=MaxNumVoters) {
-					votnumupper=MaxNumVoters;
-				}
-				printf("Voter number range [%d, %d] chosen.\n", votnumlower, votnumupper);
-				printf("Number of elections to try per scenario - default is %d\n", numelections2try);
-				scanf("%d", &numelections2try);
-				if(numelections2try<29) {
-					numelections2try=29;
-				}
-				if(numelections2try>99999999) {
-					numelections2try=99999999;
-				}
-				printf("Trying %d elections per scenario.\n", numelections2try);
-				break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
-			printf("IX. (1) Machine or (2) Real-world-based utilities?\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) :
-				printf("Machine.\n");
-				if(ch3==2) {
-					printf("Select which utility-generators you want (default 0 thru 15):\n");
-					for(i=0; i<16; i++) {
-						printf("%2d: ", i);
-						PrintUtilName(i,true);
-						printf("\n");
-					}
-					scanf("%d %d", &utilnumlower, &utilnumupper);
-					if(utilnumlower<0) {
-						utilnumlower=0;
-					}
-					if(utilnumupper>=15) {
-						utilnumupper=15;
-					}
-					printf("Utility gens  [%d, %d] chosen.\n", utilnumlower, utilnumupper);
-					/**** if ???
-					printf("Select LPpow???d):\n");
-					scanf("%d", &LPpow);
-					if(LPpow<1) LPpow=1;
-					if(LPpow>5) LPpow=5;
-					printf("Using L%d distances.\n", LPpow);
-					*****/
-				}
-				BRDriver();
-				break;
-			case(2) :
-				printf("Real-world-based.\n");
-				LoadEldataFiles();
-				RWBRDriver();
-				break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
-			break;
-		case(2) :
-			printf("Which voting method? Your choices:"); PrintAvailableVMethods();
-			fflush(stdout);
-			scanf("%d", &WhichMeth);
-			printf("using %d=", WhichMeth); PrintMethName(WhichMeth, false);
-			printf(".\nWhat filename [.bmp suffix will be auto-added for you]?\n");
-			fflush(stdout);
-			scanf("%s", fname);
-			i = strlen(fname);
-			if(i>30) {
-				printf("filename too long, moron\n");
-				fflush(stdout); exit(EXIT_FAILURE);
-			}
-			strcat(fname, ".bmp");
-			printf("how many point-sites do you want [1 to 16]?\n");
-			fflush(stdout);
-			scanf("%d", &NumSites);
-			if((NumSites<1) || (NumSites>16)) {
-				printf("out of bounds value %d moron, using 16 instead\n",NumSites);
-				NumSites=16;
-			}
-			printf("Do you want to:\n1. enter the %d coord-pairs yourself;\n",NumSites);
-			printf("2. random coordinate auto-generation?\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) :
-				printf("Enter coord pairs X Y with space (not comma) between X & Y, newline between pairs\n");
-				printf("(0,0) is in the lower left.  For example an equilateral triangle would be\n");
-				printf("99 197\n186 47\n12 47\nCoords outside of the [[0,199] range are permitted.\nYour coords:\n");
-				fflush(stdout);
-				for(i=0; i<NumSites; i++) {
-					scanf("%d %d", &(xx[i]), &(yy[i]));
-				}
-				printf("Your coords are:\n");
-				for(i=0; i<NumSites; i++) {
-					printf("(%d, %d)\n", xx[i], yy[i]);
-				}
-				break;
-			case(2) :
-				printf("X Y sidelengths of subsquare in which you want the random points (200 for full square):\n");
-				fflush(stdout);
-				scanf("%d %d", &subsqsideX,  &subsqsideY);
-				if((subsqsideX <=0) || (subsqsideX>=200)) {  subsqsideX = 200;  }
-				if((subsqsideY <=0) || (subsqsideY>=200)) {  subsqsideY = 200;  }
-				printf("using %dx%d centered subrectangle\n", subsqsideX, subsqsideY);
-				adjustYeeCoordinates(NumSites, xx, yy, subsqsideX, subsqsideY);
-				cscore = ReorderForColorContrast(  NumSites, xx, yy );
-				printf("Color score %f (big=more constrast); Your coords are:\n", cscore);
-				for(i=0; i<NumSites; i++) {
-					printf("(%d, %d)\n", xx[i], yy[i]);
-				}
-				break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
-			printf("Do you want IEVS to re-order the points to try for maximum color-contrast? (1) yes (2) no\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) :
-				printf("Reordering...\n");
-				cscore = ReorderForColorContrast(  NumSites, xx, yy );
-				printf("Color score %f (big=more constrast); Your (reordered) coords are:\n", cscore);
-				for(i=0; i<NumSites; i++) {
-					printf("(%d, %d)\n", xx[i], yy[i]);
-				}
-				break;
-			case(2) :
-				printf("OK, leaving points ordered as is.\n");
-				break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
-
-			printf("What max election size (#voters) would you like?\n");
-			printf("256 recommended as good compromise between speed and randomness.\n");
-			printf("You're allowed to go as high as %d (for slowest speed).\n", MaxNumVoters);
-			printf("Algorithm keeps redoing elections with 10%% more voters each time until\n");
-			printf("either confident know the winner, or reach this voter# bound.\n");
-			fflush(stdout);
-			scanf("%d", &TopYeeVoters);
-			if((TopYeeVoters<=0) || (TopYeeVoters>MaxNumVoters)) {
-				printf("%d out of range, moron - try again\n", TopYeeVoters); continue;
-			}
-			printf("Using TopYeeVoters=%d.\n", TopYeeVoters);
-			printf("What standard deviation on the 1D gaussian do you want? (Whole picture width is 200.)\n");
-			fflush(stdout);
-			scanf("%d", &GaussStdDev);
-			if((GaussStdDev<=0) || (GaussStdDev>999)) {
-				printf("%d out of range, moron - try again\n", GaussStdDev);
-				continue;
-			}
-			printf("Using GaussStdDevX=%d.\n", GaussStdDev);
-			printf("What honesty-percentage do you want? (0 to 100.)\n");
-			fflush(stdout);
-			scanf("%d", &ihonfrac);
-			if((ihonfrac<=0) || (ihonfrac>100)) {
-				printf("%d out of range, moron - try again\n", ihonfrac);
-				continue;
-			}
-			printf("Using honfrac=%d%%.\n", ihonfrac);
-			printf("Utilities based on (1) L1 or (2) L2 distance?\n");
-			fflush(stdout);
-			scanf("%d", &LpPow);
-			if((LpPow<=0) || (LpPow>2)) {
-				printf("%d out of range, moron - try again\n", LpPow);
-				continue;
-			}
-			printf("Using LpPow=%d.\n", LpPow);
-			printf("grinding...\n"); fflush(stdout);
-			MakeYeePict( fname, xx, yy, NumSites, WhichMeth, TopYeeVoters, GaussStdDev, ihonfrac*0.01, LpPow );
-			printf("seed=%d\n", seed);
-			break;
-		case(3):
-			runSelfTests();
-			break;
-		case(4):
-			printf("Tally an election with votes you enter (NOT IMPLEMENTED HERE - try\n");
-			printf("http://RangeVoting.org/VoteCalc.html)\n");
-			break;
-		default : printf("Wrong choice %d, moron - try again\n", choice);
-			continue;
-		}
-	} while(false); /* end switch */
-	fflush(stdout);
+	ErectMainMenu(seed);
 	exit(EXIT_SUCCESS);
 }
 
@@ -7169,4 +6858,368 @@ void PrintTheVotersBayesianRegret(brdata &regretObject, const PopulaceState_t &p
 			PrintBROutput(regretObject, ScenarioCount);
 		} /*end for(prind)*/
 	}
+}
+
+/*	InitializeRandomNumberGenerator():	initializes the random number generator
+ *						with User input and returns the value
+ *						used to seed said generator
+ */
+uint InitializeRandomNumberGenerator()
+{
+	uint seed;
+	printf("\nPlease enter random seed (0 causes machine to auto-generate from TimeOfDay)\n");
+	fflush(stdout);
+	scanf("%u", &seed);
+	InitRand(seed);
+	return seed;
+}
+
+/*	RunBasicAssertionTests():	does what it says on the tin
+ */
+void RunBasicAssertionTests()
+{
+	assert(SingletonSet(8));
+	assert(SingletonSet(256));
+	assert(!SingletonSet(256+8));
+	assert(!SingletonSet(256+512));
+	assert(!SingletonSet(3));
+	assert(!SingletonSet(7));
+	assert(!SingletonSet(5));
+	assert(!SingletonSet(10));
+	assert(!EmptySet(5));
+	assert(EmptySet(0));
+}
+
+/*	PrintOpeningCredits():	does what it says on the tin
+ */
+void PrintOpeningCredits()
+{
+	const real VERSION = 3.24;
+	const int VERSIONYEAR = 2007;
+	const int VERSIONMONTH = 2;
+	printf("IEVS (Warren D. Smith's infinitely extendible voting system comparator) at your service!\n");
+	printf("Version=%f  Year=%d  Month=%d\n", VERSION, VERSIONYEAR, VERSIONMONTH);
+	fflush(stdout);
+}
+
+/*	ErectMainMenu(seed):	presents the main menu for the User
+ *
+ *	seed:	the seed value used for the random number generator
+ */
+void ErectMainMenu(uint seed)
+{
+	extern void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], const int &subsqsideX, const int &subsqsideY);
+	uint ch2;
+	uint ch3;
+	uint choice;
+	real cscore;
+	char fname[100];
+	int i;
+	int ihonfrac;
+	int GaussStdDev;
+	int LpPow;
+	int NumSites;
+	extern void runSelfTests(void);
+	int subsqsideX;
+	int subsqsideY;
+	int TopYeeVoters;
+	int WhichMeth;
+	int xx[16];
+	int yy[16];
+	printf("What do you want to do?\n1=BayesianRegrets\n2=YeePicture\n");
+	printf("3=Test RandGen (and other self-tests)\n");
+	printf("4=Tally an election with votes you enter\n");
+	do{
+		fflush(stdout);
+		scanf("%u", &choice);
+		switch(choice) {
+		case(1) :
+			printf("Answer a sequence of questions indicating what output format you want for\n");
+			printf("the regret tables:\n");
+			printf("I. voting methods (1) sorted-by-regret or (2) by voting-method-number?\n");
+			printf("[The latter, while arbitrary, has the advantage of invariance throughout the run.]\n");
+			fflush(stdout);
+			scanf("%u", &ch2);
+			switch(ch2) {
+			case(1) : printf("sorted by regrets.\n"); BROutputMode |= SORTMODE; break;
+			case(2) : printf("sorting by voting method number.\n"); break;
+			default : printf("Wrong choice %d, moron - try again\n", ch2);
+				continue;
+			}
+			printf("II. output (1) plain ASCII (2) TeX table formatting (3) HTML table formatting?\n");
+			fflush(stdout);
+			scanf("%u", &ch2);
+			switch(ch2) {
+			case(1) : printf("plain ASCII.\n"); break;
+			case(2) : printf("TeX.\n"); BROutputMode |= TEXMODE; break;
+			case(3) : printf("HTML.\n"); BROutputMode |= HTMLMODE; break;
+			default : printf("Wrong choice %d, moron - try again\n", ch2);
+				continue;
+			}
+			printf("III. BRs (1) plain (2) normalized so SociallyBest=0, RandomWinner=1\n");
+			printf("     (3) normalized so SociallyBest=100, RandomWinner=0, WorseThanRandom<0?\n");
+			fflush(stdout);
+			scanf("%u", &ch2);
+			switch(ch2) {
+			case(1) : printf("plain.\n"); break;
+			case(2) : printf("Best=0, Random=1.\n"); BROutputMode |= NORMALIZEREGRETS; break;
+			case(3) : printf("Best=100, Random=0.\n"); BROutputMode |= SHENTRUPVSR; break;
+			default : printf("Wrong choice %d, moron - try again\n", ch2);
+				continue;
+			}
+			printf("IV. Error bars (1) on every BR value (2) omit & only compute for RandomWinner\n");
+			fflush(stdout);
+			scanf("%u", &ch2);
+			switch(ch2) {
+			case(1) : printf("all error bars.\n"); break;
+			case(2) : printf("omit error bars.\n"); BROutputMode |= OMITERRORBARS; break;
+			default : printf("Wrong choice %d, moron - try again\n", ch2);
+				continue;
+			}
+			printf("V. Print Agreement counts with (1) true-utility(undistorted) Condorcet Winners, (2) vote-based CWs\n");
+			fflush(stdout);
+			scanf("%u", &ch2);
+			switch(ch2) {
+			case(1) : printf("true-utility CWs.\n"); break;
+			case(2) : printf("vote-based CWs.\n"); BROutputMode |= VBCONDMODE; break;
+			default : printf("Wrong choice %d, moron - try again\n", ch2);
+				continue;
+			}
+			printf("VI. Print out intermethod winner-agreement-count tables (1) no, (2) yes\n");
+			fflush(stdout);
+			scanf("%u", &ch2);
+			switch(ch2) {
+			case(1) : printf("NO agree-count tables.\n"); break;
+			case(2) : printf("Yes agree-count tables.\n"); BROutputMode |= DOAGREETABLES; break;
+			default : printf("Wrong choice %d, moron - try again\n", ch2);
+				continue;
+			}
+			printf("VII. Print out regrets for (1) no, (2) only best 10, (3) all methods\n");
+			fflush(stdout);
+			scanf("%u", &ch2);
+			switch(ch2) {
+			case(1) : printf("No regrets printed (minimum verbosity).\n"); break;
+			case(2) : printf("Top10 methods regrets only printed.\n"); BROutputMode |= TOP10METHS; break;
+			case(3) : printf("All regrets printed (maximum verbosity).\n"); BROutputMode |= ALLMETHS; break;
+			default : printf("Wrong choice %d, moron - try again\n", ch2);
+				continue;
+			}
+			printf("VIII. (1) All parameter knob-settings, or (2) restricted ranges?\n");
+			honfraclower=0; honfracupper=100;
+			candnumlower=2; candnumupper=7;
+			votnumlower=2; votnumupper=MaxNumVoters;
+			numelections2try = 59;
+			fflush(stdout);
+			scanf("%u", &ch3);
+			switch(ch3) {
+			case(1) : printf("All settings.\n"); break;
+			case(2) :
+				printf("Restricted Ranges...\n");
+				printf("Honesty fraction range - default is 0 100:\n");
+				scanf("%d %d", &honfraclower, &honfracupper);
+				if(honfraclower<0) {
+					honfraclower=0;
+				}
+				if(honfracupper>100) {
+					honfracupper=100;
+				}
+				printf("Honesty fraction range [%d, %d] chosen.\n", honfraclower, honfracupper);
+				printf("Candidate Number range - default is 2 7 [but this range ignored if real-world dataset]:\n");
+				scanf("%d %d", &candnumlower, &candnumupper);
+				if(candnumlower<2) {
+					candnumlower=2;
+				}
+				if(candnumupper>=MaxNumCands) {
+					candnumupper=MaxNumCands-1;
+				}
+				printf("Candidate number range [%d, %d] chosen.\n", candnumlower, candnumupper);
+				printf("Voter Number range - default is 2 %d [but this range ignored if real-world dataset:\n",
+					votnumupper);
+				scanf("%d %d", &votnumlower, &votnumupper);
+				if(votnumlower<0) {
+					votnumlower=0;
+				}
+				if(votnumupper>=MaxNumVoters) {
+					votnumupper=MaxNumVoters;
+				}
+				printf("Voter number range [%d, %d] chosen.\n", votnumlower, votnumupper);
+				printf("Number of elections to try per scenario - default is %d\n", numelections2try);
+				scanf("%d", &numelections2try);
+				if(numelections2try<29) {
+					numelections2try=29;
+				}
+				if(numelections2try>99999999) {
+					numelections2try=99999999;
+				}
+				printf("Trying %d elections per scenario.\n", numelections2try);
+				break;
+			default : printf("Wrong choice %d, moron - try again\n", ch2);
+				continue;
+			}
+			printf("IX. (1) Machine or (2) Real-world-based utilities?\n");
+			fflush(stdout);
+			scanf("%u", &ch2);
+			switch(ch2) {
+			case(1) :
+				printf("Machine.\n");
+				if(ch3==2) {
+					printf("Select which utility-generators you want (default 0 thru 15):\n");
+					for(i=0; i<16; i++) {
+						printf("%2d: ", i);
+						PrintUtilName(i,true);
+						printf("\n");
+					}
+					scanf("%d %d", &utilnumlower, &utilnumupper);
+					if(utilnumlower<0) {
+						utilnumlower=0;
+					}
+					if(utilnumupper>=15) {
+						utilnumupper=15;
+					}
+					printf("Utility gens  [%d, %d] chosen.\n", utilnumlower, utilnumupper);
+					/**** if ???
+					printf("Select LPpow???d):\n");
+					scanf("%d", &LPpow);
+					if(LPpow<1) LPpow=1;
+					if(LPpow>5) LPpow=5;
+					printf("Using L%d distances.\n", LPpow);
+					*****/
+				}
+				BRDriver();
+				break;
+			case(2) :
+				printf("Real-world-based.\n");
+				LoadEldataFiles();
+				RWBRDriver();
+				break;
+			default : printf("Wrong choice %d, moron - try again\n", ch2);
+				continue;
+			}
+			break;
+		case(2) :
+			printf("Which voting method? Your choices:"); PrintAvailableVMethods();
+			fflush(stdout);
+			scanf("%d", &WhichMeth);
+			printf("using %d=", WhichMeth); PrintMethName(WhichMeth, false);
+			printf(".\nWhat filename [.bmp suffix will be auto-added for you]?\n");
+			fflush(stdout);
+			scanf("%s", fname);
+			i = strlen(fname);
+			if(i>30) {
+				printf("filename too long, moron\n");
+				fflush(stdout); exit(EXIT_FAILURE);
+			}
+			strcat(fname, ".bmp");
+			printf("how many point-sites do you want [1 to 16]?\n");
+			fflush(stdout);
+			scanf("%d", &NumSites);
+			if((NumSites<1) || (NumSites>16)) {
+				printf("out of bounds value %d moron, using 16 instead\n",NumSites);
+				NumSites=16;
+			}
+			printf("Do you want to:\n1. enter the %d coord-pairs yourself;\n",NumSites);
+			printf("2. random coordinate auto-generation?\n");
+			fflush(stdout);
+			scanf("%u", &ch2);
+			switch(ch2) {
+			case(1) :
+				printf("Enter coord pairs X Y with space (not comma) between X & Y, newline between pairs\n");
+				printf("(0,0) is in the lower left.  For example an equilateral triangle would be\n");
+				printf("99 197\n186 47\n12 47\nCoords outside of the [[0,199] range are permitted.\nYour coords:\n");
+				fflush(stdout);
+				for(i=0; i<NumSites; i++) {
+					scanf("%d %d", &(xx[i]), &(yy[i]));
+				}
+				printf("Your coords are:\n");
+				for(i=0; i<NumSites; i++) {
+					printf("(%d, %d)\n", xx[i], yy[i]);
+				}
+				break;
+			case(2) :
+				printf("X Y sidelengths of subsquare in which you want the random points (200 for full square):\n");
+				fflush(stdout);
+				scanf("%d %d", &subsqsideX,  &subsqsideY);
+				if((subsqsideX <=0) || (subsqsideX>=200)) {  subsqsideX = 200;  }
+				if((subsqsideY <=0) || (subsqsideY>=200)) {  subsqsideY = 200;  }
+				printf("using %dx%d centered subrectangle\n", subsqsideX, subsqsideY);
+				adjustYeeCoordinates(NumSites, xx, yy, subsqsideX, subsqsideY);
+				cscore = ReorderForColorContrast(  NumSites, xx, yy );
+				printf("Color score %f (big=more constrast); Your coords are:\n", cscore);
+				for(i=0; i<NumSites; i++) {
+					printf("(%d, %d)\n", xx[i], yy[i]);
+				}
+				break;
+			default : printf("Wrong choice %d, moron - try again\n", ch2);
+				continue;
+			}
+			printf("Do you want IEVS to re-order the points to try for maximum color-contrast? (1) yes (2) no\n");
+			fflush(stdout);
+			scanf("%u", &ch2);
+			switch(ch2) {
+			case(1) :
+				printf("Reordering...\n");
+				cscore = ReorderForColorContrast(  NumSites, xx, yy );
+				printf("Color score %f (big=more constrast); Your (reordered) coords are:\n", cscore);
+				for(i=0; i<NumSites; i++) {
+					printf("(%d, %d)\n", xx[i], yy[i]);
+				}
+				break;
+			case(2) :
+				printf("OK, leaving points ordered as is.\n");
+				break;
+			default : printf("Wrong choice %d, moron - try again\n", ch2);
+				continue;
+			}
+
+			printf("What max election size (#voters) would you like?\n");
+			printf("256 recommended as good compromise between speed and randomness.\n");
+			printf("You're allowed to go as high as %d (for slowest speed).\n", MaxNumVoters);
+			printf("Algorithm keeps redoing elections with 10%% more voters each time until\n");
+			printf("either confident know the winner, or reach this voter# bound.\n");
+			fflush(stdout);
+			scanf("%d", &TopYeeVoters);
+			if((TopYeeVoters<=0) || (TopYeeVoters>MaxNumVoters)) {
+				printf("%d out of range, moron - try again\n", TopYeeVoters); continue;
+			}
+			printf("Using TopYeeVoters=%d.\n", TopYeeVoters);
+			printf("What standard deviation on the 1D gaussian do you want? (Whole picture width is 200.)\n");
+			fflush(stdout);
+			scanf("%d", &GaussStdDev);
+			if((GaussStdDev<=0) || (GaussStdDev>999)) {
+				printf("%d out of range, moron - try again\n", GaussStdDev);
+				continue;
+			}
+			printf("Using GaussStdDevX=%d.\n", GaussStdDev);
+			printf("What honesty-percentage do you want? (0 to 100.)\n");
+			fflush(stdout);
+			scanf("%d", &ihonfrac);
+			if((ihonfrac<=0) || (ihonfrac>100)) {
+				printf("%d out of range, moron - try again\n", ihonfrac);
+				continue;
+			}
+			printf("Using honfrac=%d%%.\n", ihonfrac);
+			printf("Utilities based on (1) L1 or (2) L2 distance?\n");
+			fflush(stdout);
+			scanf("%d", &LpPow);
+			if((LpPow<=0) || (LpPow>2)) {
+				printf("%d out of range, moron - try again\n", LpPow);
+				continue;
+			}
+			printf("Using LpPow=%d.\n", LpPow);
+			printf("grinding...\n"); fflush(stdout);
+			MakeYeePict( fname, xx, yy, NumSites, WhichMeth, TopYeeVoters, GaussStdDev, ihonfrac*0.01, LpPow );
+			printf("seed=%d\n", seed);
+			break;
+		case(3):
+			runSelfTests();
+			break;
+		case(4):
+			printf("Tally an election with votes you enter (NOT IMPLEMENTED HERE - try\n");
+			printf("http://RangeVoting.org/VoteCalc.html)\n");
+			break;
+		default : printf("Wrong choice %d, moron - try again\n", choice);
+			continue;
+		}
+	} while(false); /* end switch */
+	fflush(stdout);
 }
