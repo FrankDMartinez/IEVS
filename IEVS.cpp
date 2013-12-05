@@ -6921,6 +6921,7 @@ void ErectMainMenu(uint seed)
 	int GaussStdDev;
 	int LpPow;
 	int NumSites;
+	extern void RequestAgreementCountStatus(void);
 	extern void RequestBayesianRegretNormalizationMethod(void);
 	extern void RequestBayesianRegretSortingMethod(void);
 	extern void RequestErrorBarStatus(void);
@@ -6943,15 +6944,7 @@ void ErectMainMenu(uint seed)
 			RequestOutputFormat();
 			RequestBayesianRegretNormalizationMethod();
 			RequestErrorBarStatus();
-			printf("V. Print Agreement counts with (1) true-utility(undistorted) Condorcet Winners, (2) vote-based CWs\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) : printf("true-utility CWs.\n"); break;
-			case(2) : printf("vote-based CWs.\n"); BROutputMode |= VBCONDMODE; break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
+			RequestAgreementCountStatus();
 			printf("VI. Print out intermethod winner-agreement-count tables (1) no, (2) yes\n");
 			fflush(stdout);
 			scanf("%u", &ch2);
@@ -7325,6 +7318,34 @@ void RequestErrorBarStatus()
 		case(2) :
 			printf("omit error bars.\n");
 			BROutputMode |= OMITERRORBARS;
+			finished = true;
+			break;
+		default :
+			printf("Wrong choice %u, moron - try again\n", u);
+			break;
+		}
+	}
+}
+
+/*	RequestAgreementCountStatus():	asks the User to specify how to print Condorcet
+ *					Winner agreement counts
+ */
+void RequestAgreementCountStatus()
+{
+	bool finished;
+	uint u;
+	printf("V. Print Agreement counts with (1) true-utility(undistorted) Condorcet Winners, (2) vote-based CWs\n");
+	for( finished = false; not finished; ) {
+		fflush(stdout);
+		scanf("%u", &u);
+		switch(u) {
+		case(1) :
+			printf("true-utility CWs.\n");
+			finished = true;
+			break;
+		case(2) :
+			printf("vote-based CWs.\n");
+			BROutputMode |= VBCONDMODE;
 			finished = true;
 			break;
 		default :
