@@ -6921,6 +6921,7 @@ void ErectMainMenu(uint seed)
 	int GaussStdDev;
 	int LpPow;
 	int NumSites;
+	extern void RequestBayesianRegretNormalizationMethod(void);
 	extern void RequestBayesianRegretSortingMethod(void);
 	extern void RequestOutputFormat(void);
 	extern void runSelfTests(void);
@@ -6939,17 +6940,7 @@ void ErectMainMenu(uint seed)
 			DisplayBayesianRegretMenuIntroduction();
 			RequestBayesianRegretSortingMethod();
 			RequestOutputFormat();
-			printf("III. BRs (1) plain (2) normalized so SociallyBest=0, RandomWinner=1\n");
-			printf("     (3) normalized so SociallyBest=100, RandomWinner=0, WorseThanRandom<0?\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) : printf("plain.\n"); break;
-			case(2) : printf("Best=0, Random=1.\n"); BROutputMode |= NORMALIZEREGRETS; break;
-			case(3) : printf("Best=100, Random=0.\n"); BROutputMode |= SHENTRUPVSR; break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
+			RequestBayesianRegretNormalizationMethod();
 			printf("IV. Error bars (1) on every BR value (2) omit & only compute for RandomWinner\n");
 			fflush(stdout);
 			scanf("%u", &ch2);
@@ -7278,6 +7269,41 @@ void RequestOutputFormat()
 		case(3) :
 			printf("HTML.\n");
 			BROutputMode |= HTMLMODE;
+			finished = true;
+			break;
+		default :
+			printf("Wrong choice %u, moron - try again\n", u);
+			break;
+		}
+	}
+}
+
+/*	RequestBayesianRegretNormalizationMethod():	asks the User to select a method
+ *							of 'normalizing' Bayesian regret
+ *							values
+ */
+void RequestBayesianRegretNormalizationMethod(void)
+{
+	bool finished;
+	uint u;
+	printf("III. BRs (1) plain (2) normalized so SociallyBest=0, RandomWinner=1\n");
+	printf("     (3) normalized so SociallyBest=100, RandomWinner=0, WorseThanRandom<0?\n");
+	for( finished = false; not finished; ) {
+		fflush(stdout);
+		scanf("%u", &u);
+		switch(u) {
+		case(1) :
+			printf("plain.\n");
+			finished = true;
+			break;
+		case(2) :
+			printf("Best=0, Random=1.\n");
+			BROutputMode |= NORMALIZEREGRETS;
+			finished = true;
+			break;
+		case(3) :
+			printf("Best=100, Random=0.\n");
+			BROutputMode |= SHENTRUPVSR;
 			finished = true;
 			break;
 		default :
