@@ -6922,6 +6922,7 @@ void ErectMainMenu(uint seed)
 	int LpPow;
 	int NumSites;
 	extern void RequestBayesianRegretSortingMethod(void);
+	extern void RequestOutputFormat(void);
 	extern void runSelfTests(void);
 	int subsqsideX;
 	int subsqsideY;
@@ -6937,16 +6938,7 @@ void ErectMainMenu(uint seed)
 		case(1) :
 			DisplayBayesianRegretMenuIntroduction();
 			RequestBayesianRegretSortingMethod();
-			printf("II. output (1) plain ASCII (2) TeX table formatting (3) HTML table formatting?\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) : printf("plain ASCII.\n"); break;
-			case(2) : printf("TeX.\n"); BROutputMode |= TEXMODE; break;
-			case(3) : printf("HTML.\n"); BROutputMode |= HTMLMODE; break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
+			RequestOutputFormat();
 			printf("III. BRs (1) plain (2) normalized so SociallyBest=0, RandomWinner=1\n");
 			printf("     (3) normalized so SociallyBest=100, RandomWinner=0, WorseThanRandom<0?\n");
 			fflush(stdout);
@@ -7254,6 +7246,38 @@ void RequestBayesianRegretSortingMethod(void)
 			break;
 		case(2) :
 			printf("sorting by voting method number.\n");
+			finished = true;
+			break;
+		default :
+			printf("Wrong choice %u, moron - try again\n", u);
+			break;
+		}
+	}
+}
+
+/*	RequestOutputFormat():	asks the User to choose an output format
+ */
+void RequestOutputFormat()
+{
+	bool finished;
+	uint u;
+	printf("II. output (1) plain ASCII (2) TeX table formatting (3) HTML table formatting?\n");
+	for( finished = false; not finished; ) {
+		fflush(stdout);
+		scanf("%u", &u);
+		switch(u) {
+		case(1) :
+			printf("plain ASCII.\n");
+			finished = true;
+			break;
+		case(2) :
+			printf("TeX.\n");
+			BROutputMode |= TEXMODE;
+			finished = true;
+			break;
+		case(3) :
+			printf("HTML.\n");
+			BROutputMode |= HTMLMODE;
 			finished = true;
 			break;
 		default :
