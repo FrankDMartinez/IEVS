@@ -6923,6 +6923,7 @@ void ErectMainMenu(uint seed)
 	int NumSites;
 	extern void RequestBayesianRegretNormalizationMethod(void);
 	extern void RequestBayesianRegretSortingMethod(void);
+	extern void RequestErrorBarStatus(void);
 	extern void RequestOutputFormat(void);
 	extern void runSelfTests(void);
 	int subsqsideX;
@@ -6941,15 +6942,7 @@ void ErectMainMenu(uint seed)
 			RequestBayesianRegretSortingMethod();
 			RequestOutputFormat();
 			RequestBayesianRegretNormalizationMethod();
-			printf("IV. Error bars (1) on every BR value (2) omit & only compute for RandomWinner\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) : printf("all error bars.\n"); break;
-			case(2) : printf("omit error bars.\n"); BROutputMode |= OMITERRORBARS; break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
+			RequestErrorBarStatus();
 			printf("V. Print Agreement counts with (1) true-utility(undistorted) Condorcet Winners, (2) vote-based CWs\n");
 			fflush(stdout);
 			scanf("%u", &ch2);
@@ -7304,6 +7297,34 @@ void RequestBayesianRegretNormalizationMethod(void)
 		case(3) :
 			printf("Best=100, Random=0.\n");
 			BROutputMode |= SHENTRUPVSR;
+			finished = true;
+			break;
+		default :
+			printf("Wrong choice %u, moron - try again\n", u);
+			break;
+		}
+	}
+}
+
+/*	RequestErrorBarStatus():	asks the User to specify when to produce error
+ *					bars
+ */
+void RequestErrorBarStatus()
+{
+	bool finished;
+	uint u;
+	printf("IV. Error bars (1) on every BR value (2) omit & only compute for RandomWinner\n");
+	for( finished = false; not finished; ) {
+		fflush(stdout);
+		scanf("%u", &u);
+		switch(u) {
+		case(1) :
+			printf("all error bars.\n");
+			finished = true;
+			break;
+		case(2) :
+			printf("omit error bars.\n");
+			BROutputMode |= OMITERRORBARS;
 			finished = true;
 			break;
 		default :
