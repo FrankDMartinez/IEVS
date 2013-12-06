@@ -6910,13 +6910,10 @@ enum parameters { unsetParameters, defaultParameters, customParameters };
  */
 void ErectMainMenu(uint seed)
 {
-	uint ch2;
 	uint choice;
-	real cscore;
 	extern void DisplayBayesianRegretMenuIntroduction(void);
 	extern void DisplayMainQuestion(void);
 	char fname[100];
-	int i;
 	int ihonfrac;
 	int GaussStdDev;
 	int LpPow;
@@ -6926,6 +6923,7 @@ void ErectMainMenu(uint seed)
 	extern void RequestBayesianRegretNormalizationMethod(void);
 	extern void RequestBayesianRegretSortingMethod(void);
 	extern void RequestCoordPairs(int numberOfSites, int (&xarray)[16], int (&yarray)[16]);
+	extern void RequestCoordPairReordering(int numberOfSites, int (&xarray)[16], int (&yarray)[16]);
 	extern void RequestErrorBarStatus(void);
 	extern void RequestIntermethodWinnerAgreementCountDisplayStatus(void);
 	extern void RequestNameForBMP(char (&name)[100]);
@@ -6962,24 +6960,7 @@ void ErectMainMenu(uint seed)
 			RequestNameForBMP(fname);
 			NumSites = RequestPointSiteCount();
 			RequestCoordPairs(NumSites, xx, yy);
-			printf("Do you want IEVS to re-order the points to try for maximum color-contrast? (1) yes (2) no\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) :
-				printf("Reordering...\n");
-				cscore = ReorderForColorContrast(  NumSites, xx, yy );
-				printf("Color score %f (big=more constrast); Your (reordered) coords are:\n", cscore);
-				for(i=0; i<NumSites; i++) {
-					printf("(%d, %d)\n", xx[i], yy[i]);
-				}
-				break;
-			case(2) :
-				printf("OK, leaving points ordered as is.\n");
-				break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
+			RequestCoordPairReordering(NumSites, xx, yy);
 
 			printf("What max election size (#voters) would you like?\n");
 			printf("256 recommended as good compromise between speed and randomness.\n");
@@ -7509,6 +7490,48 @@ void RequestCoordPairs(int numberOfSites, int (&xarray)[16], int (&yarray)[16])
 			for(i=0; i<numberOfSites; i++) {
 				printf("(%d, %d)\n", xarray[i], yarray[i]);
 			}
+			finished = true;
+			break;
+		default :
+			printf("Wrong choice %u, moron - try again\n", u);
+			break;
+		}
+	}
+}
+
+/*	RequestCoordPairReordering(numberOfSites, xarray, yarray):	asks the User if
+ *									the coord-pairs
+ *									should be
+ *									reordered to try
+ *									for maximum
+ *									color-contrast
+ *
+ *	numberOfSites:	the number of coord-pairs to possibly reorder
+ *	xarray:		a reference to an array of x coordinates
+ *	yarray:		a reference to an array of y coordinates
+ */
+void RequestCoordPairReordering(int numberOfSites, int (&xarray)[16], int (&yarray)[16])
+{
+	uint u;
+	bool finished;
+	printf("Do you want IEVS to re-order the points to try for maximum color-contrast? (1) yes (2) no\n");
+	for(finished = false; not finished; ) {
+		fflush(stdout);
+		scanf("%u", &u);
+		switch(u) {
+		case(1) :
+			real cscore;
+			int i;
+			printf("Reordering...\n");
+			cscore = ReorderForColorContrast(  numberOfSites, xarray, yarray );
+			printf("Color score %f (big=more constrast); Your (reordered) coords are:\n", cscore);
+			for(i=0; i<numberOfSites; i++) {
+				printf("(%d, %d)\n", xarray[i], yarray[i]);
+			}
+			finished = true;
+			break;
+		case(2) :
+			printf("OK, leaving points ordered as is.\n");
 			finished = true;
 			break;
 		default :
