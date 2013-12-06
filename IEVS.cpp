@@ -6931,6 +6931,7 @@ void ErectMainMenu(uint seed)
 	extern void RequestNameForBMP(char (&name)[100]);
 	extern void RequestOutputFormat(void);
 	extern parameters RequestParameters(void);
+	extern 	int RequestPointSiteCount(void);
 	extern void RequestRegretOutput(void);
 	extern void RequestUtilityGenerators(parameters parameterType);
 	extern int RequestVotingMethod(void);
@@ -6961,13 +6962,7 @@ void ErectMainMenu(uint seed)
 		case(2) :
 			WhichMeth = RequestVotingMethod();
 			RequestNameForBMP(fname);
-			printf("how many point-sites do you want [1 to 16]?\n");
-			fflush(stdout);
-			scanf("%d", &NumSites);
-			if((NumSites<1) || (NumSites>16)) {
-				printf("out of bounds value %d moron, using 16 instead\n",NumSites);
-				NumSites=16;
-			}
+			NumSites = RequestPointSiteCount();
 			printf("Do you want to:\n1. enter the %d coord-pairs yourself;\n",NumSites);
 			printf("2. random coordinate auto-generation?\n");
 			fflush(stdout);
@@ -7474,4 +7469,23 @@ void RequestNameForBMP(char (&name)[100])
 		exit(EXIT_FAILURE);
 	}
 	strcat(name, ".bmp");
+}
+
+/*	RequestPointSiteCount(void):	asks the User for a number of 'point-sites' for
+ *					the Yee picture; the procedure returns the
+ *					number entered by the User as long as it is at
+ *					least 1 and at most 16; otherwise, the procedure
+ *					returns 16.
+ */
+int RequestPointSiteCount(void)
+{
+	int numberOfSites;
+	printf("how many point-sites do you want [1 to 16]?\n");
+	fflush(stdout);
+	scanf("%d", &numberOfSites);
+	if((numberOfSites<1) || (numberOfSites>16)) {
+		printf("out of bounds value %d moron, using 16 instead\n",numberOfSites);
+		numberOfSites=16;
+	}
+	return numberOfSites;
 }
