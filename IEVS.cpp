@@ -6927,6 +6927,7 @@ void ErectMainMenu(uint seed)
 	extern void RequestErrorBarStatus(void);
 	extern void RequestIntermethodWinnerAgreementCountDisplayStatus(void);
 	extern void RequestOutputFormat(void);
+	extern void RequestRegretOutput(void);
 	extern void runSelfTests(void);
 	int subsqsideX;
 	int subsqsideY;
@@ -6947,16 +6948,7 @@ void ErectMainMenu(uint seed)
 			RequestErrorBarStatus();
 			RequestAgreementCountStatus();
 			RequestIntermethodWinnerAgreementCountDisplayStatus();
-			printf("VII. Print out regrets for (1) no, (2) only best 10, (3) all methods\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) : printf("No regrets printed (minimum verbosity).\n"); break;
-			case(2) : printf("Top10 methods regrets only printed.\n"); BROutputMode |= TOP10METHS; break;
-			case(3) : printf("All regrets printed (maximum verbosity).\n"); BROutputMode |= ALLMETHS; break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
+			RequestRegretOutput();
 			printf("VIII. (1) All parameter knob-settings, or (2) restricted ranges?\n");
 			honfraclower=0; honfracupper=100;
 			candnumlower=2; candnumupper=7;
@@ -7006,7 +6998,7 @@ void ErectMainMenu(uint seed)
 				}
 				printf("Trying %d elections per scenario.\n", numelections2try);
 				break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
+			default : printf("Wrong choice %d, moron - try again\n", ch3);
 				continue;
 			}
 			printf("IX. (1) Machine or (2) Real-world-based utilities?\n");
@@ -7370,6 +7362,38 @@ void RequestIntermethodWinnerAgreementCountDisplayStatus(void)
 		case(2) :
 			printf("Yes agree-count tables.\n");
 			BROutputMode |= DOAGREETABLES;
+			finished = true;
+			break;
+		default :
+			printf("Wrong choice %u, moron - try again\n", u);
+			break;
+		}
+	}
+}
+
+/*	RequestRegretOutput():	asks the User which Bayesian regrets should be outputted
+ */
+void RequestRegretOutput(void)
+{
+	bool finished;
+	uint u;
+	printf("VII. Print out regrets for (1) no, (2) only best 10, (3) all methods\n");
+	for( finished = false; not finished; ) {
+		fflush(stdout);
+		scanf("%u", &u);
+		switch(u) {
+		case(1) :
+			printf("No regrets printed (minimum verbosity).\n");
+			finished = true;
+			break;
+		case(2) :
+			printf("Top10 methods regrets only printed.\n");
+			BROutputMode |= TOP10METHS;
+			finished = true;
+			break;
+		case(3) :
+			printf("All regrets printed (maximum verbosity).\n");
+			BROutputMode |= ALLMETHS;
 			finished = true;
 			break;
 		default :
