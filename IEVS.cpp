@@ -6932,6 +6932,7 @@ void ErectMainMenu(uint seed)
 	extern parameters RequestParameters(void);
 	extern void RequestRegretOutput(void);
 	extern void RequestUtilityGenerators(parameters parameterType);
+	extern int RequestVotingMethod(void);
 	extern void runSelfTests(void);
 	int subsqsideX;
 	int subsqsideY;
@@ -6957,11 +6958,8 @@ void ErectMainMenu(uint seed)
 			RequestUtilityGenerators(parameterType);
 			break;
 		case(2) :
-			printf("Which voting method? Your choices:"); PrintAvailableVMethods();
-			fflush(stdout);
-			scanf("%d", &WhichMeth);
-			printf("using %d=", WhichMeth); PrintMethName(WhichMeth, false);
-			printf(".\nWhat filename [.bmp suffix will be auto-added for you]?\n");
+			WhichMeth = RequestVotingMethod();
+			printf("What filename [.bmp suffix will be auto-added for you]?\n");
 			fflush(stdout);
 			scanf("%s", fname);
 			i = strlen(fname);
@@ -7444,4 +7442,21 @@ void RequestUtilityGenerators(parameters parameterType)
 			break;
 		}
 	}
+}
+
+/*	RequestVotingMethod(void):	asks the User to select a voting method for
+ *					creating a Yee Picture; the procedure returns a
+ *					value representing the chosen voting method
+ */
+int RequestVotingMethod(void)
+{
+	int chosenMethod;
+	printf("Which voting method? Your choices:");
+	PrintAvailableVMethods();
+	fflush(stdout);
+	scanf("%d", &chosenMethod);
+	printf("using %d=", chosenMethod);
+	PrintMethName(chosenMethod, false);
+	printf(".\n");
+	return chosenMethod;
 }
