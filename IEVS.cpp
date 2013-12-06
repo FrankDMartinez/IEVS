@@ -6902,6 +6902,8 @@ void PrintOpeningCredits()
 	fflush(stdout);
 }
 
+enum parameters { unsetParameters, defaultParameters, customParameters };
+
 /*	ErectMainMenu(seed):	presents the main menu for the User
  *
  *	seed:	the seed value used for the random number generator
@@ -6910,7 +6912,6 @@ void ErectMainMenu(uint seed)
 {
 	extern void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], const int &subsqsideX, const int &subsqsideY);
 	uint ch2;
-	uint ch3;
 	uint choice;
 	real cscore;
 	extern void DisplayBayesianRegretMenuIntroduction(void);
@@ -6921,12 +6922,14 @@ void ErectMainMenu(uint seed)
 	int GaussStdDev;
 	int LpPow;
 	int NumSites;
+	parameters parameterType;
 	extern void RequestAgreementCountStatus(void);
 	extern void RequestBayesianRegretNormalizationMethod(void);
 	extern void RequestBayesianRegretSortingMethod(void);
 	extern void RequestErrorBarStatus(void);
 	extern void RequestIntermethodWinnerAgreementCountDisplayStatus(void);
 	extern void RequestOutputFormat(void);
+	extern parameters RequestParameters(void);
 	extern void RequestRegretOutput(void);
 	extern void runSelfTests(void);
 	int subsqsideX;
@@ -6949,65 +6952,14 @@ void ErectMainMenu(uint seed)
 			RequestAgreementCountStatus();
 			RequestIntermethodWinnerAgreementCountDisplayStatus();
 			RequestRegretOutput();
-			printf("VIII. (1) All parameter knob-settings, or (2) restricted ranges?\n");
-			honfraclower=0; honfracupper=100;
-			candnumlower=2; candnumupper=7;
-			votnumlower=2; votnumupper=MaxNumVoters;
-			numelections2try = 59;
-			fflush(stdout);
-			scanf("%u", &ch3);
-			switch(ch3) {
-			case(1) : printf("All settings.\n"); break;
-			case(2) :
-				printf("Restricted Ranges...\n");
-				printf("Honesty fraction range - default is 0 100:\n");
-				scanf("%d %d", &honfraclower, &honfracupper);
-				if(honfraclower<0) {
-					honfraclower=0;
-				}
-				if(honfracupper>100) {
-					honfracupper=100;
-				}
-				printf("Honesty fraction range [%d, %d] chosen.\n", honfraclower, honfracupper);
-				printf("Candidate Number range - default is 2 7 [but this range ignored if real-world dataset]:\n");
-				scanf("%d %d", &candnumlower, &candnumupper);
-				if(candnumlower<2) {
-					candnumlower=2;
-				}
-				if(candnumupper>=MaxNumCands) {
-					candnumupper=MaxNumCands-1;
-				}
-				printf("Candidate number range [%d, %d] chosen.\n", candnumlower, candnumupper);
-				printf("Voter Number range - default is 2 %d [but this range ignored if real-world dataset:\n",
-					votnumupper);
-				scanf("%d %d", &votnumlower, &votnumupper);
-				if(votnumlower<0) {
-					votnumlower=0;
-				}
-				if(votnumupper>=MaxNumVoters) {
-					votnumupper=MaxNumVoters;
-				}
-				printf("Voter number range [%d, %d] chosen.\n", votnumlower, votnumupper);
-				printf("Number of elections to try per scenario - default is %d\n", numelections2try);
-				scanf("%d", &numelections2try);
-				if(numelections2try<29) {
-					numelections2try=29;
-				}
-				if(numelections2try>99999999) {
-					numelections2try=99999999;
-				}
-				printf("Trying %d elections per scenario.\n", numelections2try);
-				break;
-			default : printf("Wrong choice %d, moron - try again\n", ch3);
-				continue;
-			}
+			parameterType = RequestParameters();
 			printf("IX. (1) Machine or (2) Real-world-based utilities?\n");
 			fflush(stdout);
 			scanf("%u", &ch2);
 			switch(ch2) {
 			case(1) :
 				printf("Machine.\n");
-				if(ch3==2) {
+				if(parameterType==customParameters) {
 					printf("Select which utility-generators you want (default 0 thru 15):\n");
 					for(i=0; i<16; i++) {
 						printf("%2d: ", i);
@@ -7401,4 +7353,77 @@ void RequestRegretOutput(void)
 			break;
 		}
 	}
+}
+
+/*	RequestParameters():	asks the User to set various parameters used in the
+ *				analysis
+ */
+parameters RequestParameters(void)
+{
+	uint u;
+	parameters rv;
+	printf("VIII. (1) All parameter knob-settings, or (2) restricted ranges?\n");
+	honfraclower=0;
+	honfracupper=100;
+	candnumlower=2;
+	candnumupper=7;
+	votnumlower=2;
+	votnumupper=MaxNumVoters;
+	numelections2try = 59;
+	for( rv = unsetParameters; unsetParameters == rv; ) {
+		fflush(stdout);
+		scanf("%u", &u);
+		switch(u) {
+		case(1) :
+			printf("All settings.\n");
+			rv = defaultParameters;
+			break;
+		case(2) :
+			printf("Restricted Ranges...\n");
+			printf("Honesty fraction range - default is 0 100:\n");
+			scanf("%d %d", &honfraclower, &honfracupper);
+			if(honfraclower<0) {
+				honfraclower=0;
+			}
+			if(honfracupper>100) {
+				honfracupper=100;
+			}
+			printf("Honesty fraction range [%d, %d] chosen.\n", honfraclower, honfracupper);
+			printf("Candidate Number range - default is 2 7 [but this range ignored if real-world dataset]:\n");
+			scanf("%d %d", &candnumlower, &candnumupper);
+			if(candnumlower<2) {
+				candnumlower=2;
+			}
+			if(candnumupper>=MaxNumCands) {
+				candnumupper=MaxNumCands-1;
+			}
+			printf("Candidate number range [%d, %d] chosen.\n", candnumlower, candnumupper);
+			printf("Voter Number range - default is 2 %d [but this range ignored if real-world dataset:\n",
+				votnumupper);
+			scanf("%d %d", &votnumlower, &votnumupper);
+			if(votnumlower<0) {
+				votnumlower=0;
+			}
+			if(votnumupper>=MaxNumVoters) {
+				votnumupper=MaxNumVoters;
+			}
+			printf("Voter number range [%d, %d] chosen.\n", votnumlower, votnumupper);
+			printf("Number of elections to try per scenario - default is %d\n", numelections2try);
+			scanf("%d", &numelections2try);
+			if(numelections2try<29) {
+				numelections2try=29;
+			}
+			if(numelections2try>99999999) {
+				numelections2try=99999999;
+			}
+			printf("Trying %d elections per scenario.\n", numelections2try);
+			rv = customParameters;
+			break;
+		default :
+			printf("Wrong choice %u, moron - try again\n", u);
+			break;
+		}
+	}
+	ensure(rv not_eq unsetParameters, 22);
+	return rv;
 }
