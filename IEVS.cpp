@@ -6926,6 +6926,7 @@ void ErectMainMenu(uint seed)
 	extern void RequestCoordPairReordering(int numberOfSites, int (&xarray)[16], int (&yarray)[16]);
 	extern int RequestElectorateSize(void);
 	extern void RequestErrorBarStatus(void);
+	extern int RequestHonestyPercentage(void);
 	extern void RequestIntermethodWinnerAgreementCountDisplayStatus(void);
 	extern void RequestNameForBMP(char (&name)[100]);
 	extern void RequestOutputFormat(void);
@@ -6965,14 +6966,7 @@ void ErectMainMenu(uint seed)
 			RequestCoordPairReordering(NumSites, xx, yy);
 			TopYeeVoters = RequestElectorateSize();
 			GaussStdDev = RequestStandardDeviation();
-			printf("What honesty-percentage do you want? (0 to 100.)\n");
-			fflush(stdout);
-			scanf("%d", &ihonfrac);
-			if((ihonfrac<=0) || (ihonfrac>100)) {
-				printf("%d out of range, moron - try again\n", ihonfrac);
-				continue;
-			}
-			printf("Using honfrac=%d%%.\n", ihonfrac);
+			ihonfrac = RequestHonestyPercentage();
 			printf("Utilities based on (1) L1 or (2) L2 distance?\n");
 			fflush(stdout);
 			scanf("%d", &LpPow);
@@ -7569,4 +7563,25 @@ int RequestStandardDeviation(void)
 		}
 	}
 	return size;
+}
+
+/*	RequestHonestyPercentage(void):	asks the User for a Voter honesty percentage;
+ *					the procedure returns that percentage, subject
+ *					to limitations
+ */
+int RequestHonestyPercentage(void)
+{
+	int percentage;
+	printf("What honesty-percentage do you want? (0 to 100.)\n");
+	for(;;) {
+		fflush(stdout);
+		scanf("%d", &percentage);
+		if((percentage<=0) || (percentage>100)) {
+			printf("%d out of range, moron - try again\n", percentage);
+		} else {
+			printf("Using honfrac=%d%%.\n", percentage);
+			break;
+		}
+	}
+	return percentage;
 }
