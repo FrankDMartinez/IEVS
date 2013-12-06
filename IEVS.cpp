@@ -6928,6 +6928,7 @@ void ErectMainMenu(uint seed)
 	extern void RequestBayesianRegretSortingMethod(void);
 	extern void RequestErrorBarStatus(void);
 	extern void RequestIntermethodWinnerAgreementCountDisplayStatus(void);
+	extern void RequestNameForBMP(char (&name)[100]);
 	extern void RequestOutputFormat(void);
 	extern parameters RequestParameters(void);
 	extern void RequestRegretOutput(void);
@@ -6959,15 +6960,7 @@ void ErectMainMenu(uint seed)
 			break;
 		case(2) :
 			WhichMeth = RequestVotingMethod();
-			printf("What filename [.bmp suffix will be auto-added for you]?\n");
-			fflush(stdout);
-			scanf("%s", fname);
-			i = strlen(fname);
-			if(i>30) {
-				printf("filename too long, moron\n");
-				fflush(stdout); exit(EXIT_FAILURE);
-			}
-			strcat(fname, ".bmp");
+			RequestNameForBMP(fname);
 			printf("how many point-sites do you want [1 to 16]?\n");
 			fflush(stdout);
 			scanf("%d", &NumSites);
@@ -7459,4 +7452,26 @@ int RequestVotingMethod(void)
 	PrintMethName(chosenMethod, false);
 	printf(".\n");
 	return chosenMethod;
+}
+
+/*	RequestNameForBMP(name):	asks the User for a name of a file into which to
+ *					output the Yee picture; the procedure
+ *					automatically adds ".bmp" to the end of the file
+ *					name
+ *
+ *	name:	a reference to a character array which receives the file name
+ */
+void RequestNameForBMP(char (&name)[100])
+{
+	int i;
+	printf("What filename [.bmp suffix will be auto-added for you]?\n");
+	fflush(stdout);
+	scanf("%s", name);
+	i = strlen(name);
+	if(i>30) {
+		printf("filename too long, moron\n");
+		fflush(stdout);
+		exit(EXIT_FAILURE);
+	}
+	strcat(name, ".bmp");
 }
