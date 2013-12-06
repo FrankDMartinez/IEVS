@@ -6924,6 +6924,7 @@ void ErectMainMenu(uint seed)
 	extern void RequestBayesianRegretSortingMethod(void);
 	extern void RequestCoordPairs(int numberOfSites, int (&xarray)[16], int (&yarray)[16]);
 	extern void RequestCoordPairReordering(int numberOfSites, int (&xarray)[16], int (&yarray)[16]);
+	extern int RequestElectorateSize(void);
 	extern void RequestErrorBarStatus(void);
 	extern void RequestIntermethodWinnerAgreementCountDisplayStatus(void);
 	extern void RequestNameForBMP(char (&name)[100]);
@@ -6961,18 +6962,7 @@ void ErectMainMenu(uint seed)
 			NumSites = RequestPointSiteCount();
 			RequestCoordPairs(NumSites, xx, yy);
 			RequestCoordPairReordering(NumSites, xx, yy);
-
-			printf("What max election size (#voters) would you like?\n");
-			printf("256 recommended as good compromise between speed and randomness.\n");
-			printf("You're allowed to go as high as %d (for slowest speed).\n", MaxNumVoters);
-			printf("Algorithm keeps redoing elections with 10%% more voters each time until\n");
-			printf("either confident know the winner, or reach this voter# bound.\n");
-			fflush(stdout);
-			scanf("%d", &TopYeeVoters);
-			if((TopYeeVoters<=0) || (TopYeeVoters>MaxNumVoters)) {
-				printf("%d out of range, moron - try again\n", TopYeeVoters); continue;
-			}
-			printf("Using TopYeeVoters=%d.\n", TopYeeVoters);
+			TopYeeVoters = RequestElectorateSize();
 			printf("What standard deviation on the 1D gaussian do you want? (Whole picture width is 200.)\n");
 			fflush(stdout);
 			scanf("%d", &GaussStdDev);
@@ -7539,4 +7529,30 @@ void RequestCoordPairReordering(int numberOfSites, int (&xarray)[16], int (&yarr
 			break;
 		}
 	}
+}
+
+/*	RequestElectorateSize(void):	asks the User for the number of Voters to use
+ *					when making the Yee picture; the procedure
+ *					returns the number inputted, subject to
+ *					limitation
+ */
+int RequestElectorateSize(void)
+{
+	int Voters;
+	printf("What max election size (#voters) would you like?\n");
+	printf("256 recommended as good compromise between speed and randomness.\n");
+	printf("You're allowed to go as high as %d (for slowest speed).\n", MaxNumVoters);
+	printf("Algorithm keeps redoing elections with 10%% more voters each time until\n");
+	printf("either confident know the winner, or reach this voter# bound.\n");
+	for(;;) {
+		fflush(stdout);
+		scanf("%d", &Voters);
+		if((Voters<=0) || (Voters>MaxNumVoters)) {
+			printf("%d out of range, moron - try again\n", Voters);
+		} else {
+			printf("Using TopYeeVoters=%d.\n", Voters);
+			break;
+		}
+	}
+	return Voters;
 }
