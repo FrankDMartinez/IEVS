@@ -6932,6 +6932,7 @@ void ErectMainMenu(uint seed)
 	extern parameters RequestParameters(void);
 	extern 	int RequestPointSiteCount(void);
 	extern void RequestRegretOutput(void);
+	extern int RequestStandardDeviation(void);
 	extern void RequestUtilityGenerators(parameters parameterType);
 	extern int RequestVotingMethod(void);
 	extern void runSelfTests(void);
@@ -6963,14 +6964,7 @@ void ErectMainMenu(uint seed)
 			RequestCoordPairs(NumSites, xx, yy);
 			RequestCoordPairReordering(NumSites, xx, yy);
 			TopYeeVoters = RequestElectorateSize();
-			printf("What standard deviation on the 1D gaussian do you want? (Whole picture width is 200.)\n");
-			fflush(stdout);
-			scanf("%d", &GaussStdDev);
-			if((GaussStdDev<=0) || (GaussStdDev>999)) {
-				printf("%d out of range, moron - try again\n", GaussStdDev);
-				continue;
-			}
-			printf("Using GaussStdDevX=%d.\n", GaussStdDev);
+			GaussStdDev = RequestStandardDeviation();
 			printf("What honesty-percentage do you want? (0 to 100.)\n");
 			fflush(stdout);
 			scanf("%d", &ihonfrac);
@@ -7555,4 +7549,24 @@ int RequestElectorateSize(void)
 		}
 	}
 	return Voters;
+}
+
+/*	RequestStandardDeviation(void):	asks the User for a size for the standard
+ *					deviation in the 1D gaussian
+ */
+int RequestStandardDeviation(void)
+{
+	int size;
+	printf("What standard deviation on the 1D gaussian do you want? (Whole picture width is 200.)\n");
+	for(;;) {
+		fflush(stdout);
+		scanf("%d", &size);
+		if((size<=0) || (size>999)) {
+			printf("%d out of range, moron - try again\n", size);
+		} else {
+			printf("Using GaussStdDevX=%d.\n", size);
+			break;
+		}
+	}
+	return size;
 }
