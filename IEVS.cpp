@@ -6910,7 +6910,6 @@ enum parameters { unsetParameters, defaultParameters, customParameters };
  */
 void ErectMainMenu(uint seed)
 {
-	extern void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], const int &subsqsideX, const int &subsqsideY);
 	uint ch2;
 	uint choice;
 	real cscore;
@@ -6926,6 +6925,7 @@ void ErectMainMenu(uint seed)
 	extern void RequestAgreementCountStatus(void);
 	extern void RequestBayesianRegretNormalizationMethod(void);
 	extern void RequestBayesianRegretSortingMethod(void);
+	extern void RequestCoordPairs(int numberOfSites, int (&xarray)[16], int (&yarray)[16]);
 	extern void RequestErrorBarStatus(void);
 	extern void RequestIntermethodWinnerAgreementCountDisplayStatus(void);
 	extern void RequestNameForBMP(char (&name)[100]);
@@ -6936,8 +6936,6 @@ void ErectMainMenu(uint seed)
 	extern void RequestUtilityGenerators(parameters parameterType);
 	extern int RequestVotingMethod(void);
 	extern void runSelfTests(void);
-	int subsqsideX;
-	int subsqsideY;
 	int TopYeeVoters;
 	int WhichMeth;
 	int xx[16];
@@ -6963,41 +6961,7 @@ void ErectMainMenu(uint seed)
 			WhichMeth = RequestVotingMethod();
 			RequestNameForBMP(fname);
 			NumSites = RequestPointSiteCount();
-			printf("Do you want to:\n1. enter the %d coord-pairs yourself;\n",NumSites);
-			printf("2. random coordinate auto-generation?\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) :
-				printf("Enter coord pairs X Y with space (not comma) between X & Y, newline between pairs\n");
-				printf("(0,0) is in the lower left.  For example an equilateral triangle would be\n");
-				printf("99 197\n186 47\n12 47\nCoords outside of the [[0,199] range are permitted.\nYour coords:\n");
-				fflush(stdout);
-				for(i=0; i<NumSites; i++) {
-					scanf("%d %d", &(xx[i]), &(yy[i]));
-				}
-				printf("Your coords are:\n");
-				for(i=0; i<NumSites; i++) {
-					printf("(%d, %d)\n", xx[i], yy[i]);
-				}
-				break;
-			case(2) :
-				printf("X Y sidelengths of subsquare in which you want the random points (200 for full square):\n");
-				fflush(stdout);
-				scanf("%d %d", &subsqsideX,  &subsqsideY);
-				if((subsqsideX <=0) || (subsqsideX>=200)) {  subsqsideX = 200;  }
-				if((subsqsideY <=0) || (subsqsideY>=200)) {  subsqsideY = 200;  }
-				printf("using %dx%d centered subrectangle\n", subsqsideX, subsqsideY);
-				adjustYeeCoordinates(NumSites, xx, yy, subsqsideX, subsqsideY);
-				cscore = ReorderForColorContrast(  NumSites, xx, yy );
-				printf("Color score %f (big=more constrast); Your coords are:\n", cscore);
-				for(i=0; i<NumSites; i++) {
-					printf("(%d, %d)\n", xx[i], yy[i]);
-				}
-				break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
+			RequestCoordPairs(NumSites, xx, yy);
 			printf("Do you want IEVS to re-order the points to try for maximum color-contrast? (1) yes (2) no\n");
 			fflush(stdout);
 			scanf("%u", &ch2);
@@ -7488,4 +7452,68 @@ int RequestPointSiteCount(void)
 		numberOfSites=16;
 	}
 	return numberOfSites;
+}
+
+/*	RequestCoordPairs(numberOfSites, xarray, yarray):	asks the User if the
+ *								coord-pairs should be
+ *								entered manually or
+ *								created for the User
+ *
+ *	numberOfSites:	the number of coord-pairs to enter/create
+ *	xarray:		a reference to an array to receive x coordinates
+ *	yarray:		a reference to an array to receive y coordinates
+ */
+void RequestCoordPairs(int numberOfSites, int (&xarray)[16], int (&yarray)[16])
+{
+	int i;
+	uint u;
+	bool finished;
+	printf("Do you want to:\n1. enter the %d coord-pairs yourself;\n",numberOfSites);
+	printf("2. random coordinate auto-generation?\n");
+	for(finished = false; not finished; ) {
+		fflush(stdout);
+		scanf("%u", &u);
+		switch(u) {
+		case(1) :
+			printf("Enter coord pairs X Y with space (not comma) between X & Y, newline between pairs\n");
+			printf("(0,0) is in the lower left.  For example an equilateral triangle would be\n");
+			printf("99 197\n186 47\n12 47\nCoords outside of the [[0,199] range are permitted.\nYour coords:\n");
+			fflush(stdout);
+			for(i=0; i<numberOfSites; i++) {
+				scanf("%d %d", &(xarray[i]), &(yarray[i]));
+			}
+			printf("Your coords are:\n");
+			for(i=0; i<numberOfSites; i++) {
+				printf("(%d, %d)\n", xarray[i], yarray[i]);
+			}
+			finished = true;
+			break;
+		case(2) :
+			extern void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], const int &subsqsideX, const int &subsqsideY);
+			real cscore;
+			int subsqsideX;
+			int subsqsideY;
+			printf("X Y sidelengths of subsquare in which you want the random points (200 for full square):\n");
+			fflush(stdout);
+			scanf("%d %d", &subsqsideX,  &subsqsideY);
+			if((subsqsideX <=0) || (subsqsideX>=200)) {
+				subsqsideX = 200;
+			}
+			if((subsqsideY <=0) || (subsqsideY>=200)) {
+				subsqsideY = 200;
+			}
+			printf("using %dx%d centered subrectangle\n", subsqsideX, subsqsideY);
+			adjustYeeCoordinates(numberOfSites, xarray, yarray, subsqsideX, subsqsideY);
+			cscore = ReorderForColorContrast(  numberOfSites, xarray, yarray );
+			printf("Color score %f (big=more constrast); Your coords are:\n", cscore);
+			for(i=0; i<numberOfSites; i++) {
+				printf("(%d, %d)\n", xarray[i], yarray[i]);
+			}
+			finished = true;
+			break;
+		default :
+			printf("Wrong choice %u, moron - try again\n", u);
+			break;
+		}
+	}
 }
