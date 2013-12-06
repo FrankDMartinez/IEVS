@@ -6931,6 +6931,7 @@ void ErectMainMenu(uint seed)
 	extern void RequestOutputFormat(void);
 	extern parameters RequestParameters(void);
 	extern void RequestRegretOutput(void);
+	extern void RequestUtilityGenerators(parameters parameterType);
 	extern void runSelfTests(void);
 	int subsqsideX;
 	int subsqsideY;
@@ -6953,45 +6954,7 @@ void ErectMainMenu(uint seed)
 			RequestIntermethodWinnerAgreementCountDisplayStatus();
 			RequestRegretOutput();
 			parameterType = RequestParameters();
-			printf("IX. (1) Machine or (2) Real-world-based utilities?\n");
-			fflush(stdout);
-			scanf("%u", &ch2);
-			switch(ch2) {
-			case(1) :
-				printf("Machine.\n");
-				if(parameterType==customParameters) {
-					printf("Select which utility-generators you want (default 0 thru 15):\n");
-					for(i=0; i<16; i++) {
-						printf("%2d: ", i);
-						PrintUtilName(i,true);
-						printf("\n");
-					}
-					scanf("%d %d", &utilnumlower, &utilnumupper);
-					if(utilnumlower<0) {
-						utilnumlower=0;
-					}
-					if(utilnumupper>=15) {
-						utilnumupper=15;
-					}
-					printf("Utility gens  [%d, %d] chosen.\n", utilnumlower, utilnumupper);
-					/**** if ???
-					printf("Select LPpow???d):\n");
-					scanf("%d", &LPpow);
-					if(LPpow<1) LPpow=1;
-					if(LPpow>5) LPpow=5;
-					printf("Using L%d distances.\n", LPpow);
-					*****/
-				}
-				BRDriver();
-				break;
-			case(2) :
-				printf("Real-world-based.\n");
-				LoadEldataFiles();
-				RWBRDriver();
-				break;
-			default : printf("Wrong choice %d, moron - try again\n", ch2);
-				continue;
-			}
+			RequestUtilityGenerators(parameterType);
 			break;
 		case(2) :
 			printf("Which voting method? Your choices:"); PrintAvailableVMethods();
@@ -7426,4 +7389,59 @@ parameters RequestParameters(void)
 	}
 	ensure(rv not_eq unsetParameters, 22);
 	return rv;
+}
+
+/*	RequestUtilityGenerators(parameterType):	asks the User to specify which
+ *							utility generators to use
+ *	parameterType:	the type of the various parameters set in 'RequestParameters()'
+ */
+void RequestUtilityGenerators(parameters parameterType)
+{
+	bool finished;
+	uint u;
+	printf("IX. (1) Machine or (2) Real-world-based utilities?\n");
+	for(finished = false; not finished; ) {
+		fflush(stdout);
+		scanf("%u", &u);
+		switch(u) {
+		case(1) :
+			printf("Machine.\n");
+			if(parameterType==customParameters) {
+				int i;
+				printf("Select which utility-generators you want (default 0 thru 15):\n");
+				for(i=0; i<16; i++) {
+					printf("%2d: ", i);
+					PrintUtilName(i,true);
+					printf("\n");
+				}
+				scanf("%d %d", &utilnumlower, &utilnumupper);
+				if(utilnumlower<0) {
+					utilnumlower=0;
+				}
+				if(utilnumupper>=15) {
+					utilnumupper=15;
+				}
+				printf("Utility gens t com [%d, %d] chosen.\n", utilnumlower, utilnumupper);
+				/**** if ???
+				printf("Select LPpow???d):\n");
+				scanf("%d", &LPpow);
+				if(LPpow<1) LPpow=1;
+				if(LPpow>5) LPpow=5;
+				printf("Using L%d distances.\n", LPpow);
+				*****/
+			}
+			BRDriver();
+			finished = true;
+			break;
+		case(2) :
+			printf("Real-world-based.\n");
+			LoadEldataFiles();
+			RWBRDriver();
+			finished = true;
+			break;
+		default :
+			printf("Wrong choice %u, moron - try again\n", u);
+			break;
+		}
+	}
 }
