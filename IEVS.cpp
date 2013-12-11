@@ -141,6 +141,7 @@ David Cary's Changes (not listing ones WDS did anyhow) include:
 
 #define until(x) while(!(x))
 typedef double real;
+typedef void (*driver_t)(void);
 
 const real PI = 3.14159265358979323844;
 
@@ -6913,6 +6914,7 @@ void ErectMainMenu(uint seed)
 	uint choice;
 	extern void DisplayBayesianRegretMenuIntroduction(void);
 	extern void DisplayMainQuestion(void);
+	driver_t driver;
 	char fname[100];
 	int ihonfrac;
 	int GaussStdDev;
@@ -6934,7 +6936,7 @@ void ErectMainMenu(uint seed)
 	extern 	int RequestPointSiteCount(void);
 	extern void RequestRegretOutput(void);
 	extern int RequestStandardDeviation(void);
-	extern void RequestUtilityGenerators(parameters parameterType);
+	extern driver_t RequestUtilityGenerators(parameters parameterType);
 	extern int RequestUtilityDistancePow(void);
 	extern int RequestVotingMethod(void);
 	extern void runSelfTests(void);
@@ -6957,7 +6959,8 @@ void ErectMainMenu(uint seed)
 			RequestIntermethodWinnerAgreementCountDisplayStatus();
 			RequestRegretOutput();
 			parameterType = RequestParameters();
-			RequestUtilityGenerators(parameterType);
+			driver = RequestUtilityGenerators(parameterType);
+			driver();
 			break;
 		case(2) :
 			WhichMeth = RequestVotingMethod();
@@ -7295,12 +7298,15 @@ parameters RequestParameters(void)
 }
 
 /*	RequestUtilityGenerators(parameterType):	asks the User to specify which
- *							utility generators to use
+ *							utility generators to use; the
+ *							procedure returns a pointer to
+ *							the relevant driver
  *	parameterType:	the type of the various parameters set in 'RequestParameters()'
  */
-void RequestUtilityGenerators(parameters parameterType)
+driver_t RequestUtilityGenerators(parameters parameterType)
 {
 	bool finished;
+	driver_t driver = NULL;
 	uint u;
 	printf("IX. (1) Machine or (2) Real-world-based utilities?\n");
 	for(finished = false; not finished; ) {
@@ -7333,13 +7339,13 @@ void RequestUtilityGenerators(parameters parameterType)
 				printf("Using L%d distances.\n", LPpow);
 				*****/
 			}
-			BRDriver();
+			driver = BRDriver;
 			finished = true;
 			break;
 		case(2) :
 			printf("Real-world-based.\n");
 			LoadEldataFiles();
-			RWBRDriver();
+			driver = RWBRDriver;
 			finished = true;
 			break;
 		default :
@@ -7347,6 +7353,8 @@ void RequestUtilityGenerators(parameters parameterType)
 			break;
 		}
 	}
+	ensure( driver not_eq NULL, 23);
+	return driver;
 }
 
 /*	RequestVotingMethod(void):	asks the User to select a voting method for
