@@ -6912,69 +6912,20 @@ enum parameters { unsetParameters, defaultParameters, customParameters };
 void ErectMainMenu(uint seed)
 {
 	uint choice;
-	extern void DisplayBayesianRegretMenuIntroduction(void);
+	extern void PerformBayesianRegretAnalysis(void);
 	extern void DisplayMainQuestion(void);
-	driver_t driver;
-	char fname[100];
-	int ihonfrac;
-	int GaussStdDev;
-	int LpPow;
-	int NumSites;
-	parameters parameterType;
-	extern void RequestAgreementCountStatus(void);
-	extern void RequestBayesianRegretNormalizationMethod(void);
-	extern void RequestBayesianRegretSortingMethod(void);
-	extern void RequestCoordPairs(int numberOfSites, int (&xarray)[16], int (&yarray)[16]);
-	extern void RequestCoordPairReordering(int numberOfSites, int (&xarray)[16], int (&yarray)[16]);
-	extern int RequestElectorateSize(void);
-	extern void RequestErrorBarStatus(void);
-	extern int RequestHonestyPercentage(void);
-	extern void RequestIntermethodWinnerAgreementCountDisplayStatus(void);
-	extern void RequestNameForBMP(char (&name)[100]);
-	extern void RequestOutputFormat(void);
-	extern parameters RequestParameters(void);
-	extern 	int RequestPointSiteCount(void);
-	extern void RequestRegretOutput(void);
-	extern int RequestStandardDeviation(void);
-	extern driver_t RequestUtilityGenerators(parameters parameterType);
-	extern int RequestUtilityDistancePow(void);
-	extern int RequestVotingMethod(void);
+	extern void MakeYeePicture(uint);
 	extern void runSelfTests(void);
-	int TopYeeVoters;
-	int WhichMeth;
-	int xx[16];
-	int yy[16];
 	DisplayMainQuestion();
 	do{
 		fflush(stdout);
 		scanf("%u", &choice);
 		switch(choice) {
 		case(1) :
-			DisplayBayesianRegretMenuIntroduction();
-			RequestBayesianRegretSortingMethod();
-			RequestOutputFormat();
-			RequestBayesianRegretNormalizationMethod();
-			RequestErrorBarStatus();
-			RequestAgreementCountStatus();
-			RequestIntermethodWinnerAgreementCountDisplayStatus();
-			RequestRegretOutput();
-			parameterType = RequestParameters();
-			driver = RequestUtilityGenerators(parameterType);
-			driver();
+			PerformBayesianRegretAnalysis();
 			break;
 		case(2) :
-			WhichMeth = RequestVotingMethod();
-			RequestNameForBMP(fname);
-			NumSites = RequestPointSiteCount();
-			RequestCoordPairs(NumSites, xx, yy);
-			RequestCoordPairReordering(NumSites, xx, yy);
-			TopYeeVoters = RequestElectorateSize();
-			GaussStdDev = RequestStandardDeviation();
-			ihonfrac = RequestHonestyPercentage();
-			LpPow = RequestUtilityDistancePow();
-			printf("grinding...\n"); fflush(stdout);
-			MakeYeePict( fname, xx, yy, NumSites, WhichMeth, TopYeeVoters, GaussStdDev, ihonfrac*0.01, LpPow );
-			printf("seed=%d\n", seed);
+			MakeYeePicture(seed);
 			break;
 		case(3):
 			runSelfTests();
@@ -7608,4 +7559,75 @@ int RequestUtilityDistancePow(void)
 		}
 	}
 	return LpPow;
+}
+
+/*	PerformBayesianRegretAnalysis(void):	asks the User a series of questions and
+ *						uses those answers to perform
+ *						Bayesian regret analysis and to output
+ *						the results
+ */
+void PerformBayesianRegretAnalysis(void)
+{
+	extern void DisplayBayesianRegretMenuIntroduction(void);
+	driver_t driver;
+	parameters parameterType;
+	extern void RequestAgreementCountStatus(void);
+	extern void RequestBayesianRegretNormalizationMethod(void);
+	extern void RequestBayesianRegretSortingMethod(void);
+	extern void RequestErrorBarStatus(void);
+	extern void RequestIntermethodWinnerAgreementCountDisplayStatus(void);
+	extern void RequestOutputFormat(void);
+	extern parameters RequestParameters(void);
+	extern void RequestRegretOutput(void);
+	extern driver_t RequestUtilityGenerators(parameters parameterType);
+	DisplayBayesianRegretMenuIntroduction();
+	RequestBayesianRegretSortingMethod();
+	RequestOutputFormat();
+	RequestBayesianRegretNormalizationMethod();
+	RequestErrorBarStatus();
+	RequestAgreementCountStatus();
+	RequestIntermethodWinnerAgreementCountDisplayStatus();
+	RequestRegretOutput();
+	parameterType = RequestParameters();
+	driver = RequestUtilityGenerators(parameterType);
+	driver();
+}
+
+/*	MakeYeePicture(seed):	asks the USer a series of questions and uses those
+ *				answers to create a Yee picture and to output the result
+ *
+ *	seed:	the seed value used for the random number generator
+ */
+void MakeYeePicture(uint seed)
+{
+	char fname[100];
+	int ihonfrac;
+	int GaussStdDev;
+	int LpPow;
+	int NumSites;
+	int TopYeeVoters;
+	int WhichMeth;
+	int xx[16];
+	int yy[16];
+	extern void RequestCoordPairs(int numberOfSites, int (&xarray)[16], int (&yarray)[16]);
+	extern void RequestCoordPairReordering(int numberOfSites, int (&xarray)[16], int (&yarray)[16]);
+	extern int RequestElectorateSize(void);
+	extern int RequestHonestyPercentage(void);
+	extern void RequestNameForBMP(char (&name)[100]);
+	extern 	int RequestPointSiteCount(void);
+	extern int RequestStandardDeviation(void);
+	extern int RequestUtilityDistancePow(void);
+	extern int RequestVotingMethod(void);
+	WhichMeth = RequestVotingMethod();
+	RequestNameForBMP(fname);
+	NumSites = RequestPointSiteCount();
+	RequestCoordPairs(NumSites, xx, yy);
+	RequestCoordPairReordering(NumSites, xx, yy);
+	TopYeeVoters = RequestElectorateSize();
+	GaussStdDev = RequestStandardDeviation();
+	ihonfrac = RequestHonestyPercentage();
+	LpPow = RequestUtilityDistancePow();
+	printf("grinding...\n"); fflush(stdout);
+	MakeYeePict( fname, xx, yy, NumSites, WhichMeth, TopYeeVoters, GaussStdDev, ihonfrac*0.01, LpPow );
+	printf("seed=%d\n", seed);
 }
