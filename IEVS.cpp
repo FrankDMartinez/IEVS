@@ -6935,6 +6935,7 @@ void ErectMainMenu(uint seed)
 	extern void RequestRegretOutput(void);
 	extern int RequestStandardDeviation(void);
 	extern void RequestUtilityGenerators(parameters parameterType);
+	extern int RequestUtilityDistancePow(void);
 	extern int RequestVotingMethod(void);
 	extern void runSelfTests(void);
 	int TopYeeVoters;
@@ -6967,14 +6968,7 @@ void ErectMainMenu(uint seed)
 			TopYeeVoters = RequestElectorateSize();
 			GaussStdDev = RequestStandardDeviation();
 			ihonfrac = RequestHonestyPercentage();
-			printf("Utilities based on (1) L1 or (2) L2 distance?\n");
-			fflush(stdout);
-			scanf("%d", &LpPow);
-			if((LpPow<=0) || (LpPow>2)) {
-				printf("%d out of range, moron - try again\n", LpPow);
-				continue;
-			}
-			printf("Using LpPow=%d.\n", LpPow);
+			LpPow = RequestUtilityDistancePow();
 			printf("grinding...\n"); fflush(stdout);
 			MakeYeePict( fname, xx, yy, NumSites, WhichMeth, TopYeeVoters, GaussStdDev, ihonfrac*0.01, LpPow );
 			printf("seed=%d\n", seed);
@@ -7584,4 +7578,26 @@ int RequestHonestyPercentage(void)
 		}
 	}
 	return percentage;
+}
+
+/*	RequestUtilityDistancePow(void):	asks the User to choose utilities to be
+ *						based on either the L1 or L2 distance;
+ *						the procedure returns the chosen
+ *						distance type
+ */
+int RequestUtilityDistancePow(void)
+{
+	int LpPow;
+	printf("Utilities based on (1) L1 or (2) L2 distance?\n");
+	for(;;) {
+		fflush(stdout);
+		scanf("%d", &LpPow);
+		if((LpPow<=0) || (LpPow>2)) {
+			printf("%d out of range, moron - try again\n", LpPow);
+		} else {
+			printf("Using LpPow=%d.\n", LpPow);
+			break;
+		}
+	}
+	return LpPow;
 }
