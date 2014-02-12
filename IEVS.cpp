@@ -1253,6 +1253,16 @@ void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have be
   IRVTopLim = BIGINT;
 }
 
+enum matrix_t
+{
+	defeats,
+	trueDefeats,
+	margins,
+	Armytage,
+	ArmytageDefeats,
+	ArmytageMargins
+};
+
 struct oneCandidate
 {
 	real actualUtility;
@@ -1269,20 +1279,49 @@ struct oneVoter
 	oneCandidate Candidates[MaxNumCands];
 };
 
+struct relationshipBetweenCandidates
+{
+	int DefeatsMatrix[MaxNumCands];
+	void zeroInitialize(matrix_t matrix) {
+		int (*array)[MaxNumCands];
+
+		switch(matrix) {
+		case defeats:
+			array = &DefeatsMatrix;
+			break;
+		case trueDefeats:
+		case margins:
+		case Armytage:
+		case ArmytageDefeats:
+		case ArmytageMargins:
+		default:
+			ensure(false, 29);
+			break;
+		}
+		ZeroIntArray(MaxNumCands, *array);
+	}
+};
+
 typedef struct dum1 {
   uint NumVoters;
   uint64_t NumCands;
 	oneVoter Voters[MaxNumVoters];
+	relationshipBetweenCandidates CandidatesVsOtherCandidates[MaxNumCands];
   uint TopDownPrefs[MaxNumCands*MaxNumVoters];
   uint CandRankings[MaxNumCands*MaxNumVoters];
   real PerceivedUtility[MaxNumCands*MaxNumVoters];
   real Utility[MaxNumCands*MaxNumVoters];
   int TrueDefMatrix[MaxNumCands*MaxNumCands];
-  int DefeatsMatrix[MaxNumCands*MaxNumCands];
   int MarginsMatrix[MaxNumCands*MaxNumCands];
   real Armytage[MaxNumCands*MaxNumCands];
   int ArmyDef[MaxNumCands*MaxNumCands];
   real MargArmy[MaxNumCands*MaxNumCands];
+	void zeroInitializeArray(matrix_t matrix) {
+		int i;
+		for( i = 0; i < MaxNumCands; i++ ) {
+			CandidatesVsOtherCandidates[i].zeroInitialize(matrix);
+		}
+	}
 } edata;
 
 int calculateForRunoff(const edata *E, int first, int second);
@@ -1346,6 +1385,7 @@ void BuildDefeatsMatrix(edata *E)
 	real t;
 	bool CondWin, TrueCondWin;
 	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
+	const uint numberOfVoters = E->NumVoters;
 	MakeIdentityPerm( E->NumCands, RandCandPerm );
 	RandomlyPermute( E->NumCands, RandCandPerm );
 
@@ -1354,7 +1394,7 @@ void BuildDefeatsMatrix(edata *E)
 	for(j=E->NumCands -1; j>=0; j--) {  NauruWt[j] = x / (j+1U); }
 	for(j=MinInt(E->NumCands -1,9); j>=0; j--) {  BaseballWt[j] = 10-j; }
 	BaseballWt[0] = 14;
-	ZeroIntArray(  SquareInt(E->NumCands),  E->DefeatsMatrix );
+	E->zeroInitializeArray(defeats);
 	ZeroRealArray( SquareInt(E->NumCands),  E->Armytage );
 	ZeroIntArray(  SquareInt(E->NumCands),  E->ArmyDef );
 	ZeroIntArray(  SquareInt(E->NumCands),  E->TrueDefMatrix );
@@ -1367,9 +1407,9 @@ void BuildDefeatsMatrix(edata *E)
 				const oneCandidate &secondCandidate = allCandidates[j];
 				y = E->CandRankings[x+j]; y -= E->CandRankings[x+i];
 				if( y>0 ) {
-					E->DefeatsMatrix[i*E->NumCands + j]++; /*i preferred above j*/
+					E->CandidatesVsOtherCandidates[i].DefeatsMatrix[j]++;	/*i preferred above j*/
 				}else{
-					E->DefeatsMatrix[j*E->NumCands + i]++;
+					E->CandidatesVsOtherCandidates[j].DefeatsMatrix[i]++;	/*j preferred above i*/
 				}
 				t = firstCandidate.score - secondCandidate.score;
 				if(t > 0.0) {
@@ -1391,20 +1431,24 @@ void BuildDefeatsMatrix(edata *E)
 	CondorcetWinner = -1;
 	TrueCW = -1;
 	for(i=E->NumCands -1; i>=0; i--) {
+		relationshipBetweenCandidates &relationshipsOfI = E->CandidatesVsOtherCandidates[i];
 		WinCount[i] = DrawCt[i] = 0;
 		CondWin = true;
 		TrueCondWin = true;
 		for(j=(int)E->NumCands -1; j>=0; j--) {
-			assert( E->DefeatsMatrix[i*E->NumCands+j] <= (int)E->NumVoters );
-			assert( E->DefeatsMatrix[i*E->NumCands+j] >= 0 );
-			assert( E->DefeatsMatrix[i*E->NumCands+j] + E->DefeatsMatrix[j*E->NumCands+i] <= (int)E->NumVoters );
+			const int &iDefeatsJ = relationshipsOfI.DefeatsMatrix[j];
+			const int &jDefeatsI = E->CandidatesVsOtherCandidates[j].DefeatsMatrix[i];
+			assert( iDefeatsJ <= (int)numberOfVoters );
+			assert( iDefeatsJ >= 0 );
+			assert( iDefeatsJ + jDefeatsI <= (int)numberOfVoters );
 			y = E->ArmyDef[i*E->NumCands+j]; y -= E->ArmyDef[j*E->NumCands+i];
 			if(y>0) {
 				E->MargArmy[i*E->NumCands + j] = E->Armytage[i*E->NumCands+j];
 			} else {/*y<=0*/
 				E->MargArmy[i*E->NumCands + j] = 0;
 			}
-			y = E->DefeatsMatrix[i*E->NumCands+j]; y -= E->DefeatsMatrix[j*E->NumCands+i];
+			y = iDefeatsJ;
+			y -= jDefeatsI;
 			E->MarginsMatrix[i*E->NumCands + j] = y;
 			assert(i!=j || E->MarginsMatrix[i*E->NumCands + j] == 0);
 			if(y > 0) {
@@ -1955,9 +1999,10 @@ EMETH Sinkhorn(edata *E  /* candidate with max Sinkhorn rating (from all-positiv
 	FillRealArray( E->NumCands, SinkCol, 1.0 );
 	do{
 		for(k=0; k < (int)E->NumCands; k++) {
+			relationshipBetweenCandidates &relationshipsOfK = E->CandidatesVsOtherCandidates[k];
 			for(j=E->NumCands -1; j>=0; j--) {
 				SinkMat[k*E->NumCands + j] =
-					SinkRow[k]*SinkCol[j] * (E->DefeatsMatrix[k*E->NumCands + j] + 1.0);
+					SinkRow[k]*SinkCol[j] * (relationshipsOfK.DefeatsMatrix[j] + 1.0);
 			}
 		}
 		maxsum = -HUGE; minsum = HUGE;
@@ -2017,9 +2062,10 @@ EMETH KeenerEig(edata *E  /* winning canddt has max Frobenius eigenvector entry 
 	FillRealArray( E->NumCands, EigVec2, 1.0 );
 	do{
 		for(k=0; k < (int)E->NumCands; k++) {
+			relationshipBetweenCandidates &relationshipsOfK = E->CandidatesVsOtherCandidates[k];
 			t = 0;
 			for(j=E->NumCands -1; j>=0; j--) {
-				t += (E->DefeatsMatrix[k*E->NumCands + j] + 1.0) * EigVec[j];
+				t += (relationshipsOfK.DefeatsMatrix[j] + 1.0) * EigVec[j];
 			}
 			EigVec2[k] = t;
 		}
@@ -2965,7 +3011,7 @@ EMETH HeitzigLFC(const edata *E){ /*random canddt who is not "strongly beat" win
   for(j=E->NumCands -1; j>=0; j--){
     for(i=E->NumCands -1; i>=0; i--){
       if(ApprovalVoteCount[j] > ApprovalVoteCount[i]){
-	if(2*E->DefeatsMatrix[i*E->NumCands +j] < (int)ApprovalVoteCount[i]){
+	if(2*E->CandidatesVsOtherCandidates[i].DefeatsMatrix[j] < (int)ApprovalVoteCount[i]){
           /*Candidate i is "strongly beat"*/
 	  Eliminated[i] = true;
 	}
@@ -3752,7 +3798,8 @@ EMETH MDDA(edata *E  /* approval-count winner among canddts not majority-defeate
 	for(i=E->NumCands -1; i>=0; i--) {
 		MDdisquald[i] = false;
 		for(j=E->NumCands -1; j>=0; j--) {
-			if(E->DefeatsMatrix[j*E->NumCands + i] > thresh) {
+			relationshipBetweenCandidates &relationshipsOfJ = E->CandidatesVsOtherCandidates[j];
+			if(relationshipsOfJ.DefeatsMatrix[i] > thresh) {
 				MDdisquald[i] = true;
 				dqct++;
 				break;
