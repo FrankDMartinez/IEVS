@@ -1353,8 +1353,12 @@ void BuildDefeatsMatrix(edata *E)
 
 	assert(E->NumCands <= MaxNumCands);
 	x = LCMfact[E->NumCands];
-	for(j=(int)E->NumCands-1; j>=0; j--) {  NauruWt[j] = x / (j+1U); }
-	for(j=(int)std::min<typeof(E->NumCands)>(E->NumCands-1,9); j>=0; j--) {  BaseballWt[j] = 10-j; }
+	for(j=1; j<=E->NumCands; j++) {
+		NauruWt[j-1] = x / j;
+	}
+	for(j=0; j<(int)std::min<typeof(E->NumCands)>(E->NumCands,10); j++) {
+		BaseballWt[j] = 10-j;
+	}
 	BaseballWt[0] = 14;
 	E->zeroInitializeArray(defeats);
 	ZeroArray( Square(E->NumCands),  E->Armytage );
@@ -1363,9 +1367,9 @@ void BuildDefeatsMatrix(edata *E)
 	for(k=0; k<(int)E->NumVoters; k++) {
 		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[k].Candidates;
 		x = k*E->NumCands;
-		for(i=(int)E->NumCands -1; i>=0; i--) {
+		for(i=0; i<E->NumCands; i++) {
 			const oneCandidate &firstCandidate = allCandidates[i];
-			for(j=i-1; j>=0; j--) {
+			for(j=0; j<i; j++) {
 				const oneCandidate &secondCandidate = allCandidates[j];
 				y = E->CandRankings[x+j]; y -= E->CandRankings[x+i];
 				if( y>0 ) {
@@ -1392,12 +1396,12 @@ void BuildDefeatsMatrix(edata *E)
 	}
 	CondorcetWinner = -1;
 	TrueCW = -1;
-	for(i=(int)E->NumCands -1; i>=0; i--) {
+	for(i=0; i<E->NumCands; i++) {
 		relationshipBetweenCandidates &relationshipsOfI = E->CandidatesVsOtherCandidates[i];
 		WinCount[i] = DrawCt[i] = 0;
 		CondWin = true;
 		TrueCondWin = true;
-		for(j=(int)E->NumCands -1; j>=0; j--) {
+		for(j=0; j<E->NumCands; j++) {
 			const int &iDefeatsJ = relationshipsOfI.DefeatsMatrix[j];
 			const int &jDefeatsI = E->CandidatesVsOtherCandidates[j].DefeatsMatrix[i];
 			assert( iDefeatsJ <= (int)numberOfVoters );
@@ -1433,9 +1437,9 @@ void BuildDefeatsMatrix(edata *E)
 		}
 	}
 	/* find who-you-beat sets: */
-	for(i=(int)E->NumCands-1; i>=0; i--) {
+	for(i=0; i<E->NumCands; i++) {
 		x = 0;
-		for(j=(int)E->NumCands -1; j>=0; j--) {
+		for(j=0; j<E->NumCands; j++) {
 			if( E->MarginsMatrix[i*E->NumCands + j] > 0 ) {
 				x |= (1U<<j);
 			}
@@ -1446,9 +1450,9 @@ void BuildDefeatsMatrix(edata *E)
 	ZeroArray( Square(E->NumCands), PairApproval );
 	for(i=0; i<(int)E->NumVoters; i++) {
 		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+		for(j=0; j<E->NumCands; j++) {
 			const oneCandidate &firstCandidate = allCandidates[j];
-			for(k=(int)E->NumCands-1; k>j; k--) {
+			for(k=j+1; k<E->NumCands; k++) {
 				const oneCandidate &secondCandidate = allCandidates[k];
 				y = ((firstCandidate.approve && secondCandidate.approve) ? 1:0);
 				PairApproval[j*E->NumCands +k] += y; /* count of voters who approve of both j and k */
@@ -1465,12 +1469,14 @@ EMETH SociallyBest(const edata *E  /* greatest utility-sum winner */)
 	ZeroArray( E->NumCands, UtilitySum );
 	for(i=0; i<(int)E->NumVoters; i++) {
 		x = i*E->NumCands;
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+		for(j=0; j<E->NumCands; j++) {
 			UtilitySum[j] += E->Utility[x+j];
 		}
 	}
 	BestWinner = ArgMaxArr<real>(E->NumCands, UtilitySum, (int*)RandCandPerm);
-	for(j=(int)E->NumCands-1; j>=0; j--) { assert( UtilitySum[BestWinner] >= UtilitySum[j] ); }
+	for(j=0; j<E->NumCands; j++) {
+		assert( UtilitySum[BestWinner] >= UtilitySum[j] );
+	}
 	return BestWinner;
 }
 
@@ -1509,23 +1515,23 @@ EMETH Hay(const edata *E /*Strategyproof. Prob of election proportional to sum o
 	for(i=0; i<(int)E->NumVoters; i++) {
 		x = i*E->NumCands;
 		minu = HUGE;
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+		for(j=0; j<E->NumCands; j++) {
 			if(minu > E->Utility[x+j]) {
 				minu = E->Utility[x+j];
 			}
 		}
 		sumrts = 0.0;
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+		for(j=0; j<E->NumCands; j++) {
 			sumrts += sqrt(E->Utility[x+j] - minu);
 		}
 		if(sumrts>0.0) {
-			for(j=(int)E->NumCands-1; j>=0; j--) {
+			for(j=0; j<E->NumCands; j++) {
 				UtilityRootSum[j] += sqrt(E->Utility[x+j] - minu)/sumrts;
 			}
 		}
 	}
 	sumrts = 0.0;
-	for(j=(int)E->NumCands-1; j>=0; j--) {
+	for(j=0; j<E->NumCands; j++) {
 		sumrts += UtilityRootSum[j];
 	}
 	t = Rand01() * sumrts;
@@ -1670,9 +1676,11 @@ EMETH Borda(edata *E  /* Borda: weighted positional with weights N-1, N-2, ..., 
 	if(CopeWinOnlyWinner<0) {
 		BuildDefeatsMatrix(E);
 	}
-	for(i=(int)E->NumCands-1; i>=0; i--) {
+	for(i=0; i<E->NumCands; i++) {
 		t=0;
-		for(j=(int)E->NumCands-1; j>=0; j--) {  t += E->MarginsMatrix[i*E->NumCands + j];  }
+		for(j=0; j<E->NumCands; j++) {
+			t += E->MarginsMatrix[i*E->NumCands + j];
+		}
 		BordaVoteCount[i] = t;
 	}
 	BordaWinner = ArgMaxArr<int>(E->NumCands, (int*)BordaVoteCount, (int*)RandCandPerm);
@@ -1751,13 +1759,13 @@ EMETH NansonBaldwin(edata *E  /* repeatedly eliminate Borda loser */)
 		assert(BordaLoser>=0);
 		ensure(BordaLoser>=0, 7);
 		Eliminated[BordaLoser] = true;
-		for(i=(int)E->NumCands-1; i>=0; i--) {
+		for(i=0; i<E->NumCands; i++) {
 			if(!Eliminated[i]) {
 				NansonVoteCount[i] -= E->MarginsMatrix[i*E->NumCands + BordaLoser];
 			}
 		}
 	} /* end of for(rnd) */
-	for(i=(int)E->NumCands-1; i>=0; i--) { /* find non-eliminated candidate... */
+	for(i=0; i<E->NumCands; i++) { /* find non-eliminated candidate... */
 		if(!Eliminated[i]) {
 			return i; /*NansonBaldwin winner*/
 		}
@@ -1793,7 +1801,7 @@ EMETH Rouse(edata *E  /*like Nanson-Baldwin but with an extra level of recursion
 				r = RandCandPerm[i];
 				if(rRmark[r] && Rmark[r]) {
 					bordsum = 0;
-					for(j=(int)E->NumCands-1; j>=0; j--) {
+					for(j=0; j<E->NumCands; j++) {
 						if(Rmark[j] && rRmark[j]) {
 							bordsum += E->MarginsMatrix[r*E->NumCands +j];
 						}
@@ -1815,7 +1823,12 @@ EMETH Rouse(edata *E  /*like Nanson-Baldwin but with an extra level of recursion
 		rRmark[i] = false; /* (genuinely) eliminate it */
 	}
 	winner = -1;
-	for(k=0; k< (int)E->NumCands; k++) { if(rRmark[k]) { winner = k;  break; }}
+	for(k=0; k<E->NumCands; k++) {
+		if(rRmark[k]) {
+			winner = k;
+			break;
+		}
+	}
 	assert((winner==0) || !rRmark[0]);
 	/***???
 	if(winner != CondorcetWinner && CondorcetWinner>=0) { *???*
@@ -1846,9 +1859,9 @@ EMETH IterCopeland( const edata *E  /*iterate Copeland on tied-winner set from p
 	ZeroArray(E->NumCands, summ);
 	RandomlyPermute( E->NumCands, RandCandPerm );
 	mxs = 0;
-	for(z=(int)E->NumCands; z>0; z--) {
+	for(z=0; z<E->NumCands; z++) {
 		tiect = 0;
-		for(i=(int)E->NumCands-1; i>=0; i--) {
+		for(i=0;i<E->NumCands; i++) {
 			if(summ[i] < mxs) {
 				summ[i] = -BIGINT;
 			}
@@ -1858,7 +1871,7 @@ EMETH IterCopeland( const edata *E  /*iterate Copeland on tied-winner set from p
 			r = RandCandPerm[i];
 			if(summ[r] >= mxs) {
 				x = r*E->NumCands;
-				for(j=(int)E->NumCands-1; j>=0; j--) {
+				for(j=0; j<E->NumCands; j++) {
 					if((j!=r) && (summ[j]>=mxs)) {
 						summ[r] += 1 + Sign<int>(E->MarginsMatrix[x+j]);
 					}
@@ -1888,7 +1901,7 @@ EMETH Nauru(const edata *E  /* weighted positional with weights 1, 1/2, 1/3, 1/4
 	ZeroArray( E->NumCands, (int*)NauruVoteCount );
 	for(i=0; i<(int)E->NumVoters; i++) {
 		x = i*E->NumCands;
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+		for(j=0; j<E->NumCands; j++) {
 			NauruVoteCount[j] += NauruWt[E->CandRankings[x+j]];
 		}
 	}
@@ -1905,7 +1918,7 @@ EMETH HeismanTrophy(const edata *E  /* Heisman: weighted positional with weights
 	ZeroArray( E->NumCands, (int*)HeismanVoteCount );
 	for(i=0; i<(int)E->NumVoters; i++) {
 		x = i*E->NumCands;
-		for(j=(int)std::min<typeof(E->NumCands)>(E->NumCands-1, 2); j>=0; j--) {
+		for(j=0; j<std::min<typeof(E->NumCands)>(E->NumCands, 3); j++) {
 			HeismanVoteCount[ E->TopDownPrefs[x+j] ] += 3-j;
 		}
 	}
@@ -1922,7 +1935,7 @@ EMETH BaseballMVP(const edata *E  /* weighted positional with weights 14,9,8,7,6
 	ZeroArray( E->NumCands, (int*)BaseballVoteCount );
 	for(i=0; i<(int)E->NumVoters; i++) {
 		x = i*E->NumCands;
-		for(j=(int)std::min<typeof(E->NumCands)>( E->NumCands -1, 9); j>=0; j--) {
+		for(j=0; j<std::min<typeof(E->NumCands)>( E->NumCands, 10); j++) {
 			BaseballVoteCount[ E->TopDownPrefs[x+j] ] += BaseballWt[j];
 		}
 	}
@@ -1940,9 +1953,11 @@ EMETH CondorcetLR(edata *E   /* candidate with least sum-of-pairwise-defeat-marg
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner >= 0) return CondorcetWinner;
 #endif
-	for(i=(int)E->NumCands-1; i>=0; i--) {
+	for(i=0; i<E->NumCands; i++) {
 		t = 0;
-		for(j=(int)E->NumCands-1; j>=0; j--) {  t += PosInt( E->MarginsMatrix[j*E->NumCands+i] );  }
+		for(j=0; j<E->NumCands; j++) {
+			t += PosInt( E->MarginsMatrix[j*E->NumCands+i] );
+		}
 		SumOfDefeatMargins[i] = t;
 	}
 	winner = ArgMinArr<int>(E->NumCands, (int*)SumOfDefeatMargins, (int*)RandCandPerm);
@@ -1972,7 +1987,7 @@ EMETH Sinkhorn(edata *E  /* candidate with max Sinkhorn rating (from all-positiv
 	do{
 		for(k=0; k < (int)E->NumCands; k++) {
 			relationshipBetweenCandidates &relationshipsOfK = E->CandidatesVsOtherCandidates[k];
-			for(j=(int)E->NumCands-1; j>=0; j--) {
+			for(j=0; j<E->NumCands; j++) {
 				SinkMat[k*E->NumCands + j] =
 					SinkRow[k]*SinkCol[j] * (relationshipsOfK.DefeatsMatrix[j] + 1.0);
 			}
@@ -2015,7 +2030,7 @@ EMETH Sinkhorn(edata *E  /* candidate with max Sinkhorn rating (from all-positiv
 			maxminRatio = t;
 		}
 	}until(maxminRatio < 1.000003);
-	for(j=(int)E->NumCands-1; j>=0; j--) {
+	for(j=0; j<E->NumCands; j++) {
 		SinkRat[j] = SinkCol[j]/SinkRow[j];
 	}
 	winner = ArgMaxArr<real>(E->NumCands, SinkRat, (int*)RandCandPerm);
@@ -2138,7 +2153,7 @@ EMETH RaynaudElim(edata *E  /* repeatedly eliminate canddt who suffered the wors
 			}
 		}
 	} /* end of for(rnd) */
-	for(i=(int)E->NumCands-1; i>=0; i--) { /* find non-eliminated candidate... */
+	for(i=0; i<E->NumCands; i++) { /* find non-eliminated candidate... */
 		if(!Eliminated[i]) {
 			return i; /*Raynaud winner*/
 		}
@@ -2214,7 +2229,7 @@ EMETH ArrowRaynaud(edata *E  /* repeatedly eliminate canddt with smallest {large
 			}
 		}
 	} /* end of for(rnd) */
-	for(i=(int)E->NumCands-1; i>=0; i--) { /* find non-eliminated candidate... */
+	for(i=0; i<E->NumCands; i++) { /* find non-eliminated candidate... */
 		if(!Eliminated[i]) {
 			return i; /*ArrowRaynaud winner*/
 		}
@@ -2286,15 +2301,15 @@ EMETH SchulzeBeatpaths(edata *E  /* winner = X so BeatPathStrength over rivals Y
 	if(CopeWinOnlyWinner<0) {
 		BuildDefeatsMatrix(E);
 	}
-	for(i=(int)E->NumCands-1; i>=0; i--) {
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+	for(i=0; i<E->NumCands; i++) {
+		for(j=0; j<E->NumCands; j++) {
 			if(i != j) {
 				BeatPathStrength[i*E->NumCands +j] = E->MarginsMatrix[i*E->NumCands +j];
 			}
 		}
 	}
-	for(i=(int)E->NumCands-1; i>=0; i--) {
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+	for(i=0; i<E->NumCands; i++) {
+		for(j=0; j<E->NumCands; j++) {
 			if(i != j) {
 				for(k=0; k<(int)E->NumCands; k++) {
 					if((k != j) && (k != i)) {
@@ -2313,7 +2328,7 @@ EMETH SchulzeBeatpaths(edata *E  /* winner = X so BeatPathStrength over rivals Y
 	for(i=(int)E->NumCands-1; i>=0; i--) {
 		bool haveAWinner = true;
 		k = RandCandPerm[i];
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+		for(j=0; j<E->NumCands; j++) {
 			if(k != j) {
 				if( BeatPathStrength[j*E->NumCands +k] > BeatPathStrength[k*E->NumCands +j] ) {
 					haveAWinner = false;
@@ -2526,15 +2541,15 @@ EMETH ArmytagePCSchulze(edata *E  /*Armytage pairwise comparison based on Schulz
 	if(CopeWinOnlyWinner<0) {
 		BuildDefeatsMatrix(E);
 	}
-	for(i=(int)E->NumCands-1; i>=0; i--) {
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+	for(i=0; i<E->NumCands; i++) {
+		for(j=0; j<E->NumCands; j++) {
 			if(i != j) {
 				ArmyBPS[i*E->NumCands +j] = E->MargArmy[i*E->NumCands +j];
 			}
 		}
 	}
-	for(i=(int)E->NumCands-1; i>=0; i--) {
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+	for(i=0; i<E->NumCands; i++) {
+		for(j=0; j<E->NumCands; j++) {
 			if(i != j) {
 				for(k=0; k<(int)E->NumCands; k++) {
 					if(k != j && k != i) {
@@ -2553,7 +2568,7 @@ EMETH ArmytagePCSchulze(edata *E  /*Armytage pairwise comparison based on Schulz
 	for(i=(int)E->NumCands-1; i>=0; i--) {
 		bool haveAWinner = true;
 		k = RandCandPerm[i];
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+		for(j=0; j<E->NumCands; j++) {
 			if(k != j) {
 				if( ArmyBPS[j*E->NumCands +k] > ArmyBPS[k*E->NumCands +j] ) {
 					haveAWinner = false;
@@ -2589,7 +2604,7 @@ EMETH Copeland(edata *E   /* canddt with largest number of pairwise-wins elected
 		return CopelandWinner;
 	}
 #endif
-	for(i=(int)E->NumCands-1; i>=0; i--) {
+	for(i=0; i<E->NumCands; i++) {
 		CopeScore[i] = (2*WinCount[i])+DrawCt[i];
 	}
 	CopelandWinner = ArgMaxArr<int>(E->NumCands, CopeScore, (int*)RandCandPerm);
@@ -2616,9 +2631,9 @@ EMETH SimmonsCond(edata *E  /* winner = X with least sum of top-rank-votes for r
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner>=0) return(CondorcetWinner);
 #endif
-	for(i=(int)E->NumCands-1; i>=0; i--) {
+	for(i=0; i<E->NumCands; i++) {
 		t=0;
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+		for(j=0; j<E->NumCands; j++) {
 			if(E->MarginsMatrix[j*E->NumCands+i]>0) { /* j pairwise-beats i */
 				t += 3*PlurVoteCount[j] + (SchwartzMembs[j]?1:0) + (SmithMembs[j]?1:0);
 				/*Here I am adding 1/3 of a vote if in SmithSet, ditto SchwartzSet, to break Simmons ties*/
@@ -2650,12 +2665,12 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */)
 		BuildDefeatsMatrix(E);
 	}
 	RandomlyPermute( E->NumCands, RandCandPerm );
-	for(i=(int)E->NumCands-1; i>=0; i--) {
+	for(i=0; i<E->NumCands; i++) {
 		Eliminated[i] = false;
 		HeadFav[i] = -1; /*HeadFav[i] will be the first voter whose current favorite is i*/
 		if((SmithIRVwinner<0) && (IRVTopLim==BIGINT)) {
 			t=0;
-			for(j=(int)E->NumCands-1; j>=0; j--) {
+			for(j=0; j<E->NumCands; j++) {
 				if(E->MarginsMatrix[j*E->NumCands + i] > 0) {
 					t++;
 				}
@@ -2729,7 +2744,7 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */)
 		IRVwinner = -1;
 	}
 	winner = -1;
-	for(i=(int)E->NumCands-1; i>=0; i--) { /* find non-eliminated candidate... */
+	for(i=0; i<E->NumCands; i++) { /* find non-eliminated candidate... */
 		if(!Eliminated[i]) {
 			winner=i;
 			stillthere++;
@@ -2768,7 +2783,7 @@ EMETH BTRIRV(const edata *E  /* Repeatedly eliminate either plur loser or 2nd-lo
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner>=0) return(CondorcetWinner);
 #endif
-	for(i=(int)E->NumCands-1; i>=0; i--){
+	for(i=0; i<E->NumCands; i++) {
 		Eliminated[i] = false;
 		HeadFav[i] = -1;
 	}
@@ -2830,7 +2845,7 @@ EMETH BTRIRV(const edata *E  /* Repeatedly eliminate either plur loser or 2nd-lo
 			RdVoteCount[ x ]++;
 		}
 	}
-	for(i=(int)E->NumCands-1; i>=0; i--){ /* find the non-eliminated candidate... */
+	for(i=0; i<E->NumCands; i++){ /* find the non-eliminated candidate... */
 		if(!Eliminated[i]){
 			return i; /*IRV winner*/
 		}
@@ -2842,7 +2857,7 @@ EMETH Coombs(const edata *E /*repeatedly eliminate antiplurality loser (with mos
 ){ /*side effects: Eliminated[], IFav[], RdVoteCount[], FavListNext[], HeadFav[] */
 	int Iround,i,RdLoser,NextI,j,x,maxc,r;
 	assert(E->NumCands <= MaxNumCands);
-	for(i=(int)E->NumCands-1; i>=0; i--){
+	for(i=0; i<E->NumCands; i++){
 		Eliminated[i] = false;
 		HeadFav[i] = -1; /*HeadFav[i] will be the first voter whose current most-hated is i*/
 	}
@@ -2901,7 +2916,7 @@ EMETH Coombs(const edata *E /*repeatedly eliminate antiplurality loser (with mos
 			RdVoteCount[ x ]++;
 		}
 	}	/* end of for(Iround) */
-	for(i=(int)E->NumCands-1; i>=0; i--){ /* find the non-eliminated candidate... */
+	for(i=0; i<E->NumCands; i++) { /* find the non-eliminated candidate... */
 		if(!Eliminated[i]){
 			return i; /*Coombs winner*/
 		}
@@ -2921,7 +2936,7 @@ EMETH Approval(const edata *E   /* canddt with most-approvals wins */)
 	ZeroArray( E->NumCands, (int*)ApprovalVoteCount );
 	for(i=0; i<(int)E->NumVoters; i++) {
 		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+		for(j=0; j<E->NumCands; j++) {
 			if(allCandidates[j].approve) {
 				ApprovalVoteCount[j] += 1;
 			}
@@ -2979,9 +2994,9 @@ EMETH HeitzigDFC(const edata *E)
 EMETH HeitzigLFC(const edata *E){ /*random canddt who is not "strongly beat" wins; y strongly beats x if Approval(y)>Approval(x) and less than Approval(x)/2 voters prefer x>y.*/
   /*Side effects: Eliminated[] */
   int i,j;
-  FillArray(E->NumCands, Eliminated, false);
-  for(j=(int)E->NumCands-1; j>=0; j--){
-    for(i=(int)E->NumCands-1; i>=0; i--){
+	FillArray(E->NumCands, Eliminated, false);
+	for(j=0; j<E->NumCands; j++) {
+		for(i=0; i<E->NumCands; i++) {
       if(ApprovalVoteCount[j] > ApprovalVoteCount[i]){
 	if(2*E->CandidatesVsOtherCandidates[i].DefeatsMatrix[j] < (int)ApprovalVoteCount[i]){
           /*Candidate i is "strongly beat"*/
@@ -3031,7 +3046,7 @@ EMETH IRNR(const edata *E  /*Brian Olson's voting method described above*/)
 		for(i=0; i<(int)E->NumVoters; i++) {
 			const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 			s = 0.0;
-			for(j=(int)E->NumCands-1; j>=0; j--) {
+			for(j=0; j<E->NumCands; j++) {
 				if(!Eliminated[j]) {
 					t = allCandidates[j].score - 0.5;
 					if(t < 0.0) {
@@ -3042,7 +3057,7 @@ EMETH IRNR(const edata *E  /*Brian Olson's voting method described above*/)
 			}
 			if(s>0.0) {
 				s = pow(s, -1.0/IRNRPOWER);
-				for(j=(int)E->NumCands-1; j>=0; j--) {
+				for(j=0; j<E->NumCands; j++) {
 					if(!Eliminated[j]) {
 						SumNormedRating[j] += s * allCandidates[j].score;
 					}
@@ -3098,7 +3113,7 @@ EMETH IRNRv(const edata *E  /*Brian Olson's voting method but with 2-param renor
 			const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 			s = 0.0;
 			ct=0;
-			for(j=(int)E->NumCands-1; j>=0; j--) {
+			for(j=0; j<E->NumCands; j++) {
 				if(!Eliminated[j]) {
 					s += allCandidates[j].score;
 					ct++;
@@ -3116,7 +3131,7 @@ EMETH IRNRv(const edata *E  /*Brian Olson's voting method but with 2-param renor
 			}
 			if(s>0.0) {
 				s = 1.0/sqrt(s);
-				for(j=(int)E->NumCands-1; j>=0; j--) {
+				for(j=0; j<E->NumCands; j++) {
 					if(!Eliminated[j]) {
 						SumNormedRating[j] += s * (allCandidates[j].score - avg);
 					}
@@ -3172,7 +3187,7 @@ EMETH IRNRm(const edata *E  /*Brian Olson's voting method but with 2-param renor
 			const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 			mx = -HUGE;
 			mn = HUGE;
-			for(j=(int)E->NumCands-1; j>=0; j--) {
+			for(j=0; j<E->NumCands; j++) {
 				if(!Eliminated[j]) {
 					t = allCandidates[j].score;
 					if(t<mn) {
@@ -3186,7 +3201,7 @@ EMETH IRNRm(const edata *E  /*Brian Olson's voting method but with 2-param renor
 			s = mx-mn;
 			if(s>0.0) {
 				s = 1.0/s;
-				for(j=(int)E->NumCands-1; j>=0; j--) {
+				for(j=0; j<E->NumCands; j++) {
 					if(!Eliminated[j]) {
 						SumNormedRating[j] += s * (allCandidates[j].score - mn);
 					}
@@ -3231,7 +3246,7 @@ EMETH MCA(const edata *E  /*canddt with most-2approvals wins if gets >50%, else 
 	ZeroArray( E->NumCands, (int*)MCAVoteCount );
 	for(i=0; i<(int)E->NumVoters; i++) {
 		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+		for(j=0; j<E->NumCands; j++) {
 			if(allCandidates[j].approve2) {
 				MCAVoteCount[j] += 1;
 			}
@@ -3327,7 +3342,7 @@ EMETH Range(const edata *E    /* canddt with highest average Score wins */)
 	ZeroArray( E->NumCands, RangeVoteCount );
 	for(i=0; i<(int)E->NumVoters; i++) {
 		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+		for(j=0; j<E->NumCands; j++) {
 			RangeVoteCount[j] += allCandidates[j].score;
 		}
 	}
@@ -3347,7 +3362,7 @@ EMETH RangeN(const edata *E /*highest average rounded Score [rded to integer in 
 	ZeroArray( E->NumCands, (int*)RangeNVoteCount );
 	for(i=0; i<(int)E->NumVoters; i++) {
 		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+		for(j=0; j<E->NumCands; j++) {
 			RangeNVoteCount[j] += (uint)( (allCandidates[j].score)*(RangeGranul-0.0000000001) );
 		}
 	}
@@ -3384,7 +3399,7 @@ EMETH ContinCumul(const edata *E    /* Renormalize scores so sum(over canddts)=1
 	for(i=0; i<(int)E->NumVoters; i++) {
 		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 		sum = 0.0;
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+		for(j=0; j<E->NumCands; j++) {
 			sum += allCandidates[j].score;
 		}
 		if(sum > 0.0) {
@@ -3392,7 +3407,7 @@ EMETH ContinCumul(const edata *E    /* Renormalize scores so sum(over canddts)=1
 		} else {
 			sum=0.0;
 		}
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+		for(j=0; j<E->NumCands; j++) {
 			CCumVoteCount[j] += sum * allCandidates[j].score;
 		}
 	}
@@ -3408,7 +3423,7 @@ EMETH TopMedianRating(const edata *E    /* canddt with highest median Score wins
 	int j;
 	int winner;
 	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
-	for(j=(int)E->NumCands-1; j>=0; j--) {
+	for(j=0; j<E->NumCands; j++) {
 		for(i=E->NumVoters -1; i>=0; i--) {
 			const oneCandidate &theCandidate = allVoters[i].Candidates[j];
 			CScoreVec[i] = theCandidate.score;
@@ -3426,7 +3441,7 @@ EMETH LoMedianRank(const edata *E    /* canddt with best median ranking wins */)
 	int i,j;
 	uint64_t x;
 	int winner;
-	for(j=(int)E->NumCands-1; j>=0; j--) {
+	for(j=0; j<E->NumCands; j++) {
 		for(i=E->NumVoters -1; i>=0; i--) {
 			x = i*E->NumCands + j;
 			CRankVec[i] = E->CandRankings[x];
@@ -3607,9 +3622,9 @@ EMETH DMC(edata *E  /* eliminate least-approved candidate until unbeaten winner 
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner>=0) return(CondorcetWinner);
 #endif
-	for(i=(int)E->NumCands-1; i>=0; i--) {
+	for(i=0; i<E->NumCands; i++) {
 		t=0;
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+		for(j=0; j<E->NumCands; j++) {
 			if(E->MarginsMatrix[j*E->NumCands + i]>0){ t++; }
 		}
 		LossCount[i] = t;
@@ -3685,7 +3700,7 @@ EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 		Approval(E);
 	}
 	ctm=0;
-	for(i=(int)E->NumCands-1; i>=0; i--) {
+	for(i=0; i<E->NumCands; i++) {
 		if((2*ApprovalVoteCount[i]) > E->NumVoters) {
 			MajApproved[i] = true; ctm++;
 		}else{  MajApproved[i] = false;  }
@@ -3694,10 +3709,10 @@ EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 		/*if exactly 0 or 1 canddt majority-approved, ApprovalWinner wins*/
 		return ApprovalWinner;
 	}
-	for(i=(int)E->NumCands-1; i>=0; i--) {
+	for(i=0; i<E->NumCands; i++) {
 		if(MajApproved[i]) {
 			bool haveAWinner = true;
-			for(j=(int)E->NumCands-1; j>=0; j--) {
+			for(j=0; j<E->NumCands; j++) {
 				if((j!=i) && MajApproved[j]) {
 					if( E->MarginsMatrix[i*E->NumCands + j] <= 0 ) {
 						haveAWinner = false;
@@ -3718,7 +3733,7 @@ EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 	for(i=(int)E->NumCands-1; i>=0; i--) {
 		if(MajApproved[i]) {
 			t = 0;
-			for(j=(int)E->NumCands-1; j>=0; j--) {
+			for(j=0; j<E->NumCands; j++) {
 				if((j!=i) && MajApproved[j]) {
 					if( E->MarginsMatrix[i*E->NumCands + j] > 0 ) { t++; }
 				}
@@ -3771,9 +3786,9 @@ EMETH MDDA(edata *E  /* approval-count winner among canddts not majority-defeate
 	}
 	dqct=0;
 	thresh = (E->NumVoters)/2;
-	for(i=(int)E->NumCands-1; i>=0; i--) {
+	for(i=0; i<E->NumCands; i++) {
 		MDdisquald[i] = false;
-		for(j=(int)E->NumCands-1; j>=0; j--) {
+		for(j=0; j<E->NumCands; j++) {
 			relationshipBetweenCandidates &relationshipsOfJ = E->CandidatesVsOtherCandidates[j];
 			if(relationshipsOfJ.DefeatsMatrix[i] > thresh) {
 				MDdisquald[i] = true;
@@ -4592,7 +4607,7 @@ void HonestyStrat( edata *E, real honfrac )
 			MaxUtil = -HUGE;
 			MinUtil =  HUGE;
 			SumU = 0.0;
-			for(i=(int)E->NumCands-1; i>=0; i--) {
+			for(i=0; i<E->NumCands; i++) {
 				offi = offset+i;
 				E->CandRankings[offset + E->TopDownPrefs[offi]] = i;
 				ThisU = E->PerceivedUtility[offi];
@@ -4607,7 +4622,7 @@ void HonestyStrat( edata *E, real honfrac )
 			}
 			MeanU = SumU / E->NumCands;
 			Mean2U = 0.0; ACT=0;
-			for(i=(int)E->NumCands-1; i>=0; i--) {
+			for(i=0; i<E->NumCands; i++) {
 				oneCandidate &theCandidate = allCandidates[i];
 				offi = offset+i;
 				ThisU = E->PerceivedUtility[offi];
@@ -4625,7 +4640,7 @@ void HonestyStrat( edata *E, real honfrac )
 			}
 			ensure((ACT!=0), 4);
 			Mean2U /= ACT;
-			for(i=(int)E->NumCands-1; i>=0; i--) {
+			for(i=0; i<E->NumCands; i++) {
 				oneCandidate &theCandidate = allCandidates[i];
 				offi = offset+i;
 				ThisU = E->PerceivedUtility[offi];
@@ -4682,7 +4697,7 @@ void HonestyStrat( edata *E, real honfrac )
 			}
 			ensure((ACT!=0), 6);
 			Mean2U /= ACT;
-			for(i=(int)E->NumCands-1; i>=0; i--) {
+			for(i=0; i<E->NumCands; i++) {
 				oneCandidate &theCandidate = allCandidates[i];
 				offi = offset+i;
 				ThisU = E->PerceivedUtility[offi];
