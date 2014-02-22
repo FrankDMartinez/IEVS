@@ -2687,7 +2687,7 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */)
 		SmithIRVwinner = CondorcetWinner;
 	}
 	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
-	for(i=E->NumVoters -1; i>=0; i--) {
+	for(i=0; i<E->NumVoters; i++) {
 		x = E->TopDownPrefs[i*E->NumCands+IFav[i]]; /* the initial favorite of voter i */
 		assert(x >= 0);
 		assert(x < (int)E->NumCands);
@@ -2790,7 +2790,7 @@ EMETH BTRIRV(const edata *E  /* Repeatedly eliminate either plur loser or 2nd-lo
 	ZeroArray(E->NumCands, RdVoteCount);
 	ZeroArray(E->NumVoters, IFav);
 	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
-	for(i=E->NumVoters -1; i>=0; i--){
+	for(i=0; i<E->NumVoters; i++) {
 		assert(IFav[i] >= 0);
 		assert(IFav[i] < (int)E->NumCands);
 		x = E->TopDownPrefs[i*E->NumCands + IFav[i]]; /* the favorite of voter i */
@@ -2870,7 +2870,7 @@ EMETH Coombs(const edata *E /*repeatedly eliminate antiplurality loser (with mos
 	FillArray(E->NumVoters, FavListNext, -1);
 	/* FavListNext is "next" indices in linked list of voters with common current favorite; -1 terminated. */
 	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
-	for(i=E->NumVoters -1; i>=0; i--){
+	for(i=0; i<E->NumVoters; i++) {
 		assert(IFav[i] >= 0);
 		assert(IFav[i] < (int)E->NumCands);
 		x = E->TopDownPrefs[i*E->NumCands + IFav[i]]; /* the initial most-hated of voter i */
@@ -3424,7 +3424,7 @@ EMETH TopMedianRating(const edata *E    /* canddt with highest median Score wins
 	int winner;
 	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	for(j=0; j<E->NumCands; j++) {
-		for(i=E->NumVoters -1; i>=0; i--) {
+		for(i=0; i<E->NumVoters; i++) {
 			const oneCandidate &theCandidate = allVoters[i].Candidates[j];
 			CScoreVec[i] = theCandidate.score;
 		}
@@ -3442,7 +3442,7 @@ EMETH LoMedianRank(const edata *E    /* canddt with best median ranking wins */)
 	uint64_t x;
 	int winner;
 	for(j=0; j<E->NumCands; j++) {
-		for(i=E->NumVoters -1; i>=0; i--) {
+		for(i=0; i<E->NumVoters; i++) {
 			x = i*E->NumCands + j;
 			CRankVec[i] = E->CandRankings[x];
 		}
@@ -4019,7 +4019,7 @@ EMETH WoodallDAC(const edata *E  /*Woodall: Monotonocity of single-seat preferen
 		exit(EXIT_FAILURE);
 	}
 	for(v=ARTINPRIME-1; v>=0; v--) { WoodHashCount[v] = 0; WoodHashSet[v] = 0; }
-	for(v=E->NumVoters-1; v>=0; v--) {
+	for(v=0; v<E->NumVoters; v++) {
 			s = 0;
 			offset = v*E->NumCands;
 			for(c=0; c < (int)E->NumCands; c++) {
