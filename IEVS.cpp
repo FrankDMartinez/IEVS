@@ -3377,7 +3377,6 @@ EMETH RangeN(const edata *E /*highest average rounded Score [rded to integer in 
 EMETH Range2Runoff(const edata *E    /*top-2-runoff, 1stRd=range, 2nd round has fully-honest voting*/)
 {
 	int RSecond;
-	RSecond = -1;
 	if(RangeWinner<0) {
 		Range(E);
 	}
@@ -6408,7 +6407,6 @@ void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real
 EMETH runoffForApprovalVoting(const edata *E)
 {
 	int ASecond;
-	ASecond = -1;
 	ASecond = Arg2MaxUIntArr( E->NumCands, ApprovalVoteCount, (int*)RandCandPerm, ApprovalWinner );
 	assert(ASecond>=0);
 	return calculateForRunoff(E, ApprovalWinner, ASecond);
