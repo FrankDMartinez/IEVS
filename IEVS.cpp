@@ -1247,6 +1247,7 @@ struct relationshipBetweenCandidates
 	int DefeatsMatrix[MaxNumCands];
 	int TrueDefeatsMatrix[MaxNumCands];
 	std::array<real,MaxNumCands> ArmytageMatrix;
+	std::array<int,MaxNumCands> ArmytageDefeatsMatrix;
 	void zeroInitialize(matrix_t matrix) {
 		int (*array)[MaxNumCands];
 
@@ -1261,6 +1262,8 @@ struct relationshipBetweenCandidates
 			ArmytageMatrix.fill(0);
 			break;
 		case ArmytageDefeats:
+			ArmytageDefeatsMatrix.fill(0);
+			break;
 		case ArmytageMargins:
 		case margins:
 		default:
@@ -1281,7 +1284,6 @@ typedef struct dum1 {
   real PerceivedUtility[MaxNumCands*MaxNumVoters];
   real Utility[MaxNumCands*MaxNumVoters];
   int MarginsMatrix[MaxNumCands*MaxNumCands];
-  int ArmyDef[MaxNumCands*MaxNumCands];
   real MargArmy[MaxNumCands*MaxNumCands];
 	void zeroInitializeArray(matrix_t matrix) {
 		int i;
@@ -1368,7 +1370,7 @@ void BuildDefeatsMatrix(edata *E)
 	}
 	BaseballWt[0] = 14;
 	E->zeroInitializeArray(defeats);
-	ZeroArray(  Square(numberOfCandidates),  E->ArmyDef );
+	E->zeroInitializeArray(ArmytageDefeats);
 	E->zeroInitializeArray(trueDefeats);
 	E->zeroInitializeArray(Armytage);
 	for(k=0; k<(int)E->NumVoters; k++) {
@@ -1387,10 +1389,10 @@ void BuildDefeatsMatrix(edata *E)
 				t = firstCandidate.score - secondCandidate.score;
 				if(t > 0.0) {
 					E->CandidatesVsOtherCandidates[i].ArmytageMatrix[j] += t;
-					E->ArmyDef[i*numberOfCandidates + j] ++;
+					E->CandidatesVsOtherCandidates[i].ArmytageDefeatsMatrix[j]++;
 				}else{
 					E->CandidatesVsOtherCandidates[j].ArmytageMatrix[i] -= t;
-					E->ArmyDef[j*numberOfCandidates + i] ++;
+					E->CandidatesVsOtherCandidates[j].ArmytageDefeatsMatrix[i]++;
 				}
 				t = E->Utility[x+i] - E->Utility[x+j];
 				if(t > 0.0) {
@@ -1414,7 +1416,8 @@ void BuildDefeatsMatrix(edata *E)
 			assert( iDefeatsJ <= (int)numberOfVoters );
 			assert( iDefeatsJ >= 0 );
 			assert( iDefeatsJ + jDefeatsI <= (int)numberOfVoters );
-			y = E->ArmyDef[i*numberOfCandidates+j]; y -= E->ArmyDef[j*numberOfCandidates+i];
+			y = relationshipsOfI.ArmytageDefeatsMatrix[j];
+			y -= E->CandidatesVsOtherCandidates[j].ArmytageDefeatsMatrix[i];
 			if(y>0) {
 				E->MargArmy[i*numberOfCandidates + j] = E->CandidatesVsOtherCandidates[i].ArmytageMatrix[j];
 			} else {/*y<=0*/
