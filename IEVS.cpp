@@ -11,6 +11,7 @@
   #include "stdafx.h"  /*needed if Microsoft Windows OS, unwanted if LINUX; will be more of that*/
 #endif
 #include <algorithm>
+#include <array>
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
@@ -1245,6 +1246,7 @@ struct relationshipBetweenCandidates
 {
 	int DefeatsMatrix[MaxNumCands];
 	int TrueDefeatsMatrix[MaxNumCands];
+	std::array<real,MaxNumCands> ArmytageMatrix;
 	void zeroInitialize(matrix_t matrix) {
 		int (*array)[MaxNumCands];
 
@@ -1255,10 +1257,12 @@ struct relationshipBetweenCandidates
 		case trueDefeats:
 			array = &TrueDefeatsMatrix;
 			break;
-		case margins:
 		case Armytage:
+			ArmytageMatrix.fill(0);
+			break;
 		case ArmytageDefeats:
 		case ArmytageMargins:
+		case margins:
 		default:
 			ensure(false, 29);
 			break;
@@ -1277,7 +1281,6 @@ typedef struct dum1 {
   real PerceivedUtility[MaxNumCands*MaxNumVoters];
   real Utility[MaxNumCands*MaxNumVoters];
   int MarginsMatrix[MaxNumCands*MaxNumCands];
-  real Armytage[MaxNumCands*MaxNumCands];
   int ArmyDef[MaxNumCands*MaxNumCands];
   real MargArmy[MaxNumCands*MaxNumCands];
 	void zeroInitializeArray(matrix_t matrix) {
@@ -1365,9 +1368,9 @@ void BuildDefeatsMatrix(edata *E)
 	}
 	BaseballWt[0] = 14;
 	E->zeroInitializeArray(defeats);
-	ZeroArray( Square(numberOfCandidates),  E->Armytage );
 	ZeroArray(  Square(numberOfCandidates),  E->ArmyDef );
 	E->zeroInitializeArray(trueDefeats);
+	E->zeroInitializeArray(Armytage);
 	for(k=0; k<(int)E->NumVoters; k++) {
 		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[k].Candidates;
 		x = k*numberOfCandidates;
@@ -1383,10 +1386,10 @@ void BuildDefeatsMatrix(edata *E)
 				}
 				t = firstCandidate.score - secondCandidate.score;
 				if(t > 0.0) {
-					E->Armytage[i*numberOfCandidates + j] += t; /*i preferred above j*/
+					E->CandidatesVsOtherCandidates[i].ArmytageMatrix[j] += t;
 					E->ArmyDef[i*numberOfCandidates + j] ++;
 				}else{
-					E->Armytage[j*numberOfCandidates + i] -= t;
+					E->CandidatesVsOtherCandidates[j].ArmytageMatrix[i] -= t;
 					E->ArmyDef[j*numberOfCandidates + i] ++;
 				}
 				t = E->Utility[x+i] - E->Utility[x+j];
@@ -1413,7 +1416,7 @@ void BuildDefeatsMatrix(edata *E)
 			assert( iDefeatsJ + jDefeatsI <= (int)numberOfVoters );
 			y = E->ArmyDef[i*numberOfCandidates+j]; y -= E->ArmyDef[j*numberOfCandidates+i];
 			if(y>0) {
-				E->MargArmy[i*numberOfCandidates + j] = E->Armytage[i*numberOfCandidates+j];
+				E->MargArmy[i*numberOfCandidates + j] = E->CandidatesVsOtherCandidates[i].ArmytageMatrix[j];
 			} else {/*y<=0*/
 				E->MargArmy[i*numberOfCandidates + j] = 0;
 			}
