@@ -1216,16 +1216,6 @@ void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have be
   IRVTopLim = BIGINT;
 }
 
-enum matrix_t
-{
-	defeats,
-	trueDefeats,
-	margins,
-	Armytage,
-	ArmytageDefeats,
-	ArmytageMargins
-};
-
 struct oneCandidate
 {
 	real actualUtility;
@@ -1244,33 +1234,17 @@ struct oneVoter
 
 struct relationshipBetweenCandidates
 {
-	int DefeatsMatrix[MaxNumCands];
-	int TrueDefeatsMatrix[MaxNumCands];
+	std::array<int,MaxNumCands> DefeatsMatrix;
+	std::array<int,MaxNumCands> TrueDefeatsMatrix;
 	std::array<real,MaxNumCands> ArmytageMatrix;
 	std::array<int,MaxNumCands> ArmytageDefeatsMatrix;
-	void zeroInitialize(matrix_t matrix) {
-		int (*array)[MaxNumCands];
-
-		switch(matrix) {
-		case defeats:
-			array = &DefeatsMatrix;
-			break;
-		case trueDefeats:
-			array = &TrueDefeatsMatrix;
-			break;
-		case Armytage:
-			ArmytageMatrix.fill(0);
-			break;
-		case ArmytageDefeats:
-			ArmytageDefeatsMatrix.fill(0);
-			break;
-		case ArmytageMargins:
-		case margins:
-		default:
-			ensure(false, 29);
-			break;
-		}
-		ZeroArray(MaxNumCands, *array);
+	std::array<real,MaxNumCands> ArmytageMarginsMatrix;
+	void zeroInitializeArrays() {
+		DefeatsMatrix.fill(0);
+		TrueDefeatsMatrix.fill(0);
+		ArmytageMatrix.fill(0);
+		ArmytageDefeatsMatrix.fill(0);
+		ArmytageMarginsMatrix.fill(0);
 	}
 };
 
@@ -1284,11 +1258,10 @@ typedef struct dum1 {
   real PerceivedUtility[MaxNumCands*MaxNumVoters];
   real Utility[MaxNumCands*MaxNumVoters];
   int MarginsMatrix[MaxNumCands*MaxNumCands];
-  real MargArmy[MaxNumCands*MaxNumCands];
-	void zeroInitializeArray(matrix_t matrix) {
+	void zeroInitializeArrays() {
 		int i;
 		for( i = 0; i < MaxNumCands; i++ ) {
-			CandidatesVsOtherCandidates[i].zeroInitialize(matrix);
+			CandidatesVsOtherCandidates[i].zeroInitializeArrays();
 		}
 	}
 } edata;
@@ -1369,10 +1342,7 @@ void BuildDefeatsMatrix(edata *E)
 		BaseballWt[j] = 10-j;
 	}
 	BaseballWt[0] = 14;
-	E->zeroInitializeArray(defeats);
-	E->zeroInitializeArray(ArmytageDefeats);
-	E->zeroInitializeArray(trueDefeats);
-	E->zeroInitializeArray(Armytage);
+	E->zeroInitializeArrays();
 	for(k=0; k<(int)E->NumVoters; k++) {
 		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[k].Candidates;
 		x = k*numberOfCandidates;
@@ -1419,9 +1389,9 @@ void BuildDefeatsMatrix(edata *E)
 			y = relationshipsOfI.ArmytageDefeatsMatrix[j];
 			y -= E->CandidatesVsOtherCandidates[j].ArmytageDefeatsMatrix[i];
 			if(y>0) {
-				E->MargArmy[i*numberOfCandidates + j] = E->CandidatesVsOtherCandidates[i].ArmytageMatrix[j];
+				relationshipsOfI.ArmytageMarginsMatrix[j] = E->CandidatesVsOtherCandidates[i].ArmytageMatrix[j];
 			} else {/*y<=0*/
-				E->MargArmy[i*numberOfCandidates + j] = 0;
+				relationshipsOfI.ArmytageMarginsMatrix[j] = 0;
 			}
 			y = iDefeatsJ;
 			y -= jDefeatsI;
@@ -2582,7 +2552,7 @@ EMETH ArmytagePCSchulze(edata *E  /*Armytage pairwise comparison based on Schulz
 	for(i=0; i<numberOfCandidates; i++) {
 		for(j=0; j<numberOfCandidates; j++) {
 			if(i != j) {
-				ArmyBPS[i*numberOfCandidates +j] = E->MargArmy[i*numberOfCandidates +j];
+				ArmyBPS[i*numberOfCandidates +j] = E->CandidatesVsOtherCandidates[i].ArmytageMarginsMatrix[j];
 			}
 		}
 	}
