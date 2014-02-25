@@ -1244,6 +1244,7 @@ struct oneVoter
 struct relationshipBetweenCandidates
 {
 	int DefeatsMatrix[MaxNumCands];
+	int TrueDefeatsMatrix[MaxNumCands];
 	void zeroInitialize(matrix_t matrix) {
 		int (*array)[MaxNumCands];
 
@@ -1252,6 +1253,8 @@ struct relationshipBetweenCandidates
 			array = &DefeatsMatrix;
 			break;
 		case trueDefeats:
+			array = &TrueDefeatsMatrix;
+			break;
 		case margins:
 		case Armytage:
 		case ArmytageDefeats:
@@ -1273,7 +1276,6 @@ typedef struct dum1 {
   uint CandRankings[MaxNumCands*MaxNumVoters];
   real PerceivedUtility[MaxNumCands*MaxNumVoters];
   real Utility[MaxNumCands*MaxNumVoters];
-  int TrueDefMatrix[MaxNumCands*MaxNumCands];
   int MarginsMatrix[MaxNumCands*MaxNumCands];
   real Armytage[MaxNumCands*MaxNumCands];
   int ArmyDef[MaxNumCands*MaxNumCands];
@@ -1343,6 +1345,7 @@ EMETH runoffForApprovalVoting(const edata *E);
 void BuildDefeatsMatrix(edata *E)
 { /* initializes  E->DefeatsMatrix[], E->MarginsMatrix[], RandCandPerm[], NauruWt[], WinCount[], DrawCt[], CondorcetWinner, CopeWinOnlyWinner, TrueCW */
 	int k,i,j,y;
+	int yNew;
 	uint64_t x;
 	real t;
 	bool CondWin, TrueCondWin;
@@ -1364,7 +1367,7 @@ void BuildDefeatsMatrix(edata *E)
 	E->zeroInitializeArray(defeats);
 	ZeroArray( Square(numberOfCandidates),  E->Armytage );
 	ZeroArray(  Square(numberOfCandidates),  E->ArmyDef );
-	ZeroArray(  Square(numberOfCandidates),  E->TrueDefMatrix );
+	E->zeroInitializeArray(trueDefeats);
 	for(k=0; k<(int)E->NumVoters; k++) {
 		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[k].Candidates;
 		x = k*numberOfCandidates;
@@ -1388,9 +1391,9 @@ void BuildDefeatsMatrix(edata *E)
 				}
 				t = E->Utility[x+i] - E->Utility[x+j];
 				if(t > 0.0) {
-					E->TrueDefMatrix[i*numberOfCandidates + j] ++;
+					E->CandidatesVsOtherCandidates[i].TrueDefeatsMatrix[j]++;
 				}else{
-					E->TrueDefMatrix[j*numberOfCandidates + i] ++;
+					E->CandidatesVsOtherCandidates[j].TrueDefeatsMatrix[i]++;
 				}
 			}
 		}
@@ -1427,7 +1430,8 @@ void BuildDefeatsMatrix(edata *E)
 			if(y<=0 && j!=i) {
 				CondWin = false;
 			} /* if beaten or tied, not a CondorcetWinner by this defn */
-			y = E->TrueDefMatrix[i*numberOfCandidates+j]; y -= E->TrueDefMatrix[j*numberOfCandidates+i];
+			y = E->CandidatesVsOtherCandidates[i].TrueDefeatsMatrix[j];
+			y -= E->CandidatesVsOtherCandidates[j].TrueDefeatsMatrix[i];
 			if(y<=0 && j!=i) { TrueCondWin = false; }
 		}
 		if( CondWin ) {
