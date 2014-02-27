@@ -1347,27 +1347,29 @@ void BuildDefeatsMatrix(edata *E)
 		x = k*numberOfCandidates;
 		for(i=0; i<numberOfCandidates; i++) {
 			const oneCandidate &firstCandidate = allCandidates[i];
+			relationshipBetweenCandidates &relationshipsOfI = E->CandidatesVsOtherCandidates[i];
 			for(j=0; j<i; j++) {
 				const oneCandidate &secondCandidate = allCandidates[j];
+				relationshipBetweenCandidates &relationshipsOfJ = E->CandidatesVsOtherCandidates[j];
 				y = E->CandRankings[x+j]; y -= E->CandRankings[x+i];
 				if( y>0 ) {
-					E->CandidatesVsOtherCandidates[i].DefeatsMatrix[j]++;	/*i preferred above j*/
+					relationshipsOfI.DefeatsMatrix[j]++;	/*i preferred above j*/
 				}else{
-					E->CandidatesVsOtherCandidates[j].DefeatsMatrix[i]++;	/*j preferred above i*/
+					relationshipsOfJ.DefeatsMatrix[i]++;	/*j preferred above i*/
 				}
 				t = firstCandidate.score - secondCandidate.score;
 				if(t > 0.0) {
-					E->CandidatesVsOtherCandidates[i].ArmytageMatrix[j] += t;
-					E->CandidatesVsOtherCandidates[i].ArmytageDefeatsMatrix[j]++;
+					relationshipsOfI.ArmytageMatrix[j] += t;
+					relationshipsOfI.ArmytageDefeatsMatrix[j]++;
 				}else{
-					E->CandidatesVsOtherCandidates[j].ArmytageMatrix[i] -= t;
-					E->CandidatesVsOtherCandidates[j].ArmytageDefeatsMatrix[i]++;
+					relationshipsOfJ.ArmytageMatrix[i] -= t;
+					relationshipsOfJ.ArmytageDefeatsMatrix[i]++;
 				}
 				t = E->Utility[x+i] - E->Utility[x+j];
 				if(t > 0.0) {
-					E->CandidatesVsOtherCandidates[i].TrueDefeatsMatrix[j]++;
+					relationshipsOfI.TrueDefeatsMatrix[j]++;
 				}else{
-					E->CandidatesVsOtherCandidates[j].TrueDefeatsMatrix[i]++;
+					relationshipsOfJ.TrueDefeatsMatrix[i]++;
 				}
 			}
 		}
@@ -1382,13 +1384,14 @@ void BuildDefeatsMatrix(edata *E)
 		for(j=0; j<numberOfCandidates; j++) {
 			const int &iDefeatsJ = relationshipsOfI.DefeatsMatrix[j];
 			const int &jDefeatsI = E->CandidatesVsOtherCandidates[j].DefeatsMatrix[i];
+			relationshipBetweenCandidates &relationshipsOfJ = E->CandidatesVsOtherCandidates[j];
 			assert( iDefeatsJ <= (int)numberOfVoters );
 			assert( iDefeatsJ >= 0 );
 			assert( iDefeatsJ + jDefeatsI <= (int)numberOfVoters );
 			y = relationshipsOfI.ArmytageDefeatsMatrix[j];
-			y -= E->CandidatesVsOtherCandidates[j].ArmytageDefeatsMatrix[i];
+			y -= relationshipsOfJ.ArmytageDefeatsMatrix[i];
 			if(y>0) {
-				relationshipsOfI.ArmytageMarginsMatrix[j] = E->CandidatesVsOtherCandidates[i].ArmytageMatrix[j];
+				relationshipsOfI.ArmytageMarginsMatrix[j] = relationshipsOfI.ArmytageMatrix[j];
 			} else {/*y<=0*/
 				relationshipsOfI.ArmytageMarginsMatrix[j] = 0;
 			}
@@ -1405,8 +1408,8 @@ void BuildDefeatsMatrix(edata *E)
 			if(y<=0 && j!=i) {
 				CondWin = false;
 			} /* if beaten or tied, not a CondorcetWinner by this defn */
-			y = E->CandidatesVsOtherCandidates[i].TrueDefeatsMatrix[j];
-			y -= E->CandidatesVsOtherCandidates[j].TrueDefeatsMatrix[i];
+			y = relationshipsOfI.TrueDefeatsMatrix[j];
+			y -= relationshipsOfJ.TrueDefeatsMatrix[i];
 			if(y<=0 && j!=i) { TrueCondWin = false; }
 		}
 		if( CondWin ) {
