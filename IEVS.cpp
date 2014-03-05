@@ -190,6 +190,19 @@ template< class T1 >
 		T1 TwiceMedian(uint N, T1 A[] );
 #define NullFunction ((real(*)(void))NULL)
 
+/*	oneCandidate:	information about a particular Candidate from
+ *			the perspective of a particular Voter
+ */
+struct oneCandidate
+{
+	real actualUtility;
+	bool approve;
+	bool approve2;
+	real perceivedUtility;
+	uint64_t ranking;
+	real score;
+};
+
 /******************** GENERAL PURPOSE routines having nothing to do with voting: ******/
 
 /******** Fns to deal with sets represented by bit-vectors in 1 machine word: ******/
@@ -828,6 +841,32 @@ bool IsPerm( uint64_t N, const uint Perm[] )
 	return true;
 }
 
+/*	IsPerm(N, Perm)	returns true if each integer value from 0 to
+ *			N-1 appears exactly once in 'Perm' and false
+ *			otherwise
+ *	N:	the number of unique non-negative integers, starting
+ *		with 0, expected to appear in Perm
+ *	Perm:	an array of integers
+ */
+bool IsPerm( uint64_t N, const oneCandidate (&Candidates)[MaxNumCands] )
+{ /* true if is a perm of [0..N-1] */
+	int i;
+	int ct[MaxNumCands];
+	assert(N<MaxNumCands);
+	for(i=0; i<(int)N; i++) {
+		ct[i] = 0;
+	}
+	for(i=0; i<(int)N; i++) {
+		ct[ Candidates[i].ranking ]++;
+	}
+	for(i=0; i<(int)N; i++) {
+		if(ct[i]!=1) {
+			return false;
+		}
+	}
+	return true;
+}
+
 void MakeIdentityPerm( uint64_t N, uint Perm[] ){
   int i;
   for(i=0; i<(int)N; i++){ Perm[i] = i; }
@@ -1215,17 +1254,6 @@ void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have be
   RandomUncoveredMemb = -1;
   IRVTopLim = BIGINT;
 }
-
-struct oneCandidate
-{
-	real actualUtility;
-	bool approve;
-	bool approve2;
-	real perceivedUtility;
-	uint ranking;
-	real score;
-};
-
 struct oneVoter
 {
 	uint topDownPrefs[MaxNumCands];
@@ -1254,7 +1282,6 @@ typedef struct dum1 {
 	oneVoter Voters[MaxNumVoters];
 	relationshipBetweenCandidates CandidatesVsOtherCandidates[MaxNumCands];
   uint TopDownPrefs[MaxNumCands*MaxNumVoters];
-  uint CandRankings[MaxNumCands*MaxNumVoters];
   real PerceivedUtility[MaxNumCands*MaxNumVoters];
   real Utility[MaxNumCands*MaxNumVoters];
   int MarginsMatrix[MaxNumCands*MaxNumCands];
@@ -1296,7 +1323,7 @@ void PrintEdata(FILE *F, const edata *E)
 		}
 		fprintf(F, "\n");
 		fprintf(F, "CandRank: ");
-		for(j=0; j < numberOfCandidates; j++){  fprintf(F, "%2d", E->CandRankings[v*numberOfCandidates + j]);  }
+		for(j=0; j < numberOfCandidates; j++){  fprintf(F, "%2llu", allCandidates[j].ranking);  }
 		fprintf(F, "\n");
 		fprintf(F, "TopDown: ");
 		for(j=0; j < numberOfCandidates; j++){  fprintf(F, "%2d", E->TopDownPrefs[v*numberOfCandidates + j]);  }
@@ -1351,7 +1378,8 @@ void BuildDefeatsMatrix(edata *E)
 			for(j=0; j<i; j++) {
 				const oneCandidate &secondCandidate = allCandidates[j];
 				relationshipBetweenCandidates &relationshipsOfJ = E->CandidatesVsOtherCandidates[j];
-				y = E->CandRankings[x+j]; y -= E->CandRankings[x+i];
+				y = secondCandidate.ranking;
+				y -= firstCandidate.ranking;
 				if( y>0 ) {
 					relationshipsOfI.DefeatsMatrix[j]++;	/*i preferred above j*/
 				}else{
@@ -1897,15 +1925,13 @@ EMETH Nauru(const edata *E  /* weighted positional with weights 1, 1/2, 1/3, 1/4
 	uint NauruVoteCount[MaxNumCands];
 	int i;
 	int j;
-	uint64_t x;
 	int winner;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const uint& numberOfVoters = E->NumVoters;
 	ZeroArray( numberOfCandidates, (int*)NauruVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
-		x = i*numberOfCandidates;
 		for(j=0; j<numberOfCandidates; j++) {
-			NauruVoteCount[j] += NauruWt[E->CandRankings[x+j]];
+			NauruVoteCount[j] += NauruWt[E->Voters[i].Candidates[j].ranking];
 		}
 	}
 	winner = ArgMaxUIntArr( numberOfCandidates, NauruVoteCount, (int*)RandCandPerm );
@@ -3489,14 +3515,12 @@ EMETH LoMedianRank(const edata *E    /* canddt with best median ranking wins */)
 	int MedianRank[MaxNumCands]={0};
 	int CRankVec[MaxNumVoters];
 	int i,j;
-	uint64_t x;
 	int winner;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const uint& numberOfVoters = E->NumVoters;
 	for(j=0; j<numberOfCandidates; j++) {
 		for(i=0; i<numberOfVoters; i++) {
-			x = i*numberOfCandidates + j;
-			CRankVec[i] = E->CandRankings[x];
+			CRankVec[i] = E->Voters[i].Candidates[j].ranking;
 		}
 		MedianRank[j] = TwiceMedian<int>(numberOfVoters, CRankVec);
 		assert( MedianRank[j] >= 0 );
@@ -4672,13 +4696,13 @@ void HonestyStrat( edata *E, real honfrac )
 			SumU = 0.0;
 			for(i=0; i<numberOfCandidates; i++) {
 				offi = offset+i;
-				E->CandRankings[offset + E->TopDownPrefs[offi]] = i;
+				allCandidates[E->TopDownPrefs[offi]].ranking = i;
 				ThisU = E->PerceivedUtility[offi];
 				if(MaxUtil < ThisU) {  MaxUtil = ThisU; }
 				if(MinUtil > ThisU) {  MinUtil = ThisU; }
 				SumU += ThisU;
 			}
-			assert(IsPerm(numberOfCandidates, E->CandRankings+offset));
+			assert(IsPerm(numberOfCandidates, E->Voters[v].Candidates));
 			RecipDiffUtil = MaxUtil-MinUtil;
 			if(RecipDiffUtil != 0.0) {
 				RecipDiffUtil = 1.0 / RecipDiffUtil;
@@ -4743,19 +4767,26 @@ void HonestyStrat( edata *E, real honfrac )
 					theCandidate.approve = true;
 					theCandidate.score = 1.0;
 					Mean2U += ThisU; ACT++;
-					E->CandRankings[offi] = lobd;  lobd++;
+					theCandidate.ranking = lobd;
+					lobd++;
 				}
 				else if( ThisU < MovingAvg ) {
 					theCandidate.approve = false;
 					theCandidate.score = 0.0;
-					E->CandRankings[offi] = hibd;  hibd--;
+					theCandidate.ranking = hibd;
+					hibd--;
 				}
 				else{
 					rb = RandBool();
 					theCandidate.approve = rb;
 					theCandidate.score = 0.5;
-					if(rb) { E->CandRankings[offi] = lobd;  lobd++; }
-					else{   E->CandRankings[offi] = hibd;  hibd--; }
+					if(rb) {
+						theCandidate.ranking = lobd;
+						lobd++;
+					} else {
+						theCandidate.ranking = hibd;
+						hibd--;
+					}
 				}
 			}
 			ensure((ACT!=0), 6);
@@ -4769,8 +4800,8 @@ void HonestyStrat( edata *E, real honfrac )
 				} else {
 		  			theCandidate.approve2 = false;
 				}
-				assert( E->CandRankings[offi] < numberOfCandidates );
-				E->TopDownPrefs[ offset + E->CandRankings[offi] ] = i;
+				assert( theCandidate.ranking < numberOfCandidates );
+				E->TopDownPrefs[ offset + theCandidate.ranking ] = i;
 			}
 		}/*end if(...honfrac) else clause*/
 	}/*end for(v)*/
