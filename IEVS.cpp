@@ -1349,7 +1349,8 @@ EMETH runoffForApprovalVoting(const edata *E);
 
 void BuildDefeatsMatrix(edata *E)
 { /* initializes  E->DefeatsMatrix[], E->MarginsMatrix[], RandCandPerm[], NauruWt[], WinCount[], DrawCt[], CondorcetWinner, CopeWinOnlyWinner, TrueCW */
-	int k,i,j,y;
+	int k,i,j;
+	int64_t y;
 	uint64_t x;
 	real t;
 	bool CondWin, TrueCondWin;
