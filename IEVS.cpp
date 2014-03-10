@@ -169,13 +169,18 @@ const uint DOAGREETABLES = 128U;
 const uint ALLMETHS = 256U;
 const uint TOP10METHS = 512U;
 uint BROutputMode=0;
+struct oneCandidate;
 template< class T >
 		int ArgMinArr(uint64_t N, const T Arr[], int RandPerm[]);
 template< class T >
 		int ArgMaxArr(uint64_t N, const T Arr[], int RandPerm[]);
+template< class T >
+		int ArgMaxArr(uint64_t N, const oneCandidate (&Candidates)[MaxNumCands], int RandPerm[]);
 int flipACoin(int choice1, int choice2);
 template<class T>
 		void PermShellSortDown( uint64_t N, int Perm[], const T Key[] );
+template<class T>
+		void PermShellSortDown(uint64_t N, int Perm[], const oneCandidate (&Candidates)[MaxNumCands]);
 void PrintBRPreamble(void);
 void printName(const char *name, bool padding, int spaces);
 void PrintSummaryOfNormalizedRegretData(uint scenarios);
@@ -185,6 +190,8 @@ template<class T>
 		int Sign(T x);
 template<class T>
 		int SortedKey(uint64_t N, const int Arr[], const T Key[]);
+template<class T>
+		int SortedKey(uint64_t N, const int Arr[], const oneCandidate (&Candidates)[MaxNumCands]);
 void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str);
 template< class T1 >
 		T1 TwiceMedian(uint N, T1 A[] );
@@ -1282,7 +1289,6 @@ typedef struct dum1 {
 	oneVoter Voters[MaxNumVoters];
 	relationshipBetweenCandidates CandidatesVsOtherCandidates[MaxNumCands];
   uint TopDownPrefs[MaxNumCands*MaxNumVoters];
-  real PerceivedUtility[MaxNumCands*MaxNumVoters];
   real Utility[MaxNumCands*MaxNumVoters];
   int MarginsMatrix[MaxNumCands*MaxNumCands];
 	void zeroInitializeArrays() {
@@ -1310,12 +1316,13 @@ void PrintEdata(FILE *F, const edata *E)
 	fprintf(F, "numberOfVoters=%d  numberOfCandidates=%lld\n", numberOfVoters, numberOfCandidates);
 	for(v=0; v<(int)numberOfVoters; v++){
 		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[v].Candidates;
+		const oneVoter& theVoter = E->Voters[v];
 		fprintf(F, "Voter %2d:\n",v);
 		fprintf(F, "Utility: ");
 		for(j=0; j < numberOfCandidates; j++){  fprintf(F, "%6.3f", E->Utility[v*numberOfCandidates + j]);  }
 		fprintf(F, "\n");
 		fprintf(F, "PercUti: ");
-		for(j=0; j < numberOfCandidates; j++){  fprintf(F, "%6.3f", E->PerceivedUtility[v*numberOfCandidates + j]);  }
+		for(j=0; j < numberOfCandidates; j++){  fprintf(F, "%6.3f", theVoter.Candidates[j].perceivedUtility);  }
 		fprintf(F, "\n");
 		fprintf(F, "RangeScore: ");
 		for(j=0; j < numberOfCandidates; j++) {
@@ -1516,7 +1523,8 @@ EMETH RandomBallot(const edata *E)
 { /*honest top choice of a random voter is elected. Strategyproof.*/
 	int winner;
 	const uint64_t& numberOfCandidates = E->NumCands;
-	winner = ArgMaxArr<real>(numberOfCandidates, &(E->PerceivedUtility[RandInt(E->NumVoters)*numberOfCandidates]), (int*)RandCandPerm);
+	const uint64_t VoterIndex = RandInt(E->NumVoters);
+	winner = ArgMaxArr<real>(numberOfCandidates, E->Voters[VoterIndex].Candidates, (int*)RandCandPerm);
 	return winner;
 }
 
@@ -1931,8 +1939,9 @@ EMETH Nauru(const edata *E  /* weighted positional with weights 1, 1/2, 1/3, 1/4
 	const uint& numberOfVoters = E->NumVoters;
 	ZeroArray( numberOfCandidates, (int*)NauruVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
+		const oneVoter& theVoter = E->Voters[i];
 		for(j=0; j<numberOfCandidates; j++) {
-			NauruVoteCount[j] += NauruWt[E->Voters[i].Candidates[j].ranking];
+			NauruVoteCount[j] += NauruWt[theVoter.Candidates[j].ranking];
 		}
 	}
 	winner = ArgMaxUIntArr( numberOfCandidates, NauruVoteCount, (int*)RandCandPerm );
@@ -3024,15 +3033,19 @@ EMETH HeitzigDFC(const edata *E)
 	uint offset, pwct=0, wct=0;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const uint& numberOfVoters = E->NumVoters;
-	Rwnr = ArgMaxArr<real>(numberOfCandidates, E->PerceivedUtility + RandInt(E->NumVoters)*numberOfCandidates, (int*)RandCandPerm);
+	const uint64_t VoterIndex = RandInt(E->NumVoters);
+	Rwnr = ArgMaxArr<real>(numberOfCandidates, E->Voters[VoterIndex].Candidates, (int*)RandCandPerm);
 	if(ApprovalWinner<0) {
 		Approval(E);
 	}
 	for(i=0; i<(int)numberOfVoters; i++) {
+		const oneVoter& theVoter = E->Voters[i];
+		const real perceivedUtilityOfTheApprovalWinner = theVoter.Candidates[ApprovalWinner].perceivedUtility;
+		const real perceivedUtilityOfTheRandomBallotWinner = theVoter.Candidates[Rwnr].perceivedUtility;
 		offset = i*(int)numberOfCandidates;
-		if( E->PerceivedUtility[offset+ApprovalWinner] > E->PerceivedUtility[offset+Rwnr] ) {
+		if( perceivedUtilityOfTheApprovalWinner > perceivedUtilityOfTheRandomBallotWinner ) {
 			pwct++;
-		}else if( E->PerceivedUtility[offset+ApprovalWinner] < E->PerceivedUtility[offset+Rwnr] ) {
+		}else if( perceivedUtilityOfTheApprovalWinner < perceivedUtilityOfTheRandomBallotWinner ) {
 			wct++;
 		} else {
 			/* tie, do nothing */
@@ -4687,10 +4700,11 @@ void HonestyStrat( edata *E, real honfrac )
 	assert(honfrac <= 1.0);
 	for(v=numberOfVoters -1; v>=0; v--) {
 		oneCandidate (&allCandidates)[MaxNumCands] = allVoters[v].Candidates;
+		const oneVoter& theVoter = E->Voters[v];
 		offset = v*numberOfCandidates;
 		if( Rand01() < honfrac ) { /*honest voter*/
 			MakeIdentityPerm( numberOfCandidates, E->TopDownPrefs+offset );
-			PermShellSortDown<real>( numberOfCandidates, (int*)E->TopDownPrefs+offset, E->PerceivedUtility+offset );
+			PermShellSortDown<real>( numberOfCandidates, (int*)E->TopDownPrefs+offset, theVoter.Candidates );
 			assert( IsPerm(numberOfCandidates, E->TopDownPrefs+offset) );
 			MaxUtil = -HUGE;
 			MinUtil =  HUGE;
@@ -4698,12 +4712,12 @@ void HonestyStrat( edata *E, real honfrac )
 			for(i=0; i<numberOfCandidates; i++) {
 				offi = offset+i;
 				allCandidates[E->TopDownPrefs[offi]].ranking = i;
-				ThisU = E->PerceivedUtility[offi];
+				ThisU = theVoter.Candidates[i].perceivedUtility;
 				if(MaxUtil < ThisU) {  MaxUtil = ThisU; }
 				if(MinUtil > ThisU) {  MinUtil = ThisU; }
 				SumU += ThisU;
 			}
-			assert(IsPerm(numberOfCandidates, E->Voters[v].Candidates));
+			assert(IsPerm(numberOfCandidates, theVoter.Candidates));
 			RecipDiffUtil = MaxUtil-MinUtil;
 			if(RecipDiffUtil != 0.0) {
 				RecipDiffUtil = 1.0 / RecipDiffUtil;
@@ -4713,7 +4727,7 @@ void HonestyStrat( edata *E, real honfrac )
 			for(i=0; i<numberOfCandidates; i++) {
 				oneCandidate &theCandidate = allCandidates[i];
 				offi = offset+i;
-				ThisU = E->PerceivedUtility[offi];
+				ThisU = theVoter.Candidates[i].perceivedUtility;
 				theCandidate.score = ( ThisU-MinUtil ) * RecipDiffUtil;
 				/* mean-based threshold (with coin toss if exactly at thresh) for approvals */
 				if( ThisU > MeanU ) {
@@ -4731,7 +4745,7 @@ void HonestyStrat( edata *E, real honfrac )
 			for(i=0; i<numberOfCandidates; i++) {
 				oneCandidate &theCandidate = allCandidates[i];
 				offi = offset+i;
-				ThisU = E->PerceivedUtility[offi];
+				ThisU = theVoter.Candidates[i].perceivedUtility;
 				if( ThisU >= Mean2U ) {
 					theCandidate.approve2 = true;
 				} else {
@@ -4748,12 +4762,12 @@ void HonestyStrat( edata *E, real honfrac )
 			for(i=0; i<(int)numberOfCandidates; i++) {
 				oneCandidate &theCandidate = allCandidates[i];
 				offi = offset+i;
-				ThisU = E->PerceivedUtility[offi];
+				ThisU = theVoter.Candidates[i].perceivedUtility;
 				if(i > nexti) {
 					nexti++;
 					assert(nexti >= 0);
 					for( ; nexti<(int)numberOfCandidates; nexti++) {
-						tmp = E->PerceivedUtility[offset+nexti];
+						tmp = theVoter.Candidates[nexti].perceivedUtility;
 						MovingAvg += (tmp-MovingAvg)/(nexti+1.0);
 						if( fabs(tmp-MovingAvg) > 0.000000000001) {
 							break;
@@ -4795,7 +4809,7 @@ void HonestyStrat( edata *E, real honfrac )
 			for(i=0; i<numberOfCandidates; i++) {
 				oneCandidate &theCandidate = allCandidates[i];
 				offi = offset+i;
-				ThisU = E->PerceivedUtility[offi];
+				ThisU = theVoter.Candidates[i].perceivedUtility;
 				if( ThisU >= Mean2U ) {
 					theCandidate.approve2 = true;
 				} else {
@@ -4843,14 +4857,18 @@ void AddIgnorance( edata *E, real IgnoranceAmplitude )
 	if(IgnoranceAmplitude < 0.0) {
 		/* negative is flag to cause VARIABLE levels of ignorance depending on voter (stratified) */
 		for(i=numberOfVoters*(int)numberOfCandidates-1; i>=0; i--) {
+			uint64_t VoterIndex = i/numberOfCandidates;
+			uint64_t CandidateIndex = i % numberOfCandidates;
 			ignorance = ((IgnoranceAmplitude * ((2*i)+1)) / numberOfCandidates) * RandNormal();
-			E->PerceivedUtility[i] = ignorance + E->Utility[i];
+			E->Voters[VoterIndex].Candidates[CandidateIndex].perceivedUtility = ignorance + E->Utility[i];
 		}
 	} else {
 		/* positive is flag to cause CONSTANT level of ignorance across all voters */
 		for(i=numberOfVoters*(int)numberOfCandidates-1; i>=0; i--) {
+			uint64_t VoterIndex = i/numberOfCandidates;
+			uint64_t CandidateIndex = i % numberOfCandidates;
 			ignorance = IgnoranceAmplitude * RandNormal();
-			E->PerceivedUtility[i] = ignorance + E->Utility[i];
+			E->Voters[VoterIndex].Candidates[CandidateIndex].perceivedUtility = ignorance + E->Utility[i];
 		}
 	}
 	/* Both positive & negative modes have the same mean ignorance amplitude */
@@ -5769,7 +5787,7 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 										ut = 1.0 / sqrt(12000.0 + ds);
 										m = i+jo;
 										E.Utility[m] = ut;
-										E.PerceivedUtility[m] = ut;
+										E.Voters[j].Candidates[i].perceivedUtility = ut;
 									}/*end for(i)*/
 									j++;
 								}
@@ -6111,6 +6129,35 @@ int ArgMaxArr(uint64_t N, const T Arr[], int RandPerm[])
 	return(winner);
 }
 
+/*	ArgMaxArr(N, Arr[], RandPerm[]):	returns index of random
+ *						max perceive utility
+ *						entry of Arr[0..N-1]
+ *	N:		the expected number of elements in 'RandPerm'
+ *	Candidates:	reference to an array of Candidates to provide
+ *			information to examine
+ *	RandPerm:	array of perm.
+ */
+template< class T >
+int ArgMaxArr(uint64_t N, const oneCandidate (&Candidates)[MaxNumCands], int RandPerm[])
+{
+	T maxc;
+	int a;
+	int r;
+	int winner;
+	winner = -1;
+	maxc = (typeid(T)==typeid(int)) ? (T)(-BIGINT) : (T)(-HUGE);
+	RandomlyPermute( N, (uint*)RandPerm );
+	for(a=0; a<(int)N; a++) {
+		r = RandPerm[a];
+		if(Candidates[r].perceivedUtility > maxc) {
+			maxc=Candidates[r].perceivedUtility;
+			winner=r;
+		}
+	}
+	assert(winner>=0);
+	return(winner);
+}
+
 /*	ArgMinArr(N, Arr[], RandPerm[]):	returns index of random min entry of
  *						Arr[0..N-1]
  *	N:		the expected number of elements in 'Arr' and 'RandPerm'
@@ -6160,9 +6207,10 @@ int calculateForRunoff(const edata *E, int first, int second)
 	real perceivedUtilityOfFirst;
 	real perceivedUtilityOfSecond;
 	for(a=0; a<numberOfVoters; a++) {
+		const oneVoter& theVoter = E->Voters[a];
 		offset = a*numberOfCandidates;
-		perceivedUtilityOfFirst = E->PerceivedUtility[offset+first];
-		perceivedUtilityOfSecond = E->PerceivedUtility[offset+second];
+		perceivedUtilityOfFirst = theVoter.Candidates[first].perceivedUtility;
+		perceivedUtilityOfSecond = theVoter.Candidates[second].perceivedUtility;
 		if( perceivedUtilityOfFirst > perceivedUtilityOfSecond ) {
 			pwct++;
 		}else if( perceivedUtilityOfFirst < perceivedUtilityOfSecond ) {
@@ -6375,6 +6423,34 @@ void PermShellSortDown(uint64_t N, int Perm[], const T Key[])
 		}
 	}
 	assert(SortedKey<T>(N,Perm,Key)<=0);
+}
+
+/*	PermShellSortDown(N, Perm, Key):	rearranges 'Perm[0..N-1]' so
+ *						'Key[Perm[0..N-1]].perceivedUtility'
+ *						is in decreasing order
+ *	N:	the number of expected entries in 'Perm' and 'Key'
+ *	Perm:	a set of values to rearrange
+ *	Key:	a reference to a set of constant Candidates to guide
+ *		sorting
+ */
+template<class T>
+void PermShellSortDown(uint64_t N, int Perm[], const oneCandidate (&Candidates)[MaxNumCands])
+{
+	int a;
+	int b;
+	int c;
+	int d;
+	int x;
+	for(d=0; (a=ShellIncs[d])>0; d++) {
+		for(b=a; b<(int)N; b++) {
+			x=Perm[b];
+			for(c=b-a; (c>=0) && (Candidates[Perm[c]].perceivedUtility<Candidates[x].perceivedUtility); c -= a) {
+				Perm[c+a]=Perm[c];
+			}
+			Perm[c+a]=x;
+		}
+	}
+	assert(SortedKey<T>(N,Perm,Candidates)<=0);
 }
 
 /*	printName(name, padding, spaces):	prints the given name of a utility
@@ -6619,6 +6695,53 @@ template<class T> int SortedKey(uint64_t N, const int Arr[], const T Key[])
 			break;
 		default:
 			ensure(false, 28);
+		}
+	}
+	return overallTrend;
+}
+
+/*	SortedKey(N, Arr, Key):	helps to verify 'Arr' is sorted in
+ *				a manner which is expected;
+ *				returns 1 if 'Key[Arr[i]]' is in
+ *				increasing order for all 'i' from
+ *				0 to 'N-1', -1 if 'Key[Arr[i]]' is
+ *				in decreasing order, 0 if
+ *				'Key[Arr[i]]' remains the same, or
+ *				2 for any other circumstance
+ *	N:		number of elements expected in Arr
+ *	Arr:		a set of values to have been sorted
+ *	Candidates:	a reference to a set of Candidates with
+ *			perceived utility values which are expected
+ *			to have guided the sorting
+ */
+template<class T> int SortedKey(uint64_t N, const int Arr[], const oneCandidate (&Candidates)[MaxNumCands])
+{
+	int a;
+	int overallTrend;
+	T currentValue;
+	T nextValue;
+	overallTrend = Sign<T>( Candidates[Arr[N-1]].perceivedUtility-Candidates[Arr[0]].perceivedUtility );
+	for(a=1; a<(int)N; a++) {
+		currentValue = Candidates[Arr[a-1]].perceivedUtility;
+		nextValue = Candidates[Arr[a]].perceivedUtility;
+		switch( overallTrend ) {
+			case 1:
+				if( nextValue < currentValue ) {
+					return 2;
+				}
+				break;
+			case 0:
+				if( nextValue != currentValue ) {
+					return 2;
+				}
+				break;
+			case -1:
+				if( nextValue > currentValue ) {
+					return 2;
+				}
+				break;
+			default:
+				ensure(false, 29);
 		}
 	}
 	return overallTrend;
