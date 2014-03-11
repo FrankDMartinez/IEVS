@@ -1261,6 +1261,9 @@ void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have be
   RandomUncoveredMemb = -1;
   IRVTopLim = BIGINT;
 }
+
+/*	oneVoter:	information about a particular Voter
+ */
 struct oneVoter
 {
 	uint topDownPrefs[MaxNumCands];
@@ -1289,7 +1292,6 @@ typedef struct dum1 {
 	oneVoter Voters[MaxNumVoters];
 	relationshipBetweenCandidates CandidatesVsOtherCandidates[MaxNumCands];
   uint TopDownPrefs[MaxNumCands*MaxNumVoters];
-  real Utility[MaxNumCands*MaxNumVoters];
   int MarginsMatrix[MaxNumCands*MaxNumCands];
 	void zeroInitializeArrays() {
 		int i;
@@ -1319,7 +1321,9 @@ void PrintEdata(FILE *F, const edata *E)
 		const oneVoter& theVoter = E->Voters[v];
 		fprintf(F, "Voter %2d:\n",v);
 		fprintf(F, "Utility: ");
-		for(j=0; j < numberOfCandidates; j++){  fprintf(F, "%6.3f", E->Utility[v*numberOfCandidates + j]);  }
+		for(j=0; j < numberOfCandidates; j++) {
+			fprintf(F, "%6.3f", theVoter.Candidates[j].actualUtility);
+		}
 		fprintf(F, "\n");
 		fprintf(F, "PercUti: ");
 		for(j=0; j < numberOfCandidates; j++){  fprintf(F, "%6.3f", theVoter.Candidates[j].perceivedUtility);  }
@@ -1401,7 +1405,7 @@ void BuildDefeatsMatrix(edata *E)
 					relationshipsOfJ.ArmytageMatrix[i] -= t;
 					relationshipsOfJ.ArmytageDefeatsMatrix[i]++;
 				}
-				t = E->Utility[x+i] - E->Utility[x+j];
+				t = E->Voters[k].Candidates[i].actualUtility - E->Voters[k].Candidates[j].actualUtility;
 				if(t > 0.0) {
 					relationshipsOfI.TrueDefeatsMatrix[j]++;
 				}else{
@@ -1491,7 +1495,7 @@ EMETH SociallyBest(const edata *E  /* greatest utility-sum winner */)
 	for(i=0; i<(int)numberOfVoters; i++) {
 		x = i*numberOfCandidates;
 		for(j=0; j<numberOfCandidates; j++) {
-			UtilitySum[j] += E->Utility[x+j];
+			UtilitySum[j] += E->Voters[i].Candidates[j].actualUtility;
 		}
 	}
 	BestWinner = ArgMaxArr<real>(numberOfCandidates, UtilitySum, (int*)RandCandPerm);
@@ -1541,17 +1545,18 @@ EMETH Hay(const edata *E /*Strategyproof. Prob of election proportional to sum o
 		x = i*numberOfCandidates;
 		minu = HUGE;
 		for(j=0; j<numberOfCandidates; j++) {
-			if(minu > E->Utility[x+j]) {
-				minu = E->Utility[x+j];
+			real utility = E->Voters[i].Candidates[j].actualUtility;
+			if(minu > utility) {
+				minu = utility;
 			}
 		}
 		sumrts = 0.0;
 		for(j=0; j<numberOfCandidates; j++) {
-			sumrts += sqrt(E->Utility[x+j] - minu);
+			sumrts += sqrt(E->Voters[i].Candidates[j].actualUtility - minu);
 		}
 		if(sumrts>0.0) {
 			for(j=0; j<numberOfCandidates; j++) {
-				UtilityRootSum[j] += sqrt(E->Utility[x+j] - minu)/sumrts;
+				UtilityRootSum[j] += sqrt(E->Voters[i].Candidates[j].actualUtility - minu)/sumrts;
 			}
 		}
 	}
@@ -4860,7 +4865,7 @@ void AddIgnorance( edata *E, real IgnoranceAmplitude )
 			uint64_t VoterIndex = i/numberOfCandidates;
 			uint64_t CandidateIndex = i % numberOfCandidates;
 			ignorance = ((IgnoranceAmplitude * ((2*i)+1)) / numberOfCandidates) * RandNormal();
-			E->Voters[VoterIndex].Candidates[CandidateIndex].perceivedUtility = ignorance + E->Utility[i];
+			E->Voters[VoterIndex].Candidates[CandidateIndex].perceivedUtility = ignorance + E->Voters[VoterIndex].Candidates[CandidateIndex].actualUtility;
 		}
 	} else {
 		/* positive is flag to cause CONSTANT level of ignorance across all voters */
@@ -4868,7 +4873,7 @@ void AddIgnorance( edata *E, real IgnoranceAmplitude )
 			uint64_t VoterIndex = i/numberOfCandidates;
 			uint64_t CandidateIndex = i % numberOfCandidates;
 			ignorance = IgnoranceAmplitude * RandNormal();
-			E->Voters[VoterIndex].Candidates[CandidateIndex].perceivedUtility = ignorance + E->Utility[i];
+			E->Voters[VoterIndex].Candidates[CandidateIndex].perceivedUtility = ignorance + E->Voters[VoterIndex].Candidates[CandidateIndex].actualUtility;
 		}
 	}
 	/* Both positive & negative modes have the same mean ignorance amplitude */
@@ -4905,7 +4910,13 @@ void GenWackyLocations( /*input:*/ uint NumVoters, uint64_t NumCands, uint Issue
 }
 
 UTGEN GenNormalUtils( edata *E ){ /* simplest possible utility generator: random normal numbers: */
-  GenRandNormalArr(E->NumVoters*E->NumCands, E->Utility);
+	const uint64_t& numberOfVoters = E->NumVoters;
+	const uint64_t& numberOfCandidates = E->NumCands;
+	for(int i=0; i<numberOfVoters; i++) {
+		for(int j=0; j<numberOfCandidates; j++) {
+			E->Voters[i].Candidates[j].actualUtility = RandNormal();
+		}
+	}
 }
 
 /* if Issues<0 then it uses wacky skew voter distribution instead of normal. Uses Lp distance: */
@@ -4926,8 +4937,8 @@ UTGEN GenIssueDistanceUtils( edata *E, int Issues, real Lp ){  /* utility = dist
     offset = x * numberOfCandidates;
     off2   = x * Issues;
     for(y=0; y<numberOfCandidates; y++){
-      E->Utility[offset+y] = 1.0 / sqrt(KK +
-         LpDistanceSquared(Issues, VoterLocation+off2, CandLocation+y*Issues, Lp));
+	E->Voters[x].Candidates[y].actualUtility = 1.0 / sqrt(KK +
+		LpDistanceSquared(Issues, VoterLocation+off2, CandLocation+y*Issues, Lp));
     }
   }
 }
@@ -4945,7 +4956,7 @@ UTGEN GenIssueDotprodUtils( edata *E, uint Issues ){  /* utility = canddt*voter 
     offset = x * numberOfCandidates;
     off2   = x * Issues;
     for(y=0; y < numberOfCandidates; y++){
-      E->Utility[offset+y] = s*DotProd(Issues, VoterLocation+off2, CandLocation+y*Issues);
+	    E->Voters[x].Candidates[y].actualUtility = s*DotProd(Issues, VoterLocation+off2, CandLocation+y*Issues);
     }
   }
 }
@@ -5145,7 +5156,7 @@ UTGEN GenRealWorldUtils( edata *E ){  /** based on Tideman election dataset **/
     VV = RandInt(V);  /* choose random voter in the real world election */
     VV *= C;
     for(y=0; y < numberOfCandidates; y++){
-      E->Utility[ff+y] = ((numberOfCandidates - (real)ElData[offset+VV+y]) + RandNormal())*scalefac;
+	    E->Voters[x].Candidates[y].actualUtility = ((numberOfCandidates - (real)ElData[offset+VV+y]) + RandNormal())*scalefac;
     }
   }
   offset += NVotersData[WhichElection]*NCandsData[WhichElection];
@@ -5786,7 +5797,7 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 										}
 										ut = 1.0 / sqrt(12000.0 + ds);
 										m = i+jo;
-										E.Utility[m] = ut;
+										E.Voters[j].Candidates[i].actualUtility = ut;
 										E.Voters[j].Candidates[i].perceivedUtility = ut;
 									}/*end for(i)*/
 									j++;
