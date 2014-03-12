@@ -1317,8 +1317,8 @@ void PrintEdata(FILE *F, const edata *E)
 	const uint64_t& numberOfCandidates = E->NumCands;
 	fprintf(F, "numberOfVoters=%d  numberOfCandidates=%lld\n", numberOfVoters, numberOfCandidates);
 	for(v=0; v<(int)numberOfVoters; v++){
-		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[v].Candidates;
-		const oneVoter& theVoter = E->Voters[v];
+		const oneVoter& theVoter = allVoters[v];
+		const oneCandidate (&allCandidates)[MaxNumCands] = theVoter.Candidates;
 		fprintf(F, "Voter %2d:\n",v);
 		fprintf(F, "Utility: ");
 		for(j=0; j < numberOfCandidates; j++) {
@@ -1382,7 +1382,8 @@ void BuildDefeatsMatrix(edata *E)
 	BaseballWt[0] = 14;
 	E->zeroInitializeArrays();
 	for(k=0; k<(int)numberOfVoters; k++) {
-		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[k].Candidates;
+		const oneVoter& theVoter = allVoters[k];
+		const oneCandidate (&allCandidates)[MaxNumCands] = theVoter.Candidates;
 		x = k*numberOfCandidates;
 		for(i=0; i<numberOfCandidates; i++) {
 			const oneCandidate &firstCandidate = allCandidates[i];
@@ -1405,7 +1406,7 @@ void BuildDefeatsMatrix(edata *E)
 					relationshipsOfJ.ArmytageMatrix[i] -= t;
 					relationshipsOfJ.ArmytageDefeatsMatrix[i]++;
 				}
-				t = E->Voters[k].Candidates[i].actualUtility - E->Voters[k].Candidates[j].actualUtility;
+				t = firstCandidate.actualUtility - secondCandidate.actualUtility;
 				if(t > 0.0) {
 					relationshipsOfI.TrueDefeatsMatrix[j]++;
 				}else{
@@ -1423,8 +1424,8 @@ void BuildDefeatsMatrix(edata *E)
 		TrueCondWin = true;
 		for(j=0; j<numberOfCandidates; j++) {
 			const int &iDefeatsJ = relationshipsOfI.DefeatsMatrix[j];
-			const int &jDefeatsI = E->CandidatesVsOtherCandidates[j].DefeatsMatrix[i];
 			relationshipBetweenCandidates &relationshipsOfJ = E->CandidatesVsOtherCandidates[j];
+			const int &jDefeatsI = relationshipsOfJ.DefeatsMatrix[i];
 			assert( iDefeatsJ <= (int)numberOfVoters );
 			assert( iDefeatsJ >= 0 );
 			assert( iDefeatsJ + jDefeatsI <= (int)numberOfVoters );
@@ -4704,12 +4705,12 @@ void HonestyStrat( edata *E, real honfrac )
 	assert(honfrac >= 0.0);
 	assert(honfrac <= 1.0);
 	for(v=numberOfVoters -1; v>=0; v--) {
-		oneCandidate (&allCandidates)[MaxNumCands] = allVoters[v].Candidates;
-		const oneVoter& theVoter = E->Voters[v];
+		oneVoter& theVoter = allVoters[v];
+		oneCandidate (&allCandidates)[MaxNumCands] = theVoter.Candidates;
 		offset = v*numberOfCandidates;
 		if( Rand01() < honfrac ) { /*honest voter*/
 			MakeIdentityPerm( numberOfCandidates, E->TopDownPrefs+offset );
-			PermShellSortDown<real>( numberOfCandidates, (int*)E->TopDownPrefs+offset, theVoter.Candidates );
+			PermShellSortDown<real>( numberOfCandidates, (int*)E->TopDownPrefs+offset, allCandidates );
 			assert( IsPerm(numberOfCandidates, E->TopDownPrefs+offset) );
 			MaxUtil = -HUGE;
 			MinUtil =  HUGE;
@@ -4717,7 +4718,7 @@ void HonestyStrat( edata *E, real honfrac )
 			for(i=0; i<numberOfCandidates; i++) {
 				offi = offset+i;
 				allCandidates[E->TopDownPrefs[offi]].ranking = i;
-				ThisU = theVoter.Candidates[i].perceivedUtility;
+				ThisU = allCandidates[i].perceivedUtility;
 				if(MaxUtil < ThisU) {  MaxUtil = ThisU; }
 				if(MinUtil > ThisU) {  MinUtil = ThisU; }
 				SumU += ThisU;
@@ -4732,7 +4733,7 @@ void HonestyStrat( edata *E, real honfrac )
 			for(i=0; i<numberOfCandidates; i++) {
 				oneCandidate &theCandidate = allCandidates[i];
 				offi = offset+i;
-				ThisU = theVoter.Candidates[i].perceivedUtility;
+				ThisU = theCandidate.perceivedUtility;
 				theCandidate.score = ( ThisU-MinUtil ) * RecipDiffUtil;
 				/* mean-based threshold (with coin toss if exactly at thresh) for approvals */
 				if( ThisU > MeanU ) {
@@ -4750,7 +4751,7 @@ void HonestyStrat( edata *E, real honfrac )
 			for(i=0; i<numberOfCandidates; i++) {
 				oneCandidate &theCandidate = allCandidates[i];
 				offi = offset+i;
-				ThisU = theVoter.Candidates[i].perceivedUtility;
+				ThisU = theCandidate.perceivedUtility;
 				if( ThisU >= Mean2U ) {
 					theCandidate.approve2 = true;
 				} else {
@@ -4767,7 +4768,7 @@ void HonestyStrat( edata *E, real honfrac )
 			for(i=0; i<(int)numberOfCandidates; i++) {
 				oneCandidate &theCandidate = allCandidates[i];
 				offi = offset+i;
-				ThisU = theVoter.Candidates[i].perceivedUtility;
+				ThisU = theCandidate.perceivedUtility;
 				if(i > nexti) {
 					nexti++;
 					assert(nexti >= 0);
@@ -4814,7 +4815,7 @@ void HonestyStrat( edata *E, real honfrac )
 			for(i=0; i<numberOfCandidates; i++) {
 				oneCandidate &theCandidate = allCandidates[i];
 				offi = offset+i;
-				ThisU = theVoter.Candidates[i].perceivedUtility;
+				ThisU = theCandidate.perceivedUtility;
 				if( ThisU >= Mean2U ) {
 					theCandidate.approve2 = true;
 				} else {
