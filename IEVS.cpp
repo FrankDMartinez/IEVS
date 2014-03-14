@@ -4583,15 +4583,11 @@ typedef struct dum2 {
   uint NumElections;
   real IgnoranceAmplitude;
   real Honfrac;
-  real Regret[NumMethods];
   uint RegCount[NumMethods];
   real MeanRegret[NumMethods];
   real SRegret[NumMethods];
-  bool Agree[NumMethods*NumMethods];
   uint AgreeCount[NumMethods*NumMethods];
-  bool CondAgree[NumMethods];
   uint TrueCondAgreeCount[NumMethods];
-  bool TrueCondAgree[NumMethods];
   uint CondAgreeCount[NumMethods];
    int Winners[NumMethods];
 } brdata;
@@ -4606,9 +4602,6 @@ int FindWinnersAndRegrets( edata *E,  brdata *B,  const bool Methods[] )
 	int m,w,j;
 	real r;
 	BuildDefeatsMatrix(E);
-	FillArray(NumMethods*NumMethods, B->Agree, false);
-	FillArray(NumMethods, B->CondAgree, false);
-	FillArray(NumMethods, B->TrueCondAgree, false);
 	InitCoreElState();
 	for(m=0; m<NumMethods; m++) {
 		if(Methods[m] || m<NumCoreMethods) { /* always run Core Methods */
@@ -4622,13 +4615,10 @@ int FindWinnersAndRegrets( edata *E,  brdata *B,  const bool Methods[] )
 			}
 			assert( BestWinner == B->Winners[0] );
 			assert(r>=0.0); /*can only fail if somebody overwrites array...*/
-			B->Regret[m] = r;
 			WelfordUpdateMeanSD(r, (int*)&(B->RegCount[m]), &(B->MeanRegret[m]), &(B->SRegret[m]));
 			for(j=0; j<m; j++) {
 				if(Methods[j] || j<NumCoreMethods) {
 					if( B->Winners[j] == w ) {
-						B->Agree[m*NumMethods+j]=true;
-						B->Agree[j*NumMethods+m]=true;
 						B->AgreeCount[m*NumMethods+j]++;
 						B->AgreeCount[j*NumMethods+m]++;
 						assert( B->AgreeCount[j*NumMethods+m] == B->AgreeCount[m*NumMethods+j] );
@@ -4641,11 +4631,9 @@ int FindWinnersAndRegrets( edata *E,  brdata *B,  const bool Methods[] )
 		for(m=0; m<NumMethods; m++) {
 			if(Methods[m] || m<NumCoreMethods) {
 				if(B->Winners[m]==CondorcetWinner) {
-					B->CondAgree[m]=true;
 					B->CondAgreeCount[m]++;
 				}
 				if(B->Winners[m]==TrueCW) {
-					B->TrueCondAgree[m]=true;
 					B->TrueCondAgreeCount[m]++;
 				}
 			}
