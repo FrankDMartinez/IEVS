@@ -4587,6 +4587,13 @@ struct oneVotingMethod
 	int Winner;
 };
 
+template <class T, size_t N>
+struct betterArray : std::array<T, N> {
+	void fillWithDefault() {
+		this->fill(T());
+	}
+};
+
 typedef struct dum2 {
   uint NumVoters;
   uint64_t NumCands;
@@ -4597,9 +4604,8 @@ typedef struct dum2 {
   real MeanRegret[NumMethods];
   real SRegret[NumMethods];
   uint AgreeCount[NumMethods*NumMethods];
-  uint CondAgreeCount[NumMethods];
    int Winners[NumMethods];
-	std::array<oneVotingMethod, NumMethods> votingMethods;
+	betterArray<oneVotingMethod, NumMethods> votingMethods;
 } brdata;
 
 void EDataPrep(edata &E, const brdata *B);
@@ -4641,7 +4647,7 @@ int FindWinnersAndRegrets( edata *E,  brdata *B,  const bool Methods[] )
 		for(m=0; m<NumMethods; m++) {
 			if(Methods[m] || m<NumCoreMethods) {
 				if(B->Winners[m]==CondorcetWinner) {
-					B->CondAgreeCount[m]++;
+					B->votingMethods[m].CondorcetAgreementCount++;
 				}
 				if(B->Winners[m]==TrueCW) {
 					B->votingMethods[m].trueCondorcetAgreementCount++;
@@ -5309,8 +5315,7 @@ void ComputeBRs( brdata *B, const bool VotMethods[], int UtilMeth )
 	ZeroArray( NumMethods, (int*)B->RegCount );
 	ZeroArray( NumMethods*NumMethods, (int*)B->AgreeCount );
 	ZeroArray( NumMethods*NumMethods, (int*)B->AgreeCount );
-	ZeroArray( NumMethods, (int*)B->CondAgreeCount );
-	B->votingMethods.fill(oneVotingMethod());
+	B->votingMethods.fillWithDefault();
 	InitCoreElState();
 	EDataPrep(E, B);
 	for(elnum=0; elnum < B->NumElections; elnum++){
@@ -6984,7 +6989,7 @@ void PrintBROutput(const brdata &regretObject, uint &scenarios)
 		}
 		if(htmlMode) printf("</td><td>");
 		else if(texMode) printf(" & ");
-		if(BROutputMode&VBCONDMODE) printf(" \t  %7d", regretObject.CondAgreeCount[r]);
+		if(BROutputMode&VBCONDMODE) printf(" \t  %7d", regretObject.votingMethods[r].CondorcetAgreementCount);
 		else printf(" \t  %7d", regretObject.votingMethods[r].trueCondorcetAgreementCount);
 		if(htmlMode) printf("</td></tr>\n");
 		else if(texMode) printf(" \\\\ \n");
