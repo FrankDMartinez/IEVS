@@ -4577,6 +4577,16 @@ int GimmeWinner( edata *E, int WhichMeth )
 	return(w);
 }
 
+struct oneVotingMethod
+{
+	uint regCount;
+	real meanRegret;
+	real sRegret;
+	uint trueCondorcetAgreementCount;
+	uint CondorcetAgreementCount;
+	int Winner;
+};
+
 typedef struct dum2 {
   uint NumVoters;
   uint64_t NumCands;
@@ -4590,6 +4600,7 @@ typedef struct dum2 {
   uint TrueCondAgreeCount[NumMethods];
   uint CondAgreeCount[NumMethods];
    int Winners[NumMethods];
+	std::array<oneVotingMethod, NumMethods> votingMethods;
 } brdata;
 
 void EDataPrep(edata &E, const brdata *B);
