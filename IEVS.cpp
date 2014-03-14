@@ -170,6 +170,24 @@ const uint ALLMETHS = 256U;
 const uint TOP10METHS = 512U;
 uint BROutputMode=0;
 struct oneCandidate;
+
+template <class T, size_t N>
+struct betterArray : std::array<T, N> {
+	void fillWithDefault() {
+		this->fill(T());
+	}
+};
+
+struct oneVotingMethod
+{
+	uint regCount;
+	real meanRegret;
+	real sRegret;
+	uint trueCondorcetAgreementCount;
+	uint CondorcetAgreementCount;
+	int Winner;
+};
+
 template< class T >
 		int ArgMinArr(uint64_t N, const T Arr[], int RandPerm[]);
 template< class T >
@@ -192,6 +210,7 @@ template<class T>
 		int SortedKey(uint64_t N, const int Arr[], const T Key[]);
 template<class T>
 		int SortedKey(uint64_t N, const int Arr[], const oneCandidate (&Candidates)[MaxNumCands]);
+int SortedKey(const int Arr[], const betterArray<oneVotingMethod, NumMethods>& methods);
 void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str);
 template< class T1 >
 		T1 TwiceMedian(uint N, T1 A[] );
@@ -1005,6 +1024,43 @@ template <class T> void ScaleVec(uint64_t N, T a[], T scalefac) {
 	}
 }
 
+class range
+{
+private:
+	int64_t last;
+	int64_t iter;
+
+public:
+	range(int64_t end, int64_t start = 0):
+        last(end),
+        iter(start)
+	{
+		ensure(end>=start,30);
+	}
+
+	// Iterable functions
+	const range& begin() const { return *this; }
+	const range& end() const { return *this; }
+
+	// Iterator functions
+	bool operator!=(const range&) const { return iter < last; }
+	void operator++() { ++iter; }
+	int64_t operator*() const { return iter; }
+};
+
+/*	ScaleRegrets(methods, scalefac):	scales the 'sRegret'
+ *						of each member of
+ *						'methods' by 'scalefac'
+ *	methods:	the voting methods with 'sRegret' values to
+ *			scale
+ *	scalefac:	the scaling factor
+ */
+void ScaleRegrets( betterArray<oneVotingMethod, NumMethods>& methods, real scalefac) {
+	for(const int64_t& i : range(methods.size())) {
+		methods[i].sRegret *= scalefac;
+	}
+}
+
 /*Donald Knuth's "The Art of Computer Programming, Volume 2: Seminumerical Algorithms", section 4.2.2
 describes how to compute mean and standard deviation using a recurrence relation, like this:
 M(1) = x(1),   M(k) = M(k-1) + (x(k) - M(k-1)) / k
@@ -1020,6 +1076,18 @@ void WelfordUpdateMeanSD(real NewDatum, int *Count, real *M, real *S){
   *M += (NewDatum - OldMean)/(*Count);
   *S += (NewDatum - OldMean)*(NewDatum - *M);
   return;
+}
+
+void WelfordUpdateMeanSD(real newDatum, oneVotingMethod& theMethod) {
+	real& meanRegret = theMethod.meanRegret;
+	uint& regCount = theMethod.regCount;
+	real& sRegret = theMethod.sRegret;
+	real existingMean = meanRegret;
+
+	regCount++;
+	meanRegret += (newDatum - existingMean)/regCount;
+	sRegret += (newDatum - existingMean)*(newDatum - meanRegret);
+	return;
 }
 
 /*	DistanceSquared(N, a, b):	returns the sum of the square of the differences
@@ -1133,6 +1201,37 @@ void RealPermShellSortUp(uint N, int Perm[], const real Key[])
 	assert(((sortedTrend == 0) || (sortedTrend == 1)));
 
 }
+
+/*	RealPermShellSortUp(Perm, methods)	rearranges Perm[0..N-1],
+ *						where 'N' is the number
+ *						of entries in 'methods',
+ *						so methods[Perm[0..N-1]].meanRegret
+ *						is in increasing order
+ *	Perm:					an array to permute
+ *	methods:				a set of voting methods
+ */
+void RealPermShellSortUp(int Perm[], const betterArray<oneVotingMethod, NumMethods>& methods)
+{
+	int h,k;
+	int64_t j;
+	int x;
+	int sortedTrend;
+	const range& theRange = methods.size();
+
+	for(k=0; (h=ShellIncs[k])>0; k++) {
+		for(const size_t& i : theRange) {
+			x=Perm[i];
+			for(j=i-h; j>=0 && methods[Perm[j]].meanRegret>methods[x].meanRegret; j -= h) {
+				Perm[j+h]=Perm[j];
+			}
+			Perm[j+h]=x;
+		}
+	}
+	sortedTrend = SortedKey(Perm, methods);
+	assert(((sortedTrend == 0) || (sortedTrend == 1)));
+
+}
+
 /*************************** VOTING METHODS:  ********
 all are subroutines with a common format - here is the format (which is all subsumed in
 the convenient data structure "edata"):
@@ -4577,32 +4676,12 @@ int GimmeWinner( edata *E, int WhichMeth )
 	return(w);
 }
 
-struct oneVotingMethod
-{
-	uint regCount;
-	real meanRegret;
-	real sRegret;
-	uint trueCondorcetAgreementCount;
-	uint CondorcetAgreementCount;
-	int Winner;
-};
-
-template <class T, size_t N>
-struct betterArray : std::array<T, N> {
-	void fillWithDefault() {
-		this->fill(T());
-	}
-};
-
 typedef struct dum2 {
   uint NumVoters;
   uint64_t NumCands;
   uint NumElections;
   real IgnoranceAmplitude;
   real Honfrac;
-  uint RegCount[NumMethods];
-  real MeanRegret[NumMethods];
-  real SRegret[NumMethods];
   uint AgreeCount[NumMethods*NumMethods];
    int Winners[NumMethods];
 	betterArray<oneVotingMethod, NumMethods> votingMethods;
@@ -4631,7 +4710,7 @@ int FindWinnersAndRegrets( edata *E,  brdata *B,  const bool Methods[] )
 			}
 			assert( BestWinner == B->Winners[0] );
 			assert(r>=0.0); /*can only fail if somebody overwrites array...*/
-			WelfordUpdateMeanSD(r, (int*)&(B->RegCount[m]), &(B->MeanRegret[m]), &(B->SRegret[m]));
+			WelfordUpdateMeanSD(r, B->votingMethods[m]);
 			for(j=0; j<m; j++) {
 				if(Methods[j] || j<NumCoreMethods) {
 					if( B->Winners[j] == w ) {
@@ -5310,9 +5389,6 @@ void ComputeBRs( brdata *B, const bool VotMethods[], int UtilMeth )
 	uint elnum;
 	edata E;
 
-	ZeroArray( NumMethods, B->MeanRegret );
-	ZeroArray( NumMethods, B->SRegret );
-	ZeroArray( NumMethods, (int*)B->RegCount );
 	ZeroArray( NumMethods*NumMethods, (int*)B->AgreeCount );
 	ZeroArray( NumMethods*NumMethods, (int*)B->AgreeCount );
 	B->votingMethods.fillWithDefault();
@@ -5326,7 +5402,7 @@ void ComputeBRs( brdata *B, const bool VotMethods[], int UtilMeth )
 	}
 	B->NumVoters =  E.NumVoters;
 	B->NumCands = E.NumCands;
-	ScaleVec(NumMethods, B->SRegret, 1.0/((B->NumElections - 1.0)*B->NumElections) ); /*StdDev/sqrt(#) = StdErr.*/
+	ScaleRegrets(B->votingMethods, 1.0/((B->NumElections - 1.0)*B->NumElections)); /*StdDev/sqrt(#) = StdErr.*/
 }
 
 void TestEDataStructs( const brdata *B )
@@ -6762,6 +6838,51 @@ template<class T> int SortedKey(uint64_t N, const int Arr[], const oneCandidate 
 	return overallTrend;
 }
 
+/*	SortedKey(Arr, Methods):	helps to verify 'Arr' is sorted
+ *					in a manner which is expected;
+ *					returns 1 if 'Key[Arr[i]]' is
+ *					in increasing order for all
+ *					'i' from 0 to 'N-1', -1 if
+ *					'Key[Arr[i]]' is in decreasing
+ *					order, 0 if 'Key[Arr[i]]' remains
+ *					the same, or 2 for any other
+ *					circumstance
+ *	Arr:		a set of values to have been sorted
+ *	methods:	a reference to a set of voting methods with
+ *			perceived mean regret values which are expected
+ *			to have guided the sorting
+ */
+int SortedKey(const int Arr[], const betterArray<oneVotingMethod, NumMethods>& methods)
+{
+	size_t size = methods.size();
+	const range& theRange = range(size, 1);
+	int overallTrend = Sign<real>( methods[Arr[size-1]].meanRegret-methods[Arr[0]].meanRegret );
+	for(int64_t a : theRange ) {
+		const real& currentValue = methods[Arr[a-1]].meanRegret;
+		const real& nextValue = methods[Arr[a]].meanRegret;
+		switch( overallTrend ) {
+			case 1:
+				if( nextValue < currentValue ) {
+					return 2;
+				}
+				break;
+			case 0:
+				if( nextValue != currentValue ) {
+					return 2;
+				}
+				break;
+			case -1:
+				if( nextValue > currentValue ) {
+					return 2;
+				}
+				break;
+			default:
+				ensure(false, 29);
+		}
+	}
+	return overallTrend;
+}
+
 /*	Test(name, direction, func1, func2, mean_str, meansq_str):
  *				runs a 'random' number generation
  *				test involving 'func1' and 'func2'
@@ -6962,14 +7083,14 @@ void PrintBROutput(const brdata &regretObject, uint &scenarios)
 	const bool normalizeRegrets = !!(BROutputMode&NORMALIZEREGRETS);
 	const bool normalizeRegretsByShentrup = !!(BROutputMode&SHENTRUPVSR);
 	const bool omitErrorBars = !!(BROutputMode&OMITERRORBARS);
-	const real meanRegretBase = regretObject.MeanRegret[2];
+	const real meanRegretBase = regretObject.votingMethods[2].meanRegret;
 	real currentMethodsMeanRegret;
 	if(allMethods) TopMeth = NumMethods;
 	if(top10Methods) TopMeth = 10;
 	for(i=0; i<TopMeth; i++) {
 		r=i;
 		if(BROutputMode&SORTMODE) r=MethPerm[i];
-		currentMethodsMeanRegret = regretObject.MeanRegret[r];
+		currentMethodsMeanRegret = regretObject.votingMethods[r].meanRegret;
 		if(htmlMode) printf("<tr><td>");
 		printf("%d=",r); PrintMethName(r,true);
 		if(htmlMode) printf("</td><td>");
@@ -6978,7 +7099,7 @@ void PrintBROutput(const brdata &regretObject, uint &scenarios)
 		else if(normalizeRegretsByShentrup) printf(" \t %8.5g", 100.0*(1.0 - currentMethodsMeanRegret/meanRegretBase));
 		else printf(" \t %8.5g", currentMethodsMeanRegret);
 		if(!omitErrorBars) {
-			const real currentMethodsSRegret = regretObject.SRegret[r];
+			const real currentMethodsSRegret = regretObject.votingMethods[r].sRegret;
 			if(htmlMode) printf("&plusmn;");
 			else if(texMode) printf("\\pm");
 			else printf("+-");
@@ -6997,7 +7118,7 @@ void PrintBROutput(const brdata &regretObject, uint &scenarios)
 	}/*end for(i)*/
 	for(i=0; i<NumMethods; i++) {  /*accumulate regret data for later summary*/
 		RegretData[scenarios*NumMethods + i] =
-			(regretObject.MeanRegret[i] + 0.00000000001*Rand01())/( meanRegretBase+0.00000000001 );
+			(regretObject.votingMethods[i].meanRegret + 0.00000000001*Rand01())/( meanRegretBase+0.00000000001 );
 	}
 	scenarios++;
 	if(scenarios > MaxScenarios) {
@@ -7009,7 +7130,7 @@ void PrintBROutput(const brdata &regretObject, uint &scenarios)
 	else if(texMode) printf(" \\\\ ");
 	printf("\n");
 	if( omitErrorBars && (allMethods || top10Methods) ) {
-		const real SRegretBase = regretObject.SRegret[2];
+		const real SRegretBase = regretObject.votingMethods[2].sRegret;
 		if(normalizeRegrets) reb = sqrt(SRegretBase)/meanRegretBase;
 		else if(normalizeRegretsByShentrup) reb = 100.0*sqrt(SRegretBase)/meanRegretBase;
 		else reb = sqrt(SRegretBase);
@@ -7127,7 +7248,7 @@ void PrintTheVotersBayesianRegret(brdata &regretObject, const PopulaceState_t &p
 			if(realWorld) {
 				MakeIdentityPerm(NumMethods, (uint*)MethPerm);
 				ComputeBRs(&regretObject, VotMethods, -1);
-				RealPermShellSortUp(NumMethods, MethPerm, regretObject.MeanRegret);
+				RealPermShellSortUp(MethPerm, regretObject.votingMethods);
 			}
 			printf("(Scenario#%d:", ScenarioCount);
 			if(not realWorld) {
@@ -7141,7 +7262,7 @@ void PrintTheVotersBayesianRegret(brdata &regretObject, const PopulaceState_t &p
 			if(not realWorld) {
 				ComputeBRs(&regretObject, VotMethods, UtilMeth);
 				MakeIdentityPerm(NumMethods, (uint*)MethPerm);
-				RealPermShellSortUp(NumMethods, MethPerm, regretObject.MeanRegret);
+				RealPermShellSortUp(MethPerm, regretObject.votingMethods);
 			}
 			PrintBROutput(regretObject, ScenarioCount);
 		} /*end for(prind)*/
