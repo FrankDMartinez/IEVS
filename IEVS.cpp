@@ -4597,7 +4597,6 @@ typedef struct dum2 {
   real MeanRegret[NumMethods];
   real SRegret[NumMethods];
   uint AgreeCount[NumMethods*NumMethods];
-  uint TrueCondAgreeCount[NumMethods];
   uint CondAgreeCount[NumMethods];
    int Winners[NumMethods];
 	std::array<oneVotingMethod, NumMethods> votingMethods;
@@ -4645,7 +4644,7 @@ int FindWinnersAndRegrets( edata *E,  brdata *B,  const bool Methods[] )
 					B->CondAgreeCount[m]++;
 				}
 				if(B->Winners[m]==TrueCW) {
-					B->TrueCondAgreeCount[m]++;
+					B->votingMethods[m].trueCondorcetAgreementCount++;
 				}
 			}
 		}
@@ -5311,7 +5310,7 @@ void ComputeBRs( brdata *B, const bool VotMethods[], int UtilMeth )
 	ZeroArray( NumMethods*NumMethods, (int*)B->AgreeCount );
 	ZeroArray( NumMethods*NumMethods, (int*)B->AgreeCount );
 	ZeroArray( NumMethods, (int*)B->CondAgreeCount );
-	ZeroArray( NumMethods, (int*)B->TrueCondAgreeCount );
+	B->votingMethods.fill(oneVotingMethod());
 	InitCoreElState();
 	EDataPrep(E, B);
 	for(elnum=0; elnum < B->NumElections; elnum++){
@@ -6986,7 +6985,7 @@ void PrintBROutput(const brdata &regretObject, uint &scenarios)
 		if(htmlMode) printf("</td><td>");
 		else if(texMode) printf(" & ");
 		if(BROutputMode&VBCONDMODE) printf(" \t  %7d", regretObject.CondAgreeCount[r]);
-		else printf(" \t  %7d", regretObject.TrueCondAgreeCount[r]);
+		else printf(" \t  %7d", regretObject.votingMethods[r].trueCondorcetAgreementCount);
 		if(htmlMode) printf("</td></tr>\n");
 		else if(texMode) printf(" \\\\ \n");
 		else printf("\n");
