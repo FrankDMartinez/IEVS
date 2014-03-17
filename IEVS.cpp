@@ -194,6 +194,13 @@ template< class T >
 		int ArgMaxArr(uint64_t N, const T Arr[], int RandPerm[]);
 template< class T >
 		int ArgMaxArr(uint64_t N, const oneCandidate (&Candidates)[MaxNumCands], int RandPerm[]);
+/*	fill(iteratableCollection):	fills 'iteratableCollection'
+ *					with default values
+ *	iteratableCollection:	the collection to fill
+ */
+template <typename T> void fill(T& iteratableCollection) {
+	std::fill(iteratableCollection.begin(), iteratableCollection.end(), typename T::value_type());
+}
 int flipACoin(int choice1, int choice2);
 template<class T>
 		void PermShellSortDown( uint64_t N, int Perm[], const T Key[] );
@@ -5391,7 +5398,7 @@ void ComputeBRs( brdata *B, const bool VotMethods[], int UtilMeth )
 
 	ZeroArray( NumMethods*NumMethods, (int*)B->AgreeCount );
 	ZeroArray( NumMethods*NumMethods, (int*)B->AgreeCount );
-	B->votingMethods.fillWithDefault();
+	fill(B->votingMethods);
 	InitCoreElState();
 	EDataPrep(E, B);
 	for(elnum=0; elnum < B->NumElections; elnum++){
