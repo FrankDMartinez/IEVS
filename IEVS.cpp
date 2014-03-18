@@ -1063,8 +1063,8 @@ public:
  *	scalefac:	the scaling factor
  */
 void ScaleRegrets( betterArray<oneVotingMethod, NumMethods>& methods, real scalefac) {
-	for(const int64_t& i : range(methods.size())) {
-		methods[i].sRegret *= scalefac;
+	for(oneVotingMethod& m : methods) {
+		m.sRegret *= scalefac;
 	}
 }
 
