@@ -173,6 +173,7 @@ struct oneCandidate;
 
 struct oneVotingMethod
 {
+	std::array<uint, NumMethods> agreementCountWithMethod;
 	uint regCount;
 	real meanRegret;
 	real sRegret;
@@ -4682,7 +4683,6 @@ typedef struct dum2 {
   uint NumElections;
   real IgnoranceAmplitude;
   real Honfrac;
-  uint AgreeCount[NumMethods*NumMethods];
    int Winners[NumMethods];
 	std::array<oneVotingMethod, NumMethods> votingMethods;
 } brdata;
@@ -4714,9 +4714,9 @@ int FindWinnersAndRegrets( edata *E,  brdata *B,  const bool Methods[] )
 			for(j=0; j<m; j++) {
 				if(Methods[j] || j<NumCoreMethods) {
 					if( B->Winners[j] == w ) {
-						B->AgreeCount[m*NumMethods+j]++;
-						B->AgreeCount[j*NumMethods+m]++;
-						assert( B->AgreeCount[j*NumMethods+m] == B->AgreeCount[m*NumMethods+j] );
+						B->votingMethods[m].agreementCountWithMethod[j]++;
+						B->votingMethods[j].agreementCountWithMethod[m]++;
+						ensure( B->votingMethods[m].agreementCountWithMethod[j] == B->votingMethods[j].agreementCountWithMethod[m], 31 );
 					}
 				}
 			}
@@ -5389,8 +5389,6 @@ void ComputeBRs( brdata *B, const bool VotMethods[], int UtilMeth )
 	uint elnum;
 	edata E;
 
-	ZeroArray( NumMethods*NumMethods, (int*)B->AgreeCount );
-	ZeroArray( NumMethods*NumMethods, (int*)B->AgreeCount );
 	fill(B->votingMethods);
 	InitCoreElState();
 	EDataPrep(E, B);
@@ -7147,7 +7145,7 @@ void PrintBROutput(const brdata &regretObject, uint &scenarios)
 		scalefac = 1.0;
 		if(regretObject.NumElections > 999) {
 			scalefac = 999.5/regretObject.NumElections;
-			printf("\nScaling AgreeCounts into 0-999.");
+			printf("\nScaling agreementCountWithMethod values into 0-999.");
 		}
 		printf("\nAGREE 0 ");
 		for(i=1; i<NumMethods; i++) { printf(" %3d ", i); }
@@ -7155,7 +7153,7 @@ void PrintBROutput(const brdata &regretObject, uint &scenarios)
 			printf("\n%2d ", i);
 			for(j=0; j<NumMethods; j++) {
 				if(j==i) printf("  *  ");
-				else printf(" %4d", (int)(0.4999 + regretObject.AgreeCount[i*NumMethods+j] * scalefac));
+				else printf(" %4d", (int)(0.4999 + regretObject.votingMethods[i].agreementCountWithMethod[j] * scalefac));
 			}
 		}
 		printf("\n");
