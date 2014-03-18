@@ -171,13 +171,6 @@ const uint TOP10METHS = 512U;
 uint BROutputMode=0;
 struct oneCandidate;
 
-template <class T, size_t N>
-struct betterArray : std::array<T, N> {
-	void fillWithDefault() {
-		this->fill(T());
-	}
-};
-
 struct oneVotingMethod
 {
 	uint regCount;
@@ -217,7 +210,7 @@ template<class T>
 		int SortedKey(uint64_t N, const int Arr[], const T Key[]);
 template<class T>
 		int SortedKey(uint64_t N, const int Arr[], const oneCandidate (&Candidates)[MaxNumCands]);
-int SortedKey(const int Arr[], const betterArray<oneVotingMethod, NumMethods>& methods);
+int SortedKey(const int Arr[], const std::array<oneVotingMethod, NumMethods>& methods);
 void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str);
 template< class T1 >
 		T1 TwiceMedian(uint N, T1 A[] );
@@ -1062,7 +1055,7 @@ public:
  *			scale
  *	scalefac:	the scaling factor
  */
-void ScaleRegrets( betterArray<oneVotingMethod, NumMethods>& methods, real scalefac) {
+void ScaleRegrets( std::array<oneVotingMethod, NumMethods>& methods, real scalefac) {
 	for(oneVotingMethod& m : methods) {
 		m.sRegret *= scalefac;
 	}
@@ -1217,7 +1210,7 @@ void RealPermShellSortUp(uint N, int Perm[], const real Key[])
  *	Perm:					an array to permute
  *	methods:				a set of voting methods
  */
-void RealPermShellSortUp(int Perm[], const betterArray<oneVotingMethod, NumMethods>& methods)
+void RealPermShellSortUp(int Perm[], const std::array<oneVotingMethod, NumMethods>& methods)
 {
 	int h,k;
 	int64_t j;
@@ -4691,7 +4684,7 @@ typedef struct dum2 {
   real Honfrac;
   uint AgreeCount[NumMethods*NumMethods];
    int Winners[NumMethods];
-	betterArray<oneVotingMethod, NumMethods> votingMethods;
+	std::array<oneVotingMethod, NumMethods> votingMethods;
 } brdata;
 
 void EDataPrep(edata &E, const brdata *B);
@@ -6859,7 +6852,7 @@ template<class T> int SortedKey(uint64_t N, const int Arr[], const oneCandidate 
  *			perceived mean regret values which are expected
  *			to have guided the sorting
  */
-int SortedKey(const int Arr[], const betterArray<oneVotingMethod, NumMethods>& methods)
+int SortedKey(const int Arr[], const std::array<oneVotingMethod, NumMethods>& methods)
 {
 	size_t size = methods.size();
 	const range& theRange = range(size, 1);
