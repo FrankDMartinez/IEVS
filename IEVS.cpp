@@ -1377,28 +1377,15 @@ struct relationshipBetweenCandidates
 	std::array<real,MaxNumCands> ArmytageMatrix;
 	std::array<int,MaxNumCands> ArmytageDefeatsMatrix;
 	std::array<real,MaxNumCands> ArmytageMarginsMatrix;
-	void zeroInitializeArrays() {
-		DefeatsMatrix.fill(0);
-		TrueDefeatsMatrix.fill(0);
-		ArmytageMatrix.fill(0);
-		ArmytageDefeatsMatrix.fill(0);
-		ArmytageMarginsMatrix.fill(0);
-	}
 };
 
 typedef struct dum1 {
   uint NumVoters;
   uint64_t NumCands;
 	oneVoter Voters[MaxNumVoters];
-	relationshipBetweenCandidates CandidatesVsOtherCandidates[MaxNumCands];
+	std::array<relationshipBetweenCandidates,MaxNumCands> CandidatesVsOtherCandidates;
   uint TopDownPrefs[MaxNumCands*MaxNumVoters];
   int MarginsMatrix[MaxNumCands*MaxNumCands];
-	void zeroInitializeArrays() {
-		int i;
-		for( i = 0; i < MaxNumCands; i++ ) {
-			CandidatesVsOtherCandidates[i].zeroInitializeArrays();
-		}
-	}
 } edata;
 
 int calculateForRunoff(const edata *E, int first, int second);
@@ -1480,7 +1467,7 @@ void BuildDefeatsMatrix(edata *E)
 		BaseballWt[j] = 10-j;
 	}
 	BaseballWt[0] = 14;
-	E->zeroInitializeArrays();
+	fill(E->CandidatesVsOtherCandidates);
 	for(k=0; k<(int)numberOfVoters; k++) {
 		const oneVoter& theVoter = allVoters[k];
 		const oneCandidate (&allCandidates)[MaxNumCands] = theVoter.Candidates;
