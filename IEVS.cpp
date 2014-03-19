@@ -4683,7 +4683,6 @@ typedef struct dum2 {
   uint NumElections;
   real IgnoranceAmplitude;
   real Honfrac;
-   int Winners[NumMethods];
 	std::array<oneVotingMethod, NumMethods> votingMethods;
 } brdata;
 
@@ -4701,19 +4700,19 @@ int FindWinnersAndRegrets( edata *E,  brdata *B,  const bool Methods[] )
 	for(m=0; m<NumMethods; m++) {
 		if(Methods[m] || m<NumCoreMethods) { /* always run Core Methods */
 			w = GimmeWinner(E, m);
-			B->Winners[m] = w;
+			B->votingMethods[m].Winner = w;
 			r = UtilitySum[BestWinner] - UtilitySum[w];
-			if(r<0.0 || BestWinner != B->Winners[0]) {
-				printf("FUCK! major failure, r=%g<0 u[best]=%g u[w]=%g u[w[0]]=%g\n", r,UtilitySum[BestWinner],UtilitySum[w],UtilitySum[B->Winners[0]]);
-				printf("w=%d m=%d BestWinner=%d numberOfCandidates=%lld B->Winners[0]=%d\n", w,m,BestWinner,E->NumCands,B->Winners[0]);
+			if(r<0.0 || BestWinner != B->votingMethods[0].Winner) {
+				printf("FUCK! major failure, r=%g<0 u[best]=%g u[w]=%g u[vm[0].w]=%g\n", r,UtilitySum[BestWinner],UtilitySum[w],UtilitySum[B->votingMethods[0].Winner]);
+				printf("w=%d m=%d BestWinner=%d numberOfCandidates=%lld B->votingMethods[0].Winner=%d\n", w,m,BestWinner,E->NumCands,B->votingMethods[0].Winner);
 				fflush(stdout);
 			}
-			assert( BestWinner == B->Winners[0] );
+			ensure( BestWinner == B->votingMethods[0].Winner, 32 );
 			assert(r>=0.0); /*can only fail if somebody overwrites array...*/
 			WelfordUpdateMeanSD(r, B->votingMethods[m]);
 			for(j=0; j<m; j++) {
 				if(Methods[j] || j<NumCoreMethods) {
-					if( B->Winners[j] == w ) {
+					if( B->votingMethods[j].Winner == w ) {
 						B->votingMethods[m].agreementCountWithMethod[j]++;
 						B->votingMethods[j].agreementCountWithMethod[m]++;
 						ensure( B->votingMethods[m].agreementCountWithMethod[j] == B->votingMethods[j].agreementCountWithMethod[m], 31 );
@@ -4725,10 +4724,10 @@ int FindWinnersAndRegrets( edata *E,  brdata *B,  const bool Methods[] )
 	if(CondorcetWinner >= 0) {
 		for(m=0; m<NumMethods; m++) {
 			if(Methods[m] || m<NumCoreMethods) {
-				if(B->Winners[m]==CondorcetWinner) {
+				if(B->votingMethods[m].Winner==CondorcetWinner) {
 					B->votingMethods[m].CondorcetAgreementCount++;
 				}
-				if(B->Winners[m]==TrueCW) {
+				if(B->votingMethods[m].Winner==TrueCW) {
 					B->votingMethods[m].trueCondorcetAgreementCount++;
 				}
 			}
