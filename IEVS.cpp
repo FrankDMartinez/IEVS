@@ -1377,6 +1377,7 @@ struct relationshipBetweenCandidates
 	std::array<real,MaxNumCands> ArmytageMatrix;
 	std::array<int,MaxNumCands> ArmytageDefeatsMatrix;
 	std::array<real,MaxNumCands> ArmytageMarginsMatrix;
+	std::array<int,MaxNumCands> margins;
 };
 
 typedef struct dum1 {
@@ -1384,7 +1385,6 @@ typedef struct dum1 {
   uint64_t NumCands;
 	oneVoter Voters[MaxNumVoters];
 	std::array<relationshipBetweenCandidates,MaxNumCands> CandidatesVsOtherCandidates;
-  int MarginsMatrix[MaxNumCands*MaxNumCands];
 } edata;
 
 int calculateForRunoff(const edata *E, int first, int second);
@@ -1526,8 +1526,8 @@ void BuildDefeatsMatrix(edata *E)
 			}
 			y = iDefeatsJ;
 			y -= jDefeatsI;
-			E->MarginsMatrix[i*numberOfCandidates + j] = y;
-			assert(i!=j || E->MarginsMatrix[i*numberOfCandidates + j] == 0);
+			relationshipsOfI.margins[j] = y;
+			assert(i!=j || relationshipsOfI.margins[j] == 0);
 			if(y > 0) {
 				WinCount[i]++;
 			}
@@ -1550,9 +1550,10 @@ void BuildDefeatsMatrix(edata *E)
 	}
 	/* find who-you-beat sets: */
 	for(i=0; i<numberOfCandidates; i++) {
+		const relationshipBetweenCandidates& relationshipsOfI = E->CandidatesVsOtherCandidates[i];
 		x = 0;
 		for(j=0; j<numberOfCandidates; j++) {
-			if( E->MarginsMatrix[i*numberOfCandidates + j] > 0 ) {
+			if( relationshipsOfI.margins[j] > 0 ) {
 				x |= (1U<<j);
 			}
 		}
@@ -1788,7 +1789,7 @@ EMETH PlurIR(edata *E    /* PlurIR=plur+immediate runoff (give ranking as vote) 
 		Top2Runoff(E);
 	}
 	assert(PSecond>=0);
-	i = E->MarginsMatrix[ PlurWinner*E->NumCands + PSecond ];
+	i = E->CandidatesVsOtherCandidates[PlurWinner].margins[PSecond];
 	if(i>0) {
 		return(PlurWinner);
 	}
@@ -1805,13 +1806,15 @@ EMETH Borda(edata *E  /* Borda: weighted positional with weights N-1, N-2, ..., 
 { /* side effects: BordaVoteCount[], BordaWinner */
 	int i,j,t;
 	const uint64_t& numberOfCandidates = E->NumCands;
+	const std::array<relationshipBetweenCandidates, MaxNumCands>& allCandidates = E->CandidatesVsOtherCandidates;
 	if(CopeWinOnlyWinner<0) {
 		BuildDefeatsMatrix(E);
 	}
 	for(i=0; i<numberOfCandidates; i++) {
+		const relationshipBetweenCandidates& relationshipsOfI = allCandidates[i];
 		t=0;
 		for(j=0; j<numberOfCandidates; j++) {
-			t += E->MarginsMatrix[i*numberOfCandidates + j];
+			t += relationshipsOfI.margins[j];
 		}
 		BordaVoteCount[i] = t;
 	}
@@ -1895,7 +1898,7 @@ EMETH NansonBaldwin(edata *E  /* repeatedly eliminate Borda loser */)
 		Eliminated[BordaLoser] = true;
 		for(i=0; i<numberOfCandidates; i++) {
 			if(!Eliminated[i]) {
-				NansonVoteCount[i] -= E->MarginsMatrix[i*numberOfCandidates + BordaLoser];
+				NansonVoteCount[i] -= E->CandidatesVsOtherCandidates[i].margins[BordaLoser];
 			}
 		}
 	} /* end of for(rnd) */
@@ -1923,6 +1926,7 @@ EMETH Rouse(edata *E  /*like Nanson-Baldwin but with an extra level of recursion
 	bool rRmark[MaxNumCands];
 	int i,j,k,m,r,highestb,bordsum, maxb, winner;
 	const uint64_t& numberOfCandidates = E->NumCands;
+	const std::array<relationshipBetweenCandidates, MaxNumCands>& allRelationships = E->CandidatesVsOtherCandidates;
 	if(CopeWinOnlyWinner<0) {
 		BuildDefeatsMatrix(E);
 	}
@@ -1935,10 +1939,11 @@ EMETH Rouse(edata *E  /*like Nanson-Baldwin but with an extra level of recursion
 			for(i=(int)numberOfCandidates-1; i>=0; i--) {
 				r = RandCandPerm[i];
 				if(rRmark[r] && Rmark[r]) {
+					const relationshipBetweenCandidates& relationshipsOfR = allRelationships[r];
 					bordsum = 0;
 					for(j=0; j<numberOfCandidates; j++) {
 						if(Rmark[j] && rRmark[j]) {
-							bordsum += E->MarginsMatrix[r*numberOfCandidates +j];
+							bordsum += relationshipsOfR.margins[j];
 						}
 					}
 					if(maxb < bordsum) { maxb = bordsum;  highestb = r; }
@@ -1987,6 +1992,7 @@ EMETH IterCopeland( const edata *E  /*iterate Copeland on tied-winner set from p
 	uint64_t x;
 	int mxs;
 	const uint64_t& numberOfCandidates = E->NumCands;
+	const std::array<relationshipBetweenCandidates, MaxNumCands>& allRelationships = E->CandidatesVsOtherCandidates;
 	assert(numberOfCandidates >= 2);
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner >= 0) return CondorcetWinner;
@@ -2006,10 +2012,11 @@ EMETH IterCopeland( const edata *E  /*iterate Copeland on tied-winner set from p
 		for(i=(int)numberOfCandidates-1; i>=0; i--) {
 			r = RandCandPerm[i];
 			if(summ[r] >= mxs) {
+				const relationshipBetweenCandidates& relationshipsOfR = allRelationships[r];
 				x = r*numberOfCandidates;
 				for(j=0; j<numberOfCandidates; j++) {
 					if((j!=r) && (summ[j]>=mxs)) {
-						summ[r] += 1 + Sign<int>(E->MarginsMatrix[x+j]);
+						summ[r] += 1 + Sign<int>(relationshipsOfR.margins[j]);
 					}
 				}
 				if(summ[r] >= maxc) {
@@ -2089,6 +2096,7 @@ EMETH CondorcetLR(edata *E   /* candidate with least sum-of-pairwise-defeat-marg
 	uint SumOfDefeatMargins[MaxNumCands]={0};
 	int i,j,t,winner;
 	const uint64_t& numberOfCandidates = E->NumCands;
+	const std::array<relationshipBetweenCandidates, MaxNumCands>& allRelationships = E->CandidatesVsOtherCandidates;
 	if(CopeWinOnlyWinner<0) {
 		BuildDefeatsMatrix(E);
 	}
@@ -2098,7 +2106,7 @@ EMETH CondorcetLR(edata *E   /* candidate with least sum-of-pairwise-defeat-marg
 	for(i=0; i<numberOfCandidates; i++) {
 		t = 0;
 		for(j=0; j<numberOfCandidates; j++) {
-			t += PosInt( E->MarginsMatrix[j*numberOfCandidates+i] );
+			t += PosInt( allRelationships[j].margins[i] );
 		}
 		SumOfDefeatMargins[i] = t;
 	}
@@ -2214,6 +2222,7 @@ EMETH SimpsonKramer(edata *E  /* candidate with mildest worst-defeat wins */)
 	int WorstDefeatMargin[MaxNumCands]={0};
 	int i,r,x,t,j,winner;
 	const uint64_t& numberOfCandidates = E->NumCands;
+	const std::array<relationshipBetweenCandidates, MaxNumCands>& allRelationships = E->CandidatesVsOtherCandidates;
 	if(CopeWinOnlyWinner<0) {
 		BuildDefeatsMatrix(E);
 	}
@@ -2225,7 +2234,7 @@ EMETH SimpsonKramer(edata *E  /* candidate with mildest worst-defeat wins */)
 		RandomlyPermute( numberOfCandidates, RandCandPerm );
 		for(j=(int)numberOfCandidates-1; j>=0; j--) {
 			r = RandCandPerm[j];
-			x = E->MarginsMatrix[r*numberOfCandidates+i];
+			x = allRelationships[r].margins[i];
 			if(x>t) {
 				t=x;
 			}
@@ -2247,6 +2256,7 @@ EMETH RaynaudElim(edata *E  /* repeatedly eliminate canddt who suffered the wors
 	int RayBeater[MaxNumCands]={0};
 	int i, j, x, t, RayLoser, rnd, maxc, r, beater;
 	const uint64_t& numberOfCandidates = E->NumCands;
+	const std::array<relationshipBetweenCandidates, MaxNumCands>& allRelationships = E->CandidatesVsOtherCandidates;
 	if(CopeWinOnlyWinner<0) {
 		BuildDefeatsMatrix(E);
 	}
@@ -2258,7 +2268,7 @@ EMETH RaynaudElim(edata *E  /* repeatedly eliminate canddt who suffered the wors
 		RandomlyPermute( numberOfCandidates, RandCandPerm );
 		for(j=(int)numberOfCandidates-1; j>=0; j--) {
 			r = RandCandPerm[j];
-			x = E->MarginsMatrix[r*numberOfCandidates+i];
+			x = allRelationships[r].margins[i];
 			if(x>t) { t=x; beater=r; }
 		}
 		assert(beater >= 0);
@@ -2289,7 +2299,7 @@ EMETH RaynaudElim(edata *E  /* repeatedly eliminate canddt who suffered the wors
 				for(j=(int)numberOfCandidates-1; j>=0; j--) {
 					r = RandCandPerm[j];
 					if(!Eliminated[r]) {
-						x = E->MarginsMatrix[r*numberOfCandidates+i];
+						x = allRelationships[r].margins[i];
 						if(x>t) { t=x; beater=r; }
 					}
 				}
@@ -2325,6 +2335,7 @@ EMETH ArrowRaynaud(edata *E  /* repeatedly eliminate canddt with smallest {large
 	int ARchump[MaxNumCands]={0};
 	int i, j, x, t, ARLoser, rnd, minc, r, chump;
 	const uint64_t& numberOfCandidates = E->NumCands;
+	const std::array<relationshipBetweenCandidates, MaxNumCands>& allRelationships = E->CandidatesVsOtherCandidates;
 	if(CopeWinOnlyWinner<0) {
 		BuildDefeatsMatrix(E);
 	}
@@ -2333,7 +2344,7 @@ EMETH ArrowRaynaud(edata *E  /* repeatedly eliminate canddt with smallest {large
 		RandomlyPermute( numberOfCandidates, RandCandPerm );
 		for(j=(int)numberOfCandidates-1; j>=0; j--) {
 			r = RandCandPerm[j];
-			x = E->MarginsMatrix[i*numberOfCandidates + r];
+			x = allRelationships[i].margins[r];
 			if(x>t) { t=x; chump=r; }
 		}
 		assert(chump >= 0);
@@ -2363,7 +2374,7 @@ EMETH ArrowRaynaud(edata *E  /* repeatedly eliminate canddt with smallest {large
 				for(j=(int)numberOfCandidates-1; j>=0; j--) {
 					r = RandCandPerm[j];
 					if(!Eliminated[r]) {
-						x = E->MarginsMatrix[i*numberOfCandidates+r];
+						x = allRelationships[i].margins[r];
 						if(x>t) {
 							t=x;
 							chump=r;
@@ -2446,13 +2457,14 @@ EMETH SchulzeBeatpaths(edata *E  /* winner = X so BeatPathStrength over rivals Y
 	int BeatPathStrength[MaxNumCands*MaxNumCands]={0};
 	int i,j,k,minc,winner;
 	const uint64_t& numberOfCandidates = E->NumCands;
+	const std::array<relationshipBetweenCandidates, MaxNumCands>& allRelationships = E->CandidatesVsOtherCandidates;
 	if(CopeWinOnlyWinner<0) {
 		BuildDefeatsMatrix(E);
 	}
 	for(i=0; i<numberOfCandidates; i++) {
 		for(j=0; j<numberOfCandidates; j++) {
 			if(i != j) {
-				BeatPathStrength[i*numberOfCandidates +j] = E->MarginsMatrix[i*numberOfCandidates +j];
+				BeatPathStrength[i*numberOfCandidates +j] = allRelationships[i].margins[j];
 			}
 		}
 	}
@@ -2511,6 +2523,21 @@ void beatDFS( int x, int diff, bool Set[], int Mat[], uint64_t N )
 	}
 }
 
+void beatDFS( const int& x, const int& diff, bool Set[], const std::array<relationshipBetweenCandidates, MaxNumCands>& relationships, uint64_t N )
+{
+	int i;
+	for(i=(int)N-1; i>=0; i--) {
+		if(i!=x) {
+			if( relationships[i].margins[x]>=diff ) {
+				if( !Set[i] ) {
+					Set[i] = true;
+					beatDFS( i, diff, Set, relationships, N );
+				}
+			}
+		}
+	}
+}
+
 /*	SmithSet(E):	returns the index of a randomly selected Member of the Smith set
  *			or -1 if an error occurs
  *	E:	the election data used to determine the Smith set
@@ -2523,7 +2550,7 @@ EMETH SmithSet(edata *E  /* Smith set = smallest nonempty set of canddts that pa
 	assert(CopeWinOnlyWinner>=0);
 	assert(CopeWinOnlyWinner < (int)numberOfCandidates);
 	SmithMembs[CopeWinOnlyWinner] = true;
-	beatDFS(CopeWinOnlyWinner, 1, SmithMembs, E->MarginsMatrix, numberOfCandidates);
+	beatDFS(CopeWinOnlyWinner, 1, SmithMembs, E->CandidatesVsOtherCandidates, numberOfCandidates);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(i=(int)numberOfCandidates-1; i>=0; i--) {
 		r = RandCandPerm[i];
@@ -2546,7 +2573,7 @@ EMETH SchwartzSet(edata *E  /* Schwartz set = smallest nonempty set of canddts u
 	assert(CopeWinOnlyWinner>=0);
 	assert(CopeWinOnlyWinner < (int)numberOfCandidates);
 	SchwartzMembs[CopeWinOnlyWinner] = true;
-	beatDFS(CopeWinOnlyWinner, 0, SchwartzMembs, E->MarginsMatrix, numberOfCandidates);
+	beatDFS(CopeWinOnlyWinner, 0, SchwartzMembs, E->CandidatesVsOtherCandidates, numberOfCandidates);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(i=(int)numberOfCandidates-1; i>=0; i--) {
 		r = RandCandPerm[i];
@@ -2568,6 +2595,7 @@ EMETH UncoveredSet(edata *E /*A "covers" B if A beats a strict superset of those
 { /* side effects: UncoveredSt[], CoverMatrix[] */
 	int A,B,i,r;
 	const uint64_t& numberOfCandidates = E->NumCands;
+	const std::array<relationshipBetweenCandidates, MaxNumCands>& allRelationships = E->CandidatesVsOtherCandidates;
 	if( numberOfCandidates > 4*sizeof(numberOfCandidates) ) {
 		printf("UncoveredSet: too many candidates %lld to use machine words(%d) to represent sets\n",
 			numberOfCandidates,
@@ -2606,15 +2634,15 @@ EMETH UncoveredSet(edata *E /*A "covers" B if A beats a strict superset of those
 		if( !(UncoveredSt[i]?SchwartzMembs[i]:true) ) {
 			printf("bozo! i=%d NumCands=%lld\n", i, numberOfCandidates);
 			printf("%d %d %d; %d %d %d; %d %d %d\n",
-				E->MarginsMatrix[0*numberOfCandidates + 0],
-				E->MarginsMatrix[0*numberOfCandidates + 1],
-				E->MarginsMatrix[0*numberOfCandidates + 2],
-				E->MarginsMatrix[1*numberOfCandidates + 0],
-				E->MarginsMatrix[1*numberOfCandidates + 1],
-				E->MarginsMatrix[1*numberOfCandidates + 2],
-				E->MarginsMatrix[2*numberOfCandidates + 0],
-				E->MarginsMatrix[2*numberOfCandidates + 1],
-				E->MarginsMatrix[2*numberOfCandidates + 2]  );
+				allRelationships[0].margins[0],
+				allRelationships[0].margins[1],
+				allRelationships[0].margins[2],
+				allRelationships[1].margins[0],
+				allRelationships[1].margins[1],
+				allRelationships[1].margins[2],
+				allRelationships[2].margins[0],
+				allRelationships[2].margins[1],
+				allRelationships[2].margins[2]);
 			printf("CopeWinOnlyWinner=%d\n",CopeWinOnlyWinner);
 			printf("Sc=%d%d%d\n", SchwartzMembs[0], SchwartzMembs[1], SchwartzMembs[2]);
 			printf("Un=%d%d%d\n", UncoveredSt[0], UncoveredSt[1], UncoveredSt[2]);
@@ -2628,10 +2656,10 @@ EMETH UncoveredSet(edata *E /*A "covers" B if A beats a strict superset of those
 	}
 	printf("yikes!\n");
 	printf("%d %d %d %d\n",
-		E->MarginsMatrix[0*numberOfCandidates + 0],
-		E->MarginsMatrix[1*numberOfCandidates + 0],
-		E->MarginsMatrix[0*numberOfCandidates + 1],
-		E->MarginsMatrix[1*numberOfCandidates + 1] );
+		allRelationships[0].margins[0],
+		allRelationships[1].margins[0],
+		allRelationships[0].margins[1],
+		allRelationships[1].margins[1]);
 	return(-1);
 }
 
@@ -2774,6 +2802,7 @@ EMETH SimmonsCond(edata *E  /* winner = X with least sum of top-rank-votes for r
 	int SimmVotesAgainst[MaxNumCands]={0};
 	int i,j,t,winner;
 	const uint64_t& numberOfCandidates = E->NumCands;
+	const std::array<relationshipBetweenCandidates, MaxNumCands>& allRelationships = E->CandidatesVsOtherCandidates;
 	if(CopeWinOnlyWinner<0) {
 		BuildDefeatsMatrix(E);
 	}
@@ -2792,7 +2821,7 @@ EMETH SimmonsCond(edata *E  /* winner = X with least sum of top-rank-votes for r
 	for(i=0; i<numberOfCandidates; i++) {
 		t=0;
 		for(j=0; j<numberOfCandidates; j++) {
-			if(E->MarginsMatrix[j*numberOfCandidates+i]>0) { /* j pairwise-beats i */
+			if(allRelationships[j].margins[i]>0) { /* j pairwise-beats i */
 				t += 3*PlurVoteCount[j] + (SchwartzMembs[j]?1:0) + (SmithMembs[j]?1:0);
 				/*Here I am adding 1/3 of a vote if in SmithSet, ditto SchwartzSet, to break Simmons ties*/
 			}
@@ -2821,6 +2850,7 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */)
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const uint& numberOfVoters = E->NumVoters;
 	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
+	const std::array<relationshipBetweenCandidates, MaxNumCands>& allRelationships = E->CandidatesVsOtherCandidates;
 	assert(numberOfCandidates <= MaxNumCands);
 	if((SmithIRVwinner<0) && (IRVTopLim==BIGINT) && (CopeWinOnlyWinner<0)) {
 		BuildDefeatsMatrix(E);
@@ -2832,7 +2862,7 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */)
 		if((SmithIRVwinner<0) && (IRVTopLim==BIGINT)) {
 			t=0;
 			for(j=0; j<numberOfCandidates; j++) {
-				if(E->MarginsMatrix[j*numberOfCandidates + i] > 0) {
+				if(allRelationships[j].margins[i] > 0) {
 					t++;
 				}
 			}
@@ -2873,9 +2903,10 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */)
 		ensure(RdLoser>=0, 12);
 		Eliminated[RdLoser] = true; /* eliminate RdLoser */
 		if((IRVTopLim==BIGINT) && (SmithIRVwinner < 0)) {
+			const relationshipBetweenCandidates& relationshipsOfRdLoser = allRelationships[RdLoser];
 			for(j=(int)numberOfCandidates-1; j>=0; j--) {
 				if(!Eliminated[j]) { /* update LossCount[j] */
-					t = E->MarginsMatrix[RdLoser*numberOfCandidates + j];
+					t = relationshipsOfRdLoser.margins[j];
 					if(t>0) { LossCount[j] --; }
 					if( LossCount[j] <= 0 ) { SmithIRVwinner = j; break; }
 				}
@@ -2946,6 +2977,7 @@ EMETH BTRIRV(const edata *E  /* Repeatedly eliminate either plur loser or 2nd-lo
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const uint& numberOfVoters = E->NumVoters;
 	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
+	const std::array<relationshipBetweenCandidates, MaxNumCands>& allRelationships = E->CandidatesVsOtherCandidates;
 	assert(numberOfCandidates <= MaxNumCands);
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner>=0) return(CondorcetWinner);
@@ -2990,7 +3022,7 @@ EMETH BTRIRV(const edata *E  /* Repeatedly eliminate either plur loser or 2nd-lo
 			}
 		}
 		assert(RdLoser2>=0);
-		if( E->MarginsMatrix[ RdLoser*numberOfCandidates + RdLoser2 ] > 0 ) {
+		if( allRelationships[RdLoser].margins[RdLoser2] > 0 ) {
 			RdLoser = RdLoser2;
 		}
 		ensure(RdLoser>=0, 13);
@@ -3681,15 +3713,14 @@ EMETH LoMedianRank(const edata *E    /* canddt with best median ranking wins */)
  */
 EMETH TidemanRankedPairs(const edata *E  /*lock in comparisons with largest margins not yielding cycle*/)
 {  /*side effects: Tpath[] is used as a changeable copy of MarginsMatrix.*/
-	int Tpath[MaxNumCands*MaxNumCands];
+	std::array<relationshipBetweenCandidates, MaxNumCands> Tpath = E->CandidatesVsOtherCandidates;
 	int i,r,j,winner;
 	const uint64_t& numberOfCandidates = E->NumCands;
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner>=0) return(CondorcetWinner);
 #endif
-	CopyArray(Square(numberOfCandidates), E->MarginsMatrix, Tpath);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
-	for(i=0; i < (int)numberOfCandidates; i++) { Tpath[i*numberOfCandidates +i]=BIGINT; }
+	for(i=0; i < (int)numberOfCandidates; i++) { Tpath[i].margins[i]=BIGINT; }
 	/* Whenever a victory
 	 * is locked in, the appropriate Tpath[] cell is set to BIGINT.
 	 * pi,pj are used with randperm to give precedence to victories higher
@@ -3702,10 +3733,10 @@ EMETH TidemanRankedPairs(const edata *E  /*lock in comparisons with largest marg
 			oi=RandCandPerm[pi];
 			for(pj=pi+1; pj < (int)numberOfCandidates; pj++) {
 				oj=RandCandPerm[pj];
-				if((Tpath[oi*numberOfCandidates +oj]!=BIGINT)
-					&& (Tpath[oj*numberOfCandidates +oi]!=BIGINT)) {/*not locked-out*/
-						if(Tpath[oi*numberOfCandidates +oj]>maxp) { maxp=Tpath[oi*numberOfCandidates +oj]; i=oi; j=oj; }
-						if(Tpath[oj*numberOfCandidates +oi]>maxp) { maxp=Tpath[oj*numberOfCandidates +oi]; i=oj; j=oi; }
+				if((Tpath[oi].margins[oj]!=BIGINT)
+					&& (Tpath[oj].margins[oi]!=BIGINT)) {/*not locked-out*/
+						if(Tpath[oi].margins[oj]>maxp) { maxp=Tpath[oi].margins[oj]; i=oi; j=oj; }
+						if(Tpath[oj].margins[oi]>maxp) { maxp=Tpath[oj].margins[oi]; i=oj; j=oi; }
 				}
 			}
 		}
@@ -3718,9 +3749,10 @@ EMETH TidemanRankedPairs(const edata *E  /*lock in comparisons with largest marg
 		***********************/
 		/*lock in the pair and clobber future no-good pairs:*/
 		for(oi=0; oi < (int)numberOfCandidates; oi++) {
+			relationshipBetweenCandidates& relationshipsOfOI = Tpath[oi];
 			for(oj=0; oj < (int)numberOfCandidates; oj++) {
-				if((Tpath[oi*numberOfCandidates +i]==BIGINT) && (Tpath[j*numberOfCandidates +oj]==BIGINT)) {
-					Tpath[oi*numberOfCandidates +oj]=BIGINT;
+				if((relationshipsOfOI.margins[i]==BIGINT) && (Tpath[j].margins[oj]==BIGINT)) {
+					relationshipsOfOI.margins[oj]=BIGINT;
 				}
 			}
 		}
@@ -3734,7 +3766,7 @@ EMETH TidemanRankedPairs(const edata *E  /*lock in comparisons with largest marg
 	for(i=0; i < (int)numberOfCandidates; i++) {
 		r = RandCandPerm[i];
 		for(j=0; j < (int)numberOfCandidates; j++) {
-			if(Tpath[r*numberOfCandidates +j] != BIGINT) {
+			if(Tpath[r].margins[j] != BIGINT) {
 				break;
 			}
 		}
@@ -3753,6 +3785,7 @@ EMETH HeitzigRiver(const edata *E /*http://lists.electorama.com/pipermail/electi
 	uint64_t z;
 	int i,j,k,pp,oldroot,newroot,maxc;
 	const uint64_t& numberOfCandidates = E->NumCands;
+	const std::array<relationshipBetweenCandidates, MaxNumCands>& allRelationships = E->CandidatesVsOtherCandidates;
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner>=0) return(CondorcetWinner);
 #endif
@@ -3762,8 +3795,8 @@ EMETH HeitzigRiver(const edata *E /*http://lists.electorama.com/pipermail/electi
 		RandomlyPermute( numberOfCandidates, RandCandPerm );
 		for(j=0; j < (int)numberOfCandidates; j++) {
 			r = RandCandPerm[j];
-			if(r!=i && E->MarginsMatrix[r*numberOfCandidates +i]>maxc) {
-				maxc = E->MarginsMatrix[r*numberOfCandidates +i];
+			if(r!=i && allRelationships[r].margins[i]>maxc) {
+				maxc = allRelationships[r].margins[i];
 				pp = r;
 			}
 		}
@@ -3780,8 +3813,8 @@ EMETH HeitzigRiver(const edata *E /*http://lists.electorama.com/pipermail/electi
 			r = RandCandPerm[i];
 			if(Hpar[r]==r) { /* tree root */
 				pp = Hpotpar[r];
-				if(maxc < E->MarginsMatrix[pp*numberOfCandidates +r]) {
-					maxc = E->MarginsMatrix[pp*numberOfCandidates +r];
+				if(maxc < allRelationships[pp].margins[r]) {
+					maxc = allRelationships[pp].margins[r];
 					k = r;
 				}
 			}
@@ -3807,8 +3840,8 @@ EMETH HeitzigRiver(const edata *E /*http://lists.electorama.com/pipermail/electi
 		maxc = -BIGINT; k = -1;
 		for(j=0; j < (int)numberOfCandidates; j++) {
 			r = RandCandPerm[j];
-			if(Hroot[r]!=newroot && E->MarginsMatrix[r*numberOfCandidates +newroot]>maxc) {
-				maxc = E->MarginsMatrix[r*numberOfCandidates +newroot];
+			if(Hroot[r]!=newroot && allRelationships[r].margins[newroot]>maxc) {
+				maxc = allRelationships[r].margins[newroot];
 				k = r;
 			}
 		}
@@ -3828,6 +3861,7 @@ EMETH DMC(edata *E  /* eliminate least-approved candidate until unbeaten winner 
 { /* side effects: LossCount[] */
 	int i,j,t;
 	const uint64_t& numberOfCandidates = E->NumCands;
+	const std::array<relationshipBetweenCandidates, MaxNumCands>& allRelationships = E->CandidatesVsOtherCandidates;
 	if(CopeWinOnlyWinner<0) {
 		BuildDefeatsMatrix(E);
 	}
@@ -3837,17 +3871,17 @@ EMETH DMC(edata *E  /* eliminate least-approved candidate until unbeaten winner 
 	for(i=0; i<numberOfCandidates; i++) {
 		t=0;
 		for(j=0; j<numberOfCandidates; j++) {
-			if(E->MarginsMatrix[j*numberOfCandidates + i]>0){ t++; }
+			if(allRelationships[j].margins[i]>0){ t++; }
 		}
 		LossCount[i] = t;
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	PermShellSortDown<int>(numberOfCandidates, (int*)RandCandPerm, (int*)ApprovalVoteCount);
 	for(i=(int)numberOfCandidates-1; i>0; i--) {
+		const relationshipBetweenCandidates& relationshipsOfI = allRelationships[i];
 		if( LossCount[i] <= 0 ){  return(i); /*winner*/ }
 		for(j=0; j<i; j++){ /* eliminate i and update Losscount[] */
-			t = E->MarginsMatrix[i*numberOfCandidates + j];
-			if(t>0){ LossCount[j] --; }
+			if(relationshipsOfI.margins[j]>0){ LossCount[j] --; }
 		}
 	}
 	return(i);
@@ -3862,6 +3896,21 @@ void BSbeatDFS( int x, int diff, bool Set[], bool OK[], int Mat[], uint64_t N )
 				if( !Set[i] ) {
 					Set[i] = true;
 					BSbeatDFS( i, diff, Set, OK, Mat, N );
+				}
+			}
+		}
+	}
+}
+
+void BSbeatDFS( const int& x, const int& diff, bool Set[], const bool (&OK)[MaxNumCands], const std::array<relationshipBetweenCandidates, MaxNumCands>& relationships, uint64_t N )
+{
+	int i;
+	for(i=0; i<N; i++) {
+		if(OK[i] && i!=x) {
+			if( relationships[i].margins[x]>=diff ) {
+				if( !Set[i] ) {
+					Set[i] = true;
+					BSbeatDFS( i, diff, Set, OK, relationships, N );
 				}
 			}
 		}
@@ -3907,6 +3956,7 @@ EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 	uint t,maxt;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const uint& numberOfVoters = E->NumVoters;
+	const std::array<relationshipBetweenCandidates, MaxNumCands>& allRelationships = E->CandidatesVsOtherCandidates;
 	if(CopeWinOnlyWinner<0) {
 		BuildDefeatsMatrix(E);
 	}
@@ -3926,9 +3976,10 @@ EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 	for(i=0; i<numberOfCandidates; i++) {
 		if(MajApproved[i]) {
 			bool haveAWinner = true;
+			const relationshipBetweenCandidates& relationshipsOfI = allRelationships[i];
 			for(j=0; j<numberOfCandidates; j++) {
 				if((j!=i) && MajApproved[j]) {
-					if( E->MarginsMatrix[i*numberOfCandidates + j] <= 0 ) {
+					if( relationshipsOfI.margins[j] <= 0 ) {
 						haveAWinner = false;
 						break;
 					}
@@ -3946,10 +3997,11 @@ EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 	CopeWinr = -1;
 	for(i=(int)numberOfCandidates-1; i>=0; i--) {
 		if(MajApproved[i]) {
+			const relationshipBetweenCandidates& relationshipsOfI = allRelationships[i];
 			t = 0;
 			for(j=0; j<numberOfCandidates; j++) {
 				if((j!=i) && MajApproved[j]) {
-					if( E->MarginsMatrix[i*numberOfCandidates + j] > 0 ) { t++; }
+					if( relationshipsOfI.margins[j] > 0 ) { t++; }
 				}
 			}
 			if(t >= maxt) { maxt=t; CopeWinr=i; }
@@ -3960,7 +4012,7 @@ EMETH BramsSanverPrAV(edata *E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 	assert(MajApproved[CopeWinr]);
 	FillArray(numberOfCandidates, BSSmithMembs, false);
 	BSSmithMembs[CopeWinr] = true;
-	BSbeatDFS(CopeWinr, 1, BSSmithMembs, MajApproved, E->MarginsMatrix, numberOfCandidates);
+	BSbeatDFS(CopeWinr, 1, BSSmithMembs, MajApproved, E->CandidatesVsOtherCandidates, numberOfCandidates);
 	assert(BSSmithMembs[CopeWinr]);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	winner = -1;
