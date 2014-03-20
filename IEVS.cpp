@@ -1326,7 +1326,7 @@ uint AntiPlurVoteCount[MaxNumCands];
  int HeadFav[MaxNumCands];
  int WinCount[MaxNumCands];
  int DrawCt[MaxNumCands];
- int LossCount[MaxNumCands];
+int64_t LossCount[MaxNumCands];
 uint ApprovalVoteCount[MaxNumCands];
 real RangeVoteCount[MaxNumCands];
 real SumNormedRating[MaxNumCands];
