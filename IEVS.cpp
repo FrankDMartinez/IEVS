@@ -2219,10 +2219,11 @@ EMETH KeenerEig(edata *E  /* winning canddt has max Frobenius eigenvector entry 
 
 EMETH SimpsonKramer(edata *E  /* candidate with mildest worst-defeat wins */)
 {
-	int WorstDefeatMargin[MaxNumCands]={0};
+	int64_t WorstDefeatMargin[MaxNumCands]={0};
 	int i,r;
 	int64_t x;
-	int t,j,winner;
+	int64_t t;
+	int j,winner;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const std::array<relationshipBetweenCandidates, MaxNumCands>& allRelationships = E->CandidatesVsOtherCandidates;
 	if(CopeWinOnlyWinner<0) {
@@ -2243,7 +2244,7 @@ EMETH SimpsonKramer(edata *E  /* candidate with mildest worst-defeat wins */)
 		}
 		WorstDefeatMargin[i] = t;
 	}
-	winner = ArgMinArr<int>(numberOfCandidates, WorstDefeatMargin, (int*)RandCandPerm);
+	winner = ArgMinArr<int64_t>(numberOfCandidates, WorstDefeatMargin, (int*)RandCandPerm);
 	return winner;
 }
 
@@ -2254,11 +2255,14 @@ EMETH SimpsonKramer(edata *E  /* candidate with mildest worst-defeat wins */)
  */
 EMETH RaynaudElim(edata *E  /* repeatedly eliminate canddt who suffered the worst-margin-defeat */)
 { /* side effects: Eliminated[] */
-	int RayDefeatMargin[MaxNumCands]={0};
+	int64_t RayDefeatMargin[MaxNumCands]={0};
 	int RayBeater[MaxNumCands]={0};
 	int i, j;
 	int64_t x;
-	int t, RayLoser, rnd, maxc, r, beater;
+	int64_t t;
+	int RayLoser, rnd;
+	int64_t maxc;
+	int r, beater;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const std::array<relationshipBetweenCandidates, MaxNumCands>& allRelationships = E->CandidatesVsOtherCandidates;
 	if(CopeWinOnlyWinner<0) {
@@ -2335,11 +2339,14 @@ EMETH RaynaudElim(edata *E  /* repeatedly eliminate canddt who suffered the wors
  */
 EMETH ArrowRaynaud(edata *E  /* repeatedly eliminate canddt with smallest {largest margin of victory, which is <=0 if never won} */)
 { /* side effects: Eliminated[], ArrowRaynaud can eliminate a Condorcet Winner in round #1. */
-	int ARVictMargin[MaxNumCands]={0};
+	int64_t ARVictMargin[MaxNumCands]={0};
 	int ARchump[MaxNumCands]={0};
 	int i, j;
 	int64_t x;
-	int t, ARLoser, rnd, minc, r, chump;
+	int64_t t;
+	int ARLoser, rnd;
+	int64_t minc;
+	int r, chump;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const std::array<relationshipBetweenCandidates, MaxNumCands>& allRelationships = E->CandidatesVsOtherCandidates;
 	if(CopeWinOnlyWinner<0) {
@@ -3687,8 +3694,8 @@ EMETH TopMedianRating(const edata *E    /* canddt with highest median Score wins
 
 EMETH LoMedianRank(const edata *E    /* canddt with best median ranking wins */)
 {
-	int MedianRank[MaxNumCands]={0};
-	int CRankVec[MaxNumVoters];
+	int64_t MedianRank[MaxNumCands]={0};
+	int64_t CRankVec[MaxNumVoters];
 	int i,j;
 	int winner;
 	const uint64_t& numberOfCandidates = E->NumCands;
@@ -3697,11 +3704,11 @@ EMETH LoMedianRank(const edata *E    /* canddt with best median ranking wins */)
 		for(i=0; i<numberOfVoters; i++) {
 			CRankVec[i] = E->Voters[i].Candidates[j].ranking;
 		}
-		MedianRank[j] = TwiceMedian<int>(numberOfVoters, CRankVec);
+		MedianRank[j] = TwiceMedian<int64_t>(numberOfVoters, CRankVec);
 		assert( MedianRank[j] >= 0 );
 		assert( MedianRank[j] <= 2*((int)numberOfCandidates - 1) );
 	}
-	winner = ArgMinArr<int>(numberOfCandidates, MedianRank, (int*)RandCandPerm);
+	winner = ArgMinArr<int64_t>(numberOfCandidates, MedianRank, (int*)RandCandPerm);
 	return(winner);
 }
 
