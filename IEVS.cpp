@@ -1384,7 +1384,6 @@ typedef struct dum1 {
   uint64_t NumCands;
 	oneVoter Voters[MaxNumVoters];
 	std::array<relationshipBetweenCandidates,MaxNumCands> CandidatesVsOtherCandidates;
-  uint TopDownPrefs[MaxNumCands*MaxNumVoters];
   int MarginsMatrix[MaxNumCands*MaxNumCands];
 } edata;
 
@@ -1424,7 +1423,9 @@ void PrintEdata(FILE *F, const edata *E)
 		for(j=0; j < numberOfCandidates; j++){  fprintf(F, "%2llu", allCandidates[j].ranking);  }
 		fprintf(F, "\n");
 		fprintf(F, "TopDown: ");
-		for(j=0; j < numberOfCandidates; j++){  fprintf(F, "%2d", E->TopDownPrefs[v*numberOfCandidates + j]);  }
+		for(j=0; j < numberOfCandidates; j++) {
+			fprintf(F, "%2d", theVoter.topDownPrefs[j]);
+		}
 		fprintf(F, "\n");
 		fprintf(F, "Approve: ");
 		for(j=0; j < numberOfCandidates; j++) {
@@ -1668,9 +1669,10 @@ EMETH Plurality(const edata *E   /* canddt with most top-rank votes wins */)
 	int i;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const uint& numberOfVoters = E->NumVoters;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	ZeroArray( numberOfCandidates, (int*)PlurVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++){
-		PlurVoteCount[ E->TopDownPrefs[i*numberOfCandidates+0] ]++;
+		PlurVoteCount[ allVoters[i].topDownPrefs[0] ]++;
 	}
 	PlurWinner = ArgMaxArr<int>(numberOfCandidates, (int*)PlurVoteCount, (int*)RandCandPerm);
 	return PlurWinner;
@@ -1681,9 +1683,10 @@ EMETH AntiPlurality(const edata *E   /* canddt with fewest bottom-rank votes win
 	int i;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const uint& numberOfVoters = E->NumVoters;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	ZeroArray( numberOfCandidates, (int*)AntiPlurVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++){
-		AntiPlurVoteCount[ E->TopDownPrefs[i*numberOfCandidates + numberOfCandidates - 1] ]++;
+		AntiPlurVoteCount[ allVoters[i].topDownPrefs[numberOfCandidates-1] ]++;
 	}
 	AntiPlurWinner = ArgMinArr<int>(numberOfCandidates, (int*)AntiPlurVoteCount, (int*)RandCandPerm);
 	return AntiPlurWinner;
@@ -1696,10 +1699,11 @@ EMETH Dabagh(const edata *E   /* canddt with greatest Dabagh = 2*#top-rank-votes
 	int i, winner;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const uint& numberOfVoters = E->NumVoters;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	CopyArray( numberOfCandidates, (int*)PlurVoteCount, (int*)DabaghVoteCount );
 	ScaleVec( numberOfCandidates, (int*)DabaghVoteCount, 2 );
 	for(i=0; i<(int)numberOfVoters; i++) { /*add 2nd-pref votes with weight=1:*/
-		DabaghVoteCount[ E->TopDownPrefs[i*numberOfCandidates +1] ]++;
+		DabaghVoteCount[ allVoters[i].topDownPrefs[1] ]++;
 	}
 	winner = ArgMaxArr<int>(numberOfCandidates, (int*)DabaghVoteCount, (int*)RandCandPerm);
 	return winner;
@@ -1713,10 +1717,11 @@ EMETH VtForAgainst(const edata *E   /* canddt with greatest score = #votesFor - 
 	uint64_t last;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const uint& numberOfVoters = E->NumVoters;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	last = numberOfCandidates - 1;
 	CopyArray( numberOfCandidates, (int*)PlurVoteCount, VFAVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
-		VFAVoteCount[ (int)E->TopDownPrefs[i*numberOfCandidates + last] ]--;
+		VFAVoteCount[ allVoters[i].topDownPrefs[last] ]--;
 	}
 	winner = ArgMaxArr<int>(numberOfCandidates, VFAVoteCount, (int*)RandCandPerm);
 	return winner;
@@ -2045,15 +2050,15 @@ EMETH HeismanTrophy(const edata *E  /* Heisman: weighted positional with weights
 {
 	uint HeismanVoteCount[MaxNumCands];
 	int i,j;
-	uint64_t x;
 	int winner;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const uint& numberOfVoters = E->NumVoters;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	ZeroArray( numberOfCandidates, (int*)HeismanVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
-		x = i*numberOfCandidates;
+		const oneVoter& theVoter = allVoters[i];
 		for(j=0; j<std::min<typeof(numberOfCandidates)>(numberOfCandidates, 3); j++) {
-			HeismanVoteCount[ E->TopDownPrefs[x+j] ] += 3-j;
+			HeismanVoteCount[ theVoter.topDownPrefs[j] ] += 3-j;
 		}
 	}
 	winner = ArgMaxUIntArr( numberOfCandidates, HeismanVoteCount, (int*)RandCandPerm );
@@ -2064,15 +2069,15 @@ EMETH BaseballMVP(const edata *E  /* weighted positional with weights 14,9,8,7,6
 {
 	uint BaseballVoteCount[MaxNumCands];
 	int i,j;
-	uint64_t x;
 	int winner;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const uint& numberOfVoters = E->NumVoters;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	ZeroArray( numberOfCandidates, (int*)BaseballVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
-		x = i*numberOfCandidates;
+		const oneVoter& theVoter = allVoters[i];
 		for(j=0; j<std::min<typeof(numberOfCandidates)>( numberOfCandidates, 10); j++) {
-			BaseballVoteCount[ E->TopDownPrefs[x+j] ] += BaseballWt[j];
+			BaseballVoteCount[ theVoter.topDownPrefs[j] ] += BaseballWt[j];
 		}
 	}
 	winner = ArgMaxUIntArr( numberOfCandidates, BaseballVoteCount, (int*)RandCandPerm );
@@ -2645,11 +2650,13 @@ EMETH Bucklin(const edata *E   /* canddt with over half the voters ranking him i
 	int rnd,i,best,winner;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const uint& numberOfVoters = E->NumVoters;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	winner = -1;
 	ZeroArray( numberOfCandidates,  RdVoteCount );
 	for(rnd=0; rnd<(int)numberOfCandidates; rnd++) {
 		for(i=0; i<(int)numberOfVoters; i++) {
-			RdVoteCount[ E->TopDownPrefs[i*numberOfCandidates + rnd] ]++;
+			const oneVoter& theVoter = allVoters[i];
+			RdVoteCount[ theVoter.topDownPrefs[rnd] ]++;
 		}
 		winner = ArgMaxArr<int>(numberOfCandidates, RdVoteCount, (int*)RandCandPerm);
 		best = RdVoteCount[winner];
@@ -2813,6 +2820,7 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */)
 	int Iround,i,RdLoser,NextI,j,t,x,minc,r,stillthere,winner;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const uint& numberOfVoters = E->NumVoters;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	assert(numberOfCandidates <= MaxNumCands);
 	if((SmithIRVwinner<0) && (IRVTopLim==BIGINT) && (CopeWinOnlyWinner<0)) {
 		BuildDefeatsMatrix(E);
@@ -2841,7 +2849,8 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */)
 	}
 	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
 	for(i=0; i<numberOfVoters; i++) {
-		x = E->TopDownPrefs[i*numberOfCandidates+IFav[i]]; /* the initial favorite of voter i */
+		const oneVoter& theVoter = allVoters[i];
+		x = theVoter.topDownPrefs[IFav[i]]; /* the initial favorite of voter i */
 		assert(x >= 0);
 		assert(x < (int)numberOfCandidates);
 		RdVoteCount[ x ]++;
@@ -2873,23 +2882,25 @@ EMETH IRV(edata *E   /* instant runoff; repeatedly eliminate plurality loser */)
 			}
 		}
 		for(i=HeadFav[RdLoser]; i>=0; i=NextI) {/*Go thru linked list of voters with favorite=RdLoser, adjust:*/
-			j = i*(int)numberOfCandidates;
+			const oneVoter& theVoter = allVoters[i];
+			int& favorite = IFav[i];
 			NextI =  FavListNext[i];
-			assert(IFav[i] >= 0);
-			assert(IFav[i] < (int)numberOfCandidates);
-			assert( E->TopDownPrefs[ j+IFav[i] ] == RdLoser );
+			ensure(favorite >= 0, 42);
+			ensure(favorite < (int)numberOfCandidates, 43);
+			ensure( theVoter.topDownPrefs[ favorite ] == RdLoser, 34 );
 			do{
-				IFav[i]++; x = E->TopDownPrefs[j + IFav[i]];
-			}while( Eliminated[x] );
+				favorite++;
+				x = theVoter.topDownPrefs[favorite];
+			} while( Eliminated[x] );
 			/* x is new favorite of voter i (or ran out of favorites) */
-			assert( IFav[i] < (int)numberOfCandidates );
+			ensure( favorite < (int)numberOfCandidates, 44 );
 			assert(x >= 0);
 			assert(x < (int)numberOfCandidates);
 			/* update favorite-list: */
 			FavListNext[i] = HeadFav[x];
 			HeadFav[x] = i;
 			/* update vote count totals: */
-			if(IFav[i] < IRVTopLim) {	RdVoteCount[ x ]++;   }
+			if(favorite < IRVTopLim) {	RdVoteCount[ x ]++;   }
 		} /*end for(i)*/
 	}  /* end of for(Iround) */
 	stillthere = 0;
@@ -2934,6 +2945,7 @@ EMETH BTRIRV(const edata *E  /* Repeatedly eliminate either plur loser or 2nd-lo
 	int Iround,x,i,RdLoser,RdLoser2,NextI,j,minc,r;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const uint& numberOfVoters = E->NumVoters;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	assert(numberOfCandidates <= MaxNumCands);
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner>=0) return(CondorcetWinner);
@@ -2946,9 +2958,10 @@ EMETH BTRIRV(const edata *E  /* Repeatedly eliminate either plur loser or 2nd-lo
 	ZeroArray(numberOfVoters, IFav);
 	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
 	for(i=0; i<numberOfVoters; i++) {
-		assert(IFav[i] >= 0);
-		assert(IFav[i] < (int)numberOfCandidates);
-		x = E->TopDownPrefs[i*numberOfCandidates + IFav[i]]; /* the favorite of voter i */
+		const int& favorite = IFav[i];
+		ensure(favorite >= 0, 45);
+		ensure(favorite < (int)numberOfCandidates, 46);
+		x = E->Voters[i].topDownPrefs[favorite]; /* the favorite of voter i */
 		assert(x >= 0);
 		assert(x < (int)numberOfCandidates);
 		RdVoteCount[ x ]++;
@@ -2983,13 +2996,19 @@ EMETH BTRIRV(const edata *E  /* Repeatedly eliminate either plur loser or 2nd-lo
 		ensure(RdLoser>=0, 13);
 		Eliminated[RdLoser] = true; /* eliminate RdLoser */
 		for(i=HeadFav[RdLoser]; i>=0; i=NextI){ /* Go thru list of voters with favorite=RdLoser, adjust: */
+			int& favorite = IFav[i];
+			const oneVoter& theVoter = allVoters[i];
+			const uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
 			j = i*(int)numberOfCandidates;
-			assert( E->TopDownPrefs[j+IFav[i]] == RdLoser );
-			assert(IFav[i] >= 0);
-			assert(IFav[i] < (int)numberOfCandidates);
-			do{ IFav[i]++; x = E->TopDownPrefs[j + IFav[i]]; }while( Eliminated[x] );
+			ensure( preferences[favorite] == RdLoser, 35 );
+			ensure(favorite >= 0, 36);
+			ensure(favorite < (int)numberOfCandidates, 37);
+			do {
+				favorite++;
+				x = preferences[favorite];
+			} while( Eliminated[x] );
 			/* x is new favorite of voter i */
-			assert( IFav[i] < (int)numberOfCandidates );
+			ensure( favorite < (int)numberOfCandidates, 38 );
 			NextI =	FavListNext[i];
 			/* update favorite-list: */
 			FavListNext[i] = HeadFav[x];
@@ -3010,9 +3029,10 @@ EMETH BTRIRV(const edata *E  /* Repeatedly eliminate either plur loser or 2nd-lo
 
 EMETH Coombs(const edata *E /*repeatedly eliminate antiplurality loser (with most bottom-rank votes)*/
 ){ /*side effects: Eliminated[], IFav[], RdVoteCount[], FavListNext[], HeadFav[] */
-	int Iround,i,RdLoser,NextI,j,x,maxc,r;
+	int Iround,i,RdLoser,NextI,x,maxc,r;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const uint& numberOfVoters = E->NumVoters;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	assert(numberOfCandidates <= MaxNumCands);
 	for(i=0; i<numberOfCandidates; i++){
 		Eliminated[i] = false;
@@ -3028,9 +3048,10 @@ EMETH Coombs(const edata *E /*repeatedly eliminate antiplurality loser (with mos
 	/* FavListNext is "next" indices in linked list of voters with common current favorite; -1 terminated. */
 	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
 	for(i=0; i<numberOfVoters; i++) {
-		assert(IFav[i] >= 0);
-		assert(IFav[i] < (int)numberOfCandidates);
-		x = E->TopDownPrefs[i*numberOfCandidates + IFav[i]]; /* the initial most-hated of voter i */
+		const int& favorite = IFav[i];
+		ensure(favorite >= 0, 47);
+		ensure(favorite < (int)numberOfCandidates, 48);
+		x = allVoters[i].topDownPrefs[favorite]; /* the initial most-hated of voter i */
 		assert(x >= 0);
 		assert(x < (int)numberOfCandidates);
 		RdVoteCount[ x ]++; /*antiplurality voting*/
@@ -3056,13 +3077,18 @@ EMETH Coombs(const edata *E /*repeatedly eliminate antiplurality loser (with mos
 		ensure(RdLoser>=0, 14);
 		Eliminated[RdLoser] = true; /* eliminate RdLoser */
 		for(i=HeadFav[RdLoser]; i>=0; i=NextI){/*Go thru linked list of voters with favorite=RdLoser, adjust:*/
-			j = i*(int)numberOfCandidates;
-			assert( IFav[i]>=0 );
-			assert( IFav[i]<= (int)numberOfCandidates );
-			assert( E->TopDownPrefs[ j+IFav[i] ] == RdLoser );
-			do{ IFav[i]--; x = E->TopDownPrefs[j+IFav[i]]; }while( Eliminated[x] );
+			const oneVoter& theVoter = allVoters[i];
+			const uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
+			int& favorite = IFav[i];
+			ensure( favorite>=0, 39 );
+			ensure( favorite<= (int)numberOfCandidates, 40 );
+			ensure( preferences[favorite] == RdLoser, 49 );
+			do {
+				favorite--;
+				x = preferences[favorite];
+			} while( Eliminated[x] );
 			/* x is new favorite of voter i */
-			assert( IFav[i] >= 0 );
+			ensure( favorite >= 0, 41 );
 			NextI =	FavListNext[i];
 			/* update favorite-list: */
 			FavListNext[i] = HeadFav[x];
@@ -4203,6 +4229,7 @@ EMETH WoodallDAC(const edata *E  /*Woodall: Monotonocity of single-seat preferen
 	uint s, x, h, numsets;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const uint& numberOfVoters = E->NumVoters;
+	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	if( (numberOfCandidates) > (4*sizeof(numberOfCandidates)) ) {
 		printf("WoodallDAC: too many candidates %lld to use machine words(%d) to represent sets\n",
 			numberOfCandidates,
@@ -4212,10 +4239,11 @@ EMETH WoodallDAC(const edata *E  /*Woodall: Monotonocity of single-seat preferen
 	}
 	for(v=ARTINPRIME-1; v>=0; v--) { WoodHashCount[v] = 0; WoodHashSet[v] = 0; }
 	for(v=0; v<numberOfVoters; v++) {
+		const oneVoter& theVoter = allVoters[v];
 			s = 0;
 			offset = v*numberOfCandidates;
 			for(c=0; c < (int)numberOfCandidates; c++) {
-				s |= (1U<<(E->TopDownPrefs[offset+c]));
+				s |= (1U<<(theVoter.topDownPrefs[c]));
 				h = s%ARTINPRIME;
 				assert( !EmptySet(s) );
 				leave = false;
@@ -4776,17 +4804,18 @@ void HonestyStrat( edata *E, real honfrac )
 	for(v=numberOfVoters -1; v>=0; v--) {
 		oneVoter& theVoter = allVoters[v];
 		oneCandidate (&allCandidates)[MaxNumCands] = theVoter.Candidates;
+		uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
 		offset = v*numberOfCandidates;
 		if( Rand01() < honfrac ) { /*honest voter*/
-			MakeIdentityPerm( numberOfCandidates, E->TopDownPrefs+offset );
-			PermShellSortDown<real>( numberOfCandidates, (int*)E->TopDownPrefs+offset, allCandidates );
-			assert( IsPerm(numberOfCandidates, E->TopDownPrefs+offset) );
+			MakeIdentityPerm( numberOfCandidates, preferences );
+			PermShellSortDown<real>( numberOfCandidates, (int*)preferences, allCandidates );
+			ensure( IsPerm(numberOfCandidates, preferences), 33 );
 			MaxUtil = -HUGE;
 			MinUtil =  HUGE;
 			SumU = 0.0;
 			for(i=0; i<numberOfCandidates; i++) {
 				offi = offset+i;
-				allCandidates[E->TopDownPrefs[offi]].ranking = i;
+				allCandidates[preferences[i]].ranking = i;
 				ThisU = allCandidates[i].perceivedUtility;
 				if(MaxUtil < ThisU) {  MaxUtil = ThisU; }
 				if(MinUtil > ThisU) {  MinUtil = ThisU; }
@@ -4891,7 +4920,7 @@ void HonestyStrat( edata *E, real honfrac )
 		  			theCandidate.approve2 = false;
 				}
 				assert( theCandidate.ranking < numberOfCandidates );
-				E->TopDownPrefs[ offset + theCandidate.ranking ] = i;
+				preferences[theCandidate.ranking] = i;
 			}
 		}/*end if(...honfrac) else clause*/
 	}/*end for(v)*/
