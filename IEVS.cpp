@@ -1578,7 +1578,6 @@ void BuildDefeatsMatrix(edata *E)
 
 EMETH SociallyBest(const edata *E  /* greatest utility-sum winner */)
 { /* side effects: UtilitySum[], BestWinner */
-	uint64_t x;
 	int i,j;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const uint& numberOfVoters = E->NumVoters;
@@ -1587,7 +1586,6 @@ EMETH SociallyBest(const edata *E  /* greatest utility-sum winner */)
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
 		const oneCandidate (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
-		x = i*numberOfCandidates;
 		for(j=0; j<numberOfCandidates; j++) {
 			UtilitySum[j] += allCandidatesToTheVoter[j].actualUtility;
 		}
@@ -1629,7 +1627,6 @@ EMETH RandomBallot(const edata *E)
 EMETH Hay(const edata *E /*Strategyproof. Prob of election proportional to sum of sqrts of [normalized] utilities*/)
 {
 	real UtilityRootSum[MaxNumCands];
-	uint64_t x;
 	int i,j,winner;
 	real minu, sumrts, t;
 	const uint64_t& numberOfCandidates = E->NumCands;
@@ -1639,7 +1636,6 @@ EMETH Hay(const edata *E /*Strategyproof. Prob of election proportional to sum o
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
 		const oneCandidate (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
-		x = i*numberOfCandidates;
 		minu = HUGE;
 		for(j=0; j<numberOfCandidates; j++) {
 			real utility = allCandidatesToTheVoter[j].actualUtility;
@@ -3202,7 +3198,7 @@ EMETH App2Runoff(const edata *E    /*top-2-runoff, 1stRd=approval, 2nd round has
 EMETH HeitzigDFC(const edata *E)
 { /*winner of honest runoff between ApprovalWinner and RandomBallot winner*/
 	int i, Rwnr;
-	uint offset, pwct=0, wct=0;
+	uint pwct=0, wct=0;
 	const uint64_t& numberOfCandidates = E->NumCands;
 	const uint& numberOfVoters = E->NumVoters;
 	const uint64_t VoterIndex = RandInt(E->NumVoters);
@@ -3216,7 +3212,6 @@ EMETH HeitzigDFC(const edata *E)
 		const oneCandidate (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
 		const real perceivedUtilityOfTheApprovalWinner = allCandidatesToTheVoter[ApprovalWinner].perceivedUtility;
 		const real perceivedUtilityOfTheRandomBallotWinner = allCandidatesToTheVoter[Rwnr].perceivedUtility;
-		offset = i*(int)numberOfCandidates;
 		if( perceivedUtilityOfTheApprovalWinner > perceivedUtilityOfTheRandomBallotWinner ) {
 			pwct++;
 		}else if( perceivedUtilityOfTheApprovalWinner < perceivedUtilityOfTheRandomBallotWinner ) {
@@ -4865,7 +4860,6 @@ void HonestyStrat( edata *E, real honfrac )
 	int lobd;
 	uint64_t hibd;
 	int v, i, nexti, ACT;
-	uint64_t offi;
 	uint64_t offset;
 	bool rb;
 	real MovingAvg, tmp, MaxUtil, MinUtil, SumU, MeanU, Mean2U, ThisU, RecipDiffUtil;
@@ -4937,7 +4931,6 @@ void HonestyStrat( edata *E, real honfrac )
 			lobd = 0;
 			for(i=0; i<(int)numberOfCandidates; i++) {
 				oneCandidate &theCandidate = allCandidates[i];
-				offi = offset+i;
 				ThisU = theCandidate.perceivedUtility;
 				if(i > nexti) {
 					nexti++;
@@ -4985,7 +4978,6 @@ void HonestyStrat( edata *E, real honfrac )
 			for(i=0; i<numberOfCandidates; i++) {
 				oneCandidate &theCandidate = allCandidates[i];
 				const uint64_t &theRanking = theCandidate.ranking;
-				offi = offset+i;
 				ThisU = theCandidate.perceivedUtility;
 				if( ThisU >= Mean2U ) {
 					theCandidate.approve2 = true;
@@ -5093,7 +5085,6 @@ UTGEN GenNormalUtils( edata *E ){ /* simplest possible utility generator: random
 
 /* if Issues<0 then it uses wacky skew voter distribution instead of normal. Uses Lp distance: */
 UTGEN GenIssueDistanceUtils( edata *E, int Issues, real Lp ){  /* utility = distance-based formula in Issue-space */
-	uint64_t offset;
 	uint off2, y, x;
 	real KK;
 	const uint64_t& numberOfCandidates = E->NumCands;
@@ -5109,7 +5100,6 @@ UTGEN GenIssueDistanceUtils( edata *E, int Issues, real Lp ){  /* utility = dist
   for(x=0; x < numberOfVoters; x++){
 	  oneVoter& theVoter = allVoters[x];
 	  oneCandidate (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
-    offset = x * numberOfCandidates;
     off2   = x * Issues;
     for(y=0; y<numberOfCandidates; y++){
 	allCandidatesToTheVoter[y].actualUtility = 1.0 / sqrt(KK +
@@ -5119,7 +5109,6 @@ UTGEN GenIssueDistanceUtils( edata *E, int Issues, real Lp ){  /* utility = dist
 }
 
 UTGEN GenIssueDotprodUtils( edata *E, uint Issues ){  /* utility = canddt*voter vector dot-product in Issue-space */
-	uint64_t offset;
 	uint off2, y, x;
 	real s;
 	const uint64_t& numberOfCandidates = E->NumCands;
@@ -5131,7 +5120,6 @@ UTGEN GenIssueDotprodUtils( edata *E, uint Issues ){  /* utility = canddt*voter 
 	for(x=0; x < numberOfVoters; x++){
 		oneVoter& theVoter = allVoters[x];
 		oneCandidate (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
-    offset = x * numberOfCandidates;
     off2   = x * Issues;
     for(y=0; y < numberOfCandidates; y++){
 	    allCandidatesToTheVoter[y].actualUtility = s*DotProd(Issues, VoterLocation+off2, CandLocation+y*Issues);
@@ -5312,7 +5300,6 @@ int LoadEldataFiles()
 }
 
 UTGEN GenRealWorldUtils( edata *E ){  /** based on Tideman election dataset **/
-	uint64_t ff;
 	uint y, x,V,C;
 	uint64_t VV;
   static int WhichElection=0, offset=0;
@@ -5333,7 +5320,6 @@ UTGEN GenRealWorldUtils( edata *E ){  /** based on Tideman election dataset **/
 	for(x=0; x < numberOfVoters; x++){
 		oneVoter& theVoter = allVoters[x];
 		oneCandidate (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
-    ff = x*numberOfCandidates;
     VV = RandInt(V);  /* choose random voter in the real world election */
     VV *= C;
     for(y=0; y < numberOfCandidates; y++){
@@ -5906,7 +5892,7 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 	edata E;
 	uint x;
 	uint y;
-	int k,v,j,ja,i,m,jo,s,maxw,col,w;
+	int k,v,j,ja,i,jo,s,maxw,col,w;
 	uint pass;
 	int x0,x1,y_0,y_1,PreColor;
 	uint p0,p1,p2,p3;
@@ -5975,7 +5961,6 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 											ds = 0.7*pow(( fabs(xto-xx[i]) + fabs(yto-yy[i]) ), 2);
 										}
 										ut = 1.0 / sqrt(12000.0 + ds);
-										m = i+jo;
 										theCandidateToTheVoter.actualUtility = ut;
 										theCandidateToTheVoter.perceivedUtility = ut;
 									}/*end for(i)*/
@@ -6389,17 +6374,14 @@ int ArgMinArr(uint64_t N, const T Arr[], int RandPerm[])
 int calculateForRunoff(const edata *E, int first, int second)
 {
 	uint a;
-	uint64_t offset;
 	uint pwct=0;
 	uint wct=0;
 	const uint numberOfVoters = E->NumVoters;
-	const uint64_t& numberOfCandidates = E->NumCands;
 	real perceivedUtilityOfFirst;
 	real perceivedUtilityOfSecond;
 	for(a=0; a<numberOfVoters; a++) {
 		const oneVoter& theVoter = E->Voters[a];
 		const oneCandidate (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
-		offset = a*numberOfCandidates;
 		perceivedUtilityOfFirst = allCandidatesToTheVoter[first].perceivedUtility;
 		perceivedUtilityOfSecond = allCandidatesToTheVoter[second].perceivedUtility;
 		if( perceivedUtilityOfFirst > perceivedUtilityOfSecond ) {
