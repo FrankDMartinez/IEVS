@@ -1340,7 +1340,6 @@ bool SchwartzMembs[MaxNumCands];
  int IFav[MaxNumVoters];
 uint64_t NauruWt[MaxNumCands];
 uint BaseballWt[MaxNumCands];
- int PairApproval[MaxNumCands*MaxNumCands];
 bool CoverMatrix[MaxNumCands*MaxNumCands];
 
 void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have been run*/
@@ -1378,6 +1377,7 @@ struct relationshipBetweenCandidates
 	std::array<real,MaxNumCands> ArmytageMarginsMatrix;
 	std::array<int64_t,MaxNumCands> margins;
 	uint64_t Ibeat;
+	std::array<int64_t,MaxNumCands> alsoApprovedWith;
 };
 
 typedef std::array<relationshipBetweenCandidates, MaxNumCands> relationshipMatrix;
@@ -1562,16 +1562,17 @@ void BuildDefeatsMatrix(edata *E)
 		}
 	}
 	CopeWinOnlyWinner = ArgMaxArr<int>(numberOfCandidates, WinCount, (int*)RandCandPerm);
-	ZeroArray( Square(numberOfCandidates), PairApproval );
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
 			const oneCandidate &firstCandidate = allCandidates[j];
+			relationshipBetweenCandidates& relationshipsOfJ = relationshipsBetweenCandidates[j];
 			for(k=j+1; k<numberOfCandidates; k++) {
 				const oneCandidate &secondCandidate = allCandidates[k];
+				relationshipBetweenCandidates& relationshipsOfK = relationshipsBetweenCandidates[k];
 				y = ((firstCandidate.approve && secondCandidate.approve) ? 1:0);
-				PairApproval[j*numberOfCandidates +k] += y; /* count of voters who approve of both j and k */
-				PairApproval[k*numberOfCandidates +j] += y;
+				relationshipsOfJ.alsoApprovedWith[k] += y; /* count of voters who approve of both j and k */
+				relationshipsOfK.alsoApprovedWith[j] += y;
 			}
 		}
 	}
@@ -3538,8 +3539,11 @@ Commentary by Me:
 ***/
 EMETH Benham2AppRunoff(const edata *E, bool alwaysRunoff)
 {
-	int i,j,y,r,maxc;
+	int i,j,r;
+	int64_t maxc;
+	int64_t y;
 	const uint64_t& numberOfCandidates = E->NumCands;
+	const relationshipMatrix& allRelationships = E->CandidatesVsOtherCandidates;
 	if(ApprovalWinner<0) {
 		Approval(E);
 	}
@@ -3548,7 +3552,7 @@ EMETH Benham2AppRunoff(const edata *E, bool alwaysRunoff)
 	j = -1;
 	for(i=0; i<(int)numberOfCandidates; i++) {
 		r = RandCandPerm[i];
-		y = PairApproval[ApprovalWinner*numberOfCandidates +r];
+		y = allRelationships[ApprovalWinner].alsoApprovedWith[r];
 		if( (ApprovalVoteCount[r] + y) > ApprovalVoteCount[ApprovalWinner] ) {
 			if( ((int)ApprovalVoteCount[r] - y) > maxc ) {
 				maxc = ApprovalVoteCount[r] - y;
@@ -4130,8 +4134,9 @@ Even perfect info incentives for burial and betrayal are practically  nil.
 EMETH UncAAO(edata *E)
 {
 	int UncAAOF[MaxNumCands]={0};
-	int i,j,ff,AppOpp,MnAO,r,winner;
+	int i,j,ff,r,winner;
 	const uint64_t& numberOfCandidates = E->NumCands;
+	const relationshipMatrix& allRelationships = E->CandidatesVsOtherCandidates;
 	if(ApprovalWinner<0) {
 		Approval(E);
 	}
@@ -4143,12 +4148,12 @@ EMETH UncAAO(edata *E)
 		if( UncoveredSt[i] ) {
 			UncAAOF[i] = i;
 		}else{
-			MnAO = BIGINT;
+			int64_t MnAO = BIGINT;
 			ff = -1;
 			for(j=(int)numberOfCandidates -1; j>=0; j--) {
 				r = RandCandPerm[j];
 				if( CoverMatrix[r*numberOfCandidates+i]  ) {
-					AppOpp = ApprovalVoteCount[r] - PairApproval[r*numberOfCandidates+i];
+					const int64_t& AppOpp = ApprovalVoteCount[r] - allRelationships[r].alsoApprovedWith[i];
 					if(AppOpp < MnAO) { MnAO = AppOpp; ff = r; }
 				}
 			}
