@@ -1458,6 +1458,7 @@ void BuildDefeatsMatrix(edata *E)
 	const oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
 	const uint &numberOfVoters = E->NumVoters;
 	const uint64_t& numberOfCandidates = E->NumCands;
+	relationshipMatrix& relationshipsBetweenCandidates = E->CandidatesVsOtherCandidates;
 	MakeIdentityPerm( numberOfCandidates, RandCandPerm );
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 
@@ -1470,16 +1471,16 @@ void BuildDefeatsMatrix(edata *E)
 		BaseballWt[j] = 10-j;
 	}
 	BaseballWt[0] = 14;
-	fill(E->CandidatesVsOtherCandidates);
+	fill(relationshipsBetweenCandidates);
 	for(k=0; k<(int)numberOfVoters; k++) {
 		const oneVoter& theVoter = allVoters[k];
 		const oneCandidate (&allCandidates)[MaxNumCands] = theVoter.Candidates;
 		for(i=0; i<numberOfCandidates; i++) {
 			const oneCandidate &firstCandidate = allCandidates[i];
-			relationshipBetweenCandidates &relationshipsOfI = E->CandidatesVsOtherCandidates[i];
+			relationshipBetweenCandidates &relationshipsOfI = relationshipsBetweenCandidates[i];
 			for(j=0; j<i; j++) {
 				const oneCandidate &secondCandidate = allCandidates[j];
-				relationshipBetweenCandidates &relationshipsOfJ = E->CandidatesVsOtherCandidates[j];
+				relationshipBetweenCandidates &relationshipsOfJ = relationshipsBetweenCandidates[j];
 				y = secondCandidate.ranking;
 				y -= firstCandidate.ranking;
 				if( y>0 ) {
@@ -1507,13 +1508,13 @@ void BuildDefeatsMatrix(edata *E)
 	CondorcetWinner = -1;
 	TrueCW = -1;
 	for(i=0; i<numberOfCandidates; i++) {
-		relationshipBetweenCandidates &relationshipsOfI = E->CandidatesVsOtherCandidates[i];
+		relationshipBetweenCandidates &relationshipsOfI = relationshipsBetweenCandidates[i];
 		WinCount[i] = DrawCt[i] = 0;
 		CondWin = true;
 		TrueCondWin = true;
 		for(j=0; j<numberOfCandidates; j++) {
 			const int &iDefeatsJ = relationshipsOfI.DefeatsMatrix[j];
-			relationshipBetweenCandidates &relationshipsOfJ = E->CandidatesVsOtherCandidates[j];
+			relationshipBetweenCandidates &relationshipsOfJ = relationshipsBetweenCandidates[j];
 			const int &jDefeatsI = relationshipsOfJ.DefeatsMatrix[i];
 			assert( iDefeatsJ <= (int)numberOfVoters );
 			assert( iDefeatsJ >= 0 );
@@ -1551,7 +1552,7 @@ void BuildDefeatsMatrix(edata *E)
 	}
 	/* find who-you-beat sets: */
 	for(i=0; i<numberOfCandidates; i++) {
-		const relationshipBetweenCandidates& relationshipsOfI = E->CandidatesVsOtherCandidates[i];
+		const relationshipBetweenCandidates& relationshipsOfI = relationshipsBetweenCandidates[i];
 		x = 0;
 		for(j=0; j<numberOfCandidates; j++) {
 			if( relationshipsOfI.margins[j] > 0 ) {
