@@ -1340,7 +1340,7 @@ bool SmithMembs[MaxNumCands];
 bool UncoveredSt[MaxNumCands];
 bool SchwartzMembs[MaxNumCands];
 uint64_t NauruWt[MaxNumCands];
-uint BaseballWt[MaxNumCands];
+uint BaseballWt[MaxNumCands] = {14,9,8,7,6,5,4,3,2,1,0};
 bool CoverMatrix[MaxNumCands*MaxNumCands];
 
 void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have been run*/
@@ -1469,10 +1469,6 @@ void BuildDefeatsMatrix(edata *E)
 	for(j=1; j<=numberOfCandidates; j++) {
 		NauruWt[j-1] = x / j;
 	}
-	for(j=0; j<(int)std::min<typeof(numberOfCandidates)>(numberOfCandidates,10); j++) {
-		BaseballWt[j] = 10-j;
-	}
-	BaseballWt[0] = 14;
 	fill(relationshipsBetweenCandidates);
 	for(k=0; k<(int)numberOfVoters; k++) {
 		const oneVoter& theVoter = allVoters[k];
