@@ -169,7 +169,7 @@ const uint DOAGREETABLES = 128U;
 const uint ALLMETHS = 256U;
 const uint TOP10METHS = 512U;
 uint BROutputMode=0;
-struct oneCandidate;
+struct oneCandidateToTheVoter;
 struct oneVoter;
 
 struct oneVotingMethod
@@ -188,7 +188,7 @@ template< class T >
 template< class T >
 		int ArgMaxArr(uint64_t N, const T Arr[], int RandPerm[]);
 template< class T >
-		int ArgMaxArr(uint64_t N, const oneCandidate (&Candidates)[MaxNumCands], int RandPerm[]);
+		int ArgMaxArr(uint64_t N, const oneCandidateToTheVoter (&Candidates)[MaxNumCands], int RandPerm[]);
 /*	fill(iteratableCollection):	fills 'iteratableCollection'
  *					with default values
  *	iteratableCollection:	the collection to fill
@@ -200,7 +200,7 @@ int flipACoin(int choice1, int choice2);
 template<class T>
 		void PermShellSortDown( uint64_t N, int Perm[], const T Key[] );
 template<class T>
-		void PermShellSortDown(uint64_t N, int Perm[], const oneCandidate (&Candidates)[MaxNumCands]);
+		void PermShellSortDown(uint64_t N, int Perm[], const oneCandidateToTheVoter (&Candidates)[MaxNumCands]);
 void PrintBRPreamble(void);
 void printName(const char *name, bool padding, int spaces);
 void PrintSummaryOfNormalizedRegretData(uint scenarios);
@@ -212,7 +212,7 @@ template<class T>
 template<class T>
 		int SortedKey(uint64_t N, const int Arr[], const T Key[]);
 template<class T>
-		int SortedKey(uint64_t N, const int Arr[], const oneCandidate (&Candidates)[MaxNumCands]);
+		int SortedKey(uint64_t N, const int Arr[], const oneCandidateToTheVoter (&Candidates)[MaxNumCands]);
 int SortedKey(const int Arr[], const std::array<oneVotingMethod, NumMethods>& methods);
 void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str);
 template< class T1 >
@@ -222,7 +222,7 @@ template< class T1 >
 /*	oneCandidate:	information about a particular Candidate from
  *			the perspective of a particular Voter
  */
-struct oneCandidate
+struct oneCandidateToTheVoter
 {
 	real actualUtility;
 	bool approve;
@@ -877,7 +877,7 @@ bool IsPerm( uint64_t N, const uint Perm[] )
  *		with 0, expected to appear in Perm
  *	Perm:	an array of integers
  */
-bool IsPerm( uint64_t N, const oneCandidate (&Candidates)[MaxNumCands] )
+bool IsPerm( uint64_t N, const oneCandidateToTheVoter (&Candidates)[MaxNumCands] )
 { /* true if is a perm of [0..N-1] */
 	int i;
 	int ct[MaxNumCands];
@@ -1366,7 +1366,7 @@ void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have be
 struct oneVoter
 {
 	uint topDownPrefs[MaxNumCands];
-	oneCandidate Candidates[MaxNumCands];
+	oneCandidateToTheVoter Candidates[MaxNumCands];
 	int64_t favoriteCandidate;
 };
 
@@ -1408,7 +1408,7 @@ void PrintEdata(FILE *F, const edata *E)
 	fprintf(F, "numberOfVoters=%d  numberOfCandidates=%lld\n", numberOfVoters, numberOfCandidates);
 	for(v=0; v<(int)numberOfVoters; v++){
 		const oneVoter& theVoter = allVoters[v];
-		const oneCandidate (&allCandidates)[MaxNumCands] = theVoter.Candidates;
+		const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = theVoter.Candidates;
 		fprintf(F, "Voter %2d:\n",v);
 		fprintf(F, "Utility: ");
 		for(j=0; j < numberOfCandidates; j++) {
@@ -1472,12 +1472,12 @@ void BuildDefeatsMatrix(edata *E)
 	fill(relationshipsBetweenCandidates);
 	for(k=0; k<(int)numberOfVoters; k++) {
 		const oneVoter& theVoter = allVoters[k];
-		const oneCandidate (&allCandidates)[MaxNumCands] = theVoter.Candidates;
+		const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = theVoter.Candidates;
 		for(i=0; i<numberOfCandidates; i++) {
-			const oneCandidate &firstCandidate = allCandidates[i];
+			const oneCandidateToTheVoter &firstCandidate = allCandidates[i];
 			relationshipBetweenCandidates &relationshipsOfI = relationshipsBetweenCandidates[i];
 			for(j=0; j<i; j++) {
-				const oneCandidate &secondCandidate = allCandidates[j];
+				const oneCandidateToTheVoter &secondCandidate = allCandidates[j];
 				relationshipBetweenCandidates &relationshipsOfJ = relationshipsBetweenCandidates[j];
 				y = secondCandidate.ranking;
 				y -= firstCandidate.ranking;
@@ -1561,12 +1561,12 @@ void BuildDefeatsMatrix(edata *E)
 	}
 	CopeWinOnlyWinner = ArgMaxArr<int>(numberOfCandidates, WinCount, (int*)RandCandPerm);
 	for(i=0; i<(int)numberOfVoters; i++) {
-		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+		const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
-			const oneCandidate &firstCandidate = allCandidates[j];
+			const oneCandidateToTheVoter &firstCandidate = allCandidates[j];
 			relationshipBetweenCandidates& relationshipsOfJ = relationshipsBetweenCandidates[j];
 			for(k=j+1; k<numberOfCandidates; k++) {
-				const oneCandidate &secondCandidate = allCandidates[k];
+				const oneCandidateToTheVoter &secondCandidate = allCandidates[k];
 				relationshipBetweenCandidates& relationshipsOfK = relationshipsBetweenCandidates[k];
 				y = ((firstCandidate.approve && secondCandidate.approve) ? 1:0);
 				relationshipsOfJ.alsoApprovedWith[k] += y; /* count of voters who approve of both j and k */
@@ -1585,7 +1585,7 @@ EMETH SociallyBest(const edata *E  /* greatest utility-sum winner */)
 	ZeroArray( numberOfCandidates, UtilitySum );
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
-		const oneCandidate (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
 			UtilitySum[j] += allCandidatesToTheVoter[j].actualUtility;
 		}
@@ -1635,7 +1635,7 @@ EMETH Hay(const edata *E /*Strategyproof. Prob of election proportional to sum o
 	ZeroArray( numberOfCandidates, UtilityRootSum );
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
-		const oneCandidate (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
 		minu = HUGE;
 		for(j=0; j<numberOfCandidates; j++) {
 			real utility = allCandidatesToTheVoter[j].actualUtility;
@@ -3172,7 +3172,7 @@ EMETH Approval(const edata *E   /* canddt with most-approvals wins */)
 	const uint& numberOfVoters = E->NumVoters;
 	ZeroArray( numberOfCandidates, (int*)ApprovalVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
-		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+		const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
 			if(allCandidates[j].approve) {
 				ApprovalVoteCount[j] += 1;
@@ -3212,7 +3212,7 @@ EMETH HeitzigDFC(const edata *E)
 	}
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
-		const oneCandidate (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
 		const real perceivedUtilityOfTheApprovalWinner = allCandidatesToTheVoter[ApprovalWinner].perceivedUtility;
 		const real perceivedUtilityOfTheRandomBallotWinner = allCandidatesToTheVoter[Rwnr].perceivedUtility;
 		if( perceivedUtilityOfTheApprovalWinner > perceivedUtilityOfTheRandomBallotWinner ) {
@@ -3291,7 +3291,7 @@ EMETH IRNR(const edata *E  /*Brian Olson's voting method described above*/)
 	for(rd=numberOfCandidates; rd>1; rd--) {
 		ZeroArray( numberOfCandidates, SumNormedRating );
 		for(i=0; i<(int)numberOfVoters; i++) {
-			const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+			const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 			s = 0.0;
 			for(j=0; j<numberOfCandidates; j++) {
 				if(!Eliminated[j]) {
@@ -3359,7 +3359,7 @@ EMETH IRNRv(const edata *E  /*Brian Olson's voting method but with 2-param renor
 	for(rd=numberOfCandidates; rd>1; rd--) {
 		ZeroArray( numberOfCandidates, SumNormedRating );
 		for(i=0; i<(int)numberOfVoters; i++) {
-			const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+			const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 			s = 0.0;
 			ct=0;
 			for(j=0; j<numberOfCandidates; j++) {
@@ -3435,7 +3435,7 @@ EMETH IRNRm(const edata *E  /*Brian Olson's voting method but with 2-param renor
 	for(rd=numberOfCandidates; rd>1; rd--) {
 		ZeroArray( numberOfCandidates, SumNormedRating );
 		for(i=0; i<(int)numberOfVoters; i++) {
-			const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+			const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 			mx = -HUGE;
 			mn = HUGE;
 			for(j=0; j<numberOfCandidates; j++) {
@@ -3498,7 +3498,7 @@ EMETH MCA(const edata *E  /*canddt with most-2approvals wins if gets >50%, else 
 	}
 	ZeroArray( numberOfCandidates, (int*)MCAVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
-		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+		const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
 			if(allCandidates[j].approve2) {
 				MCAVoteCount[j] += 1;
@@ -3600,7 +3600,7 @@ EMETH Range(const edata *E    /* canddt with highest average Score wins */)
 	const uint& numberOfVoters = E->NumVoters;
 	ZeroArray( numberOfCandidates, RangeVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
-		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+		const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
 			RangeVoteCount[j] += allCandidates[j].score;
 		}
@@ -3622,7 +3622,7 @@ EMETH RangeN(const edata *E /*highest average rounded Score [rded to integer in 
 	assert(RangeGranul<=10000000);
 	ZeroArray( numberOfCandidates, (int*)RangeNVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
-		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+		const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
 			RangeNVoteCount[j] += (uint)( (allCandidates[j].score)*(RangeGranul-0.0000000001) );
 		}
@@ -3660,7 +3660,7 @@ EMETH ContinCumul(const edata *E    /* Renormalize scores so sum(over canddts)=1
 	const uint& numberOfVoters = E->NumVoters;
 	ZeroArray( numberOfCandidates, CCumVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
-		const oneCandidate (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+		const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
 		sum = 0.0;
 		for(j=0; j<numberOfCandidates; j++) {
 			sum += allCandidates[j].score;
@@ -3690,7 +3690,7 @@ EMETH TopMedianRating(const edata *E    /* canddt with highest median Score wins
 	const uint& numberOfVoters = E->NumVoters;
 	for(j=0; j<numberOfCandidates; j++) {
 		for(i=0; i<numberOfVoters; i++) {
-			const oneCandidate &theCandidate = allVoters[i].Candidates[j];
+			const oneCandidateToTheVoter &theCandidate = allVoters[i].Candidates[j];
 			CScoreVec[i] = theCandidate.score;
 		}
 		MedianRating[j] = TwiceMedian<real>(numberOfVoters, CScoreVec);
@@ -4878,7 +4878,7 @@ void HonestyStrat( edata *E, real honfrac )
 	assert(honfrac <= 1.0);
 	for(v=numberOfVoters -1; v>=0; v--) {
 		oneVoter& theVoter = allVoters[v];
-		oneCandidate (&allCandidates)[MaxNumCands] = theVoter.Candidates;
+		oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = theVoter.Candidates;
 		uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
 		if( Rand01() < honfrac ) { /*honest voter*/
 			MakeIdentityPerm( numberOfCandidates, preferences );
@@ -4902,7 +4902,7 @@ void HonestyStrat( edata *E, real honfrac )
 			MeanU = SumU / numberOfCandidates;
 			Mean2U = 0.0; ACT=0;
 			for(i=0; i<numberOfCandidates; i++) {
-				oneCandidate &theCandidate = allCandidates[i];
+				oneCandidateToTheVoter &theCandidate = allCandidates[i];
 				ThisU = theCandidate.perceivedUtility;
 				theCandidate.score = ( ThisU-MinUtil ) * RecipDiffUtil;
 				/* mean-based threshold (with coin toss if exactly at thresh) for approvals */
@@ -4919,7 +4919,7 @@ void HonestyStrat( edata *E, real honfrac )
 			ensure((ACT!=0), 4);
 			Mean2U /= ACT;
 			for(i=0; i<numberOfCandidates; i++) {
-				oneCandidate &theCandidate = allCandidates[i];
+				oneCandidateToTheVoter &theCandidate = allCandidates[i];
 				ThisU = theCandidate.perceivedUtility;
 				if( ThisU >= Mean2U ) {
 					theCandidate.approve2 = true;
@@ -4935,7 +4935,7 @@ void HonestyStrat( edata *E, real honfrac )
 			hibd = numberOfCandidates-1;
 			lobd = 0;
 			for(i=0; i<(int)numberOfCandidates; i++) {
-				oneCandidate &theCandidate = allCandidates[i];
+				oneCandidateToTheVoter &theCandidate = allCandidates[i];
 				ThisU = theCandidate.perceivedUtility;
 				if(i > nexti) {
 					nexti++;
@@ -4981,7 +4981,7 @@ void HonestyStrat( edata *E, real honfrac )
 			ensure((ACT!=0), 6);
 			Mean2U /= ACT;
 			for(i=0; i<numberOfCandidates; i++) {
-				oneCandidate &theCandidate = allCandidates[i];
+				oneCandidateToTheVoter &theCandidate = allCandidates[i];
 				const uint64_t &theRanking = theCandidate.ranking;
 				ThisU = theCandidate.perceivedUtility;
 				if( ThisU >= Mean2U ) {
@@ -5104,7 +5104,7 @@ UTGEN GenIssueDistanceUtils( edata *E, int Issues, real Lp ){  /* utility = dist
   KK = 0.6*Issues;
   for(x=0; x < numberOfVoters; x++){
 	  oneVoter& theVoter = allVoters[x];
-	  oneCandidate (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+	  oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
     off2   = x * Issues;
     for(y=0; y<numberOfCandidates; y++){
 	allCandidatesToTheVoter[y].actualUtility = 1.0 / sqrt(KK +
@@ -5124,7 +5124,7 @@ UTGEN GenIssueDotprodUtils( edata *E, uint Issues ){  /* utility = canddt*voter 
   s = 1.0/sqrt((real)Issues);
 	for(x=0; x < numberOfVoters; x++){
 		oneVoter& theVoter = allVoters[x];
-		oneCandidate (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+		oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
     off2   = x * Issues;
     for(y=0; y < numberOfCandidates; y++){
 	    allCandidatesToTheVoter[y].actualUtility = s*DotProd(Issues, VoterLocation+off2, CandLocation+y*Issues);
@@ -5324,7 +5324,7 @@ UTGEN GenRealWorldUtils( edata *E ){  /** based on Tideman election dataset **/
   scalefac = 1.0/sqrt((real)C);
 	for(x=0; x < numberOfVoters; x++){
 		oneVoter& theVoter = allVoters[x];
-		oneCandidate (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+		oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
     VV = RandInt(V);  /* choose random voter in the real world election */
     VV *= C;
     for(y=0; y < numberOfCandidates; y++){
@@ -5954,11 +5954,11 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 								if(s!=0 || ja==0) { /*centro-symmetric: s=sign*/
 									/*printf("k=%d v=%d j=%d ja=%d s=%d x=%f y=%f\n",k,v,j,ja,s,xt*s,yt*s);*/
 									oneVoter& theVoter = allVoters[j];
-									oneCandidate (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+									oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
 									xto = xt*s + x;
 									yto = yt*s + y;
 									for(i=0; i<(int)NumSites; i++) { /*go thru canddts generating utils for voter j*/
-										oneCandidate& theCandidateToTheVoter = allCandidatesToTheVoter[i];
+										oneCandidateToTheVoter& theCandidateToTheVoter = allCandidatesToTheVoter[i];
 										if(LpPow==2) {
 											ds = pow((xto-xx[i]) + Square(yto-yy[i]), 2);
 										} else {/*1*/
@@ -6317,7 +6317,7 @@ int ArgMaxArr(uint64_t N, const T Arr[], int RandPerm[])
  *	RandPerm:	array of perm.
  */
 template< class T >
-int ArgMaxArr(uint64_t N, const oneCandidate (&Candidates)[MaxNumCands], int RandPerm[])
+int ArgMaxArr(uint64_t N, const oneCandidateToTheVoter (&Candidates)[MaxNumCands], int RandPerm[])
 {
 	T maxc;
 	int a;
@@ -6385,7 +6385,7 @@ int calculateForRunoff(const edata *E, int first, int second)
 	real perceivedUtilityOfSecond;
 	for(a=0; a<numberOfVoters; a++) {
 		const oneVoter& theVoter = E->Voters[a];
-		const oneCandidate (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
 		perceivedUtilityOfFirst = allCandidatesToTheVoter[first].perceivedUtility;
 		perceivedUtilityOfSecond = allCandidatesToTheVoter[second].perceivedUtility;
 		if( perceivedUtilityOfFirst > perceivedUtilityOfSecond ) {
@@ -6611,7 +6611,7 @@ void PermShellSortDown(uint64_t N, int Perm[], const T Key[])
  *		sorting
  */
 template<class T>
-void PermShellSortDown(uint64_t N, int Perm[], const oneCandidate (&Candidates)[MaxNumCands])
+void PermShellSortDown(uint64_t N, int Perm[], const oneCandidateToTheVoter (&Candidates)[MaxNumCands])
 {
 	int a;
 	int b;
@@ -6891,7 +6891,7 @@ template<class T> int SortedKey(uint64_t N, const int Arr[], const T Key[])
  *			perceived utility values which are expected
  *			to have guided the sorting
  */
-template<class T> int SortedKey(uint64_t N, const int Arr[], const oneCandidate (&Candidates)[MaxNumCands])
+template<class T> int SortedKey(uint64_t N, const int Arr[], const oneCandidateToTheVoter (&Candidates)[MaxNumCands])
 {
 	int a;
 	int overallTrend;
