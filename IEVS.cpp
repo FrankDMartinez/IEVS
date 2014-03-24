@@ -4867,7 +4867,6 @@ void HonestyStrat( edata *E, real honfrac )
 	int lobd;
 	uint64_t hibd;
 	int v, i, nexti, ACT;
-	uint64_t offset;
 	bool rb;
 	real MovingAvg, tmp, MaxUtil, MinUtil, SumU, MeanU, Mean2U, ThisU, RecipDiffUtil;
 	oneVoter (&allVoters)[MaxNumVoters] = E->Voters;
@@ -4881,7 +4880,6 @@ void HonestyStrat( edata *E, real honfrac )
 		oneVoter& theVoter = allVoters[v];
 		oneCandidate (&allCandidates)[MaxNumCands] = theVoter.Candidates;
 		uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
-		offset = v*numberOfCandidates;
 		if( Rand01() < honfrac ) { /*honest voter*/
 			MakeIdentityPerm( numberOfCandidates, preferences );
 			PermShellSortDown<real>( numberOfCandidates, (int*)preferences, allCandidates );
@@ -5899,7 +5897,7 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 	edata E;
 	uint x;
 	uint y;
-	int k,v,j,ja,i,jo,s,maxw,col,w;
+	int k,v,j,ja,i,s,maxw,col,w;
 	uint pass;
 	int x0,x1,y_0,y_1,PreColor;
 	uint p0,p1,p2,p3;
@@ -5959,7 +5957,6 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 									oneCandidate (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
 									xto = xt*s + x;
 									yto = yt*s + y;
-									jo = j*NumSites;
 									for(i=0; i<(int)NumSites; i++) { /*go thru canddts generating utils for voter j*/
 										oneCandidate& theCandidateToTheVoter = allCandidatesToTheVoter[i];
 										if(LpPow==2) {
