@@ -1342,7 +1342,6 @@ uint64_t NauruWt[MaxNumCands];
 uint BaseballWt[MaxNumCands];
  int PairApproval[MaxNumCands*MaxNumCands];
 bool CoverMatrix[MaxNumCands*MaxNumCands];
-uint64_t IBeat[MaxNumCands];
 
 void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have been run*/
   PlurWinner = -1;
@@ -1378,6 +1377,7 @@ struct relationshipBetweenCandidates
 	std::array<int,MaxNumCands> ArmytageDefeatsMatrix;
 	std::array<real,MaxNumCands> ArmytageMarginsMatrix;
 	std::array<int64_t,MaxNumCands> margins;
+	uint64_t Ibeat;
 };
 
 typedef std::array<relationshipBetweenCandidates, MaxNumCands> relationshipMatrix;
@@ -1552,14 +1552,14 @@ void BuildDefeatsMatrix(edata *E)
 	}
 	/* find who-you-beat sets: */
 	for(i=0; i<numberOfCandidates; i++) {
-		const relationshipBetweenCandidates& relationshipsOfI = relationshipsBetweenCandidates[i];
-		x = 0;
+		relationshipBetweenCandidates& relationshipsOfI = relationshipsBetweenCandidates[i];
+		uint64_t& beat = relationshipsOfI.Ibeat;
+		beat = 0;
 		for(j=0; j<numberOfCandidates; j++) {
 			if( relationshipsOfI.margins[j] > 0 ) {
-				x |= (1U<<j);
+				beat |= (1U<<j);
 			}
 		}
-		IBeat[i] = x;
 	}
 	CopeWinOnlyWinner = ArgMaxArr<int>(numberOfCandidates, WinCount, (int*)RandCandPerm);
 	ZeroArray( Square(numberOfCandidates), PairApproval );
@@ -2628,9 +2628,10 @@ EMETH UncoveredSet(edata *E /*A "covers" B if A beats a strict superset of those
 	}
 	/*find cover relation:*/
 	for(A=0; A < (int)numberOfCandidates; A++) {
+		const uint64_t& Abeats = allRelationships[A].Ibeat;
 		for(B=0; B < (int)numberOfCandidates; B++) {
 			if(B!=A) {
-				CoverMatrix[A*numberOfCandidates + B] = StrictSuperset(IBeat[A], IBeat[B]);
+				CoverMatrix[A*numberOfCandidates + B] = StrictSuperset(Abeats, allRelationships[B].Ibeat);
 			}
 		}
 		UncoveredSt[A] = true; /*initialization*/
