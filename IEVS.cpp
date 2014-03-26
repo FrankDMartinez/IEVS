@@ -4800,12 +4800,12 @@ typedef struct dum2 {
 	std::array<oneVotingMethod, NumMethods> votingMethods;
 } brdata;
 
-void EDataPrep(edata& E, const brdata *B);
-void PrepareForBayesianRegretOutput(brdata &regretObject, const int &iglevel, bool (&VotMethods)[NumMethods]);
-void PrintBROutput(const brdata &regretObject, uint &scenarios);
+void EDataPrep(edata& E, const brdata& B);
+void PrepareForBayesianRegretOutput(brdata& regretObject, const int &iglevel, bool (&VotMethods)[NumMethods]);
+void PrintBROutput(const brdata& regretObject, uint &scenarios);
 
 /* all arrays here have NumMethods entries */
-int FindWinnersAndRegrets( edata& E,  brdata *B,  const bool Methods[] )
+int FindWinnersAndRegrets( edata& E,  brdata& B,  const bool Methods[] )
 {
 	int m,w,j;
 	real r;
@@ -4814,22 +4814,22 @@ int FindWinnersAndRegrets( edata& E,  brdata *B,  const bool Methods[] )
 	for(m=0; m<NumMethods; m++) {
 		if(Methods[m] || m<NumCoreMethods) { /* always run Core Methods */
 			w = GimmeWinner(E, m);
-			B->votingMethods[m].Winner = w;
+			B.votingMethods[m].Winner = w;
 			r = UtilitySum[BestWinner] - UtilitySum[w];
-			if(r<0.0 || BestWinner != B->votingMethods[0].Winner) {
-				printf("FUCK! major failure, r=%g<0 u[best]=%g u[w]=%g u[vm[0].w]=%g\n", r,UtilitySum[BestWinner],UtilitySum[w],UtilitySum[B->votingMethods[0].Winner]);
-				printf("w=%d m=%d BestWinner=%d numberOfCandidates=%lld B->votingMethods[0].Winner=%d\n", w,m,BestWinner,E.NumCands,B->votingMethods[0].Winner);
+			if(r<0.0 || BestWinner != B.votingMethods[0].Winner) {
+				printf("FUCK! major failure, r=%g<0 u[best]=%g u[w]=%g u[vm[0].w]=%g\n", r,UtilitySum[BestWinner],UtilitySum[w],UtilitySum[B.votingMethods[0].Winner]);
+				printf("w=%d m=%d BestWinner=%d numberOfCandidates=%lld B->votingMethods[0].Winner=%d\n", w,m,BestWinner,E.NumCands,B.votingMethods[0].Winner);
 				fflush(stdout);
 			}
-			ensure( BestWinner == B->votingMethods[0].Winner, 32 );
+			ensure( BestWinner == B.votingMethods[0].Winner, 32 );
 			assert(r>=0.0); /*can only fail if somebody overwrites array...*/
-			WelfordUpdateMeanSD(r, B->votingMethods[m]);
+			WelfordUpdateMeanSD(r, B.votingMethods[m]);
 			for(j=0; j<m; j++) {
 				if(Methods[j] || j<NumCoreMethods) {
-					if( B->votingMethods[j].Winner == w ) {
-						B->votingMethods[m].agreementCountWithMethod[j]++;
-						B->votingMethods[j].agreementCountWithMethod[m]++;
-						ensure( B->votingMethods[m].agreementCountWithMethod[j] == B->votingMethods[j].agreementCountWithMethod[m], 31 );
+					if( B.votingMethods[j].Winner == w ) {
+						B.votingMethods[m].agreementCountWithMethod[j]++;
+						B.votingMethods[j].agreementCountWithMethod[m]++;
+						ensure( B.votingMethods[m].agreementCountWithMethod[j] == B.votingMethods[j].agreementCountWithMethod[m], 31 );
 					}
 				}
 			}
@@ -4838,11 +4838,11 @@ int FindWinnersAndRegrets( edata& E,  brdata *B,  const bool Methods[] )
 	if(CondorcetWinner >= 0) {
 		for(m=0; m<NumMethods; m++) {
 			if(Methods[m] || m<NumCoreMethods) {
-				if(B->votingMethods[m].Winner==CondorcetWinner) {
-					B->votingMethods[m].CondorcetAgreementCount++;
+				if(B.votingMethods[m].Winner==CondorcetWinner) {
+					B.votingMethods[m].CondorcetAgreementCount++;
 				}
-				if(B->votingMethods[m].Winner==TrueCW) {
-					B->votingMethods[m].trueCondorcetAgreementCount++;
+				if(B.votingMethods[m].Winner==TrueCW) {
+					B.votingMethods[m].trueCondorcetAgreementCount++;
 				}
 			}
 		}
@@ -5494,35 +5494,35 @@ void PrintConsts()
 }
 
 /************ Bayesian Regret ***********/
-void ComputeBRs( brdata *B, const bool VotMethods[], int UtilMeth )
+void ComputeBRs( brdata& B, const bool VotMethods[], int UtilMeth )
 {
 	uint elnum;
 	edata E;
 
-	fill(B->votingMethods);
+	fill(B.votingMethods);
 	InitCoreElState();
 	EDataPrep(E, B);
-	for(elnum=0; elnum < B->NumElections; elnum++){
+	for(elnum=0; elnum < B.NumElections; elnum++){
 		UtilDispatcher(E, UtilMeth);
-		AddIgnorance(E, B->IgnoranceAmplitude);
-		HonestyStrat(E, B->Honfrac);
+		AddIgnorance(E, B.IgnoranceAmplitude);
+		HonestyStrat(E, B.Honfrac);
 		FindWinnersAndRegrets(E, B, VotMethods);
 	}
-	B->NumVoters =  E.NumVoters;
-	B->NumCands = E.NumCands;
-	ScaleRegrets(B->votingMethods, 1.0/((B->NumElections - 1.0)*B->NumElections)); /*StdDev/sqrt(#) = StdErr.*/
+	B.NumVoters =  E.NumVoters;
+	B.NumCands = E.NumCands;
+	ScaleRegrets(B.votingMethods, 1.0/((B.NumElections - 1.0)*B.NumElections)); /*StdDev/sqrt(#) = StdErr.*/
 }
 
-void TestEDataStructs( const brdata *B )
+void TestEDataStructs( const brdata& B )
 {
 	uint elnum;
 	edata E;
 	EDataPrep(E, B);
-	for(elnum=0; elnum < B->NumElections; elnum++){
+	for(elnum=0; elnum < B.NumElections; elnum++){
 		printf("GenNormalUtils:\n"); fflush(stdout);
 		GenNormalUtils(E);
 		printf("AddIgnorance:\n"); fflush(stdout);
-		AddIgnorance(E, B->IgnoranceAmplitude);
+		AddIgnorance(E, B.IgnoranceAmplitude);
 		printf("HonestyStrat:\n"); fflush(stdout);
 		HonestyStrat(E, 1.0);
 		printf("BuildDefetasMatrix:\n"); fflush(stdout);
@@ -6140,7 +6140,7 @@ struct PopulaceState_t
 	int utilityGeneratorMethod;
 };
 
-void PrintTheVotersBayesianRegret(brdata &regretObject, const PopulaceState_t&populaceState, uint &ScenarioCount);
+void PrintTheVotersBayesianRegret(brdata& regretObject, const PopulaceState_t&populaceState, uint &ScenarioCount);
 
 /*In IEVS 2.59 with NumElections=2999 and MaxNumVoters=3000,
  *this driver runs for 80-200 hours
@@ -6511,7 +6511,7 @@ void runSelfTests()
 	B.NumCands=5;
 	B.NumElections=1;
 	B.IgnoranceAmplitude=0.001;
-	TestEDataStructs(&B);
+	TestEDataStructs(B);
 }
 
 /*	runSingleTest(aSeed):	simulates User interation of a single
@@ -6569,12 +6569,12 @@ void ensure(bool good, int number)
  *	B:			the information for initializing
  *				'E'
  */
-void EDataPrep(edata& E, const brdata *B)
+void EDataPrep(edata& E, const brdata& B)
 {
-	E.NumVoters = B->NumVoters;
-	E.NumCands = B->NumCands;
-	if(B->NumElections < 1){
-		printf("NumElections=%d<1, error\n", B->NumElections);
+	E.NumVoters = B.NumVoters;
+	E.NumCands = B.NumCands;
+	if(B.NumElections < 1){
+		printf("NumElections=%d<1, error\n", B.NumElections);
 		fflush(stdout); exit(EXIT_FAILURE);
 	}
 }
@@ -7176,7 +7176,7 @@ void PrintSummaryOfNormalizedRegretData(uint scenarios)
  *	scenarios:	the count of scenarios for which Bayesian regret output has been
  *			created as of the time this function has been called
  */
-void PrintBROutput(const brdata &regretObject, uint &scenarios)
+void PrintBROutput(const brdata& regretObject, uint &scenarios)
 {
 	int i;
 	int j;
@@ -7281,7 +7281,7 @@ void PrintBROutput(const brdata &regretObject, uint &scenarios)
  *	VotMethods:	an array to prepare which will show which voting methods to
  *			perform
  */
-void PrepareForBayesianRegretOutput(brdata &regretObject, const int &iglevel, bool (&VotMethods)[NumMethods])
+void PrepareForBayesianRegretOutput(brdata& regretObject, const int &iglevel, bool (&VotMethods)[NumMethods])
 {
 	static const real IgnLevels[] = {0.001, 0.01, 0.1, 1.0, -1.0};
 	regretObject.NumElections=numelections2try;
@@ -7332,7 +7332,7 @@ void PrintBRPreamble()
  *			Voters, etc.
  *	ScenarioCount:	the number of election scenarios processed
  */
-void PrintTheVotersBayesianRegret(brdata &regretObject, const PopulaceState_t &populaceState, uint &ScenarioCount)
+void PrintTheVotersBayesianRegret(brdata& regretObject, const PopulaceState_t &populaceState, uint &ScenarioCount)
 {
 	bool VotMethods[NumMethods];
 	const bool &realWorld = populaceState.realWorld;
@@ -7355,7 +7355,7 @@ void PrintTheVotersBayesianRegret(brdata &regretObject, const PopulaceState_t &p
 			PrepareForBayesianRegretOutput(regretObject, iglevel, VotMethods);
 			if(realWorld) {
 				MakeIdentityPerm(NumMethods, (uint*)MethPerm);
-				ComputeBRs(&regretObject, VotMethods, -1);
+				ComputeBRs(regretObject, VotMethods, -1);
 				RealPermShellSortUp(MethPerm, regretObject.votingMethods);
 			}
 			printf("(Scenario#%d:", ScenarioCount);
@@ -7368,7 +7368,7 @@ void PrintTheVotersBayesianRegret(brdata &regretObject, const PopulaceState_t &p
 				regretObject.NumElections, regretObject.IgnoranceAmplitude);
 			PrintBRPreamble();
 			if(not realWorld) {
-				ComputeBRs(&regretObject, VotMethods, UtilMeth);
+				ComputeBRs(regretObject, VotMethods, UtilMeth);
 				MakeIdentityPerm(NumMethods, (uint*)MethPerm);
 				RealPermShellSortUp(MethPerm, regretObject.votingMethods);
 			}
