@@ -5496,13 +5496,14 @@ void PrintConsts()
 /************ Bayesian Regret ***********/
 void ComputeBRs( brdata& B, const bool VotMethods[], int UtilMeth )
 {
+	const uint& numberOfElections = B.NumElections;
 	uint elnum;
 	edata E;
 
 	fill(B.votingMethods);
 	InitCoreElState();
 	EDataPrep(E, B);
-	for(elnum=0; elnum < B.NumElections; elnum++){
+	for(elnum=0; elnum < numberOfElections; elnum++){
 		UtilDispatcher(E, UtilMeth);
 		AddIgnorance(E, B.IgnoranceAmplitude);
 		HonestyStrat(E, B.Honfrac);
@@ -5515,10 +5516,11 @@ void ComputeBRs( brdata& B, const bool VotMethods[], int UtilMeth )
 
 void TestEDataStructs( const brdata& B )
 {
+	const uint& numberOfElections = B.NumElections;
 	uint elnum;
 	edata E;
 	EDataPrep(E, B);
-	for(elnum=0; elnum < B.NumElections; elnum++){
+	for(elnum=0; elnum < numberOfElections; elnum++) {
 		printf("GenNormalUtils:\n"); fflush(stdout);
 		GenNormalUtils(E);
 		printf("AddIgnorance:\n"); fflush(stdout);
