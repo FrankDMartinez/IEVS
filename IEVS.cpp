@@ -4801,28 +4801,34 @@ void PrintBROutput(const brdata& regretObject, uint &scenarios);
 /* all arrays here have NumMethods entries */
 int FindWinnersAndRegrets( edata& E,  brdata& B,  const bool Methods[] )
 {
+	std::array<oneVotingMethod, NumMethods>& allVotingMethods = B.votingMethods;
+	const int& sociallyBestWinner = allVotingMethods[0].Winner;
 	int m,w,j;
 	real r;
 	BuildDefeatsMatrix(E);
 	InitCoreElState();
 	for(m=0; m<NumMethods; m++) {
 		if(Methods[m] || m<NumCoreMethods) { /* always run Core Methods */
+			oneVotingMethod& methodM = allVotingMethods[m];
 			w = GimmeWinner(E, m);
-			B.votingMethods[m].Winner = w;
+			methodM.Winner = w;
 			r = UtilitySum[BestWinner] - UtilitySum[w];
-			if(r<0.0 || BestWinner != B.votingMethods[0].Winner) {
-				printf("FUCK! major failure, r=%g<0 u[best]=%g u[w]=%g u[vm[0].w]=%g\n", r,UtilitySum[BestWinner],UtilitySum[w],UtilitySum[B.votingMethods[0].Winner]);
-				printf("w=%d m=%d BestWinner=%d numberOfCandidates=%lld B->votingMethods[0].Winner=%d\n", w,m,BestWinner,E.NumCands,B.votingMethods[0].Winner);
+			if(r<0.0 || BestWinner != sociallyBestWinner) {
+				printf("FUCK! major failure, r=%g<0 u[best]=%g u[w]=%g u[vm[0].w]=%g\n", r,UtilitySum[BestWinner],UtilitySum[w],UtilitySum[sociallyBestWinner]);
+				printf("w=%d m=%d BestWinner=%d numberOfCandidates=%lld B->votingMethods[0].Winner=%d\n", w,m,BestWinner,E.NumCands,sociallyBestWinner);
 			}
-			ensure( BestWinner == B.votingMethods[0].Winner, 32 );
+			ensure( BestWinner == sociallyBestWinner, 32 );
 			assert(r>=0.0); /*can only fail if somebody overwrites array...*/
-			WelfordUpdateMeanSD(r, B.votingMethods[m]);
+			WelfordUpdateMeanSD(r, methodM);
 			for(j=0; j<m; j++) {
 				if(Methods[j] || j<NumCoreMethods) {
-					if( B.votingMethods[j].Winner == w ) {
-						B.votingMethods[m].agreementCountWithMethod[j]++;
-						B.votingMethods[j].agreementCountWithMethod[m]++;
-						ensure( B.votingMethods[m].agreementCountWithMethod[j] == B.votingMethods[j].agreementCountWithMethod[m], 31 );
+					oneVotingMethod& methodJ = allVotingMethods[j];
+					if( methodJ.Winner == w ) {
+						uint& MAgreesWithJ = methodM.agreementCountWithMethod[j];
+						uint& JAgreesWithM = methodJ.agreementCountWithMethod[m];
+						MAgreesWithJ++;
+						JAgreesWithM++;
+						ensure( MAgreesWithJ == JAgreesWithM, 31 );
 					}
 				}
 			}
@@ -4830,12 +4836,14 @@ int FindWinnersAndRegrets( edata& E,  brdata& B,  const bool Methods[] )
 	}
 	if(CondorcetWinner >= 0) {
 		for(m=0; m<NumMethods; m++) {
+			oneVotingMethod& methodM = allVotingMethods[m];
+			const int& WinnerOfM = methodM.Winner;
 			if(Methods[m] || m<NumCoreMethods) {
-				if(B.votingMethods[m].Winner==CondorcetWinner) {
-					B.votingMethods[m].CondorcetAgreementCount++;
+				if(WinnerOfM==CondorcetWinner) {
+					methodM.CondorcetAgreementCount++;
 				}
-				if(B.votingMethods[m].Winner==TrueCW) {
-					B.votingMethods[m].trueCondorcetAgreementCount++;
+				if(WinnerOfM==TrueCW) {
+					methodM.trueCondorcetAgreementCount++;
 				}
 			}
 		}
