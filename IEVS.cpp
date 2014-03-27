@@ -6555,10 +6555,11 @@ void ensure(bool good, int number)
  */
 void EDataPrep(edata& E, const brdata& B)
 {
+	const uint& numberOfElections = B.NumElections;
 	E.NumVoters = B.NumVoters;
 	E.NumCands = B.NumCands;
-	if(B.NumElections < 1){
-		printf("NumElections=%d<1, error\n", B.NumElections);
+	if(numberOfElections < 1){
+		printf("NumElections=%d<1, error\n", numberOfElections);
 		exit(EXIT_FAILURE);
 	}
 }
