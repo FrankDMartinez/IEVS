@@ -219,8 +219,9 @@ template< class T1 >
 		T1 TwiceMedian(uint N, T1 A[] );
 #define NullFunction ((real(*)(void))NULL)
 
-/*	oneCandidate:	information about a particular Candidate from
- *			the perspective of a particular Voter
+/*	oneCandidateToTheVoter:	information about a particular Candidate
+ *				from the perspective of a particular
+ *				Voter
  */
 struct oneCandidateToTheVoter
 {
@@ -6335,7 +6336,7 @@ int ArgMaxArr(uint64_t N, const T Arr[], int RandPerm[])
 	return(winner);
 }
 
-/*	ArgMaxArr(N, Arr[], RandPerm[]):	returns index of random
+/*	ArgMaxArr(N, Candidates[], RandPerm[]):	returns index of random
  *						max perceive utility
  *						entry of Arr[0..N-1]
  *	N:		the expected number of elements in 'RandPerm'
@@ -6399,9 +6400,10 @@ int ArgMinArr(uint64_t N, const T Arr[], int RandPerm[])
 	return(winner);
 }
 
-/*	Maximum(N, allCandidates, member):	returns index of random max entry of
- *						allCandidates[0..N-1]
- *	N:		the expected number of elements in 'Arr' and 'RandPerm'
+/*	Maximum(N, allCandidates, member):	returns index of random
+ *						maximum entry of
+ *						'allCandidates[0..N-1].member'
+ *	N:		the expected number of elements in 'allCandidates'
  *	allCandidates:	a slate of Candidates to examine
  *	member:		the member of Each Candidate to use for comparison
  */
@@ -6426,11 +6428,12 @@ int Maximum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*me
 	return(winner);
 }
 
-/*	Minimum(N, Arr[], RandPerm[]):	returns index of random min entry of
- *					Arr[0..N-1]
- *	N:		the expected number of elements in 'Arr' and 'RandPerm'
- *	Arr:		array of values to examine
- *	RandPerm:	array of perm.
+/*	Minimum(N, allCandidates, member):	returns index of random
+ *						minimum entry of
+ *						'allCandidates[0..N-1].member'
+ *	N:		the expected number of elements in 'allCandidates'
+ *	allCandidates:	a slate of Candidates to examine
+ *	member:		the member of Each Candidate to use for comparison
  */
 template< class T >
 int Minimum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*member)
