@@ -1324,7 +1324,6 @@ uint PlurVoteCount[MaxNumCands];
  int RdVoteCount[MaxNumCands];
  int FavListNext[MaxNumVoters];
  int HeadFav[MaxNumCands];
- int WinCount[MaxNumCands];
  int DrawCt[MaxNumCands];
 int64_t LossCount[MaxNumCands];
 uint ApprovalVoteCount[MaxNumCands];
@@ -1380,6 +1379,7 @@ struct oneCandidate
 	uint64_t Ibeat;
 	PairApprovalData alsoApprovedWith;
 	uint64_t antiPluralityVotes;
+	int64_t electedCount;
 };
 
 /*	oneVoter:	information about a particular Voter
@@ -1395,6 +1395,8 @@ typedef std::array<oneCandidate,MaxNumCands> CandidateSlate;
 
 template< class T >
 		int Minimum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*member);
+template< class T >
+		int Maximum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*member);
 
 typedef struct dum1 {
   uint NumVoters;
@@ -1462,7 +1464,7 @@ typedef int EMETH;  /* allows fgrep EMETH IEVS.c to find out what Election metho
 EMETH runoffForApprovalVoting(const edata& E);
 
 void BuildDefeatsMatrix(edata& E)
-{ /* initializes  E->DefeatsMatrix[], E->MarginsMatrix[], RandCandPerm[], NauruWt[], WinCount[], DrawCt[], CondorcetWinner, CopeWinOnlyWinner, TrueCW */
+{ /* initializes  E->DefeatsMatrix[], E->MarginsMatrix[], RandCandPerm[], NauruWt[], Each Candidate's 'electedCount', DrawCt[], CondorcetWinner, CopeWinOnlyWinner, TrueCW */
 	int k,i,j;
 	int64_t y;
 	uint64_t x;
@@ -1518,7 +1520,8 @@ void BuildDefeatsMatrix(edata& E)
 	TrueCW = -1;
 	for(i=0; i<numberOfCandidates; i++) {
 		oneCandidate& firstCandidate = allTheCandidates[i];
-		WinCount[i] = DrawCt[i] = 0;
+		DrawCt[i] = 0;
+		firstCandidate.electedCount = 0;
 		CondWin = true;
 		TrueCondWin = true;
 		for(j=0; j<numberOfCandidates; j++) {
@@ -1540,7 +1543,7 @@ void BuildDefeatsMatrix(edata& E)
 			firstCandidate.margins[j] = y;
 			assert(i!=j || firstCandidate.margins[j] == 0);
 			if(y > 0) {
-				WinCount[i]++;
+				firstCandidate.electedCount++;
 			}
 			if(y==0) {
 				DrawCt[i]++;
@@ -1571,7 +1574,7 @@ void BuildDefeatsMatrix(edata& E)
 			}
 		}
 	}
-	CopeWinOnlyWinner = ArgMaxArr<int>(numberOfCandidates, WinCount, (int*)RandCandPerm);
+	CopeWinOnlyWinner = Maximum<int64_t>(numberOfCandidates, allTheCandidates, &oneCandidate::electedCount);
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = allVoters[i].Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
@@ -2820,9 +2823,10 @@ EMETH ArmytagePCSchulze(edata& E  /*Armytage pairwise comparison based on Schulz
 EMETH Copeland(edata& E   /* canddt with largest number of pairwise-wins elected (tie counts as win/2) BUGGY */)
 {
 	int CopelandWinner;
-	int CopeScore[MaxNumCands]={0};
+	uint64_t CopeScore[MaxNumCands]={0};
 	int i;
 	const uint64_t& numberOfCandidates = E.NumCands;
+	const CandidateSlate& allCandidates = E.Candidates;
 	if(CopeWinOnlyWinner<0) {
 		BuildDefeatsMatrix(E);
 	}
@@ -2833,9 +2837,9 @@ EMETH Copeland(edata& E   /* canddt with largest number of pairwise-wins elected
 	}
 #endif
 	for(i=0; i<numberOfCandidates; i++) {
-		CopeScore[i] = (2*WinCount[i])+DrawCt[i];
+		CopeScore[i] = (2*allCandidates[i].electedCount)+DrawCt[i];
 	}
-	CopelandWinner = ArgMaxArr<int>(numberOfCandidates, CopeScore, (int*)RandCandPerm);
+	CopelandWinner = ArgMaxArr<uint64_t>(numberOfCandidates, CopeScore, (int*)RandCandPerm);
 	/* Currently just break ties randomly, return random highest-scorer */
 	return CopelandWinner;
 }
@@ -6347,7 +6351,13 @@ int ArgMaxArr(uint64_t N, const oneCandidateToTheVoter (&Candidates)[MaxNumCands
 	int r;
 	int winner;
 	winner = -1;
-	maxc = (typeid(T)==typeid(int)) ? (T)(-BIGINT) : (T)(-HUGE);
+	if(typeid(T)==typeid(int)) {
+		maxc = (T)(-BIGINT);
+	} else if(typeid(T)==typeid(uint64_t)) {
+		maxc = (T)(-MAXUINT64);
+	} else {
+		maxc = (T)(-HUGE);
+	}
 	RandomlyPermute( N, (uint*)RandPerm );
 	for(a=0; a<(int)N; a++) {
 		r = RandPerm[a];
@@ -6386,6 +6396,33 @@ int ArgMinArr(uint64_t N, const T Arr[], int RandPerm[])
 	assert(winner>=0);
 	assert( Arr[winner] <= Arr[0] );
 	assert( Arr[winner] <= Arr[N-1] );
+	return(winner);
+}
+
+/*	Maximum(N, allCandidates, member):	returns index of random max entry of
+ *						allCandidates[0..N-1]
+ *	N:		the expected number of elements in 'Arr' and 'RandPerm'
+ *	allCandidates:	a slate of Candidates to examine
+ *	member:		the member of Each Candidate to use for comparison
+ */
+template< class T >
+int Maximum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*member)
+{
+	T maxc;
+	int a;
+	int r;
+	int winner;
+	winner = -1;
+	maxc = (typeid(T)==typeid(uint64_t)) ? (T)(-MAXUINT64) : (T)(-HUGE);
+	RandomlyPermute( N, (uint*)RandCandPerm );
+	for(a=0; a<(int)N; a++) {
+		r = RandCandPerm[a];
+		if(allCandidates[r].*member > maxc) {
+			maxc=allCandidates[r].*member;
+			winner=r;
+		}
+	}
+	assert(winner>=0);
 	return(winner);
 }
 
