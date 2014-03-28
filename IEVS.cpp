@@ -344,6 +344,7 @@ void PrintNSpaces(int N)
 /****** convenient constants: *******/
 #define BIGINT 0x7FFFFFFF
 #define MAXUINT ((uint)-1)
+#define MAXUINT64 ((uint64_t)-1)
 /* defn works on 8,16,32, and 64-bit machines */
 
 
@@ -1320,7 +1321,6 @@ uint RangeGranul;
  int CopeWinOnlyWinner;
  int SmithIRVwinner;
 uint PlurVoteCount[MaxNumCands];
-uint AntiPlurVoteCount[MaxNumCands];
  int RdVoteCount[MaxNumCands];
  int FavListNext[MaxNumVoters];
  int HeadFav[MaxNumCands];
@@ -1379,6 +1379,7 @@ struct oneCandidate
 	MarginsData margins;
 	uint64_t Ibeat;
 	PairApprovalData alsoApprovedWith;
+	uint64_t antiPluralityVotes;
 };
 
 /*	oneVoter:	information about a particular Voter
@@ -1391,6 +1392,9 @@ struct oneVoter
 };
 
 typedef std::array<oneCandidate,MaxNumCands> CandidateSlate;
+
+template< class T >
+		int Minimum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*member);
 
 typedef struct dum1 {
   uint NumVoters;
@@ -1690,17 +1694,21 @@ EMETH Plurality(const edata& E   /* canddt with most top-rank votes wins */)
 	return PlurWinner;
 }
 
-EMETH AntiPlurality(const edata& E   /* canddt with fewest bottom-rank votes wins */)
-{ /* side effects: AntiPlurVoteCount[], AntiPlurWinner */
+EMETH AntiPlurality(edata& E   /* canddt with fewest bottom-rank votes wins */)
+{ /* side effects: each Candidates anti-plurality vote counts, AntiPlurWinner */
 	int i;
 	const uint64_t& numberOfCandidates = E.NumCands;
+	const uint64_t& lastCandidateIndex = numberOfCandidates - 1;
 	const uint& numberOfVoters = E.NumVoters;
 	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
-	ZeroArray( numberOfCandidates, (int*)AntiPlurVoteCount );
-	for(i=0; i<(int)numberOfVoters; i++){
-		AntiPlurVoteCount[ allVoters[i].topDownPrefs[numberOfCandidates-1] ]++;
+	CandidateSlate& allCandidates = E.Candidates;
+	for( oneCandidate& eachCandidate : allCandidates ) {
+		eachCandidate.antiPluralityVotes = 0;
 	}
-	AntiPlurWinner = ArgMinArr<int>(numberOfCandidates, (int*)AntiPlurVoteCount, (int*)RandCandPerm);
+	for(i=0; i<numberOfVoters; i++) {
+		allCandidates[allVoters[i].topDownPrefs[lastCandidateIndex]].antiPluralityVotes++;
+	}
+	AntiPlurWinner = Minimum<uint64_t>(numberOfCandidates, allCandidates, &oneCandidate::antiPluralityVotes);
 	return AntiPlurWinner;
 }
 
@@ -1767,7 +1775,7 @@ EMETH Top2Runoff(const edata& E    /* Top2Runoff=top-2-runoff, 2nd round has ful
  *				Winner of the plurality vote wins
  *	E:	the election data used to determine the Winner
  */
-EMETH VenzkeDisqPlur(const edata& E   /* Plurality winner wins unless over 50% vote him bottom; then plurality 2nd-winner wins. */)
+EMETH VenzkeDisqPlur(edata& E   /* Plurality winner wins unless over 50% vote him bottom; then plurality 2nd-winner wins. */)
 { /* side effects: VFAVoteCount[] */
 	if(PlurWinner<0) {
 		Plurality(E);
@@ -1775,7 +1783,7 @@ EMETH VenzkeDisqPlur(const edata& E   /* Plurality winner wins unless over 50% v
 	if(AntiPlurWinner<0) {
 		AntiPlurality(E);
 	}
-	if( (2*AntiPlurVoteCount[ PlurWinner ]) > E.NumVoters ) {
+	if( (2*E.Candidates[PlurWinner].antiPluralityVotes) > E.NumVoters ) {
 		if(PSecond<0) {
 			Top2Runoff(E);
 		}
@@ -6378,6 +6386,35 @@ int ArgMinArr(uint64_t N, const T Arr[], int RandPerm[])
 	assert(winner>=0);
 	assert( Arr[winner] <= Arr[0] );
 	assert( Arr[winner] <= Arr[N-1] );
+	return(winner);
+}
+
+/*	Minimum(N, Arr[], RandPerm[]):	returns index of random min entry of
+ *					Arr[0..N-1]
+ *	N:		the expected number of elements in 'Arr' and 'RandPerm'
+ *	Arr:		array of values to examine
+ *	RandPerm:	array of perm.
+ */
+template< class T >
+int Minimum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*member)
+{
+	T minc;
+	int a;
+	int r;
+	int winner;
+	winner = -1;
+	minc = (typeid(T)==typeid(uint64_t)) ? (T)MAXUINT64 : (T)HUGE;
+	RandomlyPermute( N, (uint*)RandCandPerm );
+	for(a=0; a<(int)N; a++) {
+		r = RandCandPerm[a];
+		if(allCandidates[r].*member<minc) {
+			minc=allCandidates[r].*member;
+			winner=r;
+		}
+	}
+	assert(winner>=0);
+	assert( allCandidates[winner].*member <= allCandidates[0].*member );
+	assert( allCandidates[winner].*member <= allCandidates[N-1].*member );
 	return(winner);
 }
 
