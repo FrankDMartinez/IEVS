@@ -6387,7 +6387,7 @@ int ArgMaxArr(uint64_t N, const oneCandidateToTheVoter (&Candidates)[MaxNumCands
 	if(typeid(T)==typeid(int)) {
 		maxc = (T)(-BIGINT);
 	} else if(typeid(T)==typeid(uint64_t)) {
-		maxc = (T)(-MAXUINT64);
+		maxc = (T) 0;
 	} else {
 		maxc = (T)(-HUGE);
 	}
@@ -6448,7 +6448,7 @@ int Maximum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*me
 	int winner;
 	winner = -1;
 	if(typeid(T)==typeid(uint64_t)) {
-		maxc = (T)(-MAXUINT64);
+		maxc = (T) 0;
 	} else if(typeid(T)==typeid(int64_t)) {
 		maxc = (T)(LLONG_MIN);
 	} else {
