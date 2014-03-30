@@ -1337,7 +1337,6 @@ bool Eliminated[MaxNumCands];
 bool SmithMembs[MaxNumCands];
 bool UncoveredSt[MaxNumCands];
 bool SchwartzMembs[MaxNumCands];
-uint64_t NauruWt[MaxNumCands];
 uint BaseballWt[MaxNumCands] = {14,9,8,7,6,5,4,3,2,1,0};
 bool CoverMatrix[MaxNumCands*MaxNumCands];
 
@@ -1468,7 +1467,6 @@ void BuildDefeatsMatrix(edata& E)
 { /* initializes  E->DefeatsMatrix[], E->MarginsMatrix[], RandCandPerm[], NauruWt[], Each Candidate's 'electedCount', DrawCt[], CondorcetWinner, CopeWinOnlyWinner, TrueCW */
 	int k,i,j;
 	int64_t y;
-	uint64_t x;
 	real t;
 	bool CondWin, TrueCondWin;
 	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
@@ -1479,10 +1477,6 @@ void BuildDefeatsMatrix(edata& E)
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 
 	assert(numberOfCandidates <= MaxNumCands);
-	x = LCMfact[numberOfCandidates];
-	for(j=1; j<=numberOfCandidates; j++) {
-		NauruWt[j-1] = x / j;
-	}
 	fill(allTheCandidates);
 	for(k=0; k<(int)numberOfVoters; k++) {
 		const oneVoter& theVoter = allVoters[k];
@@ -2063,12 +2057,19 @@ EMETH Nauru(const edata& E  /* weighted positional with weights 1, 1/2, 1/3, 1/4
 	int j;
 	int winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
+	uint64_t x = LCMfact[numberOfCandidates];
+	uint64_t NauruWt[numberOfCandidates];
 	const uint& numberOfVoters = E.NumVoters;
 	ZeroArray( numberOfCandidates, (int*)NauruVoteCount );
+	for(j=1; j<=numberOfCandidates; j++) {
+		NauruWt[j-1] = x / j;
+	}
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = E.Voters[i];
 		for(j=0; j<numberOfCandidates; j++) {
-			NauruVoteCount[j] += NauruWt[theVoter.Candidates[j].ranking];
+			const uint64_t& theRank = theVoter.Candidates[j].ranking;
+			ensure(theRank < numberOfCandidates, 50);
+			NauruVoteCount[j] += NauruWt[theRank];
 		}
 	}
 	winner = ArgMaxUIntArr( numberOfCandidates, NauruVoteCount, (int*)RandCandPerm );
