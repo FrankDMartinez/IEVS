@@ -1549,6 +1549,7 @@ void BuildDefeatsMatrix(edata& E)
 			const int &iDefeatsJ = firstCandidate.DefeatsMatrix[j];
 			oneCandidate& secondCandidate = allTheCandidates[j];
 			const int &jDefeatsI = secondCandidate.DefeatsMatrix[i];
+			int64_t& marginOfTheFirstCandidateComparedToTheSecond = firstCandidate.margins[j];
 			assert( iDefeatsJ <= (int)numberOfVoters );
 			assert( iDefeatsJ >= 0 );
 			assert( iDefeatsJ + jDefeatsI <= (int)numberOfVoters );
@@ -1561,8 +1562,8 @@ void BuildDefeatsMatrix(edata& E)
 			}
 			y = iDefeatsJ;
 			y -= jDefeatsI;
-			firstCandidate.margins[j] = y;
-			assert(i!=j || firstCandidate.margins[j] == 0);
+			marginOfTheFirstCandidateComparedToTheSecond = y;
+			assert(i!=j || marginOfTheFirstCandidateComparedToTheSecond == 0);
 			if(y > 0) {
 				firstCandidate.electedCount++;
 			}
