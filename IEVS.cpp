@@ -12,6 +12,7 @@
 #endif
 #include <algorithm>
 #include <array>
+#include <climits>
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
@@ -919,6 +920,34 @@ void RandomlyPermute( uint64_t N, uint RandPerm[] ){ /* randomly permutes RandPe
 	assert(IsPerm(N,RandPerm));
 }
 
+typedef std::array<real,MaxNumCands> ArmytageData;
+typedef std::array<int,MaxNumCands> ArmytageDefeatsData;
+typedef std::array<real,MaxNumCands> ArmytageMarginData;
+typedef std::array<int,MaxNumCands> DefeatsData;
+typedef std::array<int64_t,MaxNumCands> MarginsData;
+typedef std::array<int64_t,MaxNumCands> PairApprovalData;
+typedef std::array<int,MaxNumCands> TrueDefeatsData;
+
+/*	oneCandidate:	information about a particular Candidate
+ */
+struct oneCandidate
+{
+	DefeatsData DefeatsMatrix;
+	TrueDefeatsData TrueDefeatsMatrix;
+	ArmytageData ArmytageMatrix;
+	ArmytageDefeatsData ArmytageDefeatsMatrix;
+	ArmytageMarginData ArmytageMarginsMatrix;
+	MarginsData margins;
+	uint64_t Ibeat;
+	PairApprovalData alsoApprovedWith;
+	uint64_t antiPluralityVotes;
+	int64_t electedCount;
+	uint64_t drawCount;
+	int64_t BordaVotes;
+};
+
+typedef std::array<oneCandidate,MaxNumCands> CandidateSlate;
+
 /******* vector handling: **********/
 /*	CopyArray(N, src, dest):	copies 'N' elements from 'src[]' into 'dest[]';
  *					only elements from index 0 to 'N-1' are copied;
@@ -932,6 +961,32 @@ template <class T> void CopyArray(uint64_t N, const T src[], T dest[] ) {
 	uint64_t i;
 	for(i=0; i<N; i++) {
 		dest[i] = src[i];
+	}
+}
+
+/******* vector handling: **********/
+/*	CopyArray(N, theCandidates, dest, member):	copies 'N'
+ *							elements from
+ *							'theCandidates[0..N-1].member'
+ *							into 'dest[]';
+ *							only elements
+ *							from index 0
+ *							to 'N-1' are
+ *							copied; both
+ *							'theCandidates'
+ *							and 'dest[]'
+ *							are expected
+ *							to have at
+ *							least 'N' elements
+ *	N:		number of elements to copy
+ *	theCandidates:	the slate of Candidates from which to copy
+ *	dest:		the destination array
+ *	member:		the member of Each Candidate to copy
+ */
+template <class T> void CopyArray(uint64_t N, const CandidateSlate& theCandidates, T dest[], T oneCandidate::*member ) {
+	uint64_t i;
+	for(i=0; i<N; i++) {
+		dest[i] = theCandidates[i].*member;
 	}
 }
 
@@ -1329,7 +1384,6 @@ int64_t LossCount[MaxNumCands];
 uint ApprovalVoteCount[MaxNumCands];
 real RangeVoteCount[MaxNumCands];
 real SumNormedRating[MaxNumCands];
-uint BordaVoteCount[MaxNumCands];
 real UtilitySum[MaxNumCands];
 uint RandCandPerm[MaxNumCands]; /* should initially contain 0..NumCands-1 */
 bool Eliminated[MaxNumCands];
@@ -1356,31 +1410,6 @@ void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have be
   IRVTopLim = BIGINT;
 }
 
-typedef std::array<real,MaxNumCands> ArmytageData;
-typedef std::array<int,MaxNumCands> ArmytageDefeatsData;
-typedef std::array<real,MaxNumCands> ArmytageMarginData;
-typedef std::array<int,MaxNumCands> DefeatsData;
-typedef std::array<int64_t,MaxNumCands> MarginsData;
-typedef std::array<int64_t,MaxNumCands> PairApprovalData;
-typedef std::array<int,MaxNumCands> TrueDefeatsData;
-
-/*	oneCandidate:	information about a particular Candidate
- */
-struct oneCandidate
-{
-	DefeatsData DefeatsMatrix;
-	TrueDefeatsData TrueDefeatsMatrix;
-	ArmytageData ArmytageMatrix;
-	ArmytageDefeatsData ArmytageDefeatsMatrix;
-	ArmytageMarginData ArmytageMarginsMatrix;
-	MarginsData margins;
-	uint64_t Ibeat;
-	PairApprovalData alsoApprovedWith;
-	uint64_t antiPluralityVotes;
-	int64_t electedCount;
-	uint64_t drawCount;
-};
-
 /*	oneVoter:	information about a particular Voter
  */
 struct oneVoter
@@ -1389,8 +1418,6 @@ struct oneVoter
 	oneCandidateToTheVoter Candidates[MaxNumCands];
 	int64_t favoriteCandidate;
 };
-
-typedef std::array<oneCandidate,MaxNumCands> CandidateSlate;
 
 template< class T >
 		int Minimum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*member);
@@ -1819,10 +1846,10 @@ EMETH PlurIR(edata& E    /* PlurIR=plur+immediate runoff (give ranking as vote) 
 }
 
 EMETH Borda(edata& E  /* Borda: weighted positional with weights N-1, N-2, ..., 0  if N-canddts */)
-{ /* side effects: BordaVoteCount[], BordaWinner */
+{ /* side effects: Each Candidate's 'BordaVotes', BordaWinner */
 	int i,j,t;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	const CandidateSlate& allCandidates = E.Candidates;
+	CandidateSlate& allCandidates = E.Candidates;
 	if(CopeWinOnlyWinner<0) {
 		BuildDefeatsMatrix(E);
 	}
@@ -1832,9 +1859,9 @@ EMETH Borda(edata& E  /* Borda: weighted positional with weights N-1, N-2, ..., 
 		for(j=0; j<numberOfCandidates; j++) {
 			t += marginsOfI[j];
 		}
-		BordaVoteCount[i] = t;
+		allCandidates[i].BordaVotes = t;
 	}
-	BordaWinner = ArgMaxArr<int>(numberOfCandidates, (int*)BordaVoteCount, (int*)RandCandPerm);
+	BordaWinner = Maximum(numberOfCandidates, allCandidates, &oneCandidate::BordaVotes);
 	return BordaWinner;
 }
 
@@ -1887,8 +1914,9 @@ EMETH RandomPair(const edata& E)
  */
 EMETH NansonBaldwin(edata& E  /* repeatedly eliminate Borda loser */)
 { /* side effects: Eliminated[] */
-	int NansonVoteCount[MaxNumCands];
-	int i, BordaLoser, rnd, minc, r;
+	int64_t NansonVoteCount[MaxNumCands];
+	int i, BordaLoser, rnd, r;
+	int64_t minc;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
 #if defined(CWSPEEDUP) && CWSPEEDUP
@@ -1898,7 +1926,7 @@ EMETH NansonBaldwin(edata& E  /* repeatedly eliminate Borda loser */)
 		Borda(E);
 	}
 	FillArray(numberOfCandidates, Eliminated, false);
-	CopyArray(numberOfCandidates, (int*)BordaVoteCount, NansonVoteCount);
+	CopyArray(numberOfCandidates, allCandidates, NansonVoteCount, &oneCandidate::BordaVotes);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(rnd=1; rnd < (int)numberOfCandidates; rnd++) {
 		BordaLoser = -1;
@@ -6419,7 +6447,13 @@ int Maximum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*me
 	int r;
 	int winner;
 	winner = -1;
-	maxc = (typeid(T)==typeid(uint64_t)) ? (T)(-MAXUINT64) : (T)(-HUGE);
+	if(typeid(T)==typeid(uint64_t)) {
+		maxc = (T)(-MAXUINT64);
+	} else if(typeid(T)==typeid(int64_t)) {
+		maxc = (T)(LLONG_MIN);
+	} else {
+		maxc = (T)(-HUGE);
+	}
 	RandomlyPermute( N, (uint*)RandCandPerm );
 	for(a=0; a<(int)N; a++) {
 		r = RandCandPerm[a];
