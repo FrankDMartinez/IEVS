@@ -1337,7 +1337,6 @@ bool Eliminated[MaxNumCands];
 bool SmithMembs[MaxNumCands];
 bool UncoveredSt[MaxNumCands];
 bool SchwartzMembs[MaxNumCands];
-uint BaseballWt[MaxNumCands] = {14,9,8,7,6,5,4,3,2,1,0};
 bool CoverMatrix[MaxNumCands*MaxNumCands];
 
 void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have been run*/
@@ -2098,15 +2097,18 @@ EMETH HeismanTrophy(const edata& E  /* Heisman: weighted positional with weights
 EMETH BaseballMVP(const edata& E  /* weighted positional with weights 14,9,8,7,6,5,4,3,2,1,0,...,0 */)
 {
 	uint BaseballVoteCount[MaxNumCands];
+	static const uint BaseballWt[] = {14,9,8,7,6,5,4,3,2,1};
+	static const uint64_t numberOfBaseballWeightings = sizeof(BaseballWt)/sizeof(BaseballWt[0]);
 	int i,j;
 	int winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
+	const uint64_t& maximumNumberOfLoops = std::min<typeof(numberOfCandidates)>( numberOfCandidates, numberOfBaseballWeightings);
 	const uint& numberOfVoters = E.NumVoters;
 	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
 	ZeroArray( numberOfCandidates, (int*)BaseballVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
-		for(j=0; j<std::min<typeof(numberOfCandidates)>( numberOfCandidates, 10); j++) {
+		for(j=0; j<maximumNumberOfLoops; j++) {
 			BaseballVoteCount[ theVoter.topDownPrefs[j] ] += BaseballWt[j];
 		}
 	}
