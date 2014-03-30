@@ -1325,7 +1325,6 @@ uint PlurVoteCount[MaxNumCands];
  int RdVoteCount[MaxNumCands];
  int FavListNext[MaxNumVoters];
  int HeadFav[MaxNumCands];
- int DrawCt[MaxNumCands];
 int64_t LossCount[MaxNumCands];
 uint ApprovalVoteCount[MaxNumCands];
 real RangeVoteCount[MaxNumCands];
@@ -1379,6 +1378,7 @@ struct oneCandidate
 	PairApprovalData alsoApprovedWith;
 	uint64_t antiPluralityVotes;
 	int64_t electedCount;
+	uint64_t drawCount;
 };
 
 /*	oneVoter:	information about a particular Voter
@@ -1463,7 +1463,7 @@ typedef int EMETH;  /* allows fgrep EMETH IEVS.c to find out what Election metho
 EMETH runoffForApprovalVoting(const edata& E);
 
 void BuildDefeatsMatrix(edata& E)
-{ /* initializes  E->DefeatsMatrix[], E->MarginsMatrix[], RandCandPerm[], NauruWt[], Each Candidate's 'electedCount', DrawCt[], CondorcetWinner, CopeWinOnlyWinner, TrueCW */
+{ /* initializes  E->DefeatsMatrix[], E->MarginsMatrix[], RandCandPerm[], NauruWt[], Each Candidate's 'electedCount', Each Candidate's 'drawCount', CondorcetWinner, CopeWinOnlyWinner, TrueCW */
 	int k,i,j;
 	int64_t y;
 	real t;
@@ -1514,8 +1514,8 @@ void BuildDefeatsMatrix(edata& E)
 	TrueCW = -1;
 	for(i=0; i<numberOfCandidates; i++) {
 		oneCandidate& firstCandidate = allTheCandidates[i];
-		DrawCt[i] = 0;
 		firstCandidate.electedCount = 0;
+		firstCandidate.drawCount = 0;
 		CondWin = true;
 		TrueCondWin = true;
 		for(j=0; j<numberOfCandidates; j++) {
@@ -1540,7 +1540,7 @@ void BuildDefeatsMatrix(edata& E)
 				firstCandidate.electedCount++;
 			}
 			if(y==0) {
-				DrawCt[i]++;
+				firstCandidate.drawCount++;
 			}
 			if(y<=0 && j!=i) {
 				CondWin = false;
@@ -2841,7 +2841,8 @@ EMETH Copeland(edata& E   /* canddt with largest number of pairwise-wins elected
 	}
 #endif
 	for(i=0; i<numberOfCandidates; i++) {
-		CopeScore[i] = (2*allCandidates[i].electedCount)+DrawCt[i];
+		const oneCandidate& theCandidate = allCandidates[i];
+		CopeScore[i] = (2*theCandidate.electedCount)+theCandidate.drawCount;
 	}
 	CopelandWinner = ArgMaxArr<uint64_t>(numberOfCandidates, CopeScore, (int*)RandCandPerm);
 	/* Currently just break ties randomly, return random highest-scorer */
