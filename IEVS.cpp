@@ -944,6 +944,7 @@ struct oneCandidate
 	int64_t electedCount;
 	uint64_t drawCount;
 	int64_t BordaVotes;
+	real rangeVote;
 };
 
 typedef std::array<oneCandidate,MaxNumCands> CandidateSlate;
@@ -1066,6 +1067,35 @@ int Arg2MaxRealArr(uint64_t N, const real Arr[], const int RandPerm[], int MaxIn
   }
   assert(winner>=0);
   return(winner);
+}
+
+uint RandCandPerm[MaxNumCands]; /* should initially contain 0..NumCands-1 */
+
+/*	SecondMaximum(count, allCandidates, member, maximumIndex):	returns the index
+ *									of the entry in
+ *									'allCandidates' with
+ *									the second highest
+ *									'member'
+ *	count:		the maximum number of entries in 'allCandidates' to examine
+ *	allCandidates:	the slate of Candidates to examine
+ *	member:		the data member to use for comparison
+ *	maximumIndex:	the index into 'allCandidates' presumed to have the hightest value
+ *			of 'member'
+ */
+template<class T> int SecondMaximum(uint64_t count, const CandidateSlate& allCandidates, const T oneCandidate::*member, int maximumIndex ) {
+	T maxc;
+	int i, r, winner;
+	winner = -1;
+	maxc = -HUGE;
+	for(i=0; i<(int)count; i++){
+		r = RandCandPerm[i];
+		if(allCandidates[r].*member>maxc && r!=maximumIndex){
+			maxc=allCandidates[r].*member;
+			winner=r;
+		}
+	}
+	assert(winner>=0);
+	return(winner);
 }
 
 /*	ScaleVec(N, a, scalefac):	scales the first 'N' elements of 'a[]' by
@@ -1382,10 +1412,8 @@ uint PlurVoteCount[MaxNumCands];
  int HeadFav[MaxNumCands];
 int64_t LossCount[MaxNumCands];
 uint ApprovalVoteCount[MaxNumCands];
-real RangeVoteCount[MaxNumCands];
 real SumNormedRating[MaxNumCands];
 real UtilitySum[MaxNumCands];
-uint RandCandPerm[MaxNumCands]; /* should initially contain 0..NumCands-1 */
 bool Eliminated[MaxNumCands];
 bool SmithMembs[MaxNumCands];
 bool UncoveredSt[MaxNumCands];
@@ -3656,21 +3684,28 @@ EMETH CondorcetApproval(edata& E  /*Condorcet winner if exists, else use Approva
 	return ApprovalWinner;
 }
 
-EMETH Range(const edata& E    /* canddt with highest average Score wins */)
-{ /* side effects:   RangeVoteCount[], RangeWinner  */
+template <class T>
+	void Zero(const uint64_t& number, CandidateSlate& allCandidates, T oneCandidate::*member);
+
+EMETH Range(edata& E    /* canddt with highest average Score wins */)
+{ /* side effects:   Each Candidate's range vote, RangeWinner  */
 	int i;
 	int j;
 	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	ZeroArray( numberOfCandidates, RangeVoteCount );
+	CandidateSlate& allCandidates = E.Candidates;
+	Zero(numberOfCandidates, allCandidates, &oneCandidate::rangeVote);
+	for(i=0; i<numberOfCandidates; i++) {
+		allCandidates[i].rangeVote = 0;
+	}
 	for(i=0; i<(int)numberOfVoters; i++) {
-		const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = allVoters[i].Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
-			RangeVoteCount[j] += allCandidates[j].score;
+			allCandidates[j].rangeVote += allCandidatesToTheVoter[j].score;
 		}
 	}
-	RangeWinner = ArgMaxArr<real>(numberOfCandidates, RangeVoteCount, (int*)RandCandPerm);
+	RangeWinner = Maximum(numberOfCandidates, allCandidates, &oneCandidate::rangeVote);
 	return(RangeWinner);
 }
 
@@ -3700,15 +3735,16 @@ EMETH RangeN(const edata& E /*highest average rounded Score [rded to integer in 
  *				the top 2 Candidates as determined by range voting
  *	E:	the election data used to determine the Winner
  */
-EMETH Range2Runoff(const edata& E    /*top-2-runoff, 1stRd=range, 2nd round has fully-honest voting*/)
+EMETH Range2Runoff(edata& E    /*top-2-runoff, 1stRd=range, 2nd round has fully-honest voting*/)
 {
 	int RSecond;
 	const uint64_t& numberOfCandidates = E.NumCands;
+	const CandidateSlate& allCandidates = E.Candidates;
 	if(RangeWinner<0) {
 		Range(E);
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
-	RSecond = Arg2MaxRealArr( numberOfCandidates, RangeVoteCount, (int*)RandCandPerm, RangeWinner );
+	RSecond = SecondMaximum(numberOfCandidates, allCandidates, &oneCandidate::rangeVote, RangeWinner);
 	assert(RSecond>=0);
 	return calculateForRunoff(E, RangeWinner, RSecond);
 }
@@ -8232,4 +8268,20 @@ void resetFavorites(oneVoter (&Voters)[MaxNumVoters], const int64_t& Candidate) 
 	for( oneVoter& eachVoter : Voters ) {
 		eachVoter.favoriteCandidate = Candidate;
 	}
+}
+
+/*	Zero(number, allCandidates, member):	sets the 'member' of
+ *						the first 'number' of
+ *						Candidates in 'allCandidates'
+ *						to 0
+ *	number:		the number of Candidates to set a given member
+ *			to 0
+ *	allCandidates:	the slate of Candidates with a member to set
+ *	member:		the member of Each Candidate to set to 0
+ */
+template <class T>
+	void Zero(const uint64_t& number, CandidateSlate& allCandidates, T oneCandidate::*member) {
+		for(uint64_t count = 0; count < number; count++) {
+			allCandidates[count].*member = 0;
+		}
 }
