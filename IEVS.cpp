@@ -946,6 +946,7 @@ struct oneCandidate
 	int64_t BordaVotes;
 	real rangeVote;
 	int64_t lossCount;
+	bool uncovered;
 };
 
 typedef std::array<oneCandidate,MaxNumCands> CandidateSlate;
@@ -1416,7 +1417,6 @@ real SumNormedRating[MaxNumCands];
 real UtilitySum[MaxNumCands];
 bool Eliminated[MaxNumCands];
 bool SmithMembs[MaxNumCands];
-bool UncoveredSt[MaxNumCands];
 bool SchwartzMembs[MaxNumCands];
 bool CoverMatrix[MaxNumCands*MaxNumCands];
 
@@ -2693,10 +2693,10 @@ be tested in 1 step using wordwide operations.
 ****/
 
 EMETH UncoveredSet(edata& E /*A "covers" B if A beats a strict superset of those B beats.*/)
-{ /* side effects: UncoveredSt[], CoverMatrix[] */
+{ /* side effects: Each Candidate's 'uncovered' state, CoverMatrix[] */
 	int A,B,i,r;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	const CandidateSlate& allCandidates = E.Candidates;
+	CandidateSlate& allCandidates = E.Candidates;
 	const MarginsData& marginsOf0 = allCandidates[0].margins;
 	const MarginsData& marginsOf1 = allCandidates[1].margins;
 	const MarginsData& marginsOf2 = allCandidates[2].margins;
@@ -2721,14 +2721,15 @@ EMETH UncoveredSet(edata& E /*A "covers" B if A beats a strict superset of those
 				CoverMatrix[A*numberOfCandidates + B] = StrictSuperset(Abeats, allCandidates[B].Ibeat);
 			}
 		}
-		UncoveredSt[A] = true; /*initialization*/
+		allCandidates[A].uncovered = true;	/*initialization*/
 	}
-	/*find UncoveredSt:*/
+	/*find 'uncovered' Candidates:*/
 	for(A=0; A < (int)numberOfCandidates; A++) {
 		for(B=0; B < (int)numberOfCandidates; B++) {
 			if(B!=A) {
 				if( CoverMatrix[B*numberOfCandidates+A] ) {
-					UncoveredSt[A] = false; break;
+					allCandidates[A].uncovered = false;
+					break;
 				}
 			}
 		}
@@ -2736,7 +2737,7 @@ EMETH UncoveredSet(edata& E /*A "covers" B if A beats a strict superset of those
 	/*select random uncovered winner:*/
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(i=(int)numberOfCandidates-1; i>=0; i--){
-		if( !(UncoveredSt[i]?SchwartzMembs[i]:true) ) {
+		if( !(allCandidates[i].uncovered?SchwartzMembs[i]:true) ) {
 			printf("bozo! i=%d NumCands=%lld\n", i, numberOfCandidates);
 			printf("%lld %lld %lld; %lld %lld %lld; %lld %lld %lld\n",
 				marginsOf0[0],
@@ -2750,11 +2751,11 @@ EMETH UncoveredSet(edata& E /*A "covers" B if A beats a strict superset of those
 				marginsOf2[2]);
 			printf("CopeWinOnlyWinner=%d\n",CopeWinOnlyWinner);
 			printf("Sc=%d%d%d\n", SchwartzMembs[0], SchwartzMembs[1], SchwartzMembs[2]);
-			printf("Un=%d%d%d\n", UncoveredSt[0], UncoveredSt[1], UncoveredSt[2]);
+			printf("Un=%d%d%d\n", allCandidates[0].uncovered, allCandidates[1].uncovered, allCandidates[2].uncovered);
 		}
-		assert( UncoveredSt[i]?SchwartzMembs[i]:true );
+		assert( allCandidates[i].uncovered?SchwartzMembs[i]:true );
 		r = RandCandPerm[i];
-		if(UncoveredSt[r]){
+		if(allCandidates[r].uncovered){
 			RandomUncoveredMemb = r;
 			return r;
 		}
@@ -4252,7 +4253,7 @@ EMETH UncAAO(edata& E)
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(i=(int)numberOfCandidates -1; i>=0; i--) {
-		if( UncoveredSt[i] ) {
+		if(allCandidates[i].uncovered) {
 			UncAAOF[i] = i;
 		}else{
 			int64_t MnAO = BIGINT;
