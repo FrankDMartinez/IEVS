@@ -945,6 +945,7 @@ struct oneCandidate
 	uint64_t drawCount;
 	int64_t BordaVotes;
 	real rangeVote;
+	int64_t lossCount;
 };
 
 typedef std::array<oneCandidate,MaxNumCands> CandidateSlate;
@@ -1410,7 +1411,6 @@ uint PlurVoteCount[MaxNumCands];
  int RdVoteCount[MaxNumCands];
  int FavListNext[MaxNumVoters];
  int HeadFav[MaxNumCands];
-int64_t LossCount[MaxNumCands];
 uint ApprovalVoteCount[MaxNumCands];
 real SumNormedRating[MaxNumCands];
 real UtilitySum[MaxNumCands];
@@ -2954,14 +2954,14 @@ EMETH SimmonsCond(edata& E  /* winner = X with least sum of top-rank-votes for r
  *	E:	the election data used to determine the Winner
  */
 EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
-{ /* side effects: Eliminated[], 'favoriteCandidate's of Each Voter, RdVoteCount[], FavListNext[], HeadFav[], LossCount[], SmithIRVwinner, IRVwinner  */
+{ /* side effects: Eliminated[], 'favoriteCandidate's of Each Voter, RdVoteCount[], FavListNext[], HeadFav[], Each Candidate's 'lossCount' member, SmithIRVwinner, IRVwinner  */
 	int Iround,i,RdLoser,NextI,j;
 	int64_t t;
 	int x,minc,r,stillthere,winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
-	const CandidateSlate& allCandidates = E.Candidates;
+	CandidateSlate& allCandidates = E.Candidates;
 	assert(numberOfCandidates <= MaxNumCands);
 	if((SmithIRVwinner<0) && (IRVTopLim==BIGINT) && (CopeWinOnlyWinner<0)) {
 		BuildDefeatsMatrix(E);
@@ -2977,7 +2977,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 					t++;
 				}
 			}
-			LossCount[i] = t;
+			allCandidates[i].lossCount = t;
 		}
 	} /*end for(i)*/
 	ZeroArray(numberOfCandidates, RdVoteCount);
@@ -3016,10 +3016,13 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 		if((IRVTopLim==BIGINT) && (SmithIRVwinner < 0)) {
 			const MarginsData& marginsOfRdLoser = allCandidates[RdLoser].margins;
 			for(j=(int)numberOfCandidates-1; j>=0; j--) {
-				if(!Eliminated[j]) { /* update LossCount[j] */
+				if(!Eliminated[j]) { /* update j's 'lossCount' member */
+					int64_t& lossCount = allCandidates[j].lossCount;
 					t = marginsOfRdLoser[j];
-					if(t>0) { LossCount[j] --; }
-					if( LossCount[j] <= 0 ) { SmithIRVwinner = j; break; }
+					if(t>0) {
+						lossCount--;
+					}
+					if( lossCount <= 0 ) { SmithIRVwinner = j; break; }
 				}
 			}
 		}
@@ -3985,10 +3988,10 @@ EMETH HeitzigRiver(const edata& E /*http://lists.electorama.com/pipermail/electi
  *	E:	the election data used to determine the Winner
  */
 EMETH DMC(edata& E  /* eliminate least-approved candidate until unbeaten winner exists */)
-{ /* side effects: LossCount[] */
+{ /* side effects: Each Candidate's 'lossCount' member */
 	int i,j,t;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	const CandidateSlate& allCandidates = E.Candidates;
+	CandidateSlate& allCandidates = E.Candidates;
 	if(CopeWinOnlyWinner<0) {
 		BuildDefeatsMatrix(E);
 	}
@@ -4000,15 +4003,18 @@ EMETH DMC(edata& E  /* eliminate least-approved candidate until unbeaten winner 
 		for(j=0; j<numberOfCandidates; j++) {
 			if(allCandidates[j].margins[i]>0){ t++; }
 		}
-		LossCount[i] = t;
+		allCandidates[i].lossCount = t;
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	PermShellSortDown<int>(numberOfCandidates, (int*)RandCandPerm, (int*)ApprovalVoteCount);
 	for(i=(int)numberOfCandidates-1; i>0; i--) {
-		const MarginsData& marginsOfI = allCandidates[i].margins;
-		if( LossCount[i] <= 0 ){  return(i); /*winner*/ }
+		const oneCandidate& CandidateI = allCandidates[i];
+		const MarginsData& marginsOfI = CandidateI.margins;
+		if( CandidateI.lossCount <= 0 ){  return(i); /*winner*/ }
 		for(j=0; j<i; j++){ /* eliminate i and update Losscount[] */
-			if(marginsOfI[j]>0){ LossCount[j] --; }
+			if(marginsOfI[j]>0) {
+				allCandidates[j].lossCount--;
+			}
 		}
 	}
 	return(i);
