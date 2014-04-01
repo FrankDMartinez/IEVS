@@ -1541,9 +1541,7 @@ void BuildDefeatsMatrix(edata& E)
 			for(j=0; j<i; j++) {
 				const oneCandidateToTheVoter &secondCandidateToTheVoter = allCandidatesToTheVoter[j];
 				oneCandidate& secondCandidate = allTheCandidates[j];
-				y = secondCandidateToTheVoter.ranking;
-				y -= firstCandidateToTheVoter.ranking;
-				if( y>0 ) {
+				if( secondCandidateToTheVoter.ranking>firstCandidateToTheVoter.ranking ) {
 					firstCandidate.DefeatsMatrix[j]++;	/*i preferred above j*/
 				}else{
 					secondCandidate.DefeatsMatrix[i]++;	/*j preferred above i*/
@@ -1556,8 +1554,7 @@ void BuildDefeatsMatrix(edata& E)
 					secondCandidate.ArmytageMatrix[i] -= t;
 					secondCandidate.ArmytageDefeatsMatrix[i]++;
 				}
-				t = firstCandidateToTheVoter.actualUtility - secondCandidateToTheVoter.actualUtility;
-				if(t > 0.0) {
+				if(firstCandidateToTheVoter.actualUtility > secondCandidateToTheVoter.actualUtility) {
 					firstCandidate.TrueDefeatsMatrix[j]++;
 				}else{
 					secondCandidate.TrueDefeatsMatrix[i]++;
