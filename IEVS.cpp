@@ -190,11 +190,11 @@ template< class T >
 		int ArgMaxArr(uint64_t N, const T Arr[], int RandPerm[]);
 template< class T >
 		int ArgMaxArr(uint64_t N, const oneCandidateToTheVoter (&Candidates)[MaxNumCands], int RandPerm[]);
-/*	fill(iteratableCollection):	fills 'iteratableCollection'
- *					with default values
- *	iteratableCollection:	the collection to fill
+/*	reset(iteratableCollection):	resets 'iteratableCollection'
+ *							with default values
+ *	iteratableCollection:	the collection to reset
  */
-template <typename T> void fill(T& iteratableCollection) {
+template <typename T> void reset(T& iteratableCollection) {
 	std::fill(iteratableCollection.begin(), iteratableCollection.end(), typename T::value_type());
 }
 int flipACoin(int choice1, int choice2);
@@ -1531,7 +1531,7 @@ void BuildDefeatsMatrix(edata& E)
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 
 	assert(numberOfCandidates <= MaxNumCands);
-	fill(allTheCandidates);
+	reset(allTheCandidates);
 	for(k=0; k<(int)numberOfVoters; k++) {
 		const oneVoter& theVoter = allVoters[k];
 		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
@@ -5603,7 +5603,7 @@ void ComputeBRs( brdata& B, const bool VotMethods[], int UtilMeth )
 	uint elnum;
 	edata E;
 
-	fill(B.votingMethods);
+	reset(B.votingMethods);
 	InitCoreElState();
 	EDataPrep(E, B);
 	for(elnum=0; elnum < numberOfElections; elnum++){
