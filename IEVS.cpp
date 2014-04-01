@@ -948,6 +948,7 @@ struct oneCandidate
 	int64_t lossCount;
 	bool uncovered;
 	bool IsASchwartzMember;
+	bool IsASmithMember;
 };
 
 typedef std::array<oneCandidate,MaxNumCands> CandidateSlate;
@@ -1417,7 +1418,6 @@ uint ApprovalVoteCount[MaxNumCands];
 real SumNormedRating[MaxNumCands];
 real UtilitySum[MaxNumCands];
 bool Eliminated[MaxNumCands];
-bool SmithMembs[MaxNumCands];
 bool CoverMatrix[MaxNumCands*MaxNumCands];
 
 void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have been run*/
@@ -2607,36 +2607,6 @@ BeatPathStrength[k*numberOfCandidates+j] > 0   for all k in the "Smith Set" and 
 BeatPathStrength[k*numberOfCandidates+j] >= 0  for all k in the "Schwartz Set" and j outside it.
 *******/
 
-void beatDFS( int x, int diff, bool Set[], int Mat[], uint64_t N )
-{
-	int i;
-	for(i=(int)N-1; i>=0; i--) {
-		if(i!=x) {
-			if( Mat[i*N+x]>=diff ) {
-				if( !Set[i] ) {
-					Set[i] = true;
-					beatDFS( i, diff, Set, Mat, N );
-				}
-			}
-		}
-	}
-}
-
-void beatDFS( const int& x, const int& diff, bool Set[], CandidateSlate& relationships, uint64_t N )
-{
-	int i;
-	for(i=(int)N-1; i>=0; i--) {
-		if(i!=x) {
-			if( relationships[i].margins[x]>=diff ) {
-				if( !Set[i] ) {
-					Set[i] = true;
-					beatDFS( i, diff, Set, relationships, N );
-				}
-			}
-		}
-	}
-}
-
 void beatDFS( const int& x, const int& diff, CandidateSlate& relationships, uint64_t N, bool oneCandidate::*member )
 {
 	int i;
@@ -2659,18 +2629,19 @@ void beatDFS( const int& x, const int& diff, CandidateSlate& relationships, uint
  *	E:	the election data used to determine the Smith set
  */
 EMETH SmithSet(edata& E  /* Smith set = smallest nonempty set of canddts that pairwise-beat all nonmembers */)
-{ /* side effects: SmithMembs[] */
+{ /* side effects: Each Candidate's Smith member status */
 	int i,r;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	FillArray(numberOfCandidates, SmithMembs, false);
+	CandidateSlate& allCandidates = E.Candidates;
+	Zero(numberOfCandidates, allCandidates, &oneCandidate::IsASmithMember);
 	assert(CopeWinOnlyWinner>=0);
 	assert(CopeWinOnlyWinner < (int)numberOfCandidates);
-	SmithMembs[CopeWinOnlyWinner] = true;
-	beatDFS(CopeWinOnlyWinner, 1, SmithMembs, E.Candidates, numberOfCandidates);
+	allCandidates[CopeWinOnlyWinner].IsASmithMember = true;
+	beatDFS(CopeWinOnlyWinner, 1, allCandidates, numberOfCandidates, &oneCandidate::IsASmithMember);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(i=(int)numberOfCandidates-1; i>=0; i--) {
 		r = RandCandPerm[i];
-		if(SmithMembs[r]) {
+		if(allCandidates[r].IsASmithMember) {
 			return r; /*return random set member*/
 		}
 	}
@@ -2953,8 +2924,9 @@ EMETH SimmonsCond(edata& E  /* winner = X with least sum of top-rank-votes for r
 	for(i=0; i<numberOfCandidates; i++) {
 		t=0;
 		for(j=0; j<numberOfCandidates; j++) {
-			if(allCandidates[j].margins[i]>0) { /* j pairwise-beats i */
-				t += 3*PlurVoteCount[j] + (allCandidates[j].IsASchwartzMember ? 1 : 0) + (SmithMembs[j]?1:0);
+			const oneCandidate& CandidateJ = allCandidates[j];
+			if(CandidateJ.margins[i]>0) { /* j pairwise-beats i */
+				t += 3*PlurVoteCount[j] + (CandidateJ.IsASchwartzMember ? 1 : 0) + (CandidateJ.IsASmithMember ? 1 : 0);
 				/*Here I am adding 1/3 of a vote if in SmithSet, ditto SchwartzSet, to break Simmons ties*/
 			}
 		}
