@@ -1747,6 +1747,9 @@ EMETH Plurality(const edata& E   /* canddt with most top-rank votes wins */)
 	return PlurWinner;
 }
 
+template <class T>
+	void Zero(const uint64_t& number, CandidateSlate& allCandidates, T oneCandidate::*member);
+
 EMETH AntiPlurality(edata& E   /* canddt with fewest bottom-rank votes wins */)
 { /* side effects: each Candidates anti-plurality vote counts, AntiPlurWinner */
 	int i;
@@ -1755,9 +1758,7 @@ EMETH AntiPlurality(edata& E   /* canddt with fewest bottom-rank votes wins */)
 	const uint& numberOfVoters = E.NumVoters;
 	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
-	for( oneCandidate& eachCandidate : allCandidates ) {
-		eachCandidate.antiPluralityVotes = 0;
-	}
+	Zero(numberOfCandidates, allCandidates, &oneCandidate::antiPluralityVotes);
 	for(i=0; i<numberOfVoters; i++) {
 		allCandidates[allVoters[i].topDownPrefs[lastCandidateIndex]].antiPluralityVotes++;
 	}
@@ -2678,9 +2679,6 @@ EMETH SmithSet(edata& E  /* Smith set = smallest nonempty set of canddts that pa
 	}
 	return(-1);
 }
-
-template <class T>
-	void Zero(const uint64_t& number, CandidateSlate& allCandidates, T oneCandidate::*member);
 
 /*	SchwartzSet(E):	returns the index of a randomly selected Member of the Schwartz set
  *			or -1 if an error occurs
