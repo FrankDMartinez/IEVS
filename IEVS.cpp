@@ -2762,7 +2762,7 @@ EMETH UncoveredSet(edata& E /*A "covers" B if A beats a strict superset of those
 		const oneCandidate& CandidateI = allCandidates[i];
 		const bool& IIsUncovered = CandidateI.uncovered;
 		const bool& IIsASchwartz = CandidateI.IsASchwartzMember;
-		if( !(IIsUncovered ? IIsASchwartz : true) ) {
+		if( IIsUncovered && !IIsASchwartz ) {
 			printf("bozo! i=%d NumCands=%lld\n", i, numberOfCandidates);
 			printf("%lld %lld %lld; %lld %lld %lld; %lld %lld %lld\n",
 				marginsOf0[0],
@@ -2778,7 +2778,7 @@ EMETH UncoveredSet(edata& E /*A "covers" B if A beats a strict superset of those
 			printf("Sc=%d%d%d\n", Candidate0.IsASchwartzMember, Candidate1.IsASchwartzMember, Candidate2.IsASchwartzMember);
 			printf("Un=%d%d%d\n", Candidate0.uncovered, Candidate1.uncovered, Candidate2.uncovered);
 		}
-		assert( IIsUncovered ? IIsASchwartz : true );
+		assert( !IIsUncovered || IIsASchwartz );
 		r = RandCandPerm[i];
 		if(allCandidates[r].uncovered){
 			RandomUncoveredMemb = r;
