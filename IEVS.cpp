@@ -947,6 +947,7 @@ struct oneCandidate
 	real rangeVote;
 	int64_t lossCount;
 	bool uncovered;
+	bool IsASchwartzMember;
 };
 
 typedef std::array<oneCandidate,MaxNumCands> CandidateSlate;
@@ -1417,7 +1418,6 @@ real SumNormedRating[MaxNumCands];
 real UtilitySum[MaxNumCands];
 bool Eliminated[MaxNumCands];
 bool SmithMembs[MaxNumCands];
-bool SchwartzMembs[MaxNumCands];
 bool CoverMatrix[MaxNumCands*MaxNumCands];
 
 void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have been run*/
@@ -2624,7 +2624,7 @@ void beatDFS( int x, int diff, bool Set[], int Mat[], uint64_t N )
 	}
 }
 
-void beatDFS( const int& x, const int& diff, bool Set[], const CandidateSlate& relationships, uint64_t N )
+void beatDFS( const int& x, const int& diff, bool Set[], CandidateSlate& relationships, uint64_t N )
 {
 	int i;
 	for(i=(int)N-1; i>=0; i--) {
@@ -2633,6 +2633,23 @@ void beatDFS( const int& x, const int& diff, bool Set[], const CandidateSlate& r
 				if( !Set[i] ) {
 					Set[i] = true;
 					beatDFS( i, diff, Set, relationships, N );
+				}
+			}
+		}
+	}
+}
+
+void beatDFS( const int& x, const int& diff, CandidateSlate& relationships, uint64_t N, bool oneCandidate::*member )
+{
+	int i;
+	for(i=(int)N-1; i>=0; i--) {
+		if(i!=x) {
+			oneCandidate& theCandidate = relationships[i];
+			if( theCandidate.margins[x]>=diff ) {
+				bool& theMember = theCandidate.*member;
+				if( !theMember ) {
+					theMember = true;
+					beatDFS( i, diff, relationships, N, member );
 				}
 			}
 		}
@@ -2662,23 +2679,27 @@ EMETH SmithSet(edata& E  /* Smith set = smallest nonempty set of canddts that pa
 	return(-1);
 }
 
+template <class T>
+	void Zero(const uint64_t& number, CandidateSlate& allCandidates, T oneCandidate::*member);
+
 /*	SchwartzSet(E):	returns the index of a randomly selected Member of the Schwartz set
  *			or -1 if an error occurs
  *	E:	the election data used to determine the Schwartz set
  */
 EMETH SchwartzSet(edata& E  /* Schwartz set = smallest nonempty set of canddts undefeated by nonmembers */)
-{ /* side effects: SchwartzMembs[] */
+{ /* side effects: Each Candidate's Schwartz Member state */
 	int i,r;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	FillArray(numberOfCandidates, SchwartzMembs, false);
+	CandidateSlate& allCandidates = E.Candidates;
+	Zero(numberOfCandidates, allCandidates, &oneCandidate::IsASchwartzMember);
 	assert(CopeWinOnlyWinner>=0);
 	assert(CopeWinOnlyWinner < (int)numberOfCandidates);
-	SchwartzMembs[CopeWinOnlyWinner] = true;
-	beatDFS(CopeWinOnlyWinner, 0, SchwartzMembs, E.Candidates, numberOfCandidates);
+	allCandidates[CopeWinOnlyWinner].IsASchwartzMember = true;
+	beatDFS(CopeWinOnlyWinner, 0, allCandidates, numberOfCandidates, &oneCandidate::IsASchwartzMember);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(i=(int)numberOfCandidates-1; i>=0; i--) {
 		r = RandCandPerm[i];
-		if(SchwartzMembs[r]) {
+		if(allCandidates[r].IsASchwartzMember) {
 			return r; /*return random set member*/
 		}
 	}
@@ -2697,9 +2718,12 @@ EMETH UncoveredSet(edata& E /*A "covers" B if A beats a strict superset of those
 	int A,B,i,r;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
-	const MarginsData& marginsOf0 = allCandidates[0].margins;
-	const MarginsData& marginsOf1 = allCandidates[1].margins;
-	const MarginsData& marginsOf2 = allCandidates[2].margins;
+	const oneCandidate& Candidate0 = allCandidates[0];
+	const oneCandidate& Candidate1 = allCandidates[1];
+	const oneCandidate& Candidate2 = allCandidates[2];
+	const MarginsData& marginsOf0 = Candidate0.margins;
+	const MarginsData& marginsOf1 = Candidate1.margins;
+	const MarginsData& marginsOf2 = Candidate2.margins;
 	if( numberOfCandidates > 4*sizeof(numberOfCandidates) ) {
 		printf("UncoveredSet: too many candidates %lld to use machine words(%d) to represent sets\n",
 			numberOfCandidates,
@@ -2737,7 +2761,10 @@ EMETH UncoveredSet(edata& E /*A "covers" B if A beats a strict superset of those
 	/*select random uncovered winner:*/
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(i=(int)numberOfCandidates-1; i>=0; i--){
-		if( !(allCandidates[i].uncovered?SchwartzMembs[i]:true) ) {
+		const oneCandidate& CandidateI = allCandidates[i];
+		const bool& IIsUncovered = CandidateI.uncovered;
+		const bool& IIsASchwartz = CandidateI.IsASchwartzMember;
+		if( !(IIsUncovered ? IIsASchwartz : true) ) {
 			printf("bozo! i=%d NumCands=%lld\n", i, numberOfCandidates);
 			printf("%lld %lld %lld; %lld %lld %lld; %lld %lld %lld\n",
 				marginsOf0[0],
@@ -2750,10 +2777,10 @@ EMETH UncoveredSet(edata& E /*A "covers" B if A beats a strict superset of those
 				marginsOf2[1],
 				marginsOf2[2]);
 			printf("CopeWinOnlyWinner=%d\n",CopeWinOnlyWinner);
-			printf("Sc=%d%d%d\n", SchwartzMembs[0], SchwartzMembs[1], SchwartzMembs[2]);
-			printf("Un=%d%d%d\n", allCandidates[0].uncovered, allCandidates[1].uncovered, allCandidates[2].uncovered);
+			printf("Sc=%d%d%d\n", Candidate0.IsASchwartzMember, Candidate1.IsASchwartzMember, Candidate2.IsASchwartzMember);
+			printf("Un=%d%d%d\n", Candidate0.uncovered, Candidate1.uncovered, Candidate2.uncovered);
 		}
-		assert( allCandidates[i].uncovered?SchwartzMembs[i]:true );
+		assert( IIsUncovered ? IIsASchwartz : true );
 		r = RandCandPerm[i];
 		if(allCandidates[r].uncovered){
 			RandomUncoveredMemb = r;
@@ -2932,7 +2959,7 @@ EMETH SimmonsCond(edata& E  /* winner = X with least sum of top-rank-votes for r
 		t=0;
 		for(j=0; j<numberOfCandidates; j++) {
 			if(allCandidates[j].margins[i]>0) { /* j pairwise-beats i */
-				t += 3*PlurVoteCount[j] + (SchwartzMembs[j]?1:0) + (SmithMembs[j]?1:0);
+				t += 3*PlurVoteCount[j] + (allCandidates[j].IsASchwartzMember ? 1 : 0) + (SmithMembs[j]?1:0);
 				/*Here I am adding 1/3 of a vote if in SmithSet, ditto SchwartzSet, to break Simmons ties*/
 			}
 		}
@@ -3687,9 +3714,6 @@ EMETH CondorcetApproval(edata& E  /*Condorcet winner if exists, else use Approva
 	}
 	return ApprovalWinner;
 }
-
-template <class T>
-	void Zero(const uint64_t& number, CandidateSlate& allCandidates, T oneCandidate::*member);
 
 EMETH Range(edata& E    /* canddt with highest average Score wins */)
 { /* side effects:   Each Candidate's range vote, RangeWinner  */
