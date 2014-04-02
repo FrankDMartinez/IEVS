@@ -950,6 +950,7 @@ struct oneCandidate
 	bool IsASchwartzMember;
 	bool IsASmithMember;
 	real normalizedRatingSum;
+	real utilitySum;
 };
 
 typedef std::array<oneCandidate,MaxNumCands> CandidateSlate;
@@ -1416,7 +1417,6 @@ uint PlurVoteCount[MaxNumCands];
  int FavListNext[MaxNumVoters];
  int HeadFav[MaxNumCands];
 uint ApprovalVoteCount[MaxNumCands];
-real UtilitySum[MaxNumCands];
 bool Eliminated[MaxNumCands];
 bool CoverMatrix[MaxNumCands*MaxNumCands];
 
@@ -1531,7 +1531,11 @@ void BuildDefeatsMatrix(edata& E)
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 
 	assert(numberOfCandidates <= MaxNumCands);
-	reset(allTheCandidates);
+	for(oneCandidate& eachCandidate : allTheCandidates) {
+		const real utilitySum = eachCandidate.utilitySum;
+		eachCandidate = oneCandidate();
+		eachCandidate.utilitySum = utilitySum;
+	}
 	for(k=0; k<(int)numberOfVoters; k++) {
 		const oneVoter& theVoter = allVoters[k];
 		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
@@ -1638,23 +1642,27 @@ void BuildDefeatsMatrix(edata& E)
 	}
 }
 
-EMETH SociallyBest(const edata& E  /* greatest utility-sum winner */)
-{ /* side effects: UtilitySum[], BestWinner */
+template <class T>
+	void Zero(const uint64_t& number, CandidateSlate& allCandidates, T oneCandidate::*member);
+
+EMETH SociallyBest(edata& E  /* greatest utility-sum winner */)
+{ /* side effects: Each Candidate's 'utilitySum', BestWinner */
 	int i,j;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
-	ZeroArray( numberOfCandidates, UtilitySum );
+	CandidateSlate& allCandidates = E.Candidates;
+	Zero(numberOfCandidates, allCandidates, &oneCandidate::utilitySum);
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
 		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
-			UtilitySum[j] += allCandidatesToTheVoter[j].actualUtility;
+			 allCandidates[j].utilitySum += allCandidatesToTheVoter[j].actualUtility;
 		}
 	}
-	BestWinner = ArgMaxArr<real>(numberOfCandidates, UtilitySum, (int*)RandCandPerm);
+	BestWinner = Maximum(numberOfCandidates, allCandidates, &oneCandidate::utilitySum);
 	for(j=0; j<numberOfCandidates; j++) {
-		assert( UtilitySum[BestWinner] >= UtilitySum[j] );
+		assert( allCandidates[BestWinner].utilitySum>= allCandidates[j].utilitySum );
 	}
 	return BestWinner;
 }
@@ -1662,12 +1670,12 @@ EMETH SociallyBest(const edata& E  /* greatest utility-sum winner */)
 /*	SociallyWorst(E):	returns the Candidate with the lowest utility sum
  *	E:	the election data used to determine the socially worst Candidate
  */
-EMETH SociallyWorst(const edata& E   /* least utility-sum winner */)
-{ /* side effects: UtilitySum[], WorstWinner */
+EMETH SociallyWorst(edata& E   /* least utility-sum winner */)
+{ /* side effects: Each Candidate's 'utilitySum', WorstWinner */
 	if(BestWinner<0) {
 		SociallyBest(E);
 	}
-	WorstWinner = ArgMinArr<real>(E.NumCands, UtilitySum, (int*)RandCandPerm);
+	WorstWinner = Minimum(E.NumCands, E.Candidates, &oneCandidate::utilitySum);
 	return WorstWinner;
 }
 
@@ -1743,9 +1751,6 @@ EMETH Plurality(const edata& E   /* canddt with most top-rank votes wins */)
 	PlurWinner = ArgMaxArr<int>(numberOfCandidates, (int*)PlurVoteCount, (int*)RandCandPerm);
 	return PlurWinner;
 }
-
-template <class T>
-	void Zero(const uint64_t& number, CandidateSlate& allCandidates, T oneCandidate::*member);
 
 EMETH AntiPlurality(edata& E   /* canddt with fewest bottom-rank votes wins */)
 { /* side effects: each Candidates anti-plurality vote counts, AntiPlurWinner */
@@ -1919,12 +1924,13 @@ EMETH RandomPair(const edata& E)
 { /*pairwise honest-util winner among 2 random candidates is elected*/
 	int x,y;
 	const uint64_t& numberOfCandidates = E.NumCands;
+	const CandidateSlate& allCandidates = E.Candidates;
 	x = (int)RandInt(numberOfCandidates);
 	y = (int)RandInt(numberOfCandidates);
-	if( UtilitySum[x] > UtilitySum[y] ) {
+	if( allCandidates[x].utilitySum > allCandidates[y].utilitySum ) {
 		return x;
 	}
-	if( UtilitySum[x] < UtilitySum[y] ) {
+	if( allCandidates[x].utilitySum < allCandidates[y].utilitySum ) {
 		return y;
 	}
 	return flipACoin(y, x);
@@ -4888,6 +4894,7 @@ void PrintBROutput(const brdata& regretObject, uint &scenarios);
 int FindWinnersAndRegrets( edata& E,  brdata& B,  const bool Methods[] )
 {
 	std::array<oneVotingMethod, NumMethods>& allVotingMethods = B.votingMethods;
+	const CandidateSlate& allCandidates = E.Candidates;
 	const int& sociallyBestWinner = allVotingMethods[0].Winner;
 	int m,w,j;
 	real r;
@@ -4898,9 +4905,9 @@ int FindWinnersAndRegrets( edata& E,  brdata& B,  const bool Methods[] )
 			oneVotingMethod& methodM = allVotingMethods[m];
 			w = GimmeWinner(E, m);
 			methodM.Winner = w;
-			r = UtilitySum[BestWinner] - UtilitySum[w];
+			r = allCandidates[BestWinner].utilitySum - allCandidates[w].utilitySum;
 			if(r<0.0 || BestWinner != sociallyBestWinner) {
-				printf("FUCK! major failure, r=%g<0 u[best]=%g u[w]=%g u[vm[0].w]=%g\n", r,UtilitySum[BestWinner],UtilitySum[w],UtilitySum[sociallyBestWinner]);
+				printf("FUCK! major failure, r=%g<0 u[best]=%g u[w]=%g u[vm[0].w]=%g\n", r,allCandidates[BestWinner].utilitySum,allCandidates[w].utilitySum,allCandidates[sociallyBestWinner].utilitySum);
 				printf("w=%d m=%d BestWinner=%d numberOfCandidates=%lld B->votingMethods[0].Winner=%d\n", w,m,BestWinner,E.NumCands,sociallyBestWinner);
 			}
 			ensure( BestWinner == sociallyBestWinner, 32 );
