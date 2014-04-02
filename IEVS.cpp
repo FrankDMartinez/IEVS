@@ -949,6 +949,7 @@ struct oneCandidate
 	bool uncovered;
 	bool IsASchwartzMember;
 	bool IsASmithMember;
+	real normalizedRatingSum;
 };
 
 typedef std::array<oneCandidate,MaxNumCands> CandidateSlate;
@@ -1415,7 +1416,6 @@ uint PlurVoteCount[MaxNumCands];
  int FavListNext[MaxNumVoters];
  int HeadFav[MaxNumCands];
 uint ApprovalVoteCount[MaxNumCands];
-real SumNormedRating[MaxNumCands];
 real UtilitySum[MaxNumCands];
 bool Eliminated[MaxNumCands];
 bool CoverMatrix[MaxNumCands*MaxNumCands];
@@ -3366,7 +3366,7 @@ real IRNRPOWER=2.0;
  *			error occurs
  *	E:	the election data used to determine the Winner
  */
-EMETH IRNR(const edata& E  /*Brian Olson's voting method described above*/)
+EMETH IRNR(edata& E  /*Brian Olson's voting method described above*/)
 { /* side effects: Eliminated[], SumNormedRatings[]*/
 	uint64_t rd;
 	int i;
@@ -3377,16 +3377,17 @@ EMETH IRNR(const edata& E  /*Brian Olson's voting method described above*/)
 	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
+	CandidateSlate& allCandidates = E.Candidates;
 
 	FillArray(numberOfCandidates, Eliminated, false);
 	for(rd=numberOfCandidates; rd>1; rd--) {
-		ZeroArray( numberOfCandidates, SumNormedRating );
+		Zero(numberOfCandidates, allCandidates, &oneCandidate::normalizedRatingSum);
 		for(i=0; i<(int)numberOfVoters; i++) {
-			const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+			const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = allVoters[i].Candidates;
 			s = 0.0;
 			for(j=0; j<numberOfCandidates; j++) {
 				if(!Eliminated[j]) {
-					t = allCandidates[j].score - 0.5;
+					t = allCandidatesToTheVoter[j].score - 0.5;
 					if(t < 0.0) {
 						t = -t;
 					}
@@ -3397,7 +3398,7 @@ EMETH IRNR(const edata& E  /*Brian Olson's voting method described above*/)
 				s = pow(s, -1.0/IRNRPOWER);
 				for(j=0; j<numberOfCandidates; j++) {
 					if(!Eliminated[j]) {
-						SumNormedRating[j] += s * allCandidates[j].score;
+						allCandidates[j].normalizedRatingSum += s * allCandidatesToTheVoter[j].score;
 					}
 				}
 			}
@@ -3408,8 +3409,9 @@ EMETH IRNR(const edata& E  /*Brian Olson's voting method described above*/)
 		for(j=(int)numberOfCandidates-1; j>=0; j--) {
 			r = RandCandPerm[j];
 			if(!Eliminated[r]) {
-				if( SumNormedRating[r] < minc ) {
-					minc = SumNormedRating[r];
+				const real& normalizedRatingSumOfCandidateR = allCandidates[r].normalizedRatingSum;
+				if( normalizedRatingSumOfCandidateR < minc ) {
+					minc = normalizedRatingSumOfCandidateR;
 					loser = r;
 				}
 			}
@@ -3433,7 +3435,7 @@ EMETH IRNR(const edata& E  /*Brian Olson's voting method described above*/)
  *			renormalization) Winner or -1 if an error occurs
  *	E:	the election data used to determine the Winner
  */
-EMETH IRNRv(const edata& E  /*Brian Olson's voting method but with 2-param renorm*/)
+EMETH IRNRv(edata& E  /*Brian Olson's voting method but with 2-param renorm*/)
 { /* side effects: Eliminated[], SumNormedRatings[]*/
 	uint64_t rd;
 	int i;
@@ -3445,17 +3447,18 @@ EMETH IRNRv(const edata& E  /*Brian Olson's voting method but with 2-param renor
 	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
+	CandidateSlate& allCandidates = E.Candidates;
 
 	FillArray(numberOfCandidates, Eliminated, false);
 	for(rd=numberOfCandidates; rd>1; rd--) {
-		ZeroArray( numberOfCandidates, SumNormedRating );
+		Zero(numberOfCandidates, allCandidates, &oneCandidate::normalizedRatingSum);
 		for(i=0; i<(int)numberOfVoters; i++) {
-			const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+			const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = allVoters[i].Candidates;
 			s = 0.0;
 			ct=0;
 			for(j=0; j<numberOfCandidates; j++) {
 				if(!Eliminated[j]) {
-					s += allCandidates[j].score;
+					s += allCandidatesToTheVoter[j].score;
 					ct++;
 				}
 			}
@@ -3465,7 +3468,7 @@ EMETH IRNRv(const edata& E  /*Brian Olson's voting method but with 2-param renor
 			s = 0.0;
 			for(j=(int)numberOfCandidates-1; j>=0; j--) {
 				if(!Eliminated[j]) {
-					t = allCandidates[j].score - avg;
+					t = allCandidatesToTheVoter[j].score - avg;
 					s += t*t;
 				}
 			}
@@ -3473,7 +3476,7 @@ EMETH IRNRv(const edata& E  /*Brian Olson's voting method but with 2-param renor
 				s = 1.0/sqrt(s);
 				for(j=0; j<numberOfCandidates; j++) {
 					if(!Eliminated[j]) {
-						SumNormedRating[j] += s * (allCandidates[j].score - avg);
+						allCandidates[j].normalizedRatingSum += s * (allCandidatesToTheVoter[j].score - avg);
 					}
 				}
 			}
@@ -3484,8 +3487,9 @@ EMETH IRNRv(const edata& E  /*Brian Olson's voting method but with 2-param renor
 		for(j=(int)numberOfCandidates-1; j>=0; j--) {
 			r = RandCandPerm[j];
 			if(!Eliminated[r]) {
-				if( SumNormedRating[r] < minc ) {
-					minc = SumNormedRating[r];
+				const real& normalizedRatingSumOfCandidateR = allCandidates[r].normalizedRatingSum;
+				if( normalizedRatingSumOfCandidateR < minc ) {
+					minc = normalizedRatingSumOfCandidateR;
 					loser = r;
 				}
 			}
@@ -3510,7 +3514,7 @@ EMETH IRNRv(const edata& E  /*Brian Olson's voting method but with 2-param renor
  *			and the minimum equals 0) Winner or -1 if an error occurs
  *	E:	the election data used to determine the Winner
  */
-EMETH IRNRm(const edata& E  /*Brian Olson's voting method but with 2-param renorm*/)
+EMETH IRNRm(edata& E  /*Brian Olson's voting method but with 2-param renorm*/)
 { /* side effects: Eliminated[], SumNormedRatings[]*/
 	uint64_t rd;
 	int i;
@@ -3521,17 +3525,18 @@ EMETH IRNRm(const edata& E  /*Brian Olson's voting method but with 2-param renor
 	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
+	CandidateSlate& allCandidates = E.Candidates;
 
 	FillArray(numberOfCandidates, Eliminated, false);
 	for(rd=numberOfCandidates; rd>1; rd--) {
-		ZeroArray( numberOfCandidates, SumNormedRating );
+		Zero(numberOfCandidates, allCandidates, &oneCandidate::normalizedRatingSum);
 		for(i=0; i<(int)numberOfVoters; i++) {
-			const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+			const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = allVoters[i].Candidates;
 			mx = -HUGE;
 			mn = HUGE;
 			for(j=0; j<numberOfCandidates; j++) {
 				if(!Eliminated[j]) {
-					t = allCandidates[j].score;
+					t = allCandidatesToTheVoter[j].score;
 					if(t<mn) {
 						mn=t;
 					}
@@ -3545,7 +3550,7 @@ EMETH IRNRm(const edata& E  /*Brian Olson's voting method but with 2-param renor
 				s = 1.0/s;
 				for(j=0; j<numberOfCandidates; j++) {
 					if(!Eliminated[j]) {
-						SumNormedRating[j] += s * (allCandidates[j].score - mn);
+						allCandidates[j].normalizedRatingSum += s * (allCandidatesToTheVoter[j].score - mn);
 					}
 				}
 			}
@@ -3556,8 +3561,9 @@ EMETH IRNRm(const edata& E  /*Brian Olson's voting method but with 2-param renor
 		for(j=(int)numberOfCandidates-1; j>=0; j--) {
 			r = RandCandPerm[j];
 			if(!Eliminated[r]) {
-				if( SumNormedRating[r] < minc ) {
-					minc = SumNormedRating[r];
+				const real& normalizedRatingSumOfCandidateR = allCandidates[r].normalizedRatingSum;
+				if( normalizedRatingSumOfCandidateR < minc ) {
+					minc = normalizedRatingSumOfCandidateR;
 					loser = r;
 				}
 			}
