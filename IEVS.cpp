@@ -951,6 +951,7 @@ struct oneCandidate
 	bool IsASmithMember;
 	real normalizedRatingSum;
 	real utilitySum;
+	int64_t voteCountForThisRound;
 };
 
 typedef std::array<oneCandidate,MaxNumCands> CandidateSlate;
@@ -1413,7 +1414,6 @@ uint RangeGranul;
  int CopeWinOnlyWinner;
  int SmithIRVwinner;
 uint PlurVoteCount[MaxNumCands];
- int RdVoteCount[MaxNumCands];
  int FavListNext[MaxNumVoters];
  int HeadFav[MaxNumCands];
 uint ApprovalVoteCount[MaxNumCands];
@@ -2778,22 +2778,24 @@ EMETH UncoveredSet(edata& E /*A "covers" B if A beats a strict superset of those
  *			from the 2nd round on
  *	E:	the election data used to determine the Winner
  */
-EMETH Bucklin(const edata& E   /* canddt with over half the voters ranking him in top-k wins (for k minimal) */)
-{ /* side effects: RdVoteCount[] */
-	int rnd,i,best,winner;
+EMETH Bucklin(edata& E   /* canddt with over half the voters ranking him in top-k wins (for k minimal) */)
+{ /* side effects: Each Candidates 'voteCountForThisRound' */
+	int rnd,i,winner;
+	int64_t best;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	CandidateSlate& allCandidates = E.Candidates;
 	winner = -1;
-	ZeroArray( numberOfCandidates,  RdVoteCount );
+	Zero(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound);
 	for(rnd=0; rnd<(int)numberOfCandidates; rnd++) {
 		for(i=0; i<(int)numberOfVoters; i++) {
 			const oneVoter& theVoter = allVoters[i];
-			RdVoteCount[ theVoter.topDownPrefs[rnd] ]++;
+			allCandidates[ theVoter.topDownPrefs[rnd] ].voteCountForThisRound++;
 		}
-		winner = ArgMaxArr<int>(numberOfCandidates, RdVoteCount, (int*)RandCandPerm);
-		best = RdVoteCount[winner];
-		if((best*2) > (int)numberOfVoters) {
+		winner = Maximum(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound);
+		best = allCandidates[winner].voteCountForThisRound;
+		if((best*2) > numberOfVoters) {
 			break;
 		}
 	}
@@ -2955,10 +2957,11 @@ EMETH SimmonsCond(edata& E  /* winner = X with least sum of top-rank-votes for r
  *	E:	the election data used to determine the Winner
  */
 EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
-{ /* side effects: Eliminated[], 'favoriteCandidate's of Each Voter, RdVoteCount[], FavListNext[], HeadFav[], Each Candidate's 'lossCount' member, SmithIRVwinner, IRVwinner  */
+{ /* side effects: Eliminated[], 'favoriteCandidate's of Each Voter, Each Candidate's 'voteCountForThisRound', FavListNext[], HeadFav[], Each Candidate's 'lossCount' member, SmithIRVwinner, IRVwinner  */
 	int Iround,i,RdLoser,NextI,j;
 	int64_t t;
-	int x,minc,r,stillthere,winner;
+	int x,r,stillthere,winner;
+	int64_t minc;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
@@ -2981,7 +2984,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 			allCandidates[i].lossCount = t;
 		}
 	} /*end for(i)*/
-	ZeroArray(numberOfCandidates, RdVoteCount);
+	Zero(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound);
 	resetFavorites(allVoters);
 	/* 'favoriteCandidate' is the rank of the 1st noneliminated canddt in voter i's topdownpref list (initially 0) */
 	FillArray(numberOfVoters, FavListNext, -1);
@@ -2995,7 +2998,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 		x = theVoter.topDownPrefs[theVoter.favoriteCandidate]; /* the initial favorite of voter i */
 		assert(x >= 0);
 		assert(x < (int)numberOfCandidates);
-		RdVoteCount[ x ]++;
+		allCandidates[x].voteCountForThisRound++;
 		FavListNext[i] = HeadFav[x];
 		HeadFav[x] = i;
 	}
@@ -3005,8 +3008,8 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 		minc = BIGINT;
 		for(i=(int)numberOfCandidates-1; i>=0; i--) {
 			r = RandCandPerm[i];
-			if(!Eliminated[r] && (RdVoteCount[r]<minc)) {
-				minc=RdVoteCount[r];
+			if(!Eliminated[r] && (allCandidates[r].voteCountForThisRound<minc)) {
+				minc=allCandidates[r].voteCountForThisRound;
 				RdLoser=r;
 			}
 		}
@@ -3046,7 +3049,9 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 			FavListNext[i] = HeadFav[x];
 			HeadFav[x] = i;
 			/* update vote count totals: */
-			if(favorite < IRVTopLim) {	RdVoteCount[ x ]++;   }
+			if(favorite < IRVTopLim) {
+				allCandidates[x].voteCountForThisRound++;
+			}
 		} /*end for(i)*/
 	}  /* end of for(Iround) */
 	stillthere = 0;
@@ -3087,12 +3092,13 @@ EMETH Top3IRV(edata& E  /* Top-3-choices-only IRV */
 }
 
 EMETH BTRIRV(edata& E  /* Repeatedly eliminate either plur loser or 2nd-loser (whoever loses pairwise) */
-){ /* side effects: Eliminated[], 'favoriteCandidate's, RdVoteCount[], FavListNext[], HeadFav[], */
-	int Iround,x,i,RdLoser,RdLoser2,NextI,minc,r;
+){ /* side effects: Eliminated[], 'favoriteCandidate's, Each Candidate's 'voteCountForThisRound', FavListNext[], HeadFav[], */
+	int Iround,x,i,RdLoser,RdLoser2,NextI,r;
+	int64_t minc;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
-	const CandidateSlate& allCandidates = E.Candidates;
+	CandidateSlate& allCandidates = E.Candidates;
 	assert(numberOfCandidates <= MaxNumCands);
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner>=0) return(CondorcetWinner);
@@ -3101,7 +3107,7 @@ EMETH BTRIRV(edata& E  /* Repeatedly eliminate either plur loser or 2nd-loser (w
 		Eliminated[i] = false;
 		HeadFav[i] = -1;
 	}
-	ZeroArray(numberOfCandidates, RdVoteCount);
+	Zero(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound);
 	resetFavorites(allVoters);
 	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
 	for(i=0; i<numberOfVoters; i++) {
@@ -3112,7 +3118,7 @@ EMETH BTRIRV(edata& E  /* Repeatedly eliminate either plur loser or 2nd-loser (w
 		x = theVoter.topDownPrefs[favorite]; /* the favorite of voter i */
 		assert(x >= 0);
 		assert(x < (int)numberOfCandidates);
-		RdVoteCount[ x ]++;
+		allCandidates[x].voteCountForThisRound++;
 		FavListNext[i] = HeadFav[x];
 		HeadFav[x] = i;
 	}
@@ -3122,8 +3128,8 @@ EMETH BTRIRV(edata& E  /* Repeatedly eliminate either plur loser or 2nd-loser (w
 		minc = BIGINT;
 		for(i=(int)numberOfCandidates-1; i>=0; i--){
 			r = RandCandPerm[i];
-			if(!Eliminated[r] && RdVoteCount[r]<minc){
-				minc=RdVoteCount[r];
+			if(!Eliminated[r] && allCandidates[r].voteCountForThisRound<minc){
+				minc=allCandidates[r].voteCountForThisRound;
 				RdLoser=r;
 			}
 		}
@@ -3132,8 +3138,8 @@ EMETH BTRIRV(edata& E  /* Repeatedly eliminate either plur loser or 2nd-loser (w
 		minc = BIGINT;
 		for(i=(int)numberOfCandidates-1; i>=0; i--){
 			r = RandCandPerm[i];
-			if(!Eliminated[r] && RdVoteCount[r]<minc && r!=RdLoser){
-				minc=RdVoteCount[r];
+			if(!Eliminated[r] && allCandidates[r].voteCountForThisRound<minc && r!=RdLoser){
+				minc=allCandidates[r].voteCountForThisRound;
 				RdLoser2=r;
 			}
 		}
@@ -3163,7 +3169,7 @@ EMETH BTRIRV(edata& E  /* Repeatedly eliminate either plur loser or 2nd-loser (w
 			/* update vote count totals: */
 			assert(x >= 0);
 			assert(x < (int)numberOfCandidates);
-			RdVoteCount[ x ]++;
+			allCandidates[x].voteCountForThisRound++;
 		}
 	}
 	for(i=0; i<numberOfCandidates; i++){ /* find the non-eliminated candidate... */
@@ -3175,17 +3181,19 @@ EMETH BTRIRV(edata& E  /* Repeatedly eliminate either plur loser or 2nd-loser (w
 }
 
 EMETH Coombs(edata& E /*repeatedly eliminate antiplurality loser (with most bottom-rank votes)*/
-){ /*side effects: Eliminated[], 'favoriteCandidate's, RdVoteCount[], FavListNext[], HeadFav[] */
-	int Iround,i,RdLoser,NextI,x,maxc,r;
+){ /*side effects: Eliminated[], 'favoriteCandidate's, Each Candidates 'voteCountForThisRound', FavListNext[], HeadFav[] */
+	int Iround,i,RdLoser,NextI,x,r;
+	int64_t maxc;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	CandidateSlate& allCandidates = E.Candidates;
 	assert(numberOfCandidates <= MaxNumCands);
 	for(i=0; i<numberOfCandidates; i++){
 		Eliminated[i] = false;
 		HeadFav[i] = -1; /*HeadFav[i] will be the first voter whose current most-hated is i*/
 	}
-	ZeroArray(numberOfCandidates, RdVoteCount);
+	Zero(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound);
 	assert(numberOfCandidates >= 2);
 	assert(numberOfCandidates <= MaxNumVoters);
 	resetFavorites(allVoters,numberOfCandidates-1);
@@ -3202,7 +3210,7 @@ EMETH Coombs(edata& E /*repeatedly eliminate antiplurality loser (with most bott
 		x = theVoter.topDownPrefs[favorite]; /* the initial most-hated of voter i */
 		assert(x >= 0);
 		assert(x < (int)numberOfCandidates);
-		RdVoteCount[ x ]++; /*antiplurality voting*/
+		allCandidates[x].voteCountForThisRound++; /*antiplurality voting*/
 		FavListNext[i] = HeadFav[x];
 		HeadFav[x] = i;
 	}
@@ -3215,8 +3223,8 @@ EMETH Coombs(edata& E /*repeatedly eliminate antiplurality loser (with most bott
 			assert(r >= 0);
 			assert(r < (int)numberOfCandidates);
 			if(!Eliminated[r]){
-				if(RdVoteCount[r]>maxc){
-					maxc=RdVoteCount[r];
+				if(allCandidates[r].voteCountForThisRound>maxc){
+					maxc=allCandidates[r].voteCountForThisRound;
 					RdLoser=r;
 				}
 			}
@@ -3244,7 +3252,7 @@ EMETH Coombs(edata& E /*repeatedly eliminate antiplurality loser (with most bott
 			/* update vote count totals: */
 			assert(x>=0);
 			assert(x < (int)numberOfCandidates);
-			RdVoteCount[ x ]++;
+			allCandidates[x].voteCountForThisRound++;
 		}
 	}	/* end of for(Iround) */
 	for(i=0; i<numberOfCandidates; i++) { /* find the non-eliminated candidate... */
