@@ -952,6 +952,7 @@ struct oneCandidate
 	real normalizedRatingSum;
 	real utilitySum;
 	int64_t voteCountForThisRound;
+	bool eliminated;
 };
 
 typedef std::array<oneCandidate,MaxNumCands> CandidateSlate;
@@ -1417,7 +1418,6 @@ uint PlurVoteCount[MaxNumCands];
  int FavListNext[MaxNumVoters];
  int HeadFav[MaxNumCands];
 uint ApprovalVoteCount[MaxNumCands];
-bool Eliminated[MaxNumCands];
 bool CoverMatrix[MaxNumCands*MaxNumCands];
 
 void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have been run*/
@@ -1946,19 +1946,19 @@ EMETH RandomPair(const edata& E)
  *	E:	the election data used to determine the Baldwin Winner
  */
 EMETH NansonBaldwin(edata& E  /* repeatedly eliminate Borda loser */)
-{ /* side effects: Eliminated[] */
+{ /* side effects: Each Candidte's 'eliminated' member */
 	int64_t NansonVoteCount[MaxNumCands];
 	int i, BordaLoser, rnd, r;
 	int64_t minc;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	const CandidateSlate& allCandidates = E.Candidates;
+	CandidateSlate& allCandidates = E.Candidates;
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner >= 0) return CondorcetWinner;
 #endif
 	if(BordaWinner<0) {
 		Borda(E);
 	}
-	FillArray(numberOfCandidates, Eliminated, false);
+	Zero(numberOfCandidates, allCandidates, &oneCandidate::eliminated);
 	CopyArray(numberOfCandidates, allCandidates, NansonVoteCount, &oneCandidate::BordaVotes);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(rnd=1; rnd < (int)numberOfCandidates; rnd++) {
@@ -1966,22 +1966,23 @@ EMETH NansonBaldwin(edata& E  /* repeatedly eliminate Borda loser */)
 		minc = BIGINT;
 		for(i=(int)numberOfCandidates-1; i>=0; i--) {
 			r = RandCandPerm[i];
-			if(!Eliminated[r] && (NansonVoteCount[r]<minc)) {
+			if(!allCandidates[r].eliminated && (NansonVoteCount[r]<minc)) {
 				minc=NansonVoteCount[r];
 				BordaLoser=r;
 			}
 		}
 		assert(BordaLoser>=0);
 		ensure(BordaLoser>=0, 7);
-		Eliminated[BordaLoser] = true;
+		allCandidates[BordaLoser].eliminated = true;
 		for(i=0; i<numberOfCandidates; i++) {
-			if(!Eliminated[i]) {
-				NansonVoteCount[i] -= allCandidates[i].margins[BordaLoser];
+			const oneCandidate& theCandidate = allCandidates[i];
+			if(!theCandidate.eliminated) {
+				NansonVoteCount[i] -= theCandidate.margins[BordaLoser];
 			}
 		}
 	} /* end of for(rnd) */
 	for(i=0; i<numberOfCandidates; i++) { /* find non-eliminated candidate... */
-		if(!Eliminated[i]) {
+		if(!allCandidates[i].eliminated) {
 			return i; /*NansonBaldwin winner*/
 		}
 	}
@@ -2342,7 +2343,7 @@ EMETH SimpsonKramer(edata& E  /* candidate with mildest worst-defeat wins */)
  *	E:	the election data used to determine the Raynaud Winner
  */
 EMETH RaynaudElim(edata& E  /* repeatedly eliminate canddt who suffered the worst-margin-defeat */)
-{ /* side effects: Eliminated[] */
+{ /* side effects: Each Candidate's 'eliminated' member */
 	int64_t RayDefeatMargin[MaxNumCands]={0};
 	int RayBeater[MaxNumCands]={0};
 	int i, j;
@@ -2352,7 +2353,7 @@ EMETH RaynaudElim(edata& E  /* repeatedly eliminate canddt who suffered the wors
 	int64_t maxc;
 	int r, beater;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	const CandidateSlate& allCandidates = E.Candidates;
+	CandidateSlate& allCandidates = E.Candidates;
 	if(CopeWinOnlyWinner<0) {
 		BuildDefeatsMatrix(E);
 	}
@@ -2371,14 +2372,14 @@ EMETH RaynaudElim(edata& E  /* repeatedly eliminate canddt who suffered the wors
 		RayDefeatMargin[i] = t; /*worst margin of defeat of i, nonpositive if undefeated */
 		RayBeater[i] = beater; /*who administered that beating*/
 	}
-	FillArray(numberOfCandidates, Eliminated, false);
+	Zero(numberOfCandidates, allCandidates, &oneCandidate::eliminated);
 	for(rnd=1; rnd < (int)numberOfCandidates; rnd++) {
 		RayLoser = -1;
 		maxc = -BIGINT;
 		RandomlyPermute( numberOfCandidates, RandCandPerm );
 		for(i=(int)numberOfCandidates-1; i>=0; i--) {
 			r = RandCandPerm[i];
-			if(!Eliminated[r] && (RayDefeatMargin[r]>maxc)) {
+			if(!allCandidates[r].eliminated && (RayDefeatMargin[r]>maxc)) {
 				maxc=RayDefeatMargin[r];
 				RayLoser=r;
 			}
@@ -2386,15 +2387,15 @@ EMETH RaynaudElim(edata& E  /* repeatedly eliminate canddt who suffered the wors
 		assert(RayLoser >= 0);
 		ensure(RayLoser >= 0, 10);
 		if( maxc <= 0 ) { return RayLoser; } /*"loser" is undefeated*/
-		Eliminated[RayLoser] = true;
+		allCandidates[RayLoser].eliminated = true;
 		for(i=(int)numberOfCandidates-1; i>=0; i--) {
-			if(!Eliminated[i] && (RayBeater[i]==RayLoser)) {
+			if(!allCandidates[i].eliminated && (RayBeater[i]==RayLoser)) {
 				t = -BIGINT;
 				beater = -1;
 				RandomlyPermute( numberOfCandidates, RandCandPerm );
 				for(j=(int)numberOfCandidates-1; j>=0; j--) {
 					r = RandCandPerm[j];
-					if(!Eliminated[r]) {
+					if(!allCandidates[r].eliminated) {
 						x = allCandidates[r].margins[i];
 						if(x>t) { t=x; beater=r; }
 					}
@@ -2406,7 +2407,7 @@ EMETH RaynaudElim(edata& E  /* repeatedly eliminate canddt who suffered the wors
 		}
 	} /* end of for(rnd) */
 	for(i=0; i<numberOfCandidates; i++) { /* find non-eliminated candidate... */
-		if(!Eliminated[i]) {
+		if(!allCandidates[i].eliminated) {
 			return i; /*Raynaud winner*/
 		}
 	}
@@ -2426,7 +2427,7 @@ EMETH RaynaudElim(edata& E  /* repeatedly eliminate canddt who suffered the wors
  *	E:	the election data used to determine the Arrow-Raynaud Winner
  */
 EMETH ArrowRaynaud(edata& E  /* repeatedly eliminate canddt with smallest {largest margin of victory, which is <=0 if never won} */)
-{ /* side effects: Eliminated[], ArrowRaynaud can eliminate a Condorcet Winner in round #1. */
+{ /* side effects: Each Candidate's 'eliminated' member, ArrowRaynaud can eliminate a Condorcet Winner in round #1. */
 	int64_t ARVictMargin[MaxNumCands]={0};
 	int ARchump[MaxNumCands]={0};
 	int i, j;
@@ -2436,7 +2437,7 @@ EMETH ArrowRaynaud(edata& E  /* repeatedly eliminate canddt with smallest {large
 	int64_t minc;
 	int r, chump;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	const CandidateSlate& allCandidates = E.Candidates;
+	CandidateSlate& allCandidates = E.Candidates;
 	if(CopeWinOnlyWinner<0) {
 		BuildDefeatsMatrix(E);
 	}
@@ -2453,30 +2454,31 @@ EMETH ArrowRaynaud(edata& E  /* repeatedly eliminate canddt with smallest {large
 		ARVictMargin[i] = t; /*largest margin of victory of i, nonpositive if never won*/
 		ARchump[i] = chump; /*who suffered that beating*/
 	}
-	FillArray(numberOfCandidates, Eliminated, false);
+	Zero(numberOfCandidates, allCandidates, &oneCandidate::eliminated);
 	for(rnd=1; rnd < (int)numberOfCandidates; rnd++) {
 		ARLoser = -1;
 		minc = BIGINT;
 		RandomlyPermute( numberOfCandidates, RandCandPerm );
 		for(i=(int)numberOfCandidates-1; i>=0; i--) {
 			r = RandCandPerm[i];
-			if(!Eliminated[r] && (ARVictMargin[r]<minc)) {
+			if(!allCandidates[r].eliminated && (ARVictMargin[r]<minc)) {
 				minc=ARVictMargin[r];
 				ARLoser=r;
 			}
 		}
 		assert(ARLoser >= 0);
 		ensure(ARLoser >= 0, 11);
-		Eliminated[ARLoser] = true;
+		allCandidates[ARLoser].eliminated = true;
 		for(i=(int)numberOfCandidates-1; i>=0; i--) {
-			if(!Eliminated[i] && (ARchump[i]==ARLoser)) {
+			const oneCandidate& CandidateI = allCandidates[i];
+			if(!CandidateI.eliminated && (ARchump[i]==ARLoser)) {
 				t = -BIGINT;
 				chump = -1;
 				RandomlyPermute( numberOfCandidates, RandCandPerm );
 				for(j=(int)numberOfCandidates-1; j>=0; j--) {
 					r = RandCandPerm[j];
-					if(!Eliminated[r]) {
-						x = allCandidates[i].margins[r];
+					if(!allCandidates[r].eliminated) {
+						x = CandidateI.margins[r];
 						if(x>t) {
 							t=x;
 							chump=r;
@@ -2490,7 +2492,7 @@ EMETH ArrowRaynaud(edata& E  /* repeatedly eliminate canddt with smallest {large
 		}
 	} /* end of for(rnd) */
 	for(i=0; i<numberOfCandidates; i++) { /* find non-eliminated candidate... */
-		if(!Eliminated[i]) {
+		if(!allCandidates[i].eliminated) {
 			return i; /*ArrowRaynaud winner*/
 		}
 	}
@@ -2957,7 +2959,7 @@ EMETH SimmonsCond(edata& E  /* winner = X with least sum of top-rank-votes for r
  *	E:	the election data used to determine the Winner
  */
 EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
-{ /* side effects: Eliminated[], 'favoriteCandidate's of Each Voter, Each Candidate's 'voteCountForThisRound', FavListNext[], HeadFav[], Each Candidate's 'lossCount' member, SmithIRVwinner, IRVwinner  */
+{ /* side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's of Each Voter, Each Candidate's 'voteCountForThisRound', FavListNext[], HeadFav[], Each Candidate's 'lossCount' member, SmithIRVwinner, IRVwinner  */
 	int Iround,i,RdLoser,NextI,j;
 	int64_t t;
 	int x,r,stillthere,winner;
@@ -2972,7 +2974,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(i=0; i<numberOfCandidates; i++) {
-		Eliminated[i] = false;
+		allCandidates[i].eliminated =false;
 		HeadFav[i] = -1; /*HeadFav[i] will be the first voter whose current favorite is i*/
 		if((SmithIRVwinner<0) && (IRVTopLim==BIGINT)) {
 			t=0;
@@ -3008,7 +3010,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 		minc = BIGINT;
 		for(i=(int)numberOfCandidates-1; i>=0; i--) {
 			r = RandCandPerm[i];
-			if(!Eliminated[r] && (allCandidates[r].voteCountForThisRound<minc)) {
+			if(!allCandidates[r].eliminated && (allCandidates[r].voteCountForThisRound<minc)) {
 				minc=allCandidates[r].voteCountForThisRound;
 				RdLoser=r;
 			}
@@ -3016,11 +3018,11 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 		assert(RdLoser>=0);
 		assert(RdLoser < (int)numberOfCandidates);
 		ensure(RdLoser>=0, 12);
-		Eliminated[RdLoser] = true; /* eliminate RdLoser */
+		allCandidates[RdLoser].eliminated = true; /* eliminate RdLoser */
 		if((IRVTopLim==BIGINT) && (SmithIRVwinner < 0)) {
 			const MarginsData& marginsOfRdLoser = allCandidates[RdLoser].margins;
 			for(j=(int)numberOfCandidates-1; j>=0; j--) {
-				if(!Eliminated[j]) { /* update j's 'lossCount' member */
+				if(!allCandidates[j].eliminated) { /* update j's 'lossCount' member */
 					int64_t& lossCount = allCandidates[j].lossCount;
 					t = marginsOfRdLoser[j];
 					if(t>0) {
@@ -3040,7 +3042,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 			do{
 				favorite++;
 				x = theVoter.topDownPrefs[favorite];
-			} while( Eliminated[x] );
+			} while( allCandidates[x].eliminated);
 			/* x is new favorite of voter i (or ran out of favorites) */
 			ensure( favorite < (int)numberOfCandidates, 44 );
 			assert(x >= 0);
@@ -3060,7 +3062,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 	}
 	winner = -1;
 	for(i=0; i<numberOfCandidates; i++) { /* find non-eliminated candidate... */
-		if(!Eliminated[i]) {
+		if(!allCandidates[i].eliminated) {
 			winner=i;
 			stillthere++;
 		}
@@ -3092,7 +3094,7 @@ EMETH Top3IRV(edata& E  /* Top-3-choices-only IRV */
 }
 
 EMETH BTRIRV(edata& E  /* Repeatedly eliminate either plur loser or 2nd-loser (whoever loses pairwise) */
-){ /* side effects: Eliminated[], 'favoriteCandidate's, Each Candidate's 'voteCountForThisRound', FavListNext[], HeadFav[], */
+){ /* side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's, Each Candidate's 'voteCountForThisRound', FavListNext[], HeadFav[], */
 	int Iround,x,i,RdLoser,RdLoser2,NextI,r;
 	int64_t minc;
 	const uint64_t& numberOfCandidates = E.NumCands;
@@ -3104,7 +3106,7 @@ EMETH BTRIRV(edata& E  /* Repeatedly eliminate either plur loser or 2nd-loser (w
 	if(CondorcetWinner>=0) return(CondorcetWinner);
 #endif
 	for(i=0; i<numberOfCandidates; i++) {
-		Eliminated[i] = false;
+		allCandidates[i].eliminated = false;
 		HeadFav[i] = -1;
 	}
 	Zero(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound);
@@ -3128,7 +3130,7 @@ EMETH BTRIRV(edata& E  /* Repeatedly eliminate either plur loser or 2nd-loser (w
 		minc = BIGINT;
 		for(i=(int)numberOfCandidates-1; i>=0; i--){
 			r = RandCandPerm[i];
-			if(!Eliminated[r] && allCandidates[r].voteCountForThisRound<minc){
+			if(!allCandidates[r].eliminated && allCandidates[r].voteCountForThisRound<minc){
 				minc=allCandidates[r].voteCountForThisRound;
 				RdLoser=r;
 			}
@@ -3138,7 +3140,7 @@ EMETH BTRIRV(edata& E  /* Repeatedly eliminate either plur loser or 2nd-loser (w
 		minc = BIGINT;
 		for(i=(int)numberOfCandidates-1; i>=0; i--){
 			r = RandCandPerm[i];
-			if(!Eliminated[r] && allCandidates[r].voteCountForThisRound<minc && r!=RdLoser){
+			if(!allCandidates[r].eliminated && allCandidates[r].voteCountForThisRound<minc && r!=RdLoser){
 				minc=allCandidates[r].voteCountForThisRound;
 				RdLoser2=r;
 			}
@@ -3148,7 +3150,7 @@ EMETH BTRIRV(edata& E  /* Repeatedly eliminate either plur loser or 2nd-loser (w
 			RdLoser = RdLoser2;
 		}
 		ensure(RdLoser>=0, 13);
-		Eliminated[RdLoser] = true; /* eliminate RdLoser */
+		allCandidates[RdLoser].eliminated = true; /* eliminate RdLoser */
 		for(i=HeadFav[RdLoser]; i>=0; i=NextI){ /* Go thru list of voters with favorite=RdLoser, adjust: */
 			oneVoter& theVoter = allVoters[i];
 			int64_t& favorite = theVoter.favoriteCandidate;
@@ -3159,7 +3161,7 @@ EMETH BTRIRV(edata& E  /* Repeatedly eliminate either plur loser or 2nd-loser (w
 			do {
 				favorite++;
 				x = preferences[favorite];
-			} while( Eliminated[x] );
+			} while( allCandidates[x].eliminated );
 			/* x is new favorite of voter i */
 			ensure( favorite < (int)numberOfCandidates, 38 );
 			NextI =	FavListNext[i];
@@ -3173,7 +3175,7 @@ EMETH BTRIRV(edata& E  /* Repeatedly eliminate either plur loser or 2nd-loser (w
 		}
 	}
 	for(i=0; i<numberOfCandidates; i++){ /* find the non-eliminated candidate... */
-		if(!Eliminated[i]){
+		if(!allCandidates[i].eliminated){
 			return i; /*IRV winner*/
 		}
 	}
@@ -3181,7 +3183,7 @@ EMETH BTRIRV(edata& E  /* Repeatedly eliminate either plur loser or 2nd-loser (w
 }
 
 EMETH Coombs(edata& E /*repeatedly eliminate antiplurality loser (with most bottom-rank votes)*/
-){ /*side effects: Eliminated[], 'favoriteCandidate's, Each Candidates 'voteCountForThisRound', FavListNext[], HeadFav[] */
+){ /*side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's, Each Candidates 'voteCountForThisRound', FavListNext[], HeadFav[] */
 	int Iround,i,RdLoser,NextI,x,r;
 	int64_t maxc;
 	const uint64_t& numberOfCandidates = E.NumCands;
@@ -3190,7 +3192,7 @@ EMETH Coombs(edata& E /*repeatedly eliminate antiplurality loser (with most bott
 	CandidateSlate& allCandidates = E.Candidates;
 	assert(numberOfCandidates <= MaxNumCands);
 	for(i=0; i<numberOfCandidates; i++){
-		Eliminated[i] = false;
+		allCandidates[i].eliminated = false;
 		HeadFav[i] = -1; /*HeadFav[i] will be the first voter whose current most-hated is i*/
 	}
 	Zero(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound);
@@ -3222,7 +3224,7 @@ EMETH Coombs(edata& E /*repeatedly eliminate antiplurality loser (with most bott
 			r = RandCandPerm[i];
 			assert(r >= 0);
 			assert(r < (int)numberOfCandidates);
-			if(!Eliminated[r]){
+			if(!allCandidates[r].eliminated) {
 				if(allCandidates[r].voteCountForThisRound>maxc){
 					maxc=allCandidates[r].voteCountForThisRound;
 					RdLoser=r;
@@ -3231,7 +3233,7 @@ EMETH Coombs(edata& E /*repeatedly eliminate antiplurality loser (with most bott
 		}
 		assert(RdLoser>=0);
 		ensure(RdLoser>=0, 14);
-		Eliminated[RdLoser] = true; /* eliminate RdLoser */
+		allCandidates[RdLoser].eliminated = true; /* eliminate RdLoser */
 		for(i=HeadFav[RdLoser]; i>=0; i=NextI){/*Go thru linked list of voters with favorite=RdLoser, adjust:*/
 			oneVoter& theVoter = allVoters[i];
 			const uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
@@ -3242,7 +3244,7 @@ EMETH Coombs(edata& E /*repeatedly eliminate antiplurality loser (with most bott
 			do {
 				favorite--;
 				x = preferences[favorite];
-			} while( Eliminated[x] );
+			} while( allCandidates[x].eliminated );
 			/* x is new favorite of voter i */
 			ensure( favorite >= 0, 41 );
 			NextI =	FavListNext[i];
@@ -3256,7 +3258,7 @@ EMETH Coombs(edata& E /*repeatedly eliminate antiplurality loser (with most bott
 		}
 	}	/* end of for(Iround) */
 	for(i=0; i<numberOfCandidates; i++) { /* find the non-eliminated candidate... */
-		if(!Eliminated[i]){
+		if(!allCandidates[i].eliminated) {
 			return i; /*Coombs winner*/
 		}
 	}
@@ -3339,28 +3341,28 @@ EMETH HeitzigDFC(const edata& E)
 	return(Rwnr);
 }
 
-EMETH HeitzigLFC(const edata& E){ /*random canddt who is not "strongly beat" wins; y strongly beats x if Approval(y)>Approval(x) and less than Approval(x)/2 voters prefer x>y.*/
-  /*Side effects: Eliminated[] */
+EMETH HeitzigLFC(edata& E){ /*random canddt who is not "strongly beat" wins; y strongly beats x if Approval(y)>Approval(x) and less than Approval(x)/2 voters prefer x>y.*/
+  /*Side effects: Each Candidate's 'eliminated' member */
 	int i,j;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	const CandidateSlate& allCandidates = E.Candidates;
-	FillArray(numberOfCandidates, Eliminated, false);
+	CandidateSlate& allCandidates = E.Candidates;
+	Zero(numberOfCandidates, allCandidates, &oneCandidate::eliminated);
 	for(j=0; j<numberOfCandidates; j++) {
 		for(i=0; i<numberOfCandidates; i++) {
       if(ApprovalVoteCount[j] > ApprovalVoteCount[i]){
 	if(2*allCandidates[i].DefeatsMatrix[j] < (int)ApprovalVoteCount[i]){
           /*Candidate i is "strongly beat"*/
-	  Eliminated[i] = true;
+		allCandidates[i].eliminated = true;
 	}
       }
     }
   }
   RandomlyPermute( numberOfCandidates, RandCandPerm );
   for(i=(int)numberOfCandidates-1; i>=0; i--){ /* find random non-eliminated candidate... */
-    j = RandCandPerm[i];
-    if(!Eliminated[j]){
-      return j; /*winner*/
-    }
+	j = RandCandPerm[i];
+	if(!allCandidates[j].eliminated) {
+		return j; /*winner*/
+	}
   }
   return(-1); /*error*/
 }
@@ -3381,7 +3383,7 @@ real IRNRPOWER=2.0;
  *	E:	the election data used to determine the Winner
  */
 EMETH IRNR(edata& E  /*Brian Olson's voting method described above*/)
-{ /* side effects: Eliminated[], SumNormedRatings[]*/
+{ /* side effects: Each Candidate's 'eliminated' member, SumNormedRatings[]*/
 	uint64_t rd;
 	int i;
 	int j;
@@ -3393,14 +3395,14 @@ EMETH IRNR(edata& E  /*Brian Olson's voting method described above*/)
 	const uint& numberOfVoters = E.NumVoters;
 	CandidateSlate& allCandidates = E.Candidates;
 
-	FillArray(numberOfCandidates, Eliminated, false);
+	Zero(numberOfCandidates, allCandidates, &oneCandidate::eliminated);
 	for(rd=numberOfCandidates; rd>1; rd--) {
 		Zero(numberOfCandidates, allCandidates, &oneCandidate::normalizedRatingSum);
 		for(i=0; i<(int)numberOfVoters; i++) {
 			const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = allVoters[i].Candidates;
 			s = 0.0;
 			for(j=0; j<numberOfCandidates; j++) {
-				if(!Eliminated[j]) {
+				if(!allCandidates[j].eliminated) {
 					t = allCandidatesToTheVoter[j].score - 0.5;
 					if(t < 0.0) {
 						t = -t;
@@ -3411,8 +3413,9 @@ EMETH IRNR(edata& E  /*Brian Olson's voting method described above*/)
 			if(s>0.0) {
 				s = pow(s, -1.0/IRNRPOWER);
 				for(j=0; j<numberOfCandidates; j++) {
-					if(!Eliminated[j]) {
-						allCandidates[j].normalizedRatingSum += s * allCandidatesToTheVoter[j].score;
+					oneCandidate& CandidateJ = allCandidates[j];
+					if(!CandidateJ.eliminated) {
+						CandidateJ.normalizedRatingSum += s * allCandidatesToTheVoter[j].score;
 					}
 				}
 			}
@@ -3422,7 +3425,7 @@ EMETH IRNR(edata& E  /*Brian Olson's voting method described above*/)
 		minc = HUGE;
 		for(j=(int)numberOfCandidates-1; j>=0; j--) {
 			r = RandCandPerm[j];
-			if(!Eliminated[r]) {
+			if(!allCandidates[r].eliminated) {
 				const real& normalizedRatingSumOfCandidateR = allCandidates[r].normalizedRatingSum;
 				if( normalizedRatingSumOfCandidateR < minc ) {
 					minc = normalizedRatingSumOfCandidateR;
@@ -3432,11 +3435,11 @@ EMETH IRNR(edata& E  /*Brian Olson's voting method described above*/)
 		}
 		assert(loser>=0);
 		ensure(loser>=0, 15);
-		Eliminated[loser] = true;
+		allCandidates[loser].eliminated = true;
 	}
 	for(i=(int)numberOfCandidates-1; i>=0; i--) { /* find random non-eliminated candidate... */
 		j = RandCandPerm[i];
-		if(!Eliminated[j]) {
+		if(!allCandidates[j].eliminated) {
 			return j; /*winner*/
 		}
 	}
@@ -3450,7 +3453,7 @@ EMETH IRNR(edata& E  /*Brian Olson's voting method described above*/)
  *	E:	the election data used to determine the Winner
  */
 EMETH IRNRv(edata& E  /*Brian Olson's voting method but with 2-param renorm*/)
-{ /* side effects: Eliminated[], SumNormedRatings[]*/
+{ /* side effects: Each Candidate's 'eliminated' member, SumNormedRatings[]*/
 	uint64_t rd;
 	int i;
 	int j;
@@ -3463,7 +3466,7 @@ EMETH IRNRv(edata& E  /*Brian Olson's voting method but with 2-param renorm*/)
 	const uint& numberOfVoters = E.NumVoters;
 	CandidateSlate& allCandidates = E.Candidates;
 
-	FillArray(numberOfCandidates, Eliminated, false);
+	Zero(numberOfCandidates, allCandidates, &oneCandidate::eliminated);
 	for(rd=numberOfCandidates; rd>1; rd--) {
 		Zero(numberOfCandidates, allCandidates, &oneCandidate::normalizedRatingSum);
 		for(i=0; i<(int)numberOfVoters; i++) {
@@ -3471,7 +3474,7 @@ EMETH IRNRv(edata& E  /*Brian Olson's voting method but with 2-param renorm*/)
 			s = 0.0;
 			ct=0;
 			for(j=0; j<numberOfCandidates; j++) {
-				if(!Eliminated[j]) {
+				if(!allCandidates[j].eliminated) {
 					s += allCandidatesToTheVoter[j].score;
 					ct++;
 				}
@@ -3481,7 +3484,7 @@ EMETH IRNRv(edata& E  /*Brian Olson's voting method but with 2-param renorm*/)
 			avg = s/ct; /*mean*/
 			s = 0.0;
 			for(j=(int)numberOfCandidates-1; j>=0; j--) {
-				if(!Eliminated[j]) {
+				if(!allCandidates[j].eliminated) {
 					t = allCandidatesToTheVoter[j].score - avg;
 					s += t*t;
 				}
@@ -3489,7 +3492,7 @@ EMETH IRNRv(edata& E  /*Brian Olson's voting method but with 2-param renorm*/)
 			if(s>0.0) {
 				s = 1.0/sqrt(s);
 				for(j=0; j<numberOfCandidates; j++) {
-					if(!Eliminated[j]) {
+					if(!allCandidates[j].eliminated) {
 						allCandidates[j].normalizedRatingSum += s * (allCandidatesToTheVoter[j].score - avg);
 					}
 				}
@@ -3500,7 +3503,7 @@ EMETH IRNRv(edata& E  /*Brian Olson's voting method but with 2-param renorm*/)
 		minc = HUGE;
 		for(j=(int)numberOfCandidates-1; j>=0; j--) {
 			r = RandCandPerm[j];
-			if(!Eliminated[r]) {
+			if(!allCandidates[r].eliminated) {
 				const real& normalizedRatingSumOfCandidateR = allCandidates[r].normalizedRatingSum;
 				if( normalizedRatingSumOfCandidateR < minc ) {
 					minc = normalizedRatingSumOfCandidateR;
@@ -3510,11 +3513,11 @@ EMETH IRNRv(edata& E  /*Brian Olson's voting method but with 2-param renorm*/)
 		}
 		assert(loser>=0);
 		ensure(loser>=0, 16);
-		Eliminated[loser] = true;
+		allCandidates[loser].eliminated = true;
 	}
 	for(i=(int)numberOfCandidates-1; i>=0; i--) { /* find random non-eliminated candidate... */
 		j = RandCandPerm[i];
-		if(!Eliminated[j]) {
+		if(!allCandidates[j].eliminated) {
 			return j; /*winner*/
 		}
 	}
@@ -3529,7 +3532,7 @@ EMETH IRNRv(edata& E  /*Brian Olson's voting method but with 2-param renorm*/)
  *	E:	the election data used to determine the Winner
  */
 EMETH IRNRm(edata& E  /*Brian Olson's voting method but with 2-param renorm*/)
-{ /* side effects: Eliminated[], SumNormedRatings[]*/
+{ /* side effects: Each Candidate's 'eliminated' member, SumNormedRatings[]*/
 	uint64_t rd;
 	int i;
 	int j;
@@ -3541,7 +3544,7 @@ EMETH IRNRm(edata& E  /*Brian Olson's voting method but with 2-param renorm*/)
 	const uint& numberOfVoters = E.NumVoters;
 	CandidateSlate& allCandidates = E.Candidates;
 
-	FillArray(numberOfCandidates, Eliminated, false);
+	Zero(numberOfCandidates, allCandidates, &oneCandidate::eliminated);
 	for(rd=numberOfCandidates; rd>1; rd--) {
 		Zero(numberOfCandidates, allCandidates, &oneCandidate::normalizedRatingSum);
 		for(i=0; i<(int)numberOfVoters; i++) {
@@ -3549,7 +3552,7 @@ EMETH IRNRm(edata& E  /*Brian Olson's voting method but with 2-param renorm*/)
 			mx = -HUGE;
 			mn = HUGE;
 			for(j=0; j<numberOfCandidates; j++) {
-				if(!Eliminated[j]) {
+				if(!allCandidates[j].eliminated) {
 					t = allCandidatesToTheVoter[j].score;
 					if(t<mn) {
 						mn=t;
@@ -3563,7 +3566,7 @@ EMETH IRNRm(edata& E  /*Brian Olson's voting method but with 2-param renorm*/)
 			if(s>0.0) {
 				s = 1.0/s;
 				for(j=0; j<numberOfCandidates; j++) {
-					if(!Eliminated[j]) {
+					if(!allCandidates[j].eliminated) {
 						allCandidates[j].normalizedRatingSum += s * (allCandidatesToTheVoter[j].score - mn);
 					}
 				}
@@ -3574,7 +3577,7 @@ EMETH IRNRm(edata& E  /*Brian Olson's voting method but with 2-param renorm*/)
 		minc = HUGE;
 		for(j=(int)numberOfCandidates-1; j>=0; j--) {
 			r = RandCandPerm[j];
-			if(!Eliminated[r]) {
+			if(!allCandidates[r].eliminated) {
 				const real& normalizedRatingSumOfCandidateR = allCandidates[r].normalizedRatingSum;
 				if( normalizedRatingSumOfCandidateR < minc ) {
 					minc = normalizedRatingSumOfCandidateR;
@@ -3584,11 +3587,11 @@ EMETH IRNRm(edata& E  /*Brian Olson's voting method but with 2-param renorm*/)
 		}
 		assert(loser>=0);
 		ensure(loser>=0, 17);
-		Eliminated[loser] = true;
+		allCandidates[loser].eliminated = true;
 	}
 	for(i=(int)numberOfCandidates-1; i>=0; i--) { /* find random non-eliminated candidate... */
 		j = RandCandPerm[i];
-		if(!Eliminated[j]) {
+		if(!allCandidates[j].eliminated) {
 			return j; /*winner*/
 		}
 	}
