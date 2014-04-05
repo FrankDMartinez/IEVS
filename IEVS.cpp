@@ -1059,24 +1059,6 @@ int Arg2MaxUIntArr(uint64_t N, const uint Arr[], const int RandPerm[], int MaxIn
   return(winner);
 }
 
-/* Assumes RandPerm[0..N-1] contains random perm and MaxInd is index for Arr[] yielding max.
- * Returns index of second-max. */
-int Arg2MaxRealArr(uint64_t N, const real Arr[], const int RandPerm[], int MaxInd ){
-  real maxc;
-  int i, r, winner;
-  winner = -1;
-  maxc = -HUGE;
-  for(i=0; i<(int)N; i++){
-    r = RandPerm[i];
-    if(Arr[r]>maxc && r!=MaxInd){
-      maxc=Arr[r];
-      winner=r;
-    }
-  }
-  assert(winner>=0);
-  return(winner);
-}
-
 uint RandCandPerm[MaxNumCands]; /* should initially contain 0..NumCands-1 */
 
 /*	SecondMaximum(count, allCandidates, member, maximumIndex):	returns the index
@@ -4033,21 +4015,6 @@ EMETH DMC(edata& E  /* eliminate least-approved candidate until unbeaten winner 
 		}
 	}
 	return(i);
-}
-
-void BSbeatDFS( int x, int diff, bool Set[], bool OK[], int Mat[], uint64_t N )
-{
-	int i;
-	for(i=0; i<N; i++) {
-		if(OK[i] && i!=x) {
-			if( Mat[i*N+x]>=diff ) {
-				if( !Set[i] ) {
-					Set[i] = true;
-					BSbeatDFS( i, diff, Set, OK, Mat, N );
-				}
-			}
-		}
-	}
 }
 
 void BSbeatDFS( const int& x, const int& diff, bool Set[], const bool (&OK)[MaxNumCands], const CandidateSlate& relationships, uint64_t N )
