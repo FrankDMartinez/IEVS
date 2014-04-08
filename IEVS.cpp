@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <array>
 #include <climits>
+#include <cmath>
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
@@ -3349,6 +3350,75 @@ EMETH HeitzigLFC(edata& E){ /*random canddt who is not "strongly beat" wins; y s
   return(-1); /*error*/
 }
 
+
+/*
+reset All Candidates' elimination status
+until there is 1 Candidate remaining:
+	reset All Candidate's normalized rating sum (NRS)
+	for Each Voter:
+		normalize each vote vector
+		add the normalized vote for Each Candidate to the Candidate's NRS
+	randomly permute the Candidates
+	by random permutation, find the Candidate with the lowest NRS
+	eliminate that Candidate
+by random permutation, find the 1 uneliminated Candidate
+return that Candidate if found
+else return -1
+*/
+
+typedef std::array<real, MaxNumCands> voteVector;
+typedef voteVector (*normalizationFunction)(const oneVoter&, const CandidateSlate&, const uint64_t&);
+real IRNRPOWER=2.0;
+/*	IRNR(E, mode):	returns the instant-runoff normalized-ratings Winner or -1 if an
+ *			error occurs
+ *	E:		the election data used to determine the Winner
+ *	normalizer:	the normalization function to use
+ */
+EMETH IRNR(edata& E, normalizationFunction normalizer /*Brian Olson's voting method described above*/)
+{ /* side effects: Each Candidate's 'eliminated' member, SumNormedRatings[]*/
+	uint64_t rd;
+	int i;
+	int j;
+	int loser;
+	real minc;
+	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const uint64_t& numberOfCandidates = E.NumCands;
+	const uint& numberOfVoters = E.NumVoters;
+	CandidateSlate& allCandidates = E.Candidates;
+	int r;
+	extern void addToNormalizedRatingSum(const voteVector&, CandidateSlate&, const uint64_t&);
+	Zero(numberOfCandidates, allCandidates, &oneCandidate::eliminated);
+	for(rd=numberOfCandidates; rd>1; rd--) {
+		Zero(numberOfCandidates, allCandidates, &oneCandidate::normalizedRatingSum);
+		for(i=0; i<(int)numberOfVoters; i++) {
+			voteVector normalizedVoteVector = normalizer(allVoters[i], allCandidates, numberOfCandidates);
+			addToNormalizedRatingSum(normalizedVoteVector, allCandidates, numberOfCandidates);
+		}
+		RandomlyPermute( numberOfCandidates, RandCandPerm );
+		loser = -1;
+		minc = HUGE;
+		for(j=(int)numberOfCandidates-1; j>=0; j--) {
+			r = RandCandPerm[j];
+			if(!allCandidates[r].eliminated) {
+				const real& normalizedRatingSumOfCandidateR = allCandidates[r].normalizedRatingSum;
+				if( normalizedRatingSumOfCandidateR < minc ) {
+					minc = normalizedRatingSumOfCandidateR;
+					loser = r;
+				}
+			}
+		}
+		assert(loser>=0);
+		ensure(loser>=0, 15);
+		allCandidates[loser].eliminated = true;
+	}
+	for(i=(int)numberOfCandidates-1; i>=0; i--) { /* find random non-eliminated candidate... */
+		j = RandCandPerm[i];
+		if(!allCandidates[j].eliminated) {
+			return j; /*winner*/
+		}
+	}
+	return(-1); /*error*/
+}
 /***
 Brian Olson's IRNR system:
 1. get from each voter a range-style vote-vector, entries in range [-10, +10].
@@ -3359,7 +3429,6 @@ Brian Olson's IRNR system:
 6. back to step 3 until only 1 candidate remains.
 7. It wins.
 ***/
-real IRNRPOWER=2.0;
 /*	IRNR(E):	returns the instant-runoff normalized-ratings Winner or -1 if an
  *			error occurs
  *	E:	the election data used to determine the Winner
@@ -4764,6 +4833,8 @@ void PrintAvailableVMethods(){
   }
 }
 
+voteVector traditionalVoteVectorNormalization(const oneVoter&, const CandidateSlate&, const uint64_t&);
+
 /*	GimmeWinner(E, WhichMeth):	returns the Winner of the election as determined
  *					by a specific method
  *	E:		the election data used to determine the Winner
@@ -4836,7 +4907,7 @@ int GimmeWinner( edata& E, int WhichMeth )
 	case(59) : w=UncAAO(E); break;
 		/****** below methods are "Slow": *****/
 	case(NumFastMethods+0) : w=TidemanRankedPairs(E); break;
-	case(NumFastMethods+1) : IRNRPOWER=2.0; w=IRNR(E); break;
+	case(NumFastMethods+1) : IRNRPOWER=2.0; w=IRNR(E, traditionalVoteVectorNormalization); break;
 	case(NumFastMethods+2) : IRNRPOWER=1.0; w=IRNR(E); break;
 	case(NumFastMethods+3) : IRNRPOWER=3.0; w=IRNR(E); break;
 	case(NumFastMethods+4) : IRNRPOWER=9.0; w=IRNR(E); break;
@@ -8273,4 +8344,73 @@ template <class T>
 		for(uint64_t count = 0; count < number; count++) {
 			allCandidates[count].*member = 0;
 		}
+}
+
+/*	traditionalVoteVectorNormalization(theVoter, Candidates, count):	normalizes
+ *				the vote vector of non-eliminated Candidates provided by
+ *				'theVoter' and returns it; the normalization process is as
+ *				follows: (1) each vote value of non-eleiminated Candidates
+ *				is raised to the IRNRPOWER (2) the resulting values are
+ *				summed (3) the IRNRPOWERth root of the resulting sum is
+ *				calcualted (4) each vote value is divided by the resulting
+ *				root (5) the collection of quotients constitutes the
+ *				normalized vote vector
+ *	theVoter:	the Voter with the vote vector to
+ *			normalize
+ *	Candidates:	the slate of Candidates to consider
+ *	count:		the number of Candidates
+ *
+ *	NOTE #1:	As of this point in time, I am not sure
+ *			why each vote is first reduced by 0.5. If
+ *			I learn the reason, I will update this
+ *			comment.
+ *	Note #2:	Is there a good reason to require the sum
+ *			exceed 0? If IRNRPOWER is even, the sum is
+ *			guaranteed to be non-negative. If
+ *			IRNRPOWER is negative, a negative sum is
+ *			acceptable for taking the root.
+ */
+voteVector traditionalVoteVectorNormalization(const oneVoter& theVoter,
+										const CandidateSlate& Candidates,
+										const uint64_t& count)
+{
+	real s = 0.0;
+	real t;
+	voteVector normalizedVoteVector;
+	const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+	for(int j=0; j<count; j++) {
+		if(not Candidates[j].eliminated) {
+			t = allCandidatesToTheVoter[j].score - 0.5;
+			t = std::abs(t);
+			s += pow(t, IRNRPOWER);
+		}
+	}
+	if(s>0.0) {
+		s = pow(s, -1.0/IRNRPOWER);
+		for(int j=0; j<count; j++) {
+			if(not Candidates[j].eliminated) {
+				normalizedVoteVector[j] = allCandidatesToTheVoter[j].score * s;
+			}
+		}
+	}
+	return normalizedVoteVector;
+}
+
+/*	addToNormalizedRatingSum(normalizedVotes, Candidates, count):	adds normalized vote values
+  *															to the normalized rating sums
+  *															of Each non-eliminated Candidate
+  *	normalizedVotes:	the normalized vote vector
+  *	Candidates:		the set of Candidates to add the normalized votes
+  *	count:			the number of Candidates to consider
+  */
+void addToNormalizedRatingSum(const voteVector& normalizedVotes,
+							CandidateSlate& allCandidates,
+							const uint64_t& count)
+{
+	for(uint64_t j=0; j<count; j++) {
+		oneCandidate& EachCandidate = allCandidates[j];
+		if(not EachCandidate.eliminated) {
+			EachCandidate.normalizedRatingSum += normalizedVotes[j];
+		}
+	}
 }
