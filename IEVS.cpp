@@ -4907,10 +4907,22 @@ int GimmeWinner( edata& E, int WhichMeth )
 	case(59) : w=UncAAO(E); break;
 		/****** below methods are "Slow": *****/
 	case(NumFastMethods+0) : w=TidemanRankedPairs(E); break;
-	case(NumFastMethods+1) : IRNRPOWER=2.0; w=IRNR(E, traditionalVoteVectorNormalization); break;
-	case(NumFastMethods+2) : IRNRPOWER=1.0; w=IRNR(E); break;
-	case(NumFastMethods+3) : IRNRPOWER=3.0; w=IRNR(E); break;
-	case(NumFastMethods+4) : IRNRPOWER=9.0; w=IRNR(E); break;
+	case(NumFastMethods+1) :
+			IRNRPOWER=2.0;
+			w=IRNR(E, traditionalVoteVectorNormalization);
+			break;
+	case(NumFastMethods+2) :
+			IRNRPOWER=1.0;
+			w=IRNR(E, traditionalVoteVectorNormalization);
+			break;
+	case(NumFastMethods+3) :
+			IRNRPOWER=3.0;
+			w=IRNR(E, traditionalVoteVectorNormalization);
+			break;
+	case(NumFastMethods+4) :
+			IRNRPOWER=9.0;
+			w=IRNR(E, traditionalVoteVectorNormalization);
+			break;
 	case(NumFastMethods+5) : w=IRNRv(E); break;
 	case(NumFastMethods+6) : w=IRNRm(E); break;
 	case(NumFastMethods+7) : w=Rouse(E); break;
