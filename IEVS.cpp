@@ -4834,6 +4834,7 @@ void PrintAvailableVMethods(){
 }
 
 voteVector traditionalVoteVectorNormalization(const oneVoter&, const CandidateSlate&, const uint64_t&);
+voteVector linearVoteVectorNormalization(const oneVoter&, const CandidateSlate&, const uint64_t&);
 
 /*	GimmeWinner(E, WhichMeth):	returns the Winner of the election as determined
  *					by a specific method
@@ -4923,7 +4924,9 @@ int GimmeWinner( edata& E, int WhichMeth )
 			IRNRPOWER=9.0;
 			w=IRNR(E, traditionalVoteVectorNormalization);
 			break;
-	case(NumFastMethods+5) : w=IRNRv(E); break;
+	case(NumFastMethods+5) :
+			w=IRNR(E, linearVoteVectorNormalization);
+			break;
 	case(NumFastMethods+6) : w=IRNRm(E); break;
 	case(NumFastMethods+7) : w=Rouse(E); break;
 	default :
@@ -8425,4 +8428,63 @@ void addToNormalizedRatingSum(const voteVector& normalizedVotes,
 			EachCandidate.normalizedRatingSum += normalizedVotes[j];
 		}
 	}
+}
+
+/*	linearVoteVectorNormalization(theVoter, Candidates, count):	normalizes
+ *				the vote vector of non-eliminated Candidates provided
+ *				by 'theVoter' and returns it; the normalization
+ *				process is just like that described for
+ *				'traditionalVoteVectorNormalization()' but it
+ *				performs a TWO-parameter linear transformation
+ *				so mean=0 and variance=1.
+ *	theVoter:	the Voter with the vote vector to
+ *			normalize
+ *	Candidates:	the slate of Candidates to consider
+ *	count:		the number of Candidates
+ *
+ *	NOTE #1:	As of this point in time, I am not sure
+ *			why each vote is reduced by the average. If
+ *			I learn the reason, I will update this
+ *			comment.
+ *	Note #2:	There seems to be conditions in the test output
+ *			when All Candidates have a score of 1. How should
+ *			these cases be handled?
+ */
+voteVector linearVoteVectorNormalization(const oneVoter& theVoter,
+					      const CandidateSlate& Candidates,
+					      const uint64_t& count)
+{
+	uint64_t countedThisRound = 0;
+	real mean;
+	real s = 0.0;
+	real t;
+	voteVector normalizedVoteVector;
+	const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+	for(int j=0; j<count; j++) {
+		if(not Candidates[j].eliminated) {
+			s += allCandidatesToTheVoter[j].score;
+			countedThisRound++;
+		}
+	}
+	assert(countedThisRound>0);
+	ensure(countedThisRound>0, 5);
+	mean = s/countedThisRound;
+	s = 0.0;
+	normalizedVoteVector.fill(0);
+	for(int64_t j=(count-1); j>=0; j--) {
+		if(not Candidates[j].eliminated) {
+			t = allCandidatesToTheVoter[j].score - mean;
+			s += t*t;
+		}
+	}
+	if(s>0.0) {
+		s = 1.0/sqrt(s);
+		for(int j=0; j<count; j++) {
+			if(not Candidates[j].eliminated) {
+				const real& adjustedScore = (allCandidatesToTheVoter[j].score - mean);
+				normalizedVoteVector[j] = adjustedScore * s;
+			}
+		}
+	}
+	return normalizedVoteVector;
 }
