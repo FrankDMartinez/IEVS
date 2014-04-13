@@ -4835,6 +4835,7 @@ void PrintAvailableVMethods(){
 
 voteVector traditionalVoteVectorNormalization(const oneVoter&, const CandidateSlate&, const uint64_t&);
 voteVector linearVoteVectorNormalization(const oneVoter&, const CandidateSlate&, const uint64_t&);
+voteVector minMaxStyleVoteVectorNormalization(const oneVoter&, const CandidateSlate&, const uint64_t&);
 
 /*	GimmeWinner(E, WhichMeth):	returns the Winner of the election as determined
  *					by a specific method
@@ -4927,7 +4928,9 @@ int GimmeWinner( edata& E, int WhichMeth )
 	case(NumFastMethods+5) :
 			w=IRNR(E, linearVoteVectorNormalization);
 			break;
-	case(NumFastMethods+6) : w=IRNRm(E); break;
+	case(NumFastMethods+6) :
+			w=IRNR(E, minMaxStyleVoteVectorNormalization);
+			break;
 	case(NumFastMethods+7) : w=Rouse(E); break;
 	default :
 		printf("Unsupported voting method %d\n", WhichMeth);
@@ -8476,6 +8479,48 @@ voteVector linearVoteVectorNormalization(const oneVoter& theVoter, const Candida
 		for(int j=0; j<count; j++) {
 			if(not Candidates[j].eliminated) {
 				const real& adjustedScore = (allCandidatesToTheVoter[j].score - mean);
+				normalizedVoteVector[j] = adjustedScore * s;
+			}
+		}
+	}
+	return normalizedVoteVector;
+}
+
+/*	minMaxStyleVoteVectorNormalization(theVoter, Candidates, count):	normalizes
+ *				the vote vector of non-eliminated Candidates
+ *				provided by 'theVoter' and returns it;
+ *				the normalization process is a 2-parameter
+ *				linear transformation renormalization
+ *				so the maximum equals 1 and the minimum
+ *				equals 0; the procedure returns the
+ *				index of the Winner or -1 if an error
+ *				occurs
+ *	theVoter:	the Voter with the vote vector to
+ *			normalize
+ *	Candidates:	the slate of Candidates to consider
+ *	count:		the number of Candidates
+ */
+voteVector minMaxStyleVoteVectorNormalization(const oneVoter& theVoter, const CandidateSlate& Candidates, const uint64_t& count)
+{
+	real s = 0.0;
+	voteVector normalizedVoteVector;
+	const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+	real theMaximum = -HUGE;
+	real theMinimum = HUGE;
+	for(int j=0; j<count; j++) {
+		if(not Candidates[j].eliminated) {
+			const real& t = allCandidatesToTheVoter[j].score;
+			theMaximum = std::max(t, theMaximum);
+			theMinimum = std::min(t, theMinimum);
+		}
+	}
+	normalizedVoteVector.fill(0);
+	s = theMaximum - theMinimum;
+	if(s>0.0) {
+		s = 1.0/s;
+		for(int j=0; j<count; j++) {
+			if(not Candidates[j].eliminated) {
+				const real& adjustedScore = allCandidatesToTheVoter[j].score - theMinimum;
 				normalizedVoteVector[j] = adjustedScore * s;
 			}
 		}
