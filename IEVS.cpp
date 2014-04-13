@@ -4807,11 +4807,11 @@ void PrintMethName( int WhichMeth, bool Padding )
 		spaces = 10;
 		break;
 	case(NumFastMethods+5) :
-		name = "IRNRv";
+		name = "IRNRlinear";
 		spaces = 10;
 		break;
 	case(NumFastMethods+6) :
-		name = "IRNRm";
+		name = "IRNRmin-max";
 		spaces = 10;
 		break;
 	case(NumFastMethods+7) :
