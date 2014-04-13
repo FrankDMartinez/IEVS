@@ -8385,9 +8385,7 @@ template <class T>
  *			IRNRPOWER is negative, a negative sum is
  *			acceptable for taking the root.
  */
-voteVector traditionalVoteVectorNormalization(const oneVoter& theVoter,
-										const CandidateSlate& Candidates,
-										const uint64_t& count)
+voteVector traditionalVoteVectorNormalization(const oneVoter& theVoter, const CandidateSlate& Candidates, const uint64_t& count)
 {
 	real s = 0.0;
 	real t;
@@ -8418,9 +8416,7 @@ voteVector traditionalVoteVectorNormalization(const oneVoter& theVoter,
   *	Candidates:		the set of Candidates to add the normalized votes
   *	count:			the number of Candidates to consider
   */
-void addToNormalizedRatingSum(const voteVector& normalizedVotes,
-							CandidateSlate& allCandidates,
-							const uint64_t& count)
+void addToNormalizedRatingSum(const voteVector& normalizedVotes, CandidateSlate& allCandidates, const uint64_t& count)
 {
 	for(uint64_t j=0; j<count; j++) {
 		oneCandidate& EachCandidate = allCandidates[j];
@@ -8450,9 +8446,7 @@ void addToNormalizedRatingSum(const voteVector& normalizedVotes,
  *			when All Candidates have a score of 1. How should
  *			these cases be handled?
  */
-voteVector linearVoteVectorNormalization(const oneVoter& theVoter,
-					      const CandidateSlate& Candidates,
-					      const uint64_t& count)
+voteVector linearVoteVectorNormalization(const oneVoter& theVoter, const CandidateSlate& Candidates, const uint64_t& count)
 {
 	uint64_t countedThisRound = 0;
 	real mean;
