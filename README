@@ -1,0 +1,123 @@
+**** IEVS ***** Warren D. Smiths's 2007 infinitely extendible voting system comparison engine ****
+Copyright (C): Warren D. Smith 2007.  Anybody can use this non-commercially 
+provided they acknowledge me, notify me (and make available for my unrestricted use)
+re any & all code improvements created or bugs found.  If you want commercial use,
+then we'll negotiate.  
+
+On Unix, Mac OSX, and Linux: Compilation:  gcc IEVS.c -Wall -lm -O6 -o IEVS
+    for extra speed (but less safety) add the #define NDEBUG line at top.
+On MSWINDOWS:   change #define MSWINDOWS to TRUE.  Should work, see notes below by Cary -
+    thanks much to David Cary for the MSWINDOWS port!!  (Except that he introduced a bunch
+    of bugs with careless typecasts, which hopefully I now have fixed...)
+What election methods are available?:    fgrep EMETH IEVS.c
+What utility-generators now available?:  fgrep UTGEN IEVS.c
+
+This program should also work (with minor modifications) under microsoft windows OS.
+David Cary successfully ported it and his notes on how he did it, are below.
+As a side effect, Cary also noticed how to speed up Yee-picture-generation significantly
+and fixed a bug in OutputCompressedBarray(). :)
+If you do such porting, please report your experience, how you compiled it, 
+etc.   warren.wds AT gmail.com.
+
+Software Architecture:
+I. voting methods.
+II. voting strategies.
+III. ignorance generators
+IV. utility generators
+
+Anybody can add new voting methods, new strategies, or new utility generators.
+The idea is to build a "Chinese menu" system which can investigate A*B*C*D kinds of scenarios
+BUT the effort to write it is only A+B+C+D.
+
+The information-flow-direction is  IV-->III-->II-->I-->winners-->regrets.
+
+I am initially writing this with not very many of each.  It is a "skeleton"
+system which can be fleshed out later by adding more of each of I,II,III,IV.
+Please send your contributed routines to warren.wds AT gmail.com .
+You should be able to make an implementation of a new method pretty easily by
+imitating some already-implemented methods similar to yours.
+BUGGY: Rouse??, Copeland??
+As-yet unimplemented voting methods include:
+ICA, Maxtree, range+runoff(based on range ballots with ties discarded),
+RRV+runoff, Sarvo-methods, Banks set, Boehm, Dodgson.
+Asset & Candidate-withdrawal-option-IRV (both don't really fit into our model).
+To add a new voting method you need to:
+add your new EMETH subroutine, and you need to change 3 more lines:
+  #define NumMethods PutCorrect#Methodshere
+  and the case lines in GimmeWinner() and PrintMethName().
+(If you add a new "core" method also must change NumCoreMethods and 
+perhaps renumber the methods...)
+
+Currently only rating-based, strict-ranking-based, and approval-based methods (& combinations)
+are supported - equalities are not allowed in rankings.  ("3-slot" methods
+also supported.)  To extend the code to allow
+equalities, I suggest adding a boolean vector
+with v[x]=TRUE meaning x is really tied with, not below,
+the candidate immediately preceding.  That is a later goal.
+
+HonestyStrat() now supports an arbitrary mixture of honest and (one kind of) strategic voters.  
+More strategies can/will be added later.
+
+3 utility generators now implemented (some parameterized), plus 
+another "reality-based" utility generator based on
+Tideman-et-al's real-world election collection.
+
+Future plans/ideas:  translate from C into D?
+(Templates & automatic array bounds checking would really help.)
+auto-searcher for property violations?  
+L1 utils should be skewed distn.
+Allow a user-selected voting-method subset.
+Targeted BR finder (new user interface to BR finder).
+Other strat generators.
+Use of 2-candidate elections is knd of silly.
+Need to make better controls on summarizers so you can ask it to summarize only
+SUBSETS of the data (such as, honest voters only, large #s of candidates only, etc)...
+More realistic strategies for plur+runoff, MCA, IRNR, Benham2AppRunoff?
+Build good hybrid voting methods?
+Add feature to input votes from user and tally election.
+Two-humped Gaussian distributions?
+RandomWinner regret mean & variance should be computed more exactly.
+DMC & the like - do the approvals and rankings correspond with strategy? Should they?
+Summarizer: Also look at dominance relations, "approval".
+***************************
+
+Now notes by David Cary, 2007-02-14 re modifications to port IEVS 2.58 from LINUX to 
+Windows XP using Microsoft Visual Studio .Net 2003.  
+
+David Cary's Changes (not listing ones WDS did anyhow) include:
+ 1) Fix compile errors due to passing an int[] to a function that expects a uint[],
+ 2) Fix compile errors due to passing a uint[] to a function that expects an int[],
+ 3) Fix runtime error caused by opening the .bmp output file in text mode, to avoid
+      LF bytes being written as CR LF combinations.
+ 4) Add an include for "stdafx.h".
+
+ This program was successfully compiled and run as a C++ program after making the following
+ adjustments to the default Visual Studio Project:
+ 1)  Increase the stack size to 4 MB (under Linker/System)
+        (the default is 1 MB, but sizeof(edata) is about 2.2 MB and lives on the stack).
+
+ All reported warnings were eliminated by:
+ 1) Updating the Visual Studio Project to not report 64-bit issues
+      (under "C/C++" / General)
+ 2) Demoting warning messages #4018 & 4244 to warning level 4 by adding command line options
+      /w44018 /w44244 under "C/C++" / Command Line.
+      These messages warn about implicit int/uint conversions and conversions from __int64
+      to unsigned int.
+****************************
+
+Now notes by Frank D. Martinez, 2014-04-16.
+
+I am attempting to make the code more readible in the way I define
+"more readible": as if I am reading something more like pseudocode.
+
+I have changed the code from C to C++ because the STL helps facilitate
+the "more readible" goal.
+
+I am also working to reduce the number of global variables involved
+because experience has shewn reducing global variables reduces the
+risk of errors. Your "mileage" may vary.
+
+I have a good deal more work to do as far as metaphorical "house
+cleaning" so I can more easily understand how all the parts work
+together.
+****************************
