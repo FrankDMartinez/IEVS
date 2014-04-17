@@ -185,6 +185,44 @@ struct oneVotingMethod
 	int Winner;
 };
 
+typedef std::array<real,MaxNumCands> ArmytageData;
+typedef std::array<int,MaxNumCands> ArmytageDefeatsData;
+typedef std::array<real,MaxNumCands> ArmytageMarginData;
+typedef std::array<int,MaxNumCands> DefeatsData;
+typedef std::array<int64_t,MaxNumCands> MarginsData;
+typedef std::array<int64_t,MaxNumCands> PairApprovalData;
+typedef std::array<int,MaxNumCands> TrueDefeatsData;
+
+/*	oneCandidate:	information about a particular Candidate
+ */
+struct oneCandidate
+{
+	DefeatsData DefeatsMatrix;
+	TrueDefeatsData TrueDefeatsMatrix;
+	ArmytageData ArmytageMatrix;
+	ArmytageDefeatsData ArmytageDefeatsMatrix;
+	ArmytageMarginData ArmytageMarginsMatrix;
+	MarginsData margins;
+	uint64_t Ibeat;
+	PairApprovalData alsoApprovedWith;
+	uint64_t antiPluralityVotes;
+	uint approvals;
+	int64_t electedCount;
+	uint64_t drawCount;
+	int64_t BordaVotes;
+	real rangeVote;
+	int64_t lossCount;
+	bool uncovered;
+	bool IsASchwartzMember;
+	bool IsASmithMember;
+	real normalizedRatingSum;
+	real utilitySum;
+	int64_t voteCountForThisRound;
+	bool eliminated;
+};
+
+typedef std::array<oneCandidate,MaxNumCands> CandidateSlate;
+
 template< class T >
 		int ArgMinArr(uint64_t N, const T Arr[], int RandPerm[]);
 template< class T >
@@ -203,6 +241,8 @@ template<class T>
 		void PermShellSortDown( uint64_t N, int Perm[], const T Key[] );
 template<class T>
 		void PermShellSortDown(uint64_t N, int Perm[], const oneCandidateToTheVoter (&Candidates)[MaxNumCands]);
+template<class T>
+		void PermShellSortDown(uint64_t N, const CandidateSlate& Candidates, const T oneCandidate::*member);
 void PrintBRPreamble(void);
 void printName(const char *name, bool padding, int spaces);
 void PrintSummaryOfNormalizedRegretData(uint scenarios);
@@ -921,43 +961,6 @@ void RandomlyPermute( uint64_t N, uint RandPerm[] ){ /* randomly permutes RandPe
 	assert(IsPerm(N,RandPerm));
 }
 
-typedef std::array<real,MaxNumCands> ArmytageData;
-typedef std::array<int,MaxNumCands> ArmytageDefeatsData;
-typedef std::array<real,MaxNumCands> ArmytageMarginData;
-typedef std::array<int,MaxNumCands> DefeatsData;
-typedef std::array<int64_t,MaxNumCands> MarginsData;
-typedef std::array<int64_t,MaxNumCands> PairApprovalData;
-typedef std::array<int,MaxNumCands> TrueDefeatsData;
-
-/*	oneCandidate:	information about a particular Candidate
- */
-struct oneCandidate
-{
-	DefeatsData DefeatsMatrix;
-	TrueDefeatsData TrueDefeatsMatrix;
-	ArmytageData ArmytageMatrix;
-	ArmytageDefeatsData ArmytageDefeatsMatrix;
-	ArmytageMarginData ArmytageMarginsMatrix;
-	MarginsData margins;
-	uint64_t Ibeat;
-	PairApprovalData alsoApprovedWith;
-	uint64_t antiPluralityVotes;
-	int64_t electedCount;
-	uint64_t drawCount;
-	int64_t BordaVotes;
-	real rangeVote;
-	int64_t lossCount;
-	bool uncovered;
-	bool IsASchwartzMember;
-	bool IsASmithMember;
-	real normalizedRatingSum;
-	real utilitySum;
-	int64_t voteCountForThisRound;
-	bool eliminated;
-};
-
-typedef std::array<oneCandidate,MaxNumCands> CandidateSlate;
-
 /******* vector handling: **********/
 /*	CopyArray(N, src, dest):	copies 'N' elements from 'src[]' into 'dest[]';
  *					only elements from index 0 to 'N-1' are copied;
@@ -1075,12 +1078,19 @@ uint RandCandPerm[MaxNumCands]; /* should initially contain 0..NumCands-1 */
  */
 template<class T> int SecondMaximum(uint64_t count, const CandidateSlate& allCandidates, const T oneCandidate::*member, int maximumIndex ) {
 	T maxc;
-	int i, r, winner;
+	int i;
+	int r;
+	int winner;
+	bool typeIsUnsigned = typeid(T) == typeid(uint);
 	winner = -1;
-	maxc = -HUGE;
+	if(typeid(T)==typeid(uint)) {
+		maxc = (T) 0;
+	} else {
+		maxc = (T)(-HUGE);
+	}
 	for(i=0; i<(int)count; i++){
 		r = RandCandPerm[i];
-		if(allCandidates[r].*member>maxc && r!=maximumIndex){
+		if(((typeIsUnsigned && allCandidates[r].*member>=maxc) || allCandidates[r].*member>maxc) && r!=maximumIndex){
 			maxc=allCandidates[r].*member;
 			winner=r;
 		}
@@ -1400,7 +1410,6 @@ uint RangeGranul;
 uint PlurVoteCount[MaxNumCands];
  int FavListNext[MaxNumVoters];
  int HeadFav[MaxNumCands];
-uint ApprovalVoteCount[MaxNumCands];
 bool CoverMatrix[MaxNumCands*MaxNumCands];
 
 void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have been run*/
@@ -3252,24 +3261,25 @@ EMETH Coombs(edata& E /*repeatedly eliminate antiplurality loser (with most bott
  *			approval method; the Candidate with the most approvals wins
  *	E:	the election data used to determine the Winner
  */
-EMETH Approval(const edata& E   /* canddt with most-approvals wins */)
-{ /* side effects: ApprovalVoteCount[], ApprovalWinner */
+EMETH Approval(edata& E   /* canddt with most-approvals wins */)
+{ /* side effects: Each Candidate's 'approval' member, ApprovalWinner */
 	int i;
 	int j;
+	CandidateSlate& allCandidates = E.Candidates;
 	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	ZeroArray( numberOfCandidates, (int*)ApprovalVoteCount );
+	Zero(numberOfCandidates, allCandidates, &oneCandidate::approvals);
 	for(i=0; i<(int)numberOfVoters; i++) {
-		const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = allVoters[i].Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
-			if(allCandidates[j].approve) {
-				ApprovalVoteCount[j] += 1;
+			if(allCandidatesToTheVoter[j].approve) {
+				allCandidates[j].approvals++;
 			}
 		}
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
-	ApprovalWinner = ArgMaxUIntArr( numberOfCandidates, (uint*)ApprovalVoteCount, (int*)RandCandPerm );
+	ApprovalWinner = Maximum(numberOfCandidates, allCandidates, &oneCandidate::approvals);
 	return(ApprovalWinner);
 }
 
@@ -3277,7 +3287,7 @@ EMETH Approval(const edata& E   /* canddt with most-approvals wins */)
  *			Candidates as determined by approval voting
  *	E:	the election data used to determine the Winner
  */
-EMETH App2Runoff(const edata& E    /*top-2-runoff, 1stRd=approval, 2nd round has fully-honest voting*/)
+EMETH App2Runoff(edata& E    /*top-2-runoff, 1stRd=approval, 2nd round has fully-honest voting*/)
 { /* side effects: ASecond */
 	EMETH winner;
 	if(ApprovalWinner<0) {
@@ -3287,7 +3297,7 @@ EMETH App2Runoff(const edata& E    /*top-2-runoff, 1stRd=approval, 2nd round has
 	return winner;
 }
 
-EMETH HeitzigDFC(const edata& E)
+EMETH HeitzigDFC(edata& E)
 { /*winner of honest runoff between ApprovalWinner and RandomBallot winner*/
 	int i, Rwnr;
 	uint pwct=0, wct=0;
@@ -3324,30 +3334,33 @@ EMETH HeitzigDFC(const edata& E)
 	return(Rwnr);
 }
 
-EMETH HeitzigLFC(edata& E){ /*random canddt who is not "strongly beat" wins; y strongly beats x if Approval(y)>Approval(x) and less than Approval(x)/2 voters prefer x>y.*/
-  /*Side effects: Each Candidate's 'eliminated' member */
+EMETH HeitzigLFC(edata& E)
+{ /*random canddt who is not "strongly beat" wins; y strongly beats x if Approval(y)>Approval(x) and less than Approval(x)/2 voters prefer x>y.*/
+	/*Side effects: Each Candidate's 'eliminated' member */
 	int i,j;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
 	Zero(numberOfCandidates, allCandidates, &oneCandidate::eliminated);
 	for(j=0; j<numberOfCandidates; j++) {
+		const oneCandidate& CandidateJ = allCandidates[j];
 		for(i=0; i<numberOfCandidates; i++) {
-      if(ApprovalVoteCount[j] > ApprovalVoteCount[i]){
-	if(2*allCandidates[i].DefeatsMatrix[j] < (int)ApprovalVoteCount[i]){
-          /*Candidate i is "strongly beat"*/
-		allCandidates[i].eliminated = true;
+			oneCandidate& CandidateI = allCandidates[i];
+			if(CandidateJ.approvals > CandidateI.approvals) {
+				if(2*CandidateI.DefeatsMatrix[j] < CandidateI.approvals) {
+					/*Candidate i is "strongly beat"*/
+					allCandidates[i].eliminated = true;
+				}
+			}
+		}
 	}
-      }
-    }
-  }
-  RandomlyPermute( numberOfCandidates, RandCandPerm );
-  for(i=(int)numberOfCandidates-1; i>=0; i--){ /* find random non-eliminated candidate... */
-	j = RandCandPerm[i];
-	if(!allCandidates[j].eliminated) {
-		return j; /*winner*/
+	RandomlyPermute( numberOfCandidates, RandCandPerm );
+	for(i=(int)numberOfCandidates-1; i>=0; i--) { /* find random non-eliminated candidate... */
+		j = RandCandPerm[i];
+		if(!allCandidates[j].eliminated) {
+			return j; /*winner*/
+		}
 	}
-  }
-  return(-1); /*error*/
+	return(-1); /*error*/
 }
 
 
@@ -3420,7 +3433,7 @@ EMETH IRNR(edata& E, normalizationFunction normalizer /*Brian Olson's voting met
 	return(-1); /*error*/
 }
 
-EMETH MCA(const edata& E  /*canddt with most-2approvals wins if gets >50%, else regular approval-winner wins*/)
+EMETH MCA(edata& E  /*canddt with most-2approvals wins if gets >50%, else regular approval-winner wins*/)
 {
 	uint MCAVoteCount[MaxNumCands];
 	int i;
@@ -3473,7 +3486,7 @@ Commentary by Me:
  *	E:		the election data
  *	alwaysRunoff:	whether to always do a run-off election or not
 ***/
-EMETH Benham2AppRunoff(const edata& E, bool alwaysRunoff)
+EMETH Benham2AppRunoff(edata& E, bool alwaysRunoff)
 {
 	int i,j,r;
 	int64_t maxc;
@@ -3489,9 +3502,9 @@ EMETH Benham2AppRunoff(const edata& E, bool alwaysRunoff)
 	for(i=0; i<(int)numberOfCandidates; i++) {
 		r = RandCandPerm[i];
 		y = allCandidates[ApprovalWinner].alsoApprovedWith[r];
-		if( (ApprovalVoteCount[r] + y) > ApprovalVoteCount[ApprovalWinner] ) {
-			if( ((int)ApprovalVoteCount[r] - y) > maxc ) {
-				maxc = ApprovalVoteCount[r] - y;
+		if( (allCandidates[r].approvals + y) > allCandidates[ApprovalWinner].approvals ) {
+			if( (allCandidates[r].approvals - y) > maxc ) {
+				maxc = allCandidates[r].approvals - y;
 				j = r;
 			}
 		}
@@ -3843,7 +3856,7 @@ EMETH DMC(edata& E  /* eliminate least-approved candidate until unbeaten winner 
 		allCandidates[i].lossCount = t;
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
-	PermShellSortDown<int>(numberOfCandidates, (int*)RandCandPerm, (int*)ApprovalVoteCount);
+	PermShellSortDown(numberOfCandidates, allCandidates, &oneCandidate::approvals);
 	for(i=(int)numberOfCandidates-1; i>0; i--) {
 		const oneCandidate& CandidateI = allCandidates[i];
 		const MarginsData& marginsOfI = CandidateI.margins;
@@ -3920,9 +3933,12 @@ EMETH BramsSanverPrAV(edata& E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 	}
 	ctm=0;
 	for(i=0; i<numberOfCandidates; i++) {
-		if((2*ApprovalVoteCount[i]) > numberOfVoters) {
-			MajApproved[i] = true; ctm++;
-		}else{  MajApproved[i] = false;  }
+		if((2*allCandidates[i].approvals) > numberOfVoters) {
+			MajApproved[i] = true;
+			ctm++;
+		} else {
+			MajApproved[i] = false;
+		}
 	}
 	if(ctm<=1) {
 		/*if exactly 0 or 1 canddt majority-approved, ApprovalWinner wins*/
@@ -3974,7 +3990,10 @@ EMETH BramsSanverPrAV(edata& E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 	maxt = 0;
 	for(i=(int)numberOfCandidates-1; i>=0; i--) {
 		r = RandCandPerm[i];
-		if(BSSmithMembs[r] && (ApprovalVoteCount[r]>maxt)) { maxt=ApprovalVoteCount[r]; winner=r; }
+		if(BSSmithMembs[r] && (allCandidates[r].approvals>maxt)) {
+			maxt=allCandidates[r].approvals;
+			winner=r;
+		}
 	}
 	return winner;
 }
@@ -4027,8 +4046,8 @@ EMETH MDDA(edata& E  /* approval-count winner among canddts not majority-defeate
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(i=(int)numberOfCandidates-1; i>=0; i--) {
 		r = RandCandPerm[i];
-		if(!MDdisquald[r] && ((int)ApprovalVoteCount[r] >= maxc)) {
-			maxc=ApprovalVoteCount[r];
+		if(!MDdisquald[r] && (allCandidates[r].approvals >= maxc)) {
+			maxc=allCandidates[r].approvals;
 			winner=r;
 		}
 	}
@@ -4082,7 +4101,7 @@ EMETH UncAAO(edata& E)
 			for(j=(int)numberOfCandidates -1; j>=0; j--) {
 				r = RandCandPerm[j];
 				if( CoverMatrix[r*numberOfCandidates+i]  ) {
-					const int64_t& AppOpp = ApprovalVoteCount[r] - allCandidates[r].alsoApprovedWith[i];
+					const int64_t& AppOpp = allCandidates[r].approvals - allCandidates[r].alsoApprovedWith[i];
 					if(AppOpp < MnAO) { MnAO = AppOpp; ff = r; }
 				}
 			}
@@ -6331,6 +6350,7 @@ int Maximum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*me
 	T maxc;
 	int a;
 	int r;
+	bool typeIsUnsigned = typeid(T) == typeid(uint);
 	int winner;
 	winner = -1;
 	if(typeid(T)==typeid(uint64_t)) {
@@ -6343,7 +6363,7 @@ int Maximum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*me
 	RandomlyPermute( N, (uint*)RandCandPerm );
 	for(a=0; a<(int)N; a++) {
 		r = RandCandPerm[a];
-		if(allCandidates[r].*member > maxc) {
+		if(((typeIsUnsigned && allCandidates[r].*member>=maxc) || allCandidates[r].*member>maxc)) {
 			maxc=allCandidates[r].*member;
 			winner=r;
 		}
@@ -6591,6 +6611,33 @@ int flipACoin(int choice1, int choice2)
 	return selected;
 }
 
+/*	PermShellSortDown(N, Candidates, member):	rearranges 'RandCandPerm[0..N-1]'
+ *							so 'Candidates[RandCandPerm[0..N-1]].member'
+ *							is in decreasing order
+ *	N:		the number of expected entries in 'Candidates'
+ *	Candidates:	a slate of Candidate upon which to base the sorting
+ *	member:		the member of Each Candidate to guide sorting
+ */
+template<class T>
+void PermShellSortDown(uint64_t N, const CandidateSlate& Candidates, const T oneCandidate::*member)
+{
+	int a;
+	int b;
+	int c;
+	int d;
+	int x;
+	for(d=0; (a=ShellIncs[d])>0; d++) {
+		for(b=a; b<(int)N; b++) {
+			x=RandCandPerm[b];
+			for(c=b-a; (c>=0) && (Candidates[RandCandPerm[c]].*member<Candidates[x].*member); c -= a) {
+				RandCandPerm[c+a]=RandCandPerm[c];
+			}
+			RandCandPerm[c+a]=x;
+		}
+	}
+	assert(SortedKey<T>(N,Candidates,member)<=0);
+}
+
 /*	PermShellSortDown(N, Perm, Key):	rearranges 'Perm[0..N-1]' so
  *						'Key[Perm[0..N-1]]' is in decreasing
  *						order
@@ -6779,7 +6826,7 @@ void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real
 EMETH runoffForApprovalVoting(const edata& E)
 {
 	int ASecond;
-	ASecond = Arg2MaxUIntArr( E.NumCands, ApprovalVoteCount, (int*)RandCandPerm, ApprovalWinner );
+	ASecond = SecondMaximum(E.NumCands, E.Candidates, &oneCandidate::approvals, ApprovalWinner);
 	assert(ASecond>=0);
 	return calculateForRunoff(E, ApprovalWinner, ASecond);
 }
@@ -6845,6 +6892,75 @@ template<class T> int Sign(T x)
 		rv = 0;
 	}
 	return rv;
+}
+
+/*	Sign(start, finish):	returns an indication value to signify
+ *				whether the trend from 'start' to 'finish'
+ *				is positive, negative, or 0
+ *	start:	the value at which the trend begins
+ *	finish:	the value at which the trend ends
+ */
+template<class T> int Sign(const T& start, const T& finish)
+{
+	int rv;
+	if(start<finish) {
+		rv = 1;
+	}
+	else if(start>finish) {
+		rv = -1;
+	}
+	else {
+		rv = 0;
+	}
+	return rv;
+}
+
+/*	SortedKey(N, Candidates, member):	helps to verify 'RandCandPerm'
+ *						is sorted in a manner
+ *						which is expected; returns
+ *						1 if 'Candidates[RandCandPerm[i]].member'
+ *						is in increasing order
+ *						for all 'i' from 0 to
+ *						'N-1', -1 if 'Candidates[RandCandPerm[i]].member'
+ *						is in decreasing order,
+ *						0 if 'Candidates[RandCandPerm[i]].member'
+ *						remains the same, or
+ *						2 for any other circumstance
+ *	N:		number of elements expected in 'Candidates'
+ *	Candidates:	a slate of Candidates used for sorting 'RandCandPerm[]'
+ *	member:		a member of Each Candidate used for guiding sorting
+ */
+template<class T> int SortedKey(uint64_t N, const CandidateSlate& Candidates, const T oneCandidate::*member)
+{
+	int a;
+	int overallTrend;
+	T currentValue;
+	T nextValue;
+	overallTrend = Sign<T>(Candidates[RandCandPerm[0]].*member, Candidates[RandCandPerm[N-1]].*member);
+	for(a=1; a<(int)N; a++) {
+		currentValue = Candidates[RandCandPerm[a-1]].*member;
+		nextValue = Candidates[RandCandPerm[a]].*member;
+		switch( overallTrend ) {
+			case 1:
+				if( nextValue < currentValue ) {
+					return 2;
+				}
+				break;
+			case 0:
+				if( nextValue != currentValue ) {
+					return 2;
+				}
+				break;
+			case -1:
+				if( nextValue > currentValue ) {
+					return 2;
+				}
+				break;
+			default:
+				ensure(false, 28);
+		}
+	}
+	return overallTrend;
 }
 
 /*	SortedKey(N, Arr, Key):	helps to verify 'Arr' is sorted in
