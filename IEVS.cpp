@@ -210,6 +210,7 @@ struct oneCandidate
 	int64_t electedCount;
 	uint64_t drawCount;
 	int64_t BordaVotes;
+	uint64_t pluralityVotes;
 	real rangeVote;
 	int64_t lossCount;
 	bool uncovered;
@@ -1081,7 +1082,7 @@ template<class T> int SecondMaximum(uint64_t count, const CandidateSlate& allCan
 	int i;
 	int r;
 	int winner;
-	bool typeIsUnsigned = typeid(T) == typeid(uint);
+	bool typeIsUnsigned = (typeid(T) == typeid(uint) || typeid(T) == typeid(uint64_t));
 	winner = -1;
 	if(typeid(T)==typeid(uint)) {
 		maxc = (T) 0;
@@ -1407,7 +1408,6 @@ uint RangeGranul;
  int TrueCW;   /*cond winner based on undistorted true utilities; negative if does not exist*/
  int CopeWinOnlyWinner;
  int SmithIRVwinner;
-uint PlurVoteCount[MaxNumCands];
  int FavListNext[MaxNumVoters];
  int HeadFav[MaxNumCands];
 bool CoverMatrix[MaxNumCands*MaxNumCands];
@@ -1525,8 +1525,10 @@ void BuildDefeatsMatrix(edata& E)
 	assert(numberOfCandidates <= MaxNumCands);
 	for(oneCandidate& eachCandidate : allTheCandidates) {
 		const real utilitySum = eachCandidate.utilitySum;
+		const auto pluralityVotes = eachCandidate.pluralityVotes;
 		eachCandidate = oneCandidate();
 		eachCandidate.utilitySum = utilitySum;
+		eachCandidate.pluralityVotes = pluralityVotes;
 	}
 	for(k=0; k<(int)numberOfVoters; k++) {
 		const oneVoter& theVoter = allVoters[k];
@@ -1730,17 +1732,18 @@ EMETH Hay(const edata& E /*Strategyproof. Prob of election proportional to sum o
 	return winner;
 }
 
-EMETH Plurality(const edata& E   /* canddt with most top-rank votes wins */)
-{ /* side effects: PlurVoteCount[], PlurWinner */
+EMETH Plurality(edata& E   /* canddt with most top-rank votes wins */)
+{ /* side effects: Each Candidate's plurality vote count, PlurWinner */
 	int i;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
-	ZeroArray( numberOfCandidates, (int*)PlurVoteCount );
-	for(i=0; i<(int)numberOfVoters; i++){
-		PlurVoteCount[ allVoters[i].topDownPrefs[0] ]++;
+	CandidateSlate& allCandidates = E.Candidates;
+	Zero(numberOfCandidates, allCandidates, &oneCandidate::pluralityVotes);
+	for(i=0; i<(int)numberOfVoters; i++) {
+		allCandidates[ allVoters[i].topDownPrefs[0] ].pluralityVotes++;
 	}
-	PlurWinner = ArgMaxArr<int>(numberOfCandidates, (int*)PlurVoteCount, (int*)RandCandPerm);
+	PlurWinner = Maximum(numberOfCandidates, allCandidates, &oneCandidate::pluralityVotes);
 	return PlurWinner;
 }
 
@@ -1763,35 +1766,37 @@ EMETH AntiPlurality(edata& E   /* canddt with fewest bottom-rank votes wins */)
 /* Plurality needs to have already been run before running Dabagh.  */
 EMETH Dabagh(const edata& E   /* canddt with greatest Dabagh = 2*#top-rank-votes + 1*#second-rank-votes, wins */)
 {
-	uint DabaghVoteCount[MaxNumCands];
+	uint64_t DabaghVoteCount[MaxNumCands];
 	int i, winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
-	CopyArray( numberOfCandidates, (int*)PlurVoteCount, (int*)DabaghVoteCount );
-	ScaleVec( numberOfCandidates, (int*)DabaghVoteCount, 2 );
+	const CandidateSlate& allCandidates = E.Candidates;
+	CopyArray(numberOfCandidates, allCandidates, DabaghVoteCount, &oneCandidate::pluralityVotes);
+	ScaleVec( numberOfCandidates, DabaghVoteCount, (uint64_t)2 );
 	for(i=0; i<(int)numberOfVoters; i++) { /*add 2nd-pref votes with weight=1:*/
 		DabaghVoteCount[ allVoters[i].topDownPrefs[1] ]++;
 	}
-	winner = ArgMaxArr<int>(numberOfCandidates, (int*)DabaghVoteCount, (int*)RandCandPerm);
+	winner = ArgMaxArr(numberOfCandidates, DabaghVoteCount, (int*)RandCandPerm);
 	return winner;
 }
 
 /* Plurality needs to have already been run before running VtForAgainst.  */
 EMETH VtForAgainst(const edata& E   /* canddt with greatest score = #votesFor - #votesAgainst,  wins */)
 {
-	int VFAVoteCount[MaxNumCands];
+	int64_t VFAVoteCount[MaxNumCands];
 	int i, winner;
 	uint64_t last;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const CandidateSlate& allCandidates = E.Candidates;
 	last = numberOfCandidates - 1;
-	CopyArray( numberOfCandidates, (int*)PlurVoteCount, VFAVoteCount );
+	CopyArray(numberOfCandidates, allCandidates, (uint64_t*)VFAVoteCount, &oneCandidate::pluralityVotes);
 	for(i=0; i<(int)numberOfVoters; i++) {
 		VFAVoteCount[ allVoters[i].topDownPrefs[last] ]--;
 	}
-	winner = ArgMaxArr<int>(numberOfCandidates, VFAVoteCount, (int*)RandCandPerm);
+	winner = ArgMaxArr(numberOfCandidates, VFAVoteCount, (int*)RandCandPerm);
 	return winner;
 }
 
@@ -1804,13 +1809,13 @@ EMETH VtForAgainst(const edata& E   /* canddt with greatest score = #votesFor - 
  *			top 2 Candidates, the Winner is decided with a 'coin flip'
  *	E:	the election data used to determine the Winner
  */
-EMETH Top2Runoff(const edata& E    /* Top2Runoff=top-2-runoff, 2nd round has fully-honest voting */)
+EMETH Top2Runoff(edata& E    /* Top2Runoff=top-2-runoff, 2nd round has fully-honest voting */)
 { /* side effects: PSecond */
 	PSecond = -1;
 	if(PlurWinner<0) {
 		Plurality(E);
 	}
-	PSecond = Arg2MaxUIntArr( E.NumCands, PlurVoteCount, (int*)RandCandPerm, PlurWinner );
+	PSecond = SecondMaximum(E.NumCands, E.Candidates, &oneCandidate::pluralityVotes, PlurWinner);
 	assert(PSecond>=0);
 	return calculateForRunoff(E, PlurWinner, PSecond);
 }
@@ -2904,8 +2909,10 @@ EMETH Copeland(edata& E   /* canddt with largest number of pairwise-wins elected
 
 EMETH SimmonsCond(edata& E  /* winner = X with least sum of top-rank-votes for rivals pairwise-beating X */)
 {
-	int SimmVotesAgainst[MaxNumCands]={0};
-	int i,j,t,winner;
+	int64_t SimmVotesAgainst[MaxNumCands]={0};
+	int i,j;
+	int64_t t;
+	int winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
 	if(CopeWinOnlyWinner<0) {
@@ -2928,13 +2935,13 @@ EMETH SimmonsCond(edata& E  /* winner = X with least sum of top-rank-votes for r
 		for(j=0; j<numberOfCandidates; j++) {
 			const oneCandidate& CandidateJ = allCandidates[j];
 			if(CandidateJ.margins[i]>0) { /* j pairwise-beats i */
-				t += 3*PlurVoteCount[j] + (CandidateJ.IsASchwartzMember ? 1 : 0) + (CandidateJ.IsASmithMember ? 1 : 0);
+				t += 3*allCandidates[j].pluralityVotes + (CandidateJ.IsASchwartzMember ? 1 : 0) + (CandidateJ.IsASmithMember ? 1 : 0);
 				/*Here I am adding 1/3 of a vote if in SmithSet, ditto SchwartzSet, to break Simmons ties*/
 			}
 		}
 		SimmVotesAgainst[i] = t;
 	}
-	winner = ArgMinArr<int>(numberOfCandidates, SimmVotesAgainst, (int*)RandCandPerm);
+	winner = ArgMinArr(numberOfCandidates, SimmVotesAgainst, (int*)RandCandPerm);
 	return winner;
 }
 
