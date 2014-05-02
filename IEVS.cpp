@@ -1661,14 +1661,32 @@ EMETH SociallyBest(edata& E  /* greatest utility-sum winner */)
 	return BestWinner;
 }
 
+/*	Determine(Winner, theMethod, E):	determines the
+ *						Winner of an
+ *						election
+ *						conducted using
+ *						a given voting
+ *						method
+ *	Winner:		the Winner to determine; receives the
+ *			results, if needed
+ *	theMethod:	the voting method to determine the
+ *			Winner
+ *	E:		the election data to use to determine
+ *			the Winner
+ */
+template<class T> void Determine(int& Winner, T theMethod, edata& E)
+{
+	if(0 > Winner) {
+		theMethod(E);
+	}
+}
+
 /*	SociallyWorst(E):	returns the Candidate with the lowest utility sum
  *	E:	the election data used to determine the socially worst Candidate
  */
 EMETH SociallyWorst(edata& E   /* least utility-sum winner */)
 { /* side effects: Each Candidate's 'utilitySum', WorstWinner */
-	if(BestWinner<0) {
-		SociallyBest(E);
-	}
+	Determine(BestWinner, SociallyBest, E);
 	WorstWinner = Minimum(E.NumCands, E.Candidates, &oneCandidate::utilitySum);
 	return WorstWinner;
 }
@@ -1812,9 +1830,7 @@ EMETH VtForAgainst(const edata& E   /* canddt with greatest score = #votesFor - 
 EMETH Top2Runoff(edata& E    /* Top2Runoff=top-2-runoff, 2nd round has fully-honest voting */)
 { /* side effects: PSecond */
 	PSecond = -1;
-	if(PlurWinner<0) {
-		Plurality(E);
-	}
+	Determine(PlurWinner, Plurality, E);
 	PSecond = SecondMaximum(E.NumCands, E.Candidates, &oneCandidate::pluralityVotes, PlurWinner);
 	assert(PSecond>=0);
 	return calculateForRunoff(E, PlurWinner, PSecond);
@@ -1830,16 +1846,10 @@ EMETH Top2Runoff(edata& E    /* Top2Runoff=top-2-runoff, 2nd round has fully-hon
  */
 EMETH VenzkeDisqPlur(edata& E   /* Plurality winner wins unless over 50% vote him bottom; then plurality 2nd-winner wins. */)
 { /* side effects: VFAVoteCount[] */
-	if(PlurWinner<0) {
-		Plurality(E);
-	}
-	if(AntiPlurWinner<0) {
-		AntiPlurality(E);
-	}
+	Determine(PlurWinner, Plurality, E);
+	Determine(AntiPlurWinner, AntiPlurality, E);
 	if( (2*E.Candidates[PlurWinner].antiPluralityVotes) > E.NumVoters ) {
-		if(PSecond<0) {
-			Top2Runoff(E);
-		}
+		Determine(PSecond, Top2Runoff, E);
 		return PSecond;
 	}
 	return PlurWinner;
@@ -1848,18 +1858,10 @@ EMETH VenzkeDisqPlur(edata& E   /* Plurality winner wins unless over 50% vote hi
 EMETH PlurIR(edata& E    /* PlurIR=plur+immediate runoff (give ranking as vote) */)
 {
 	int64_t i;
-	if(CopeWinOnlyWinner<0) {
-		BuildDefeatsMatrix(E);
-	}
-	if(PSecond<0) {
-		Top2Runoff(E);
-	}
-	if(PlurWinner<0) {
-		Plurality(E);
-	}
-	if(PSecond<0) {
-		Top2Runoff(E);
-	}
+	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
+	Determine(PSecond, Top2Runoff, E);
+	Determine(PlurWinner, Plurality, E);
+	Determine(PSecond, Top2Runoff, E);
 	assert(PSecond>=0);
 	i = E.Candidates[PlurWinner].margins[PSecond];
 	if(i>0) {
@@ -1879,9 +1881,7 @@ EMETH Borda(edata& E  /* Borda: weighted positional with weights N-1, N-2, ..., 
 	int i,j,t;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
-	if(CopeWinOnlyWinner<0) {
-		BuildDefeatsMatrix(E);
-	}
+	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 	for(i=0; i<numberOfCandidates; i++) {
 		const MarginsData& marginsOfI = allCandidates[i].margins;
 		t=0;
@@ -1900,15 +1900,11 @@ EMETH Borda(edata& E  /* Borda: weighted positional with weights N-1, N-2, ..., 
  */
 EMETH Black(edata& E  /* Condorcet winner if exists, else use Borda */)
 {
-	if(CopeWinOnlyWinner<0) {
-		BuildDefeatsMatrix(E);
-	}
+	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 	if(CondorcetWinner >= 0) {
 		return CondorcetWinner;
 	}
-	if(BordaWinner<0) {
-		Borda(E);
-	}
+	Determine(BordaWinner, Borda, E);
 	return BordaWinner;
 }
 
@@ -1952,9 +1948,7 @@ EMETH NansonBaldwin(edata& E  /* repeatedly eliminate Borda loser */)
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner >= 0) return CondorcetWinner;
 #endif
-	if(BordaWinner<0) {
-		Borda(E);
-	}
+	Determine(BordaWinner, Borda, E);
 	Zero(numberOfCandidates, allCandidates, &oneCandidate::eliminated);
 	CopyArray(numberOfCandidates, allCandidates, NansonVoteCount, &oneCandidate::BordaVotes);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
@@ -2003,9 +1997,7 @@ EMETH Rouse(edata& E  /*like Nanson-Baldwin but with an extra level of recursion
 	int i,j,k,m,r,highestb,bordsum, maxb, winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
-	if(CopeWinOnlyWinner<0) {
-		BuildDefeatsMatrix(E);
-	}
+	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 	FillArray(numberOfCandidates, rRmark, true); /* nobody eliminated initially */
 	for(m= (int)numberOfCandidates; m>1; m--) { /* NumCands-1 elimination-rounds */
 		for(k=1; k<m; k++) {  /* m-1 pseudo-elimination rounds */
@@ -2181,9 +2173,7 @@ EMETH CondorcetLR(edata& E   /* candidate with least sum-of-pairwise-defeat-marg
 	int i,j,t,winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
-	if(CopeWinOnlyWinner<0) {
-		BuildDefeatsMatrix(E);
-	}
+	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner >= 0) return CondorcetWinner;
 #endif
@@ -2215,9 +2205,7 @@ EMETH Sinkhorn(edata& E  /* candidate with max Sinkhorn rating (from all-positiv
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
 	real t,maxsum,minsum,sum,maxminRatio;
-	if(CopeWinOnlyWinner<0) {
-		BuildDefeatsMatrix(E);
-	}
+	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 	FillArray( numberOfCandidates, SinkRow, 1.0 );
 	FillArray( numberOfCandidates, SinkCol, 1.0 );
 	do{
@@ -2280,9 +2268,7 @@ EMETH KeenerEig(edata& E  /* winning canddt has max Frobenius eigenvector entry 
 	real t,sum,dist;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
-	if(CopeWinOnlyWinner<0) {
-		BuildDefeatsMatrix(E);
-	}
+	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 	FillArray( numberOfCandidates, EigVec, 1.0 );
 	FillArray( numberOfCandidates, EigVec2, 1.0 );
 	do{
@@ -2312,9 +2298,7 @@ EMETH SimpsonKramer(edata& E  /* candidate with mildest worst-defeat wins */)
 	int j,winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
-	if(CopeWinOnlyWinner<0) {
-		BuildDefeatsMatrix(E);
-	}
+	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner >= 0) return CondorcetWinner;
 #endif
@@ -2351,9 +2335,7 @@ EMETH RaynaudElim(edata& E  /* repeatedly eliminate canddt who suffered the wors
 	int r, beater;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
-	if(CopeWinOnlyWinner<0) {
-		BuildDefeatsMatrix(E);
-	}
+	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner >= 0) return CondorcetWinner;
 #endif
@@ -2435,9 +2417,7 @@ EMETH ArrowRaynaud(edata& E  /* repeatedly eliminate canddt with smallest {large
 	int r, chump;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
-	if(CopeWinOnlyWinner<0) {
-		BuildDefeatsMatrix(E);
-	}
+	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 	for(i=(int)numberOfCandidates-1; i>=0; i--) {
 		const MarginsData& marginsOfI = allCandidates[i].margins;
 		t = -BIGINT; chump = -1;
@@ -2561,9 +2541,7 @@ EMETH SchulzeBeatpaths(edata& E  /* winner = X so BeatPathStrength over rivals Y
 	int winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
-	if(CopeWinOnlyWinner<0) {
-		BuildDefeatsMatrix(E);
-	}
+	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 	for(i=0; i<numberOfCandidates; i++) {
 		const MarginsData& marginsOfI = allCandidates[i].margins;
 		for(j=0; j<numberOfCandidates; j++) {
@@ -2702,12 +2680,8 @@ EMETH UncoveredSet(edata& E /*A "covers" B if A beats a strict superset of those
 		printf("You could rewrite the code to use uint128s to try allow up to 128 canddts\n");
 		exit(EXIT_FAILURE);
 	}
-	if(CopeWinOnlyWinner<0) {
-		BuildDefeatsMatrix(E);
-	}
-	if(SchwartzWinner<0) {
-		SchwartzSet(E);
-	}
+	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
+	Determine(SchwartzWinner, SchwartzSet, E);
 	/*find cover relation:*/
 	for(A=0; A < (int)numberOfCandidates; A++) {
 		const uint64_t& Abeats = allCandidates[A].Ibeat;
@@ -2829,9 +2803,7 @@ EMETH ArmytagePCSchulze(edata& E  /*Armytage pairwise comparison based on Schulz
 	real minc;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
-	if(CopeWinOnlyWinner<0) {
-		BuildDefeatsMatrix(E);
-	}
+	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 	for(i=0; i<numberOfCandidates; i++) {
 		const ArmytageMarginData& ArmytageMarginsOfI = allCandidates[i].ArmytageMarginsMatrix;
 		for(j=0; j<numberOfCandidates; j++) {
@@ -2889,9 +2861,7 @@ EMETH Copeland(edata& E   /* canddt with largest number of pairwise-wins elected
 	int i;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
-	if(CopeWinOnlyWinner<0) {
-		BuildDefeatsMatrix(E);
-	}
+	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner >= 0) {
 		CopelandWinner = CondorcetWinner;
@@ -2907,6 +2877,28 @@ EMETH Copeland(edata& E   /* canddt with largest number of pairwise-wins elected
 	return CopelandWinner;
 }
 
+typedef EMETH (methodFunction)(edata&);
+
+/*	Determine(Winner, theMethod, E):	determines the
+ *						Winner of an
+ *						election
+ *						conducted using
+ *						a given voting
+ *						method
+ *	Winner:		the Winner to determine; receives the
+ *			results, if needed
+ *	theMethod:	the voting method to determine the
+ *			Winner
+ *	E:		the election data to use to determine
+ *			the Winner
+ */
+void Determine(int& Winner, methodFunction theMethod, edata& E)
+{
+	if(0 > Winner) {
+		theMethod(E);
+	}
+}
+
 EMETH SimmonsCond(edata& E  /* winner = X with least sum of top-rank-votes for rivals pairwise-beating X */)
 {
 	int64_t SimmVotesAgainst[MaxNumCands]={0};
@@ -2915,18 +2907,10 @@ EMETH SimmonsCond(edata& E  /* winner = X with least sum of top-rank-votes for r
 	int winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
-	if(CopeWinOnlyWinner<0) {
-		BuildDefeatsMatrix(E);
-	}
-	if(PlurWinner<0) {
-		Plurality(E);
-	}
-	if(SmithWinner<0) {
-		SmithSet(E);
-	}
-	if(SchwartzWinner<0) {
-		SchwartzSet(E);
-	}
+	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
+        Determine(PlurWinner, Plurality, E);
+        Determine(SmithWinner, SmithSet, E);
+        Determine(SchwartzWinner, SchwartzSet, E);
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner>=0) return(CondorcetWinner);
 #endif
@@ -3297,9 +3281,7 @@ EMETH Approval(edata& E   /* canddt with most-approvals wins */)
 EMETH App2Runoff(edata& E    /*top-2-runoff, 1stRd=approval, 2nd round has fully-honest voting*/)
 { /* side effects: ASecond */
 	EMETH winner;
-	if(ApprovalWinner<0) {
-		Approval(E);
-	}
+	Determine(ApprovalWinner, Approval, E);
 	winner = runoffForApprovalVoting(E);
 	return winner;
 }
@@ -3313,9 +3295,7 @@ EMETH HeitzigDFC(edata& E)
 	const uint64_t VoterIndex = RandInt(E.NumVoters);
 	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
 	Rwnr = ArgMaxArr<real>(numberOfCandidates, E.Voters[VoterIndex].Candidates, (int*)RandCandPerm);
-	if(ApprovalWinner<0) {
-		Approval(E);
-	}
+	Determine(ApprovalWinner, Approval, E);
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
 		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
@@ -3449,9 +3429,7 @@ EMETH MCA(edata& E  /*canddt with most-2approvals wins if gets >50%, else regula
 	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	if(ApprovalWinner<0) {
-		Approval(E);
-	}
+	Determine(ApprovalWinner, Approval, E);
 	ZeroArray( numberOfCandidates, (int*)MCAVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
@@ -3500,9 +3478,7 @@ EMETH Benham2AppRunoff(edata& E, bool alwaysRunoff)
 	int64_t y;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
-	if(ApprovalWinner<0) {
-		Approval(E);
-	}
+	Determine(ApprovalWinner, Approval, E);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	maxc = -BIGINT;
 	j = -1;
@@ -3535,12 +3511,8 @@ EMETH Benham2AppRunoff(edata& E, bool alwaysRunoff)
  */
 EMETH CondorcetApproval(edata& E  /*Condorcet winner if exists, else use Approval*/)
 {
-	if(ApprovalWinner<0) {
-		Approval(E);
-	}
-	if(CopeWinOnlyWinner<0) {
-		BuildDefeatsMatrix(E);
-	}
+	Determine(ApprovalWinner, Approval, E);
+	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 	if(CondorcetWinner >= 0) {
 		return CondorcetWinner;
 	}
@@ -3600,9 +3572,7 @@ EMETH Range2Runoff(edata& E    /*top-2-runoff, 1stRd=range, 2nd round has fully-
 	int RSecond;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
-	if(RangeWinner<0) {
-		Range(E);
-	}
+	Determine(RangeWinner, Range, E);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	RSecond = SecondMaximum(numberOfCandidates, allCandidates, &oneCandidate::rangeVote, RangeWinner);
 	assert(RSecond>=0);
@@ -3849,9 +3819,7 @@ EMETH DMC(edata& E  /* eliminate least-approved candidate until unbeaten winner 
 	int i,j,t;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
-	if(CopeWinOnlyWinner<0) {
-		BuildDefeatsMatrix(E);
-	}
+	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner>=0) return(CondorcetWinner);
 #endif
@@ -3932,12 +3900,8 @@ EMETH BramsSanverPrAV(edata& E  /*SJ Brams & MR Sanver: Voting Systems That Comb
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	const CandidateSlate& allCandidates = E.Candidates;
-	if(CopeWinOnlyWinner<0) {
-		BuildDefeatsMatrix(E);
-	}
-	if(ApprovalWinner<0) {
-		Approval(E);
-	}
+	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
+	Determine(ApprovalWinner, Approval, E);
 	ctm=0;
 	for(i=0; i<numberOfCandidates; i++) {
 		if((2*allCandidates[i].approvals) > numberOfVoters) {
@@ -4027,12 +3991,8 @@ EMETH MDDA(edata& E  /* approval-count winner among canddts not majority-defeate
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
 	/*if(CWSPEEDUP && CondorcetWinner >=0 ) return(CondorcetWinner); valid??*/
-	if(CopeWinOnlyWinner<0) {
-		BuildDefeatsMatrix(E);
-	}
-	if(ApprovalWinner<0) {
-		Approval(E);
-	}
+	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
+	Determine(ApprovalWinner, Approval, E);
 	dqct=0;
 	thresh = (E.NumVoters)/2;
 	for(i=0; i<numberOfCandidates; i++) {
@@ -4092,12 +4052,8 @@ EMETH UncAAO(edata& E)
 	int i,j,ff,r,winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
-	if(ApprovalWinner<0) {
-		Approval(E);
-	}
-	if(RandomUncoveredMemb<0) {
-		UncoveredSet(E);
-	}
+	Determine(ApprovalWinner, Approval, E);
+	Determine(RandomUncoveredMemb, UncoveredSet, E);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(i=(int)numberOfCandidates -1; i>=0; i--) {
 		if(allCandidates[i].uncovered) {
