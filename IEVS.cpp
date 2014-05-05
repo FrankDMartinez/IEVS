@@ -642,7 +642,7 @@ oops
 *************************/
 
 real Rand01(){ /* returns random uniform in [0,1] */
-  return ((BigLinCong32()+0.5)/(1.0 + MAXUINT) + BigLinCong32())/(1.0 + MAXUINT);
+	return ((BigLinCong32()+0.5)/(1.0 + MAXUINT) + BigLinCong32())/(1.0 + MAXUINT);
 }
 
 /*	InitRand(seed):	initializes the psuedo-random number generator
@@ -744,11 +744,11 @@ bool RandBool()
 }
 
 real RandExpl(){ /* returns standard exponential (density=exp(-x) for x>0) random deviate */
-  real x;
-  do{
-    x = Rand01();
-  }while( x==0.0 );
-  return -log(x);
+	real x;
+	do{
+		x = Rand01();
+	}while( x==0.0 );
+	return -log(x);
 }
 
 void TestRandExpl()
@@ -757,23 +757,23 @@ void TestRandExpl()
 }
 
 real RandNormal(){ /* returns standard Normal (gaussian variance=1 mean=0) deviate */
-  real w, x1;
-  static real x2;
-  static bool ready = false;
-  if(ready){
-    ready = false;
-    return x2;
-  }
-  do{
-    x1 = 2*Rand01() - 1.0;
-    x2 = 2*Rand01() - 1.0;
-    w = x1*x1 + x2*x2;
-  }while ( w > 1.0 || w==0.0 );
-  w = sqrt( (-2.0*log(w)) / w );
-  x1 *= w;
-  x2 *= w;  /* Now x1 and x2 are two indep normals (Box-Muller polar method) */
-  ready = true;
-  return x1;
+	real w, x1;
+	static real x2;
+	static bool ready = false;
+	if(ready){
+		ready = false;
+		return x2;
+	}
+	do{
+		x1 = 2*Rand01() - 1.0;
+		x2 = 2*Rand01() - 1.0;
+		w = x1*x1 + x2*x2;
+	}while ( w > 1.0 || w==0.0 );
+	w = sqrt( (-2.0*log(w)) / w );
+	x1 *= w;
+	x2 *= w;  /* Now x1 and x2 are two indep normals (Box-Muller polar method) */
+	ready = true;
+	return x1;
 }
 
 void TestNormalRand()
@@ -786,10 +786,10 @@ void TestNormalRand()
  * Equivalently, sin(2*pi*T)*R and cos(2*pi*T)*R are iid standard normals if T is
  * random uniform in [0,1] and if R is the independent output of RandRadialNormal().  ****/
 real RandRadialNormal(){
-  real w;
-  do{ w = Rand01(); }while(w==0.0);
-  w = sqrt( -2.0*log(w) );
-  return w;
+	real w;
+	do{ w = Rand01(); }while(w==0.0);
+	w = sqrt( -2.0*log(w) );
+	return w;
 }
 
 void TestRadialNormalRand()
@@ -819,10 +819,10 @@ real RandSkew()
 }
 
 void GenRandNormalArr(uint64_t N, real Arr[]){ /* returns Arr[0..N-1] of standard normal randoms */
-  int i;
-  for(i=0; i<N; i++){
-    Arr[i] = RandNormal();
-  }
+	int i;
+	for(i=0; i<N; i++){
+		Arr[i] = RandNormal();
+	}
 }
 
 /*	RandInt(N):	returns a random integer less than 'N' but at
@@ -835,15 +835,15 @@ uint64_t RandInt(uint64_t N) {
 }
 
 real wkc(int a, int b){
-  int si;
-  assert(b>0);
-  si = (a%2) ? 1 : -1; /*si=pseudorandom sign*/
-  return  si*cos( (2*a+1)*PI / (4*b) );
+	int si;
+	assert(b>0);
+	si = (a%2) ? 1 : -1; /*si=pseudorandom sign*/
+	return  si*cos( (2*a+1)*PI / (4*b) );
 }
 
 real wks(int a, int b){
-  assert(b>0);
-  return sin( (2*a+1)*PI / (4*b) );
+	assert(b>0);
+	return sin( (2*a+1)*PI / (4*b) );
 }
 
 /* This is a goofy probability density on N-vectors.  Its mean is the zero vector.
@@ -882,9 +882,9 @@ void GenRandWackyArr(int N, real Arr[])
 }
 
 void TestsOfRand(){
-  TestRand01(); TestNormalRand(); TestRandExpl();
-  TestRadialNormalRand();
-  TestRadialNormalRand2();
+	TestRand01(); TestNormalRand(); TestRandExpl();
+	TestRadialNormalRand();
+	TestRadialNormalRand2();
 }
 
 /*	IsPerm(N, Perm)	returns true if each integer value from 0 to
@@ -940,8 +940,8 @@ bool IsPerm( uint64_t N, const oneCandidateToTheVoter (&Candidates)[MaxNumCands]
 }
 
 void MakeIdentityPerm( uint64_t N, uint Perm[] ){
-  int i;
-  for(i=0; i<(int)N; i++){ Perm[i] = i; }
+	int i;
+	for(i=0; i<(int)N; i++){ Perm[i] = i; }
 }
 
 /*	RandomlyPermute(N, RandPerm)	randomly permutes the each
@@ -1030,38 +1030,38 @@ void ZeroArray(uint64_t N, T Arr[]) {
 
 /* Assumes RandPerm[0..N-1] contains perm. Returns index of random max entry of Arr[0..N-1]. */
 int ArgMaxUIntArr(uint64_t N, const uint Arr[], int RandPerm[] ){
-  uint maxc;
-  int i, r, winner;
-  winner = -1;
-  maxc = 0;
-  RandomlyPermute( N, (uint*)RandPerm );
-  for(i=0; i<(int)N; i++){
-    r = RandPerm[i];
-    if(Arr[r]>=maxc){
-      maxc=Arr[r];
-      winner=r;
-    }
-  }
-  assert(winner>=0);
-  return(winner);
+	uint maxc;
+	int i, r, winner;
+	winner = -1;
+	maxc = 0;
+	RandomlyPermute( N, (uint*)RandPerm );
+	for(i=0; i<(int)N; i++){
+		r = RandPerm[i];
+		if(Arr[r]>=maxc){
+			maxc=Arr[r];
+			winner=r;
+		}
+	}
+	assert(winner>=0);
+	return(winner);
 }
 
 /* Assumes RandPerm[0..N-1] contains random perm and MaxInd is index for Arr[] yielding max.
  * Returns index of second-max. */
 int Arg2MaxUIntArr(uint64_t N, const uint Arr[], const int RandPerm[], int MaxInd ){
-  uint maxc;
-  int i, r, winner;
-  winner = -1;
-  maxc = 0;
-  for(i=0; i<(int)N; i++){
-    r = RandPerm[i];
-    if(Arr[r]>=maxc && r!=MaxInd){
-      maxc=Arr[r];
-      winner=r;
-    }
-  }
-  assert(winner>=0);
-  return(winner);
+	uint maxc;
+	int i, r, winner;
+	winner = -1;
+	maxc = 0;
+	for(i=0; i<(int)N; i++){
+		r = RandPerm[i];
+		if(Arr[r]>=maxc && r!=MaxInd){
+			maxc=Arr[r];
+			winner=r;
+		}
+	}
+	assert(winner>=0);
+	return(winner);
 }
 
 uint RandCandPerm[MaxNumCands]; /* should initially contain 0..NumCands-1 */
@@ -1122,8 +1122,8 @@ private:
 
 public:
 	range(int64_t end, int64_t start = 0):
-        last(end),
-        iter(start)
+	last(end),
+	iter(start)
 	{
 		ensure(end>=start,30);
 	}
@@ -1160,12 +1160,12 @@ sigma = sqrt(S(n) / (n - 1))
 Attributes this method to B.P. Welford, Technometrics 4 (1962) 419-420.
 *******/
 void WelfordUpdateMeanSD(real NewDatum, int *Count, real *M, real *S){
-  real OldMean;
-  OldMean = *M;
-  (*Count)++;
-  *M += (NewDatum - OldMean)/(*Count);
-  *S += (NewDatum - OldMean)*(NewDatum - *M);
-  return;
+	real OldMean;
+	OldMean = *M;
+	(*Count)++;
+	*M += (NewDatum - OldMean)/(*Count);
+	*S += (NewDatum - OldMean)*(NewDatum - *M);
+	return;
 }
 
 void WelfordUpdateMeanSD(real newDatum, oneVotingMethod& theMethod) {
@@ -1413,21 +1413,21 @@ uint RangeGranul;
 bool CoverMatrix[MaxNumCands*MaxNumCands];
 
 void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have been run*/
-  PlurWinner = -1;
-  BordaWinner = -1;
-  ApprovalWinner = -1;
-  RangeWinner = -1;
-  IRVwinner = -1;
-  BestWinner = -1;
-  WorstWinner = -1;
-  AntiPlurWinner = -1;
-  PSecond = -1;
-  SmithWinner = -1;
-  SchwartzWinner = -1;
-  CopeWinOnlyWinner = -1;
-  SmithIRVwinner = -1;
-  RandomUncoveredMemb = -1;
-  IRVTopLim = BIGINT;
+	PlurWinner = -1;
+	BordaWinner = -1;
+	ApprovalWinner = -1;
+	RangeWinner = -1;
+	IRVwinner = -1;
+	BestWinner = -1;
+	WorstWinner = -1;
+	AntiPlurWinner = -1;
+	PSecond = -1;
+	SmithWinner = -1;
+	SchwartzWinner = -1;
+	CopeWinOnlyWinner = -1;
+	SmithIRVwinner = -1;
+	RandomUncoveredMemb = -1;
+	IRVTopLim = BIGINT;
 }
 
 /*	oneVoter:	information about a particular Voter
@@ -1445,8 +1445,8 @@ template< class T >
 		int Maximum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*member);
 
 typedef struct dum1 {
-  uint NumVoters;
-  uint64_t NumCands;
+	uint NumVoters;
+	uint64_t NumCands;
 	oneVoter Voters[MaxNumVoters];
 	CandidateSlate Candidates;
 } edata;
@@ -1651,7 +1651,7 @@ EMETH SociallyBest(edata& E  /* greatest utility-sum winner */)
 		const oneVoter& theVoter = allVoters[i];
 		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
-			 allCandidates[j].utilitySum += allCandidatesToTheVoter[j].actualUtility;
+			allCandidates[j].utilitySum += allCandidatesToTheVoter[j].actualUtility;
 		}
 	}
 	BestWinner = Maximum(numberOfCandidates, allCandidates, &oneCandidate::utilitySum);
@@ -2908,9 +2908,9 @@ EMETH SimmonsCond(edata& E  /* winner = X with least sum of top-rank-votes for r
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
 	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
-        Determine(PlurWinner, Plurality, E);
-        Determine(SmithWinner, SmithSet, E);
-        Determine(SchwartzWinner, SchwartzSet, E);
+	Determine(PlurWinner, Plurality, E);
+	Determine(SmithWinner, SmithSet, E);
+	Determine(SchwartzWinner, SchwartzSet, E);
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner>=0) return(CondorcetWinner);
 #endif
@@ -3060,20 +3060,20 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 
 EMETH SmithIRV(edata& E  /*  Eliminate plurality loser until unbeaten candidate exists. */
 ){ /* must be run after IRV. */
-  if(IRVwinner<0){
-    SmithIRVwinner = -1;
-    IRV(E);
-  }
-  return SmithIRVwinner;
+	if(IRVwinner<0){
+		SmithIRVwinner = -1;
+		IRV(E);
+	}
+	return SmithIRVwinner;
 }
 
 EMETH Top3IRV(edata& E  /* Top-3-choices-only IRV */
 ){
-  int w;
-  IRVTopLim = 3;
-  w = IRV(E);
-  IRVTopLim = BIGINT;
-  return w;
+	int w;
+	IRVTopLim = 3;
+	w = IRV(E);
+	IRVTopLim = BIGINT;
+	return w;
 }
 
 EMETH BTRIRV(edata& E  /* Repeatedly eliminate either plur loser or 2nd-loser (whoever loses pairwise) */
@@ -4579,11 +4579,11 @@ void PrintMethName( int WhichMeth, bool Padding )
 }
 
 void PrintAvailableVMethods(){
-  int i;
-  printf("\nAvailable Voting methods:\n");
-  for(i=0; i<NumMethods; i++){
-    printf("%d=",i); PrintMethName(i,false); printf("\n");
-  }
+	int i;
+	printf("\nAvailable Voting methods:\n");
+	for(i=0; i<NumMethods; i++){
+		printf("%d=",i); PrintMethName(i,false); printf("\n");
+	}
 }
 
 voteVector traditionalVoteVectorNormalization(const oneVoter&, const CandidateSlate&, const uint64_t&);
@@ -4698,11 +4698,11 @@ int GimmeWinner( edata& E, int WhichMeth )
 }
 
 typedef struct dum2 {
-  uint NumVoters;
-  uint64_t NumCands;
-  uint NumElections;
-  real IgnoranceAmplitude;
-  real Honfrac;
+	uint NumVoters;
+	uint64_t NumCands;
+	uint NumElections;
+	real IgnoranceAmplitude;
+	real Honfrac;
 	std::array<oneVotingMethod, NumMethods> votingMethods;
 } brdata;
 
@@ -4923,7 +4923,7 @@ void HonestyStrat( edata& E, real honfrac )
 				if( ThisU >= Mean2U ) {
 					theCandidate.approve2 = true;
 				} else {
-		  			theCandidate.approve2 = false;
+						theCandidate.approve2 = false;
 				}
 				assert( theRanking < numberOfCandidates );
 				preferences[theRanking] = i;
@@ -5031,22 +5031,22 @@ UTGEN GenIssueDistanceUtils( edata& E, int Issues, real Lp ){  /* utility = dist
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
-  if(Issues<0){
-    Issues = -Issues;
-    GenWackyLocations( numberOfVoters, numberOfCandidates, Issues, VoterLocation, CandLocation );
-  }else{
-    GenNormalLocations( numberOfVoters, numberOfCandidates, Issues, VoterLocation, CandLocation );
-  }
-  KK = 0.6*Issues;
-  for(x=0; x < numberOfVoters; x++){
-	  oneVoter& theVoter = allVoters[x];
-	  oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
-    off2   = x * Issues;
-    for(y=0; y<numberOfCandidates; y++){
-	allCandidatesToTheVoter[y].actualUtility = 1.0 / sqrt(KK +
-		LpDistanceSquared(Issues, VoterLocation+off2, CandLocation+y*Issues, Lp));
-    }
-  }
+	if(Issues<0){
+		Issues = -Issues;
+		GenWackyLocations( numberOfVoters, numberOfCandidates, Issues, VoterLocation, CandLocation );
+	}else{
+		GenNormalLocations( numberOfVoters, numberOfCandidates, Issues, VoterLocation, CandLocation );
+	}
+	KK = 0.6*Issues;
+	for(x=0; x < numberOfVoters; x++){
+		oneVoter& theVoter = allVoters[x];
+		oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+		off2   = x * Issues;
+		for(y=0; y<numberOfCandidates; y++){
+			allCandidatesToTheVoter[y].actualUtility = 1.0 / sqrt(KK +
+			LpDistanceSquared(Issues, VoterLocation+off2, CandLocation+y*Issues, Lp));
+		}
+	}
 }
 
 UTGEN GenIssueDotprodUtils( edata& E, uint Issues ){  /* utility = canddt*voter vector dot-product in Issue-space */
@@ -5055,17 +5055,17 @@ UTGEN GenIssueDotprodUtils( edata& E, uint Issues ){  /* utility = canddt*voter 
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
-  GenNormalLocations( numberOfVoters, numberOfCandidates, Issues, VoterLocation, CandLocation );
-  assert(Issues>0);
-  s = 1.0/sqrt((real)Issues);
+	GenNormalLocations( numberOfVoters, numberOfCandidates, Issues, VoterLocation, CandLocation );
+	assert(Issues>0);
+	s = 1.0/sqrt((real)Issues);
 	for(x=0; x < numberOfVoters; x++){
 		oneVoter& theVoter = allVoters[x];
 		oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
-    off2   = x * Issues;
-    for(y=0; y < numberOfCandidates; y++){
-	    allCandidatesToTheVoter[y].actualUtility = s*DotProd(Issues, VoterLocation+off2, CandLocation+y*Issues);
-    }
-  }
+		off2   = x * Issues;
+		for(y=0; y < numberOfCandidates; y++){
+			allCandidatesToTheVoter[y].actualUtility = s*DotProd(Issues, VoterLocation+off2, CandLocation+y*Issues);
+		}
+	}
 }
 
 const int NumHilFiles = 87;
@@ -5235,58 +5235,58 @@ int LoadEldataFiles()
 UTGEN GenRealWorldUtils( edata& E ){  /** based on Tideman election dataset **/
 	uint y, x,V,C;
 	uint64_t VV;
-  static int WhichElection=0, offset=0;
+	static int WhichElection=0, offset=0;
 	real scalefac;
 	uint64_t& numberOfCandidates = E.NumCands;
 	uint& numberOfVoters = E.NumVoters;
 	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
-  if(WhichElection >= NumElectionsLoaded){
-    WhichElection = 0; offset = 0;
-  }
-  V = NVotersData[WhichElection];
-  C = NCandsData[WhichElection];
-  assert(C>2);
-  assert(V>2);
-  numberOfCandidates = C;
-  numberOfVoters = 53;  /* always will be 53 voters */
-  scalefac = 1.0/sqrt((real)C);
+	if(WhichElection >= NumElectionsLoaded){
+		WhichElection = 0; offset = 0;
+	}
+	V = NVotersData[WhichElection];
+	C = NCandsData[WhichElection];
+	assert(C>2);
+	assert(V>2);
+	numberOfCandidates = C;
+	numberOfVoters = 53;  /* always will be 53 voters */
+	scalefac = 1.0/sqrt((real)C);
 	for(x=0; x < numberOfVoters; x++){
 		oneVoter& theVoter = allVoters[x];
 		oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
-    VV = RandInt(V);  /* choose random voter in the real world election */
-    VV *= C;
-    for(y=0; y < numberOfCandidates; y++){
-	    allCandidatesToTheVoter[y].actualUtility = ((numberOfCandidates - (real)ElData[offset+VV+y]) + RandNormal())*scalefac;
-    }
-  }
-  offset += NVotersData[WhichElection]*NCandsData[WhichElection];
-  WhichElection++;
+		VV = RandInt(V);  /* choose random voter in the real world election */
+		VV *= C;
+		for(y=0; y < numberOfCandidates; y++){
+			allCandidatesToTheVoter[y].actualUtility = ((numberOfCandidates - (real)ElData[offset+VV+y]) + RandNormal())*scalefac;
+		}
+	}
+	offset += NVotersData[WhichElection]*NCandsData[WhichElection];
+	WhichElection++;
 }
 
 
 
 void UtilDispatcher( edata& E, int WhichMeth ){   /*WhichMeth = -1 ==> real world utils*/
-  switch(WhichMeth){
-  case(-1) : GenRealWorldUtils(E);  break;
-  case(0) : GenNormalUtils(E); break;
-  case(1) : GenIssueDotprodUtils(E, 1); break;
-  case(2) : GenIssueDotprodUtils(E, 2); break;
-  case(3) : GenIssueDotprodUtils(E, 3); break;
-  case(4) : GenIssueDotprodUtils(E, 4); break;
-  case(5) : GenIssueDotprodUtils(E, 5); break;
-  case(6) : GenIssueDistanceUtils(E, 1, 1.0);  break; /* Now using L1 distance */
-  case(7) : GenIssueDistanceUtils(E, 2, 1.0);  break;
-  case(8) : GenIssueDistanceUtils(E, 3, 1.0);  break;
-  case(9) : GenIssueDistanceUtils(E, 4, 1.0);  break;
-  case(10) : GenIssueDistanceUtils(E, 5, 1.0);  break;
-  case(11)  : GenIssueDistanceUtils(E, -1, 2.0); break; /* These L2 distance */
-  case(12)  : GenIssueDistanceUtils(E, -2, 2.0); break;
-  case(13)  : GenIssueDistanceUtils(E, -3, 2.0); break;
-  case(14)  : GenIssueDistanceUtils(E, -4, 2.0); break;
-  case(15) : GenIssueDistanceUtils(E, -5, 2.0); break;
+	switch(WhichMeth){
+	case(-1) : GenRealWorldUtils(E);  break;
+	case(0) : GenNormalUtils(E); break;
+	case(1) : GenIssueDotprodUtils(E, 1); break;
+	case(2) : GenIssueDotprodUtils(E, 2); break;
+	case(3) : GenIssueDotprodUtils(E, 3); break;
+	case(4) : GenIssueDotprodUtils(E, 4); break;
+	case(5) : GenIssueDotprodUtils(E, 5); break;
+	case(6) : GenIssueDistanceUtils(E, 1, 1.0);  break; /* Now using L1 distance */
+	case(7) : GenIssueDistanceUtils(E, 2, 1.0);  break;
+	case(8) : GenIssueDistanceUtils(E, 3, 1.0);  break;
+	case(9) : GenIssueDistanceUtils(E, 4, 1.0);  break;
+	case(10) : GenIssueDistanceUtils(E, 5, 1.0);  break;
+	case(11)  : GenIssueDistanceUtils(E, -1, 2.0); break; /* These L2 distance */
+	case(12)  : GenIssueDistanceUtils(E, -2, 2.0); break;
+	case(13)  : GenIssueDistanceUtils(E, -3, 2.0); break;
+	case(14)  : GenIssueDistanceUtils(E, -4, 2.0); break;
+	case(15) : GenIssueDistanceUtils(E, -5, 2.0); break;
 
-  default : printf("Unsupported util gen %d\n", WhichMeth); exit(EXIT_FAILURE);
-  } /*end switch*/
+	default : printf("Unsupported util gen %d\n", WhichMeth); exit(EXIT_FAILURE);
+	} /*end switch*/
 }
 
 /*	PrintUtilName(WhichMeth, Padding):	prints a utility method name and
@@ -5527,19 +5527,19 @@ If N=0 that means an escape whose meaning depends on the 2nd byte:
 **************************************/
 
 void OutputLittleEndianUint32( uint x, FILE *F ){
-  putc( x%256, F);
-  x /= 256;
-  putc( x%256, F);
-  x /= 256;
-  putc( x%256, F);
-  x /= 256;
-  putc( x%256, F);
+	putc( x%256, F);
+	x /= 256;
+	putc( x%256, F);
+	x /= 256;
+	putc( x%256, F);
+	x /= 256;
+	putc( x%256, F);
 }
 
 void OutputLittleEndianUint16( uint x, FILE *F ){
-  putc( x%256, F);
-  x /= 256;
-  putc( x%256, F);
+	putc( x%256, F);
+	x /= 256;
+	putc( x%256, F);
 }
 
 /*	OutputBarray(imgsize, Barray, F):	outputs the byte array, 'Barray[]', to
@@ -5558,12 +5558,12 @@ void OutputBarray( uint imgsize, const uint8_t Barray[], FILE *F )
 }
 
 uint ReadPixel( uint x, uint y, const uint8_t Barray[] ){ /*assumes 200x200, 4bits per pixel*/
-  int addr;
-  uint q;
-  addr = 100*y + x/2;
-  q = Barray[addr];
-  if(!(x%2)){ q >>= 4; }
-  return(q&15U);
+	int addr;
+	uint q;
+	addr = 100*y + x/2;
+	q = Barray[addr];
+	if(!(x%2)){ q >>= 4; }
+	return(q&15U);
 }
 
 uint OutputCompressedBarray( uint imgsize, const uint8_t Barray[], bool really, FILE *F )
@@ -5620,83 +5620,83 @@ uint OutputCompressedBarray( uint imgsize, const uint8_t Barray[], bool really, 
 }
 
 uint OutputBMPHead( uint width, uint height, uint bitsperpixel, uint compression, const uint8_t Barray[], FILE *F ){
-  uint sf, roundedwidth, colors, colortabsize, offset, imgsize, compressedsize;
-  assert(bitsperpixel==1 || bitsperpixel==4 || bitsperpixel==8 || bitsperpixel==24);
-  putc(66, F); /*B*/
-  putc(77, F); /*M*/
-  roundedwidth = (width/2) + 2*(width%2);
-  if(roundedwidth%4 != 0){ roundedwidth = (roundedwidth/4 + 1)*4; }
-  colors = 1U<<bitsperpixel;
-  colortabsize = 4*colors;
-  if(colortabsize > 1024) {
-  	colortabsize=0;
-  }
-  offset =54 + colortabsize;
-  imgsize = roundedwidth*height;
-  if(imgsize==20000 && compression){
-    compressedsize = OutputCompressedBarray( imgsize, Barray, false, F );
-    if(compressedsize < imgsize){ imgsize=compressedsize; compression=2; }
-    else{ compression=0; }
-  }
-  sf = imgsize + offset;
-  OutputLittleEndianUint32(sf, F);
-  putc(0,F);  putc(0,F);
-  putc(0,F);  putc(0,F);
-  OutputLittleEndianUint32(offset, F);
-  OutputLittleEndianUint32(40, F);
-  OutputLittleEndianUint32(width, F);
-  OutputLittleEndianUint32(height, F);
-  OutputLittleEndianUint16(1, F); /*1 plane*/
-  OutputLittleEndianUint16(bitsperpixel, F);
-  OutputLittleEndianUint32(compression, F); /*0=uncompressed*/
-  OutputLittleEndianUint32(imgsize, F);
-  OutputLittleEndianUint32(0, F);
-  OutputLittleEndianUint32(0, F);
-  OutputLittleEndianUint32(colors, F);
-  OutputLittleEndianUint32(colors, F);
-  /*The user will now want to
-   *1. output colortabsize worth of palette data.
-   *2. output imgsize bytes worth of bitmap data.
-   *3. close the file F.
-   *But neither is not done by this routine.*/
-  return(imgsize);
+	uint sf, roundedwidth, colors, colortabsize, offset, imgsize, compressedsize;
+	assert(bitsperpixel==1 || bitsperpixel==4 || bitsperpixel==8 || bitsperpixel==24);
+	putc(66, F); /*B*/
+	putc(77, F); /*M*/
+	roundedwidth = (width/2) + 2*(width%2);
+	if(roundedwidth%4 != 0){ roundedwidth = (roundedwidth/4 + 1)*4; }
+	colors = 1U<<bitsperpixel;
+	colortabsize = 4*colors;
+	if(colortabsize > 1024) {
+		colortabsize=0;
+	}
+	offset =54 + colortabsize;
+	imgsize = roundedwidth*height;
+	if(imgsize==20000 && compression){
+		compressedsize = OutputCompressedBarray( imgsize, Barray, false, F );
+		if(compressedsize < imgsize){ imgsize=compressedsize; compression=2; }
+		else{ compression=0; }
+	}
+	sf = imgsize + offset;
+	OutputLittleEndianUint32(sf, F);
+	putc(0,F);  putc(0,F);
+	putc(0,F);  putc(0,F);
+	OutputLittleEndianUint32(offset, F);
+	OutputLittleEndianUint32(40, F);
+	OutputLittleEndianUint32(width, F);
+	OutputLittleEndianUint32(height, F);
+	OutputLittleEndianUint16(1, F); /*1 plane*/
+	OutputLittleEndianUint16(bitsperpixel, F);
+	OutputLittleEndianUint32(compression, F); /*0=uncompressed*/
+	OutputLittleEndianUint32(imgsize, F);
+	OutputLittleEndianUint32(0, F);
+	OutputLittleEndianUint32(0, F);
+	OutputLittleEndianUint32(colors, F);
+	OutputLittleEndianUint32(colors, F);
+	/*The user will now want to
+	 *1. output colortabsize worth of palette data.
+	 *2. output imgsize bytes worth of bitmap data.
+	 *3. close the file F.
+	 *But neither is not done by this routine.*/
+	return(imgsize);
 }
 
 uint8_t PaletteColorArray[64];
 
 void BogoPutc(uint8_t x, FILE *F){
-  static uint i=0;
-  if(i>=64) {
-  	i=0;
-  }
-  PaletteColorArray[i] = x; i++;
-  if(F!=NULL) {
-  	putc(x, F);
-  }
+	static uint i=0;
+	if(i>=64) {
+		i=0;
+	}
+	PaletteColorArray[i] = x; i++;
+	if(F!=NULL) {
+		putc(x, F);
+	}
 }
 
 void OutputFCC16ColorPalette( FILE *F ){
-  BogoPutc(255, F);   BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(0, F); /*red*/
-  BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(255, F);   BogoPutc(0, F); /*blue*/
-  BogoPutc(  0, F);   BogoPutc(255, F);   BogoPutc(  0, F);   BogoPutc(0, F); /*green*/
+	BogoPutc(255, F);   BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(0, F); /*red*/
+	BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(255, F);   BogoPutc(0, F); /*blue*/
+	BogoPutc(  0, F);   BogoPutc(255, F);   BogoPutc(  0, F);   BogoPutc(0, F); /*green*/
 
-  BogoPutc(  0, F);   BogoPutc(255, F);   BogoPutc(255, F);   BogoPutc(0, F); /*bluegreen*/
-  BogoPutc(255, F);   BogoPutc(  0, F);   BogoPutc(255, F);   BogoPutc(0, F); /*bluered*/
-  BogoPutc(255, F);   BogoPutc(255, F);   BogoPutc(  0, F);   BogoPutc(0, F); /*redgreen*/
+	BogoPutc(  0, F);   BogoPutc(255, F);   BogoPutc(255, F);   BogoPutc(0, F); /*bluegreen*/
+	BogoPutc(255, F);   BogoPutc(  0, F);   BogoPutc(255, F);   BogoPutc(0, F); /*bluered*/
+	BogoPutc(255, F);   BogoPutc(255, F);   BogoPutc(  0, F);   BogoPutc(0, F); /*redgreen*/
 
-  BogoPutc(255, F);   BogoPutc(127, F);   BogoPutc(127, F);   BogoPutc(0, F);
-  BogoPutc(127, F);   BogoPutc(255, F);   BogoPutc(177, F);   BogoPutc(0, F); /*added red to try to make yellower*/
-  BogoPutc(127, F);   BogoPutc(127, F);   BogoPutc(255, F);   BogoPutc(0, F);
+	BogoPutc(255, F);   BogoPutc(127, F);   BogoPutc(127, F);   BogoPutc(0, F);
+	BogoPutc(127, F);   BogoPutc(255, F);   BogoPutc(177, F);   BogoPutc(0, F); /*added red to try to make yellower*/
+	BogoPutc(127, F);   BogoPutc(127, F);   BogoPutc(255, F);   BogoPutc(0, F);
 
-  BogoPutc(  0, F);   BogoPutc(127, F);   BogoPutc(127, F);   BogoPutc(0, F);
-  BogoPutc(127, F);   BogoPutc(  0, F);   BogoPutc(127, F);   BogoPutc(0, F);
-  BogoPutc(127, F);   BogoPutc(127, F);   BogoPutc(  0, F);   BogoPutc(0, F);
+	BogoPutc(  0, F);   BogoPutc(127, F);   BogoPutc(127, F);   BogoPutc(0, F);
+	BogoPutc(127, F);   BogoPutc(  0, F);   BogoPutc(127, F);   BogoPutc(0, F);
+	BogoPutc(127, F);   BogoPutc(127, F);   BogoPutc(  0, F);   BogoPutc(0, F);
 
-  BogoPutc(127, F);   BogoPutc(127, F);   BogoPutc(127, F);   BogoPutc(0, F); /*add on dark grey*/
-  BogoPutc(191, F);   BogoPutc(191, F);   BogoPutc(191, F);   BogoPutc(0, F); /*add on light grey*/
+	BogoPutc(127, F);   BogoPutc(127, F);   BogoPutc(127, F);   BogoPutc(0, F); /*add on dark grey*/
+	BogoPutc(191, F);   BogoPutc(191, F);   BogoPutc(191, F);   BogoPutc(0, F); /*add on light grey*/
 
-  BogoPutc(255, F);   BogoPutc(255, F);   BogoPutc(255, F);   BogoPutc(0, F); /*white*/
-  BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(0, F); /*black*/
+	BogoPutc(255, F);   BogoPutc(255, F);   BogoPutc(255, F);   BogoPutc(0, F); /*white*/
+	BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(  0, F);   BogoPutc(0, F); /*black*/
 }
 
 void CreatePixel(int x, int y, uint color, uint8_t Barray[])
@@ -5722,37 +5722,37 @@ void CreatePixel(int x, int y, uint color, uint8_t Barray[])
 
 void DrawCircle(int x, int y, uint radius, uint BorderColor, uint FillColor, uint8_t Barray[])
 { /*Bresenham alg.*/
-  int xd, yd, i, d, mode;
-  for(mode=0; mode<=1; mode++){
-    xd = 0;
-    yd = radius;
-    d = 3 - (2 * yd);
-    while(yd >= xd){
-      if(mode==0){ /*fill:*/
-	for(i=(x-xd)+1; i<x+xd; i++){ CreatePixel(i, y + yd, FillColor, Barray); }
-	for(i=(x-xd)+1; i<x+xd; i++){ CreatePixel(i, y - yd, FillColor, Barray); }
-	for(i=(x-yd)+1; i<x+yd; i++){ CreatePixel(i, y + xd, FillColor, Barray); }
-	for(i=(x-yd)+1; i<x+yd; i++){ CreatePixel(i, y - xd, FillColor, Barray); }
-      }else{	/*border points in 8 octants:*/
-	CreatePixel(x - xd, y + yd, BorderColor, Barray);
-	CreatePixel(x + xd, y + yd, BorderColor, Barray);
-	CreatePixel(x - xd, y - yd, BorderColor, Barray);
-	CreatePixel(x + xd, y - yd, BorderColor, Barray);
-	CreatePixel(x - yd, y + xd, BorderColor, Barray);
-	CreatePixel(x + yd, y + xd, BorderColor, Barray);
-	CreatePixel(x - yd, y - xd, BorderColor, Barray);
-	CreatePixel(x + yd, y - xd, BorderColor, Barray);
-      }
-      /*update coords:*/
-      if (d < 0){
-	d += 4*xd + 6;
-      }else{
-	  d += 10 + 4*(xd-yd);
-	  yd--;
-      }
-      xd++;
-    } /*end while*/
-  }
+	int xd, yd, i, d, mode;
+	for(mode=0; mode<=1; mode++){
+		xd = 0;
+		yd = radius;
+		d = 3 - (2 * yd);
+		while(yd >= xd){
+			if(mode==0){ /*fill:*/
+				for(i=(x-xd)+1; i<x+xd; i++){ CreatePixel(i, y + yd, FillColor, Barray); }
+				for(i=(x-xd)+1; i<x+xd; i++){ CreatePixel(i, y - yd, FillColor, Barray); }
+				for(i=(x-yd)+1; i<x+yd; i++){ CreatePixel(i, y + xd, FillColor, Barray); }
+				for(i=(x-yd)+1; i<x+yd; i++){ CreatePixel(i, y - xd, FillColor, Barray); }
+			}else{	/*border points in 8 octants:*/
+				CreatePixel(x - xd, y + yd, BorderColor, Barray);
+				CreatePixel(x + xd, y + yd, BorderColor, Barray);
+				CreatePixel(x - xd, y - yd, BorderColor, Barray);
+				CreatePixel(x + xd, y - yd, BorderColor, Barray);
+				CreatePixel(x - yd, y + xd, BorderColor, Barray);
+				CreatePixel(x + yd, y + xd, BorderColor, Barray);
+				CreatePixel(x - yd, y - xd, BorderColor, Barray);
+				CreatePixel(x + yd, y - xd, BorderColor, Barray);
+			}
+			/*update coords:*/
+			if (d < 0){
+				d += 4*xd + 6;
+			}else{
+				d += 10 + 4*(xd-yd);
+				yd--;
+			}
+			xd++;
+		} /*end while*/
+	}
 }
 
 void DrawVoronoi(uint NumSites, const int xx[], const int yy[], uint8_t Barray[20000], int LpPow)
@@ -5941,46 +5941,46 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 
 void MakeYeePict( char filename[], const int xx[], const int yy[], int NumSites, int WhichMeth,
 		  uint TopYeeVoters, uint GaussStdDev, real honfrac, int LpPow ){
-  FILE *F;
-  uint8_t Barray[20000];
-  int i;
-  uint imgsize;
+	FILE *F;
+	uint8_t Barray[20000];
+	int i;
+	uint imgsize;
 #if defined(MSWINDOWS) && MSWINDOWS
-  F = fopen(filename, "wb");
+	F = fopen(filename, "wb");
 #else
-  F = fopen(filename, "w");
+	F = fopen(filename, "w");
 #endif
-  if(F==NULL){
-    printf("failed to open %s\n", filename);
-    exit(EXIT_FAILURE);
-  }
-  if(WhichMeth==0 && LpPow==2) {
-  	DrawVoronoi( NumSites, (const int*)xx, (const int*)yy, Barray, LpPow );
-  } else if(WhichMeth==1 && LpPow==2) {
-  	DrawFPvor( NumSites, (const int*)xx, (const int*)yy, Barray, LpPow );
-  } else {
-  	YeePicture( NumSites, (TopYeeVoters-1)/2, xx, yy, WhichMeth, Barray, GaussStdDev, honfrac, LpPow );
-  }
-  imgsize = OutputBMPHead(200, 200, 4, true, Barray, F);
-  OutputFCC16ColorPalette(F);
-  if(imgsize>=20000) {
-  	OutputBarray(imgsize, Barray, F);
-  } else {
-  	imgsize=OutputCompressedBarray(imgsize, Barray, true, F);
-  }
-  printf("%s: %d bytes\n", filename, imgsize);
-  fclose(F);
-  printf("coordinates:\n");
-  for(i=0; i<NumSites; i++){
-    printf("(%d,%d)", xx[i], yy[i]);
-    if(i<NumSites-1) {
+	if(F==NULL){
+		printf("failed to open %s\n", filename);
+		exit(EXIT_FAILURE);
+	}
+	if(WhichMeth==0 && LpPow==2) {
+		DrawVoronoi( NumSites, (const int*)xx, (const int*)yy, Barray, LpPow );
+	} else if(WhichMeth==1 && LpPow==2) {
+		DrawFPvor( NumSites, (const int*)xx, (const int*)yy, Barray, LpPow );
+	} else {
+		YeePicture( NumSites, (TopYeeVoters-1)/2, xx, yy, WhichMeth, Barray, GaussStdDev, honfrac, LpPow );
+	}
+	imgsize = OutputBMPHead(200, 200, 4, true, Barray, F);
+	OutputFCC16ColorPalette(F);
+	if(imgsize>=20000) {
+		OutputBarray(imgsize, Barray, F);
+	} else {
+		imgsize=OutputCompressedBarray(imgsize, Barray, true, F);
+	}
+	printf("%s: %d bytes\n", filename, imgsize);
+	fclose(F);
+	printf("coordinates:\n");
+	for(i=0; i<NumSites; i++){
+		printf("(%d,%d)", xx[i], yy[i]);
+		if(i<NumSites-1) {
 	printf(", ");
-    }
-    if(i%8==7) {
+		}
+		if(i%8==7) {
 	printf("\n");
-    }
-  }
-  printf("\n");
+		}
+	}
+	printf("\n");
 }
 
 real ColorContrastScore( uint NumSites, const int xx[], const int yy[] )
@@ -6003,28 +6003,28 @@ real ColorContrastScore( uint NumSites, const int xx[], const int yy[] )
 }
 
 real ReorderForColorContrast( uint NumSites, int xx[], int yy[] ){
-  int i;
-  int temp;
-  real cs2,cscore;
+	int i;
+	int temp;
+	real cs2,cscore;
 	uint64_t s1;
 	uint64_t s2;
-  OutputFCC16ColorPalette( NULL );
-  cscore = ColorContrastScore( NumSites, xx, yy );
-  for(i=0; i<9000; i++){
-    s1 = RandInt(NumSites);
-    s2 = RandInt(NumSites);
-    if(s1 != s2){
-      temp=xx[s1]; xx[s1]=xx[s2]; xx[s2]=temp;
-      temp=yy[s1]; yy[s1]=yy[s2]; yy[s2]=temp;
-      cs2 = ColorContrastScore( NumSites, xx, yy );
-      if(cs2<cscore){
-	temp=xx[s1]; xx[s1]=xx[s2]; xx[s2]=temp;
-	temp=yy[s1]; yy[s1]=yy[s2]; yy[s2]=temp;
+	OutputFCC16ColorPalette( NULL );
+	cscore = ColorContrastScore( NumSites, xx, yy );
+	for(i=0; i<9000; i++){
+		s1 = RandInt(NumSites);
+		s2 = RandInt(NumSites);
+		if(s1 != s2){
+			temp=xx[s1]; xx[s1]=xx[s2]; xx[s2]=temp;
+			temp=yy[s1]; yy[s1]=yy[s2]; yy[s2]=temp;
+			cs2 = ColorContrastScore( NumSites, xx, yy );
+			if(cs2<cscore){
+				temp=xx[s1]; xx[s1]=xx[s2]; xx[s2]=temp;
+				temp=yy[s1]; yy[s1]=yy[s2]; yy[s2]=temp;
 
-      }else{ cscore = cs2; }
-    }
-  }
-  return cscore;
+			}else{ cscore = cs2; }
+		}
+	}
+	return cscore;
 }
 
 /******************** BR driver and output: *************/
@@ -6392,7 +6392,7 @@ int calculateForRunoff(const edata& E, int first, int second)
 		}else if( perceivedUtilityOfFirst < perceivedUtilityOfSecond ) {
 			wct++;
 		} else {
-		    /* do nothing */
+			/* do nothing */
 		}
 	}
 	if(pwct > wct) {
@@ -6499,7 +6499,7 @@ void runSingleTest(uint aSeed)
 {
 	extern void runSingleYeeTest(uint aSeed);
 
-    	InitRand(aSeed);
+	InitRand(aSeed);
 	BROutputMode = SORTMODE|ALLMETHS;
 	candnumupper=16;//MaxNumCands-1;
 	votnumupper=50;//MaxNumVoters;
@@ -8263,12 +8263,12 @@ voteVector traditionalVoteVectorNormalization(const oneVoter& theVoter, const Ca
 }
 
 /*	addToNormalizedRatingSum(normalizedVotes, Candidates, count):	adds normalized vote values
-  *															to the normalized rating sums
-  *															of Each non-eliminated Candidate
-  *	normalizedVotes:	the normalized vote vector
-  *	Candidates:		the set of Candidates to add the normalized votes
-  *	count:			the number of Candidates to consider
-  */
+ *															to the normalized rating sums
+ *															of Each non-eliminated Candidate
+ *	normalizedVotes:	the normalized vote vector
+ *	Candidates:		the set of Candidates to add the normalized votes
+ *	count:			the number of Candidates to consider
+ */
 void addToNormalizedRatingSum(const voteVector& normalizedVotes, CandidateSlate& allCandidates, const uint64_t& count)
 {
 	for(uint64_t j=0; j<count; j++) {
