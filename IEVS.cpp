@@ -1723,6 +1723,29 @@ EMETH RandomBallot(const edata& E)
 	return winner;
 }
 
+/*	minimumActualUtility(Candidates, numberOfCandidates):	returns the minimum
+ *								actual utility of All
+ *								Candidates from the
+ *								perspective of a
+ *								particular Voter
+ *	Candidates:		an array of Candidates from the perspective
+ *				of a particular Voter
+ *	numberOfCandidates:	the number of Candidates in the current
+ *				election
+ */
+real minimumActualUtility(const oneCandidateToTheVoter (&Candidates)[MaxNumCands], const uint64_t& numberOfCandidates)
+{
+	real lowest = HUGE;
+
+	for(uint64_t j=0; j<numberOfCandidates; j++) {
+		real utility = Candidates[j].actualUtility;
+		if(lowest > utility) {
+			lowest = utility;
+		}
+	}
+	return lowest;
+}
+
 EMETH Hay(const edata& E /*Strategyproof. Prob of election proportional to sum of sqrts of [normalized] utilities*/)
 {
 	real UtilityRootSum[MaxNumCands];
@@ -1735,13 +1758,7 @@ EMETH Hay(const edata& E /*Strategyproof. Prob of election proportional to sum o
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
 		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
-		minu = HUGE;
-		for(j=0; j<numberOfCandidates; j++) {
-			real utility = allCandidatesToTheVoter[j].actualUtility;
-			if(minu > utility) {
-				minu = utility;
-			}
-		}
+		minu = minimumActualUtility(allCandidatesToTheVoter, numberOfCandidates);
 		sumrts = 0.0;
 		for(j=0; j<numberOfCandidates; j++) {
 			sumrts += sqrt(allCandidatesToTheVoter[j].actualUtility - minu);
