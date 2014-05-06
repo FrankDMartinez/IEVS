@@ -2307,9 +2307,7 @@ EMETH Sinkhorn(edata& E  /* candidate with max Sinkhorn rating (from all-positiv
 		}
 		ensure((minsum != 0.0), 2);
 		t = maxsum/minsum;
-		if( maxminRatio < t ) {
-			maxminRatio = t;
-		}
+		maxminRatio = std::max(maxminRatio, t);
 	}until(maxminRatio < 1.000003);
 	for(j=0; j<numberOfCandidates; j++) {
 		SinkRat[j] = SinkCol[j]/SinkRow[j];
