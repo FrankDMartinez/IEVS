@@ -1963,6 +1963,32 @@ EMETH RandomPair(const edata& E)
 	return flipACoin(y, x);
 }
 
+/*	findLoser(count, Candidates, weights):	returns the index of
+ *						the Candidate which is
+ *						both non-eliminated
+ *						and has the lowest
+ *						corresponding entry in
+ *						'weights'
+ *	count:		the number of Candidates in the current
+ *			election
+ *	Candidates:	the set of Candidates in the current election
+ *	weights:	the set of weights used to find the 'Loser'
+ */
+int findLoser(const uint64_t& count, const CandidateSlate& Candidates, const int64_t (&weights)[MaxNumCands])
+{
+	int Loser = -1;
+	int64_t minc = BIGINT;
+	int r;
+	for(int i=(int)count-1; i>=0; i--) {
+		r = RandCandPerm[i];
+		if(!Candidates[r].eliminated && (weights[r]<minc)) {
+			minc=weights[r];
+			Loser=r;
+		}
+	}
+	return Loser;
+}
+
 /*	NansonBaldwin(E):	returns the index of the Baldwin Winner, not necessarily
  *				the Nanson Winner, and, even then, it looks as if the
  *				Baldwin Winner may be calculated incorrectly by this
@@ -1975,8 +2001,7 @@ EMETH RandomPair(const edata& E)
 EMETH NansonBaldwin(edata& E  /* repeatedly eliminate Borda loser */)
 { /* side effects: Each Candidte's 'eliminated' member */
 	int64_t NansonVoteCount[MaxNumCands];
-	int i, BordaLoser, rnd, r;
-	int64_t minc;
+	int i, BordaLoser, rnd;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
 #if defined(CWSPEEDUP) && CWSPEEDUP
@@ -1987,15 +2012,7 @@ EMETH NansonBaldwin(edata& E  /* repeatedly eliminate Borda loser */)
 	CopyArray(numberOfCandidates, allCandidates, NansonVoteCount, &oneCandidate::BordaVotes);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(rnd=1; rnd < (int)numberOfCandidates; rnd++) {
-		BordaLoser = -1;
-		minc = BIGINT;
-		for(i=(int)numberOfCandidates-1; i>=0; i--) {
-			r = RandCandPerm[i];
-			if(!allCandidates[r].eliminated && (NansonVoteCount[r]<minc)) {
-				minc=NansonVoteCount[r];
-				BordaLoser=r;
-			}
-		}
+		BordaLoser = findLoser(numberOfCandidates, allCandidates, NansonVoteCount);
 		assert(BordaLoser>=0);
 		ensure(BordaLoser>=0, 7);
 		allCandidates[BordaLoser].eliminated = true;
@@ -2447,7 +2464,6 @@ EMETH ArrowRaynaud(edata& E  /* repeatedly eliminate canddt with smallest {large
 	int64_t x;
 	int64_t t;
 	int ARLoser, rnd;
-	int64_t minc;
 	int r, chump;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
@@ -2467,16 +2483,8 @@ EMETH ArrowRaynaud(edata& E  /* repeatedly eliminate canddt with smallest {large
 	}
 	Zero(numberOfCandidates, allCandidates, &oneCandidate::eliminated);
 	for(rnd=1; rnd < (int)numberOfCandidates; rnd++) {
-		ARLoser = -1;
-		minc = BIGINT;
 		RandomlyPermute( numberOfCandidates, RandCandPerm );
-		for(i=(int)numberOfCandidates-1; i>=0; i--) {
-			r = RandCandPerm[i];
-			if(!allCandidates[r].eliminated && (ARVictMargin[r]<minc)) {
-				minc=ARVictMargin[r];
-				ARLoser=r;
-			}
-		}
+		ARLoser = findLoser(numberOfCandidates, allCandidates, ARVictMargin);
 		assert(ARLoser >= 0);
 		ensure(ARLoser >= 0, 11);
 		allCandidates[ARLoser].eliminated = true;
