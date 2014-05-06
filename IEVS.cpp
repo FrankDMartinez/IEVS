@@ -2287,12 +2287,8 @@ EMETH Sinkhorn(edata& E  /* candidate with max Sinkhorn rating (from all-positiv
 			for(j=(int)numberOfCandidates-1; j>=0; j--) {
 				sum += SinkMat[k*numberOfCandidates + j];
 			}
-			if(minsum > sum) {
-				minsum = sum;
-			}
-			if(maxsum < sum) {
-				maxsum = sum;
-			}
+			minsum = std::min(minsum, sum);
+			maxsum = std::max(maxsum, sum);
 			ensure((sum!=0.0), 26);
 			SinkRow[k] /= sum;
 		}
