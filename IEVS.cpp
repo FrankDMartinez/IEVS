@@ -2363,9 +2363,7 @@ EMETH SimpsonKramer(edata& E  /* candidate with mildest worst-defeat wins */)
 		for(j=(int)numberOfCandidates-1; j>=0; j--) {
 			r = RandCandPerm[j];
 			x = allCandidates[r].margins[i];
-			if(x>t) {
-				t=x;
-			}
+			t = std::max(t, x);
 		}
 		WorstDefeatMargin[i] = t;
 	}
