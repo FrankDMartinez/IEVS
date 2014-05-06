@@ -2536,7 +2536,7 @@ EMETH ArrowRaynaud(edata& E  /* repeatedly eliminate canddt with smallest {large
  *	count:		the number of Candidates in the current
  *			election
  */
-bool beatPathWinnerExists(const int64_t (&bpsArray)[MaxNumCands*MaxNumCands], const int& k, const uint64_t& count)
+template<class T> bool beatPathWinnerExists(const T (&bpsArray)[MaxNumCands*MaxNumCands], const int& k, const uint64_t& count)
 {
 	for(int j=0; j<count; j++) {
 		if(k != j) {
@@ -2895,16 +2895,9 @@ EMETH ArmytagePCSchulze(edata& E  /*Armytage pairwise comparison based on Schulz
 		}
 	}
 	for(i=(int)numberOfCandidates-1; i>=0; i--) {
-		bool haveAWinner = true;
+		bool haveAWinner;
 		k = RandCandPerm[i];
-		for(j=0; j<numberOfCandidates; j++) {
-			if(k != j) {
-				if( ArmyBPS[j*numberOfCandidates +k] > ArmyBPS[k*numberOfCandidates +j] ) {
-					haveAWinner = false;
-					break;
-				}
-			}
-		}
+		haveAWinner = beatPathWinnerExists(ArmyBPS, k, numberOfCandidates);
 		if(haveAWinner) {
 			winner = k;   return winner;
 		}
