@@ -1989,6 +1989,23 @@ int findLoser(const uint64_t& count, const CandidateSlate& Candidates, const int
 	return Loser;
 }
 
+/*	subtract(voteCount, theCandidate, BordaLoser):	subtracts from 'voteCount'
+ *							the margin of 'theCandidate'
+ *							with respect to the 'BordaLoser'
+ *							iff 'theCandidate' has not
+ *							yet been eliminated from
+ *							contention
+ *	voteCount:	the value to adjust
+ *	theCandidate:	the Candidate to consider
+ *	BordaLoser:	the Borda count Loser
+ */
+void subtract(int64_t& voteCount, const oneCandidate& theCandidate, const int& BordaLoser)
+{
+	if(!theCandidate.eliminated) {
+		voteCount -= theCandidate.margins[BordaLoser];
+	}
+}
+
 /*	NansonBaldwin(E):	returns the index of the Baldwin Winner, not necessarily
  *				the Nanson Winner, and, even then, it looks as if the
  *				Baldwin Winner may be calculated incorrectly by this
@@ -2017,10 +2034,7 @@ EMETH NansonBaldwin(edata& E  /* repeatedly eliminate Borda loser */)
 		ensure(BordaLoser>=0, 7);
 		allCandidates[BordaLoser].eliminated = true;
 		for(i=0; i<numberOfCandidates; i++) {
-			const oneCandidate& theCandidate = allCandidates[i];
-			if(!theCandidate.eliminated) {
-				NansonVoteCount[i] -= theCandidate.margins[BordaLoser];
-			}
+			subtract(NansonVoteCount[i], allCandidates[i], BordaLoser);
 		}
 	} /* end of for(rnd) */
 	for(i=0; i<numberOfCandidates; i++) { /* find non-eliminated candidate... */
