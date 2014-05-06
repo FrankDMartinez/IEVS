@@ -1509,6 +1509,28 @@ typedef int EMETH;  /* allows fgrep EMETH IEVS.c to find out what Election metho
 
 EMETH runoffForApprovalVoting(const edata& E);
 
+/*	IBeatsWho(margins, numberOfCandidates):	returns a hash of
+ *						Candidates beaten by
+ *						the Candidates Whose
+ *						margins are given by
+ *						'margins'
+ *	margins:			array of margins of the given
+ *				Candidate with respect to other
+ *				Candidates
+ *	numberOfCandidates:	the number of Candidates in the
+ *				current election
+ */
+uint64_t IBeatsWho(const MarginsData& margins, const uint64_t& numberOfCandidates)
+{
+	uint64_t beatsHash = 0;
+	for(uint64_t j=0; j<numberOfCandidates; j++) {
+		if( margins[j] > 0 ) {
+			beatsHash |= (1U<<j);
+		}
+	}
+	return beatsHash;
+}
+
 void BuildDefeatsMatrix(edata& E)
 { /* initializes  E->DefeatsMatrix[], E->MarginsMatrix[], RandCandPerm[], NauruWt[], Each Candidate's 'electedCount', Each Candidate's 'drawCount', CondorcetWinner, CopeWinOnlyWinner, TrueCW */
 	int k,i,j;
@@ -1612,12 +1634,7 @@ void BuildDefeatsMatrix(edata& E)
 		oneCandidate& firstCandidate = allTheCandidates[i];
 		uint64_t& beat = firstCandidate.Ibeat;
 		const MarginsData& marginsOfI = firstCandidate.margins;
-		beat = 0;
-		for(j=0; j<numberOfCandidates; j++) {
-			if( marginsOfI[j] > 0 ) {
-				beat |= (1U<<j);
-			}
-		}
+		beat = IBeatsWho(marginsOfI, numberOfCandidates);
 	}
 	CopeWinOnlyWinner = Maximum<int64_t>(numberOfCandidates, allTheCandidates, &oneCandidate::electedCount);
 	for(i=0; i<(int)numberOfVoters; i++) {
