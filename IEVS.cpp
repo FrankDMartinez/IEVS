@@ -2520,6 +2520,34 @@ EMETH ArrowRaynaud(edata& E  /* repeatedly eliminate canddt with smallest {large
 	return(-1); /*error*/
 }
 
+/*	beatPathWinnerExists(bpsArray, k, count):	examines
+ *							'bpsArray'
+ *							to see if
+ *							a Schulze
+ *							Beat Path
+ *							Winner exists;
+ *							if so, 'true'
+ *							is returned;
+ *							otherwise,
+ *							'false'
+ *							is
+ *	bpsArray:	a beat path strength array
+ *	k:		the index of a Candidate to consider
+ *	count:		the number of Candidates in the current
+ *			election
+ */
+bool beatPathWinnerExists(const int64_t (&bpsArray)[MaxNumCands*MaxNumCands], const int& k, const uint64_t& count)
+{
+	for(int j=0; j<count; j++) {
+		if(k != j) {
+			if( bpsArray[j*count +k] > bpsArray[k*count +j] ) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
 /*	SchulzeBeatpaths(E):	returns the index of the Schulze beatpaths Winner; this
  *				implementation is an O(N^3) algorithm, but it is known
  *				how to speed it up to O(N^2); the Schulze beatpath
@@ -2612,16 +2640,9 @@ EMETH SchulzeBeatpaths(edata& E  /* winner = X so BeatPathStrength over rivals Y
 		}
 	}
 	for(i=(int)numberOfCandidates-1; i>=0; i--) {
-		bool haveAWinner = true;
+		bool haveAWinner;
 		k = RandCandPerm[i];
-		for(j=0; j<numberOfCandidates; j++) {
-			if(k != j) {
-				if( BeatPathStrength[j*numberOfCandidates +k] > BeatPathStrength[k*numberOfCandidates +j] ) {
-					haveAWinner = false;
-					break;
-				}
-			}
-		}
+		haveAWinner = beatPathWinnerExists(BeatPathStrength, k, numberOfCandidates);
 		if( haveAWinner ) {
 			winner = k;   return winner;
 		}
