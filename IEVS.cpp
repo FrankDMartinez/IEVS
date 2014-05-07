@@ -1440,7 +1440,7 @@ struct oneVoter
 };
 
 template< class T >
-		int Minimum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*member);
+		int Minimum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*member, const bool& permute = true, const bool& checkElimination = false);
 template< class T >
 		int Maximum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*member);
 
@@ -3063,15 +3063,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(Iround=1; Iround < (int)numberOfCandidates; Iround++) { /*perform IRV rounds*/
-		RdLoser = -1;
-		minc = BIGINT;
-		for(i=0; i<numberOfCandidates; i++) {
-			r = RandCandPerm[i];
-			if(!allCandidates[r].eliminated && (allCandidates[r].voteCountForThisRound<minc)) {
-				minc=allCandidates[r].voteCountForThisRound;
-				RdLoser=r;
-			}
-		}
+		RdLoser = Minimum(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound, false, true);
 		assert(RdLoser>=0);
 		assert(RdLoser < (int)numberOfCandidates);
 		ensure(RdLoser>=0, 12);
@@ -6457,33 +6449,64 @@ int Maximum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*me
 	return(winner);
 }
 
-/*	Minimum(N, allCandidates, member):	returns index of random
- *						minimum entry of
- *						'allCandidates[0..N-1].member'
- *	N:		the expected number of elements in 'allCandidates'
- *	allCandidates:	a slate of Candidates to examine
- *	member:		the member of Each Candidate to use for comparison
- */
+//	Function: Minimum
+//
+//	Returns:
+//		the index of a Candidate randomly selected from
+//		all Candidates with the minimum value of 'allCandidates[0..N-1].member'
+//
+//	Parameters:
+//		N                - the expected number of elements
+//		                   in 'allCandidates'
+//		allCandidates    - a slate of Candidates to examine
+//		member           - the member of Each Candidate
+//		                   to use for comparison
+//		permute          - whether to randomly permute 'RandCandPerm'
+//		                   before analyzing; default is 'true'
+//		checkElimination - check if a Candidate is eliminated
+//		                   before testing its 'member';
+//		                   default is 'false'
 template< class T >
-int Minimum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*member)
+int Minimum(uint64_t N,
+            const CandidateSlate& allCandidates,
+            T oneCandidate::*member,
+            const bool& permute,
+            const bool& checkElimination)
 {
 	T minc;
 	int a;
 	int r;
 	int winner;
+	bool test;
 	winner = -1;
-	minc = (typeid(T)==typeid(uint64_t)) ? (T)MAXUINT64 : (T)HUGE;
-	RandomlyPermute( N, (uint*)RandCandPerm );
+	if(typeid(T)==typeid(uint64_t)) {
+		minc = (T)MAXUINT64;
+	} else if(typeid(T)==typeid(int64_t)) {
+		minc = (T)BIGINT;
+	} else {
+		minc = (T)HUGE;
+	}
+	if(permute) {
+		RandomlyPermute( N, (uint*)RandCandPerm );
+	}
 	for(a=0; a<(int)N; a++) {
 		r = RandCandPerm[a];
-		if(allCandidates[r].*member<minc) {
-			minc=allCandidates[r].*member;
+		const oneCandidate& theCandidate = allCandidates[r];
+		if(checkElimination) {
+			test = !theCandidate.eliminated;
+		} else {
+			test = true;
+		}
+		if(test && theCandidate.*member<minc) {
+			minc=theCandidate.*member;
 			winner=r;
 		}
 	}
 	assert(winner>=0);
-	assert( allCandidates[winner].*member <= allCandidates[0].*member );
-	assert( allCandidates[winner].*member <= allCandidates[N-1].*member );
+	if(false==checkElimination) {
+		assert( allCandidates[winner].*member <= allCandidates[0].*member );
+		assert( allCandidates[winner].*member <= allCandidates[N-1].*member );
+	}
 	return(winner);
 }
 
