@@ -2957,7 +2957,18 @@ void Determine(int& Winner, methodFunction theMethod, edata& E)
 	}
 }
 
-EMETH SimmonsCond(edata& E  /* winner = X with least sum of top-rank-votes for rivals pairwise-beating X */)
+//	Function: SimmonsCond
+//
+//	Returns:
+//		the index of a randomly selected Candidate from
+//		All Candidates with the least sum of top-rank-votes
+//		for Rivals pairwise-beating said Candidate; note:
+//		this implementation also adds 1/3 of a vote in certain
+//		cases in order to help break ties
+//	Parameters:
+//		E	- the election data to use for determining
+//			  the Simmons Condorect Winner
+EMETH SimmonsCond(edata& E)
 {
 	int64_t SimmVotesAgainst[MaxNumCands]={0};
 	int i,j;
@@ -2987,18 +2998,23 @@ EMETH SimmonsCond(edata& E  /* winner = X with least sum of top-rank-votes for r
 	return winner;
 }
 
+
 /*******
  * The following IRV (instant runoff voting) algorithm has somewhat long code, but
  * by using linked lists achieves fast (very sublinear) runtime.
- * If SmithIRVwinner<0 then It also computes SmithIRVwinner as a side effect.
  * This code can also be used to compute the winner in "Top3" (bastardized) IRV where
  * voters only allowed to indicate their top 3 choices in order..
  * For normal IRV (or SmithIRV) set IRVTopLim=BIGINT before run.
  * For Top3-IRV set IRVTopLim=3 (or any other integer N for TopN-IRV). ***/
-/*	IRV(E):	returns the index of the instant runoff voting Winner or -1 if an error
- *		occurs
- *	E:	the election data used to determine the Winner
- */
+//	Function: IRV
+//
+//	Returns:
+//		the index of the instant runoff voting Winner or
+//		-1 if an error occurs; if SmithIRVwinner<0, the
+//		SmithIRVwinner is also determined as a side effect
+//	Parameters:
+//		E	- the election data to use for determining
+//			  the instant runoff voting Winner
 EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 { /* side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's of Each Voter, Each Candidate's 'voteCountForThisRound', FavListNext[], HeadFav[], Each Candidate's 'lossCount' member, SmithIRVwinner, IRVwinner  */
 	int Iround,i,RdLoser,NextI,j;
@@ -3116,8 +3132,19 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 	return(winner);
 }
 
-EMETH SmithIRV(edata& E  /*  Eliminate plurality loser until unbeaten candidate exists. */
-){ /* must be run after IRV. */
+//	Function: SmithIRV
+//
+//	Returns:
+//		the index of a Candidate after eliminate the plurality
+//		losing Candidate until an unbeaten Candidate exists;
+//		the index returned is the index of the unbeaten
+//		Candidate; note: this function must be called after
+//		'IRV()'
+//	Parameters:
+//		E	- the election data to use for determining
+//			  the instant runoff voting Winner
+EMETH SmithIRV(edata& E)
+{ /* must be run after IRV. */
 	if(IRVwinner<0){
 		SmithIRVwinner = -1;
 		IRV(E);
@@ -3125,8 +3152,18 @@ EMETH SmithIRV(edata& E  /*  Eliminate plurality loser until unbeaten candidate 
 	return SmithIRVwinner;
 }
 
-EMETH Top3IRV(edata& E  /* Top-3-choices-only IRV */
-){
+//	Function: Top3IRV
+//
+//	Returns:
+//		the index of the instant runoff voting Winner or
+//		-1 if an error occurs; Voters indicate only Their
+//		top 3 choices in order; if SmithIRVwinner<0, the
+//		SmithIRVwinner is also determined as a side effect
+//	Parameters:
+//		E	- the election data to use for determining
+//			  the instant runoff voting Winner
+EMETH Top3IRV(edata& E)
+{
 	int w;
 	IRVTopLim = 3;
 	w = IRV(E);
@@ -3134,8 +3171,18 @@ EMETH Top3IRV(edata& E  /* Top-3-choices-only IRV */
 	return w;
 }
 
-EMETH BTRIRV(edata& E  /* Repeatedly eliminate either plur loser or 2nd-loser (whoever loses pairwise) */
-){ /* side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's, Each Candidate's 'voteCountForThisRound', FavListNext[], HeadFav[], */
+//	Function: BTRIRV
+//
+//	Returns:
+//		the index of the instant runoff voting Winner or
+//		-1 if an error occurs; Candidates eliminated are
+//		either the plurality Loser or the plurality "2nd Loser",
+//		whichever loses pairwise to the Other
+//	Parameters:
+//		E	- the election data to use for determining
+//			  the instant runoff voting Winner
+EMETH BTRIRV(edata& E)
+{ /* side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's, Each Candidate's 'voteCountForThisRound', FavListNext[], HeadFav[], */
 	int Iround,x,i,RdLoser,RdLoser2,NextI,r;
 	int64_t minc;
 	const uint64_t& numberOfCandidates = E.NumCands;
@@ -3223,8 +3270,25 @@ EMETH BTRIRV(edata& E  /* Repeatedly eliminate either plur loser or 2nd-loser (w
 	return(-1); /*error*/
 }
 
-EMETH Coombs(edata& E /*repeatedly eliminate antiplurality loser (with most bottom-rank votes)*/
-){ /*side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's, Each Candidates 'voteCountForThisRound', FavListNext[], HeadFav[] */
+//	Function: Coombs
+//
+//	Returns:
+//		the index of the Coombs Winner or
+//		-1 if an error occurs; Each Voter rank-orders All
+//		of the Candidates on Their ballot; if at any time
+//		1 Candidate is ranked first (among non-eliminated
+//		Candidates) by an absolute majority of the Voters,
+//		that Candidate wins; otherwise, the Candidate ranked
+//		last (again among non-eliminated Candidates) by
+//		the largest number of (or a plurality of) Voters
+//		is eliminated; conversely, under instant runoff
+//		voting, the Candidate ranked first (among non-eliminated
+//		Candidates) by the fewest Voters is eliminated
+//	Parameters:
+//		E	- the election data to use for determining
+//			  the instant runoff voting Winner
+EMETH Coombs(edata& E)
+{ /*side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's, Each Candidates 'voteCountForThisRound', FavListNext[], HeadFav[] */
 	int Iround,i,RdLoser,NextI,x,r;
 	int64_t maxc;
 	const uint64_t& numberOfCandidates = E.NumCands;
