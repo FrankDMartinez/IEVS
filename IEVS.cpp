@@ -3049,7 +3049,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 	for(Iround=1; Iround < (int)numberOfCandidates; Iround++) { /*perform IRV rounds*/
 		RdLoser = -1;
 		minc = BIGINT;
-		for(i=(int)numberOfCandidates-1; i>=0; i--) {
+		for(i=0; i<numberOfCandidates; i++) {
 			r = RandCandPerm[i];
 			if(!allCandidates[r].eliminated && (allCandidates[r].voteCountForThisRound<minc)) {
 				minc=allCandidates[r].voteCountForThisRound;
@@ -3169,7 +3169,7 @@ EMETH BTRIRV(edata& E  /* Repeatedly eliminate either plur loser or 2nd-loser (w
 	for(Iround=1; Iround<(int)numberOfCandidates; Iround++){
 		RdLoser = -1;
 		minc = BIGINT;
-		for(i=(int)numberOfCandidates-1; i>=0; i--){
+		for(i=0; i<numberOfCandidates; i++) {
 			r = RandCandPerm[i];
 			if(!allCandidates[r].eliminated && allCandidates[r].voteCountForThisRound<minc){
 				minc=allCandidates[r].voteCountForThisRound;
