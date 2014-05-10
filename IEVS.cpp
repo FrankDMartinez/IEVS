@@ -3205,16 +3205,8 @@ EMETH BTRIRV(edata& E)
 		HeadFav[x] = i;
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
-	for(Iround=1; Iround<(int)numberOfCandidates; Iround++){
-		RdLoser = -1;
-		minc = BIGINT;
-		for(i=0; i<numberOfCandidates; i++) {
-			r = RandCandPerm[i];
-			if(!allCandidates[r].eliminated && allCandidates[r].voteCountForThisRound<minc){
-				minc=allCandidates[r].voteCountForThisRound;
-				RdLoser=r;
-			}
-		}
+	for(Iround=1; Iround<(int)numberOfCandidates; Iround++) {
+		RdLoser = Minimum(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound, false, true);
 		assert(RdLoser>=0);
 		RdLoser2 = -1;
 		minc = BIGINT;
