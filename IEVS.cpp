@@ -3210,7 +3210,7 @@ EMETH BTRIRV(edata& E)
 		assert(RdLoser>=0);
 		RdLoser2 = -1;
 		minc = BIGINT;
-		for(i=(int)numberOfCandidates-1; i>=0; i--){
+		for(i=0; i<numberOfCandidates; i++) {
 			r = RandCandPerm[i];
 			if(!allCandidates[r].eliminated && allCandidates[r].voteCountForThisRound<minc && r!=RdLoser){
 				minc=allCandidates[r].voteCountForThisRound;
