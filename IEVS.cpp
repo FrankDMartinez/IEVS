@@ -3175,8 +3175,7 @@ EMETH Top3IRV(edata& E)
 //			  the instant runoff voting Winner
 EMETH BTRIRV(edata& E)
 { /* side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's, Each Candidate's 'voteCountForThisRound', FavListNext[], HeadFav[], */
-	int Iround,x,i,RdLoser,RdLoser2,NextI,r;
-	int64_t minc;
+	int Iround,x,i,RdLoser,RdLoser2,NextI;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
@@ -3208,15 +3207,10 @@ EMETH BTRIRV(edata& E)
 	for(Iround=1; Iround<(int)numberOfCandidates; Iround++) {
 		RdLoser = Minimum(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound, false, true);
 		assert(RdLoser>=0);
-		RdLoser2 = -1;
-		minc = BIGINT;
-		for(i=0; i<numberOfCandidates; i++) {
-			r = RandCandPerm[i];
-			if(!allCandidates[r].eliminated && allCandidates[r].voteCountForThisRound<minc && r!=RdLoser){
-				minc=allCandidates[r].voteCountForThisRound;
-				RdLoser2=r;
-			}
-		}
+		bool eliminationState = allCandidates[RdLoser].eliminated;
+		allCandidates[RdLoser].eliminated = true;
+		RdLoser2 = Minimum(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound, false, true);
+		allCandidates[RdLoser].eliminated = eliminationState;
 		assert(RdLoser2>=0);
 		if( allCandidates[RdLoser].margins[RdLoser2] > 0 ) {
 			RdLoser = RdLoser2;
