@@ -3329,7 +3329,7 @@ EMETH Coombs(edata& E)
 	for(Iround=1; Iround < (int)numberOfCandidates; Iround++){
 		RdLoser = -1;
 		maxc = -BIGINT;
-		for(i=(int)numberOfCandidates-1; i>=0; i--){
+		for(i=0; i<numberOfCandidates; i++) {
 			r = RandCandPerm[i];
 			assert(r >= 0);
 			assert(r < (int)numberOfCandidates);
