@@ -3162,6 +3162,8 @@ EMETH Top3IRV(edata& E)
 	return w;
 }
 
+enum Direction {Up, Down};
+
 //	Function: findNewFavorite
 //
 //	Returns:
@@ -3180,16 +3182,25 @@ EMETH Top3IRV(edata& E)
 //		allCandidates	- the suite of All Candidates in this
 //				  this election
 //		CandidateCount	- the number of Candidates in this election
+//		direction	- whether to bump 'favorite' up or down
 uint findNewFavorite(int64_t& favorite,
 		     const uint (&preferences)[MaxNumCands],
 		     const CandidateSlate& allCandidates,
-		     const uint64_t& CandidateCount)
+		     const uint64_t& CandidateCount,
+		     const Direction& direction)
 {
 	uint indexOfNewFavorite;
 	ensure(favorite >= 0, 36);
 	ensure(favorite < (int)CandidateCount, 37);
+	ensure((direction == Up) || (direction == Down), 51);
+	int64_t delta;
+	if(direction == Up) {
+		delta = +1;
+	} else {
+		delta = -1;
+	}
 	do {
-		favorite++;
+		favorite += delta;
 		indexOfNewFavorite = preferences[favorite];
 	} while( allCandidates[indexOfNewFavorite].eliminated );
 	ensure( favorite < (int)CandidateCount, 38 );
@@ -3256,7 +3267,7 @@ EMETH BTRIRV(edata& E)
 			int64_t& favorite = theVoter.favoriteCandidate;
 			const uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
 			ensure( preferences[favorite] == RdLoser, 35 );
-			x = findNewFavorite(favorite, preferences, allCandidates, numberOfCandidates);
+			x = findNewFavorite(favorite, preferences, allCandidates, numberOfCandidates, Up);
 			NextI =	FavListNext[i];
 			/* update favorite-list: */
 			FavListNext[i] = HeadFav[x];
@@ -3334,15 +3345,8 @@ EMETH Coombs(edata& E)
 			oneVoter& theVoter = allVoters[i];
 			const uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
 			int64_t& favorite = theVoter.favoriteCandidate;
-			ensure( favorite>=0, 39 );
-			ensure( favorite<= (int)numberOfCandidates, 40 );
 			ensure( preferences[favorite] == RdLoser, 49 );
-			do {
-				favorite--;
-				x = preferences[favorite];
-			} while( allCandidates[x].eliminated );
-			/* x is new favorite of voter i */
-			ensure( favorite >= 0, 41 );
+			x = findNewFavorite(favorite, preferences, allCandidates, numberOfCandidates, Down);
 			NextI =	FavListNext[i];
 			/* update favorite-list: */
 			FavListNext[i] = HeadFav[x];
