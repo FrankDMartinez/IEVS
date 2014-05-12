@@ -6387,12 +6387,18 @@ int ArgMaxArr(uint64_t N, const oneCandidateToTheVoter (&Candidates)[MaxNumCands
 	return(winner);
 }
 
-/*	ArgMinArr(N, Arr[], RandPerm[]):	returns index of random min entry of
- *						Arr[0..N-1]
- *	N:		the expected number of elements in 'Arr' and 'RandPerm'
- *	Arr:		array of values to examine
- *	RandPerm:	array of perm.
- */
+//	Function: ArgMinArr
+//
+//	Returns:
+//		the index of a Candidate randomly selected from
+//		all Candidates with the minimum value of 'Arr[0..N-1]'
+//
+//	Parameters:
+//		N                - the expected number of elements in
+//		                   'Arr' and 'RandPerm'
+//		Arr              - array of values to examine
+//		RandPerm         - array of randomly ordered indices
+//		                   into 'Arr'
 template< class T >
 int ArgMinArr(uint64_t N, const T Arr[], int RandPerm[])
 {
