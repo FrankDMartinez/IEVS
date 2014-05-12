@@ -3794,10 +3794,16 @@ EMETH LoMedianRank(const edata& E    /* canddt with best median ranking wins */)
  * and runs in order N^4 time with N candidates, i.e slow.  It is possible to speed it
  * up to Otilde(N^2) steps with the use of fast data structures...):
  ******************************************/
-/*	TidemanRankedPairs(E):	returns the Tideman ranked pair Winner or -1 if an error
- *				occurs
- *	E:	the election data used to determine the Winner
- */
+//	Function: TidemanRankedPairs
+//
+//	Returns:
+//		an index of a Candidate randomly selected from
+//		all Winners according to Tideman ranked pair method
+//		or -1 if an error occurs
+//
+//	Parameters:
+//		E	- the election data to use for determining
+//			  the Winner
 EMETH TidemanRankedPairs(const edata& E  /*lock in comparisons with largest margins not yielding cycle*/)
 {  /*side effects: Tpath[] is used as a changeable copy of MarginsMatrix.*/
 	CandidateSlate Tpath = E.Candidates;
@@ -3890,6 +3896,16 @@ void updateTheRoot(int (&theRoots)[MaxNumCands],
 	}
 }
 
+//	Function: HeitzigRiver
+//
+//	Returns:
+//		the index of a Candidate randomly selected from
+//		all Winners according to Jobst Heitzig's River
+//		method
+//
+//	Parameters:
+//		E	- the election data to use for determining
+//			  the Winner
 EMETH HeitzigRiver(const edata& E /*http://lists.electorama.com/pipermail/election-methods-electorama.com/2004-October/013971.html*/)
 {
 	int Hpotpar[MaxNumCands]={0};
