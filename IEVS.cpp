@@ -1442,7 +1442,7 @@ struct oneVoter
 template< class T >
 		int Minimum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*member, const bool& permute = true, const bool& checkElimination = false);
 template< class T >
-		int Maximum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*member);
+		int Maximum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*member, const bool& permute = true, const bool& checkElimination = false);
 
 typedef struct dum1 {
 	uint NumVoters;
@@ -3293,8 +3293,7 @@ EMETH BTRIRV(edata& E)
 //			  the instant runoff voting Winner
 EMETH Coombs(edata& E)
 { /*side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's, Each Candidates 'voteCountForThisRound', FavListNext[], HeadFav[] */
-	int Iround,i,RdLoser,NextI,x,r;
-	int64_t maxc;
+	int Iround,i,RdLoser,NextI,x;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
@@ -3326,20 +3325,8 @@ EMETH Coombs(edata& E)
 		HeadFav[x] = i;
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
-	for(Iround=1; Iround < (int)numberOfCandidates; Iround++){
-		RdLoser = -1;
-		maxc = -BIGINT;
-		for(i=0; i<numberOfCandidates; i++) {
-			r = RandCandPerm[i];
-			assert(r >= 0);
-			assert(r < (int)numberOfCandidates);
-			if(!allCandidates[r].eliminated) {
-				if(allCandidates[r].voteCountForThisRound>maxc){
-					maxc=allCandidates[r].voteCountForThisRound;
-					RdLoser=r;
-				}
-			}
-		}
+	for(Iround=1; Iround < (int)numberOfCandidates; Iround++) {
+		RdLoser = Maximum(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound, false, true);
 		assert(RdLoser>=0);
 		ensure(RdLoser>=0, 14);
 		allCandidates[RdLoser].eliminated = true; /* eliminate RdLoser */
@@ -6429,18 +6416,33 @@ int ArgMinArr(uint64_t N, const T Arr[], int RandPerm[])
 	return(winner);
 }
 
-/*	Maximum(N, allCandidates, member):	returns index of random
- *						maximum entry of
- *						'allCandidates[0..N-1].member'
- *	N:		the expected number of elements in 'allCandidates'
- *	allCandidates:	a slate of Candidates to examine
- *	member:		the member of Each Candidate to use for comparison
- */
+//	Function: Maximum
+//
+//	Returns:
+//		the index of a Candidate randomly selected from
+//		all Candidates with the maximum value of 'allCandidates[0..N-1].member'
+//
+//	Parameters:
+//		N                - the expected number of elements
+//		                   in 'allCandidates'
+//		allCandidates    - a slate of Candidates to examine
+//		member           - the member of Each Candidate
+//		                   to use for comparison
+//		permute          - whether to randomly permute 'RandCandPerm'
+//		                   before analyzing; default is 'true'
+//		checkElimination - check if a Candidate is eliminated
+//		                   before testing its 'member';
+//		                   default is 'false'
 template< class T >
-int Maximum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*member)
+int Maximum(uint64_t N,
+	    const CandidateSlate& allCandidates,
+	    T oneCandidate::*member,
+            const bool& permute,
+            const bool& checkElimination)
 {
 	T maxc;
 	int a;
+	bool test;
 	int r;
 	bool typeIsUnsigned = typeid(T) == typeid(uint);
 	int winner;
@@ -6452,10 +6454,19 @@ int Maximum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*me
 	} else {
 		maxc = (T)(-HUGE);
 	}
-	RandomlyPermute( N, (uint*)RandCandPerm );
+	if(permute) {
+		RandomlyPermute( N, (uint*)RandCandPerm );
+	}
 	for(a=0; a<(int)N; a++) {
 		r = RandCandPerm[a];
-		if(((typeIsUnsigned && allCandidates[r].*member>=maxc) || allCandidates[r].*member>maxc)) {
+		const oneCandidate& theCandidate = allCandidates[r];
+		if(checkElimination) {
+			test = !theCandidate.eliminated;
+		} else {
+			test = true;
+		}
+		if(test &&
+		   ((typeIsUnsigned && allCandidates[r].*member>=maxc) || allCandidates[r].*member>maxc)) {
 			maxc=allCandidates[r].*member;
 			winner=r;
 		}
