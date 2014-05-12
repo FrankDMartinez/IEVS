@@ -3163,6 +3163,40 @@ EMETH Top3IRV(edata& E)
 	return w;
 }
 
+//	Function: findNewFavorite
+//
+//	Returns:
+//		the index of a given Voter's next favorite Candidate
+//		which has not yet been eliminated by 'BTRIRV()'
+//	Parameters:
+//		favorite	- the index of the Voter's current favorite
+//				  Candidate
+//		preferences	- an array of Candidate indices ranked
+//				  according to a given Voter's preferences;
+//				  Candidates with indices located at
+//				  lower indices into this array are more
+//				  prefered than Candidates Whose indices
+//				  are located at higher indices into
+//				  this array
+//		allCandidates	- the suite of All Candidates in this
+//				  this election
+//		CandidateCount	- the number of Candidates in this election
+uint findNewFavorite(int64_t& favorite,
+		     const uint (&preferences)[MaxNumCands],
+		     const CandidateSlate& allCandidates,
+		     const uint64_t& CandidateCount)
+{
+	uint indexOfNewFavorite;
+	ensure(favorite >= 0, 36);
+	ensure(favorite < (int)CandidateCount, 37);
+	do {
+		favorite++;
+		indexOfNewFavorite = preferences[favorite];
+	} while( allCandidates[indexOfNewFavorite].eliminated );
+	ensure( favorite < (int)CandidateCount, 38 );
+	return indexOfNewFavorite;
+}
+
 //	Function: BTRIRV
 //
 //	Returns:
@@ -3175,11 +3209,12 @@ EMETH Top3IRV(edata& E)
 //			  the instant runoff voting Winner
 EMETH BTRIRV(edata& E)
 { /* side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's, Each Candidate's 'voteCountForThisRound', FavListNext[], HeadFav[], */
-	int Iround,x,i,RdLoser,RdLoser2,NextI;
+	int Iround,i,RdLoser,RdLoser2,NextI;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
+	uint64_t x;
 	assert(numberOfCandidates <= MaxNumCands);
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner>=0) return(CondorcetWinner);
@@ -3222,20 +3257,12 @@ EMETH BTRIRV(edata& E)
 			int64_t& favorite = theVoter.favoriteCandidate;
 			const uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
 			ensure( preferences[favorite] == RdLoser, 35 );
-			ensure(favorite >= 0, 36);
-			ensure(favorite < (int)numberOfCandidates, 37);
-			do {
-				favorite++;
-				x = preferences[favorite];
-			} while( allCandidates[x].eliminated );
-			/* x is new favorite of voter i */
-			ensure( favorite < (int)numberOfCandidates, 38 );
+			x = findNewFavorite(favorite, preferences, allCandidates, numberOfCandidates);
 			NextI =	FavListNext[i];
 			/* update favorite-list: */
 			FavListNext[i] = HeadFav[x];
 			HeadFav[x] = i;
 			/* update vote count totals: */
-			assert(x >= 0);
 			assert(x < (int)numberOfCandidates);
 			allCandidates[x].voteCountForThisRound++;
 		}
