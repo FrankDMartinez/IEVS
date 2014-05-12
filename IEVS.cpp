@@ -3864,6 +3864,32 @@ EMETH TidemanRankedPairs(const edata& E  /*lock in comparisons with largest marg
 	return(winner);
 }
 
+//	Function: updateTheRoot
+//
+//	updates all instances of 'priorRoot' in the given Heitzig River root array to 'newRoot'
+//
+//	Parameters:
+//		theRoots           - a collection of Heitzig River
+//		                     root values
+//		priorRoot          - the value in 'theRoots' to
+//		                     replace
+//		newRoot            - the value with which to replace
+//		                     'priorRoot'
+//		numberOfCandidates - the number of Candidates in
+//		                     the current election
+void updateTheRoot(int (&theRoots)[MaxNumCands],
+                   const int priorRoot,
+                   const int& newRoot,
+                   const uint64_t& numberOfCandidates)
+{
+	for(int i=0; i < (int)numberOfCandidates; i++) {
+		int& ithRoot = theRoots[i];
+		if(ithRoot == priorRoot) {
+			ithRoot = newRoot;
+		}
+	}
+}
+
 EMETH HeitzigRiver(const edata& E /*http://lists.electorama.com/pipermail/election-methods-electorama.com/2004-October/013971.html*/)
 {
 	int Hpotpar[MaxNumCands]={0};
@@ -3871,7 +3897,7 @@ EMETH HeitzigRiver(const edata& E /*http://lists.electorama.com/pipermail/electi
 	int Hroot[MaxNumCands]={0};
 	int r;
 	uint64_t z;
-	int i,j,k,pp,oldroot,newroot;
+	int i,j,k,pp,newroot;
 	int64_t maxc;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
@@ -3919,12 +3945,7 @@ EMETH HeitzigRiver(const edata& E /*http://lists.electorama.com/pipermail/electi
 		if(z<=1) {
 			break;
 		}
-		oldroot = Hroot[k];
-		for(i=0; i < (int)numberOfCandidates; i++) {
-			if(Hroot[i] == oldroot) {
-				Hroot[i] = newroot;
-			}
-		}
+		updateTheRoot(Hroot, Hroot[k], newroot, numberOfCandidates);
 		/* update potential parent of newroot: */
 		maxc = -BIGINT; k = -1;
 		for(j=0; j < (int)numberOfCandidates; j++) {
