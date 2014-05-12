@@ -3381,8 +3381,8 @@ EMETH Coombs(edata& E)
 //		numberOfCandidates      - the number of Candidates in
 //		                          the current election
 void addTheApprovalOfTheVoter(const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands],
-			      CandidateSlate& allCandidates,
-			      const uint64_t& numberOfCandidates)
+                              CandidateSlate& allCandidates,
+                              const uint64_t& numberOfCandidates)
 {
 	for(int j=0; j<numberOfCandidates; j++) {
 		if(allCandidatesToTheVoter[j].approve) {
@@ -3415,11 +3415,16 @@ EMETH Approval(edata& E)
 	return(ApprovalWinner);
 }
 
-/*	App2Runoff(E):	returns the index of the Winner from a run-off between the top 2
- *			Candidates as determined by approval voting
- *	E:	the election data used to determine the Winner
- */
-EMETH App2Runoff(edata& E    /*top-2-runoff, 1stRd=approval, 2nd round has fully-honest voting*/)
+//	Function: App2Runoff
+//
+//	Returns:
+//		the index of the Winner from a run-off between the top
+//		2 Candidates as determined by approval voting; the 1st
+//		round uses the approval method; the 2nd round has fully-honest
+//		voting
+//	Parameters:
+//		E	- the election data used to determine the Winner
+EMETH App2Runoff(edata& E)
 { /* side effects: ASecond */
 	EMETH winner;
 	Determine(ApprovalWinner, Approval, E);
