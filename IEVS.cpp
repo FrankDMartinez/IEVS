@@ -3365,6 +3365,32 @@ EMETH Coombs(edata& E)
 	return(-1); /*error*/
 }
 
+
+//	Function: addTheApprovalOfTheVoter
+//
+//	increments the approval count of Each Candidate a given Voter
+//	approves
+//
+//	Parameters:
+//		allCandidatesToTheVoter - a collection of Candidates
+//		                          as perceived by 1 particular
+//		                          Voter
+//		allCandidates           - a collection of Candidates
+//		                          in general for the current
+//		                          election
+//		numberOfCandidates      - the number of Candidates in
+//		                          the current election
+void addTheApprovalOfTheVoter(const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands],
+			      CandidateSlate& allCandidates,
+			      const uint64_t& numberOfCandidates)
+{
+	for(int j=0; j<numberOfCandidates; j++) {
+		if(allCandidatesToTheVoter[j].approve) {
+			allCandidates[j].approvals++;
+		}
+	}
+}
+
 //	Function: Approval
 //
 //	Returns:
@@ -3375,7 +3401,6 @@ EMETH Coombs(edata& E)
 EMETH Approval(edata& E)
 { /* side effects: Each Candidate's 'approval' member, ApprovalWinner */
 	int i;
-	int j;
 	CandidateSlate& allCandidates = E.Candidates;
 	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
@@ -3383,11 +3408,7 @@ EMETH Approval(edata& E)
 	Zero(numberOfCandidates, allCandidates, &oneCandidate::approvals);
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = allVoters[i].Candidates;
-		for(j=0; j<numberOfCandidates; j++) {
-			if(allCandidatesToTheVoter[j].approve) {
-				allCandidates[j].approvals++;
-			}
-		}
+		addTheApprovalOfTheVoter(allCandidatesToTheVoter, allCandidates, numberOfCandidates);
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	ApprovalWinner = Maximum(numberOfCandidates, allCandidates, &oneCandidate::approvals);
