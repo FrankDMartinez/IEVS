@@ -3374,11 +3374,14 @@ EMETH Coombs(edata& E)
 	return(-1); /*error*/
 }
 
-/*	Approval(E):	returns an index corresponding to the Winner according to the
- *			approval method; the Candidate with the most approvals wins
- *	E:	the election data used to determine the Winner
- */
-EMETH Approval(edata& E   /* canddt with most-approvals wins */)
+//	Function: Approval
+//
+//	Returns:
+//		the index corresponding to the Winner according to the
+//		approval method; the Candidate with the most approvals wins
+//	Parameters:
+//		E	- the election data used to determine the Winner
+EMETH Approval(edata& E)
 { /* side effects: Each Candidate's 'approval' member, ApprovalWinner */
 	int i;
 	int j;
