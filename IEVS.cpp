@@ -3543,7 +3543,7 @@ EMETH IRNR(edata& E, normalizationFunction normalizer /*Brian Olson's voting met
 		RandomlyPermute( numberOfCandidates, RandCandPerm );
 		loser = -1;
 		minc = HUGE;
-		for(j=(int)numberOfCandidates-1; j>=0; j--) {
+		for(j=0; j<numberOfCandidates; j++) {
 			r = RandCandPerm[j];
 			if(!allCandidates[r].eliminated) {
 				const real& normalizedRatingSumOfCandidateR = allCandidates[r].normalizedRatingSum;
