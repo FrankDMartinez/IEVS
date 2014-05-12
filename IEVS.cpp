@@ -3526,12 +3526,10 @@ EMETH IRNR(edata& E, normalizationFunction normalizer /*Brian Olson's voting met
 	int i;
 	int j;
 	int loser;
-	real minc;
 	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	CandidateSlate& allCandidates = E.Candidates;
-	int r;
 	extern void addToNormalizedRatingSum(const voteVector&, CandidateSlate&, const uint64_t&);
 	Zero(numberOfCandidates, allCandidates, &oneCandidate::eliminated);
 	for(rd=numberOfCandidates; rd>1; rd--) {
@@ -3540,19 +3538,7 @@ EMETH IRNR(edata& E, normalizationFunction normalizer /*Brian Olson's voting met
 			voteVector normalizedVoteVector = normalizer(allVoters[i], allCandidates, numberOfCandidates);
 			addToNormalizedRatingSum(normalizedVoteVector, allCandidates, numberOfCandidates);
 		}
-		RandomlyPermute( numberOfCandidates, RandCandPerm );
-		loser = -1;
-		minc = HUGE;
-		for(j=0; j<numberOfCandidates; j++) {
-			r = RandCandPerm[j];
-			if(!allCandidates[r].eliminated) {
-				const real& normalizedRatingSumOfCandidateR = allCandidates[r].normalizedRatingSum;
-				if( normalizedRatingSumOfCandidateR < minc ) {
-					minc = normalizedRatingSumOfCandidateR;
-					loser = r;
-				}
-			}
-		}
+		loser = Minimum(numberOfCandidates, allCandidates, &oneCandidate::normalizedRatingSum, true, true);
 		assert(loser>=0);
 		ensure(loser>=0, 15);
 		allCandidates[loser].eliminated = true;
