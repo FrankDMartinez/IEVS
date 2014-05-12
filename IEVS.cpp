@@ -3019,8 +3019,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 { /* side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's of Each Voter, Each Candidate's 'voteCountForThisRound', FavListNext[], HeadFav[], Each Candidate's 'lossCount' member, SmithIRVwinner, IRVwinner  */
 	int Iround,i,RdLoser,NextI,j;
 	int64_t t;
-	int x,r,stillthere,winner;
-	int64_t minc;
+	int x,stillthere,winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
