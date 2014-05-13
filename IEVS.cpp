@@ -4940,6 +4940,34 @@ void updateMethodAgreements(oneVotingMethod& theGivenMethod,
 	}
 }
 
+//	Function: updateCondorcetAgreementOfOneMethod
+//
+//	updates the agreement count of a given voting method with
+//	both the Condorcet Winner and the true Condorcet Winner
+//	if the current method is actively tested for the current
+//	election
+//
+//	Parameters:
+//		theGivenMethod - the voting method to be analyzed
+//		tested         - whether that method is actively
+//		                 tested for the current election
+//		core           - whether the given method is a "core
+//		                 method"
+void updateCondorcetAgreementOfOneMethod(oneVotingMethod& theGivenMethod,
+                                         const bool& tested,
+                                         const bool& core)
+{
+	if(tested || core) {
+		const int& theWinner = theGivenMethod.Winner;
+		if(theWinner==CondorcetWinner) {
+			theGivenMethod.CondorcetAgreementCount++;
+		}
+		if(theWinner==TrueCW) {
+			theGivenMethod.trueCondorcetAgreementCount++;
+		}
+	}
+}
+
 /* all arrays here have NumMethods entries */
 //	Function: FindWinnersAndRegrets
 //
@@ -4978,15 +5006,8 @@ int FindWinnersAndRegrets( edata& E,  brdata& B,  const bool Methods[] )
 	if(CondorcetWinner >= 0) {
 		for(m=0; m<NumMethods; m++) {
 			oneVotingMethod& methodM = allVotingMethods[m];
-			const int& WinnerOfM = methodM.Winner;
-			if(Methods[m] || m<NumCoreMethods) {
-				if(WinnerOfM==CondorcetWinner) {
-					methodM.CondorcetAgreementCount++;
-				}
-				if(WinnerOfM==TrueCW) {
-					methodM.trueCondorcetAgreementCount++;
-				}
-			}
+			const bool& coreMethod = m<NumCoreMethods;
+			updateCondorcetAgreementOfOneMethod(methodM, Methods[m], coreMethod);
 		}
 	}
 	return(CondorcetWinner);
