@@ -3977,6 +3977,29 @@ EMETH HeitzigRiver(const edata& E /*http://lists.electorama.com/pipermail/electi
 	return newroot;
 }
 
+//	Function: updateLossCount
+//
+//	decrements the loss count of Each Candidate from 0 thru 'i-1'
+//	if Candidate 'i' has a margin over said Candidate
+//
+//	Parameters:
+//		allCandidates - the collection of Candidates in this
+//		                election
+//		margins       - the margins of a particular Candidate
+//		                with respect to All Other Candidates
+//		i             - the index of the Candidate to Whom 'margins'
+//		                belongs
+void updateLossCount(CandidateSlate& allCandidates,
+                     const MarginsData& margins,
+                     const int& i)
+{
+	for(int j=0; j<i; j++) {
+		if(margins[j]>0) {
+			allCandidates[j].lossCount--;
+		}
+	}
+}
+
 /*	DMC(E):	returns the index of the Definite Majority Choice (a.k.a. Ranked
  *		Approval Voting) Winner or -1 if an error occurs; the method is
  *		summarized as "While no undefeated candidates exist, eliminate the
@@ -4005,11 +4028,7 @@ EMETH DMC(edata& E  /* eliminate least-approved candidate until unbeaten winner 
 		const oneCandidate& CandidateI = allCandidates[i];
 		const MarginsData& marginsOfI = CandidateI.margins;
 		if( CandidateI.lossCount <= 0 ){  return(i); /*winner*/ }
-		for(j=0; j<i; j++){ /* eliminate i and update Losscount[] */
-			if(marginsOfI[j]>0) {
-				allCandidates[j].lossCount--;
-			}
-		}
+		updateLossCount(allCandidates, marginsOfI, i);
 	}
 	return(i);
 }
