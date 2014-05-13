@@ -4904,6 +4904,17 @@ void PrepareForBayesianRegretOutput(brdata& regretObject, const int &iglevel, bo
 void PrintBROutput(const brdata& regretObject, uint &scenarios);
 
 /* all arrays here have NumMethods entries */
+//	Function: FindWinnersAndRegrets
+//
+//	Returns:
+//		the Condorcet Winner of an election
+//
+//	Parameters:
+//		E       - the election data to use for determining
+//		          the Winner
+//		B       - the Bayesian regret data for this election
+//		Methods - an array indicating which voting methods
+//		          to perform
 int FindWinnersAndRegrets( edata& E,  brdata& B,  const bool Methods[] )
 {
 	std::array<oneVotingMethod, NumMethods>& allVotingMethods = B.votingMethods;
@@ -4977,18 +4988,26 @@ That is done because pre-biased elections are exponentially well-predictable and
 too little interesting data.
 ***************************/
 
-/* HonestyStrat, if honfrac=1.0, gives 100% honest voters (who approve
-candidates above mean utility, and approve2 candiates >= mean utility for "approved" candidates,
-rank-order everybody honestly, and linearly transform range scores to make best=1, worst=0,
-rest linearly interpolated).
-But if honfrac=0.0 it gives 100% strategic voters who assume that the candidates are
-pre-ordered in order of decreasing likelihood of winning, and that chances decline very rapidly.
-These voters try to maximize their vote's impact on lower-numbered candidates.
-If 0<honfrac<1 then it randomly chooses, independently
-for each voter, whether to make her be honest or
-strategic (honesty probability is honfrac).  Note, if the luck is right,
-this still can yield 100% strategic or 100% honest voters
-also - that is unlikely, but could happen. ***/
+//	Function: HonestyStrat
+//
+//	determines election results based on Voter honesty; the
+//	probability of a Voter voting honestly is equal to the value
+//	of 'honfrac'; the probability of a Voter voting strategically
+//	is equal to the value of '1-honfrac'; "voting honestly"
+//	is defined as "approving all Candidates above mean utility,
+//	approve2 Candidates have utility of at least the mean utility
+//	of 'approved' Candidates, ranking all Candidates honestly,
+//	and a linear transform of range scores so best == 1 and
+//	worst == 0 and All Others are linearly interpolated"; voting
+//	strategically is defined as "presuming the Candidates are
+//	pre-ordered in order of decreasing likelihood of winning
+//	and the chances decline very rapidly and attempting to maximize
+//	One's vote's effect on lower-numbered Candidtes"
+//
+//	Parameters:
+//		E       - the election data to use for determining
+//		          the Winner
+//		honfrac - probability of a Voter voting honestly
 void HonestyStrat( edata& E, real honfrac )
 {
 	int lobd;
