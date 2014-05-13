@@ -4000,12 +4000,17 @@ void updateLossCount(CandidateSlate& allCandidates,
 	}
 }
 
-/*	DMC(E):	returns the index of the Definite Majority Choice (a.k.a. Ranked
- *		Approval Voting) Winner or -1 if an error occurs; the method is
- *		summarized as "While no undefeated candidates exist, eliminate the
- *		least-approved candidate"
- *	E:	the election data used to determine the Winner
- */
+//	Function: DMC
+//
+//	Returns:
+//		the index of the Definite Majority Choice (a.k.a.
+//		Ranked Approval Voting) Winner or -1 if an error
+//		occurs; the method is summarized as "While no
+//		undefeated candidates exist, eliminate the least-approved
+//		candidate"
+//
+//	Parameters:
+//		E - the election data used to determine the Winner
 EMETH DMC(edata& E  /* eliminate least-approved candidate until unbeaten winner exists */)
 { /* side effects: Each Candidate's 'lossCount' member */
 	int i,j,t;
