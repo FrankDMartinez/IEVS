@@ -4903,6 +4903,43 @@ void EDataPrep(edata& E, const brdata& B);
 void PrepareForBayesianRegretOutput(brdata& regretObject, const int &iglevel, bool (&VotMethods)[NumMethods]);
 void PrintBROutput(const brdata& regretObject, uint &scenarios);
 
+//	Function: updateMethodAgreements
+//
+//	updates the agreement counts of each voting method from
+//	index 0 to 'm' which result in the same winning Candidate
+//	as a given method
+//
+//	Parameters:
+//		theGivenMethod   - the method against which all
+//		                   other methods are compared
+//		m                - the index of 'theGivenMethod'
+//		                   into the array of all voting
+//		                   methods
+//		allVotingMethods - the array of all voting methods
+//		methods          - an array indicating which voting
+//		                   methods to compare
+//		w                - a value indicating the winning
+//		                   Candidate of 'theGivenMethod'
+void updateMethodAgreements(oneVotingMethod& theGivenMethod,
+                            const int& m,
+                            std::array<oneVotingMethod, NumMethods>& allVotingMethods,
+                            const bool methods[],
+                            const int& w)
+{
+	for(int j=0; j<m; j++) {
+		if(methods[j] || j<NumCoreMethods) {
+			oneVotingMethod& methodJ = allVotingMethods[j];
+			if( methodJ.Winner == w ) {
+				uint& MAgreesWithJ = theGivenMethod.agreementCountWithMethod[j];
+				uint& JAgreesWithM = methodJ.agreementCountWithMethod[m];
+				MAgreesWithJ++;
+				JAgreesWithM++;
+				ensure( MAgreesWithJ == JAgreesWithM, 31 );
+			}
+		}
+	}
+}
+
 /* all arrays here have NumMethods entries */
 //	Function: FindWinnersAndRegrets
 //
@@ -4920,7 +4957,7 @@ int FindWinnersAndRegrets( edata& E,  brdata& B,  const bool Methods[] )
 	std::array<oneVotingMethod, NumMethods>& allVotingMethods = B.votingMethods;
 	const CandidateSlate& allCandidates = E.Candidates;
 	const int& sociallyBestWinner = allVotingMethods[0].Winner;
-	int m,w,j;
+	int m,w;
 	real r;
 	BuildDefeatsMatrix(E);
 	InitCoreElState();
@@ -4935,18 +4972,7 @@ int FindWinnersAndRegrets( edata& E,  brdata& B,  const bool Methods[] )
 			assert(BestWinner == sociallyBestWinner); /*can only fail if somebody overwrites array...*/
 			assert(r>=0.0); /*can only fail if somebody overwrites array...*/
 			WelfordUpdateMeanSD(r, methodM);
-			for(j=0; j<m; j++) {
-				if(Methods[j] || j<NumCoreMethods) {
-					oneVotingMethod& methodJ = allVotingMethods[j];
-					if( methodJ.Winner == w ) {
-						uint& MAgreesWithJ = methodM.agreementCountWithMethod[j];
-						uint& JAgreesWithM = methodJ.agreementCountWithMethod[m];
-						MAgreesWithJ++;
-						JAgreesWithM++;
-						ensure( MAgreesWithJ == JAgreesWithM, 31 );
-					}
-				}
-			}
+			updateMethodAgreements(methodM, m, allVotingMethods, Methods, w);
 		}
 	}
 	if(CondorcetWinner >= 0) {
