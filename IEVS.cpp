@@ -4919,11 +4919,9 @@ int FindWinnersAndRegrets( edata& E,  brdata& B,  const bool Methods[] )
 			w = GimmeWinner(E, m);
 			methodM.Winner = w;
 			r = allCandidates[BestWinner].utilitySum - allCandidates[w].utilitySum;
-			if(r<0.0 || BestWinner != sociallyBestWinner) {
-				printf("FUCK! major failure, r=%g<0 u[best]=%g u[w]=%g u[vm[0].w]=%g\n", r,allCandidates[BestWinner].utilitySum,allCandidates[w].utilitySum,allCandidates[sociallyBestWinner].utilitySum);
-				printf("w=%d m=%d BestWinner=%d numberOfCandidates=%lld B->votingMethods[0].Winner=%d\n", w,m,BestWinner,E.NumCands,sociallyBestWinner);
-			}
 			ensure( BestWinner == sociallyBestWinner, 32 );
+			ensure( r>=0.0, 52 );
+			assert(BestWinner == sociallyBestWinner); /*can only fail if somebody overwrites array...*/
 			assert(r>=0.0); /*can only fail if somebody overwrites array...*/
 			WelfordUpdateMeanSD(r, methodM);
 			for(j=0; j<m; j++) {
