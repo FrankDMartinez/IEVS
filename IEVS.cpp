@@ -5035,6 +5035,76 @@ That is done because pre-biased elections are exponentially well-predictable and
 too little interesting data.
 ***************************/
 
+//	Function: voteHonestly
+//
+//	determines the votes of an honest Voter; "voting honestly"
+//	is defined as "approving all Candidates above mean utility,
+//	approve2 Candidates have utility of at least the mean utility
+//	of 'approved' Candidates, ranking all Candidates honestly,
+//	and a linear transform of range scores so best == 1 and
+//	worst == 0 and All Others are linearly interpolated"
+//
+//	Parameters:
+//		theVoter           - the Voter voting honestly
+//		numberOfCandidates - the number of Candidate in
+//		                   - the current election
+void voteHonestly(oneVoter& theVoter, const uint64_t& numberOfCandidates)
+{
+	oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = theVoter.Candidates;
+	uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
+	MakeIdentityPerm( numberOfCandidates, preferences );
+	PermShellSortDown<real>( numberOfCandidates, (int*)preferences, allCandidates );
+	ensure( IsPerm(numberOfCandidates, preferences), 33 );
+	real MaxUtil = -HUGE;
+	real MinUtil =  HUGE;
+	real SumU = 0.0;
+	real ThisU;
+	for(int i=0; i<numberOfCandidates; i++) {
+		allCandidates[preferences[i]].ranking = i;
+		ThisU = allCandidates[i].perceivedUtility;
+		if(MaxUtil < ThisU) {  MaxUtil = ThisU; }
+		if(MinUtil > ThisU) {  MinUtil = ThisU; }
+		SumU += ThisU;
+	}
+	assert(IsPerm(numberOfCandidates, theVoter.Candidates));
+	real utilityRange = MaxUtil-MinUtil;
+	real RecipDiffUtil;
+	if(utilityRange != 0.0) {
+		RecipDiffUtil = 1.0 / utilityRange;
+	} else {
+		RecipDiffUtil = 0.0;
+	}
+	real MeanU = SumU / numberOfCandidates;
+	real Mean2U = 0.0;
+	int ACT=0;
+	for(int j=0; j<numberOfCandidates; j++) {
+		oneCandidateToTheVoter &theCandidate = allCandidates[j];
+		ThisU = theCandidate.perceivedUtility;
+		theCandidate.score = ( ThisU-MinUtil ) * RecipDiffUtil;
+		/* mean-based threshold (with coin toss if exactly at thresh) for approvals */
+		if( ThisU > MeanU ) {
+			theCandidate.approve = true;
+			Mean2U += ThisU;
+			ACT++;
+		} else if( ThisU < MeanU ) {
+			theCandidate.approve = false;
+		} else {
+			theCandidate.approve = RandBool();
+		}
+	}
+	ensure((ACT!=0), 4);
+	Mean2U /= ACT;
+	for(int k=0; k<numberOfCandidates; k++) {
+		oneCandidateToTheVoter &theCandidate = allCandidates[k];
+		ThisU = theCandidate.perceivedUtility;
+		if( ThisU >= Mean2U ) {
+			theCandidate.approve2 = true;
+		} else {
+			theCandidate.approve2 = false;
+		}
+	}
+}
+
 //	Function: HonestyStrat
 //
 //	determines election results based on Voter honesty; the
@@ -5061,7 +5131,6 @@ void HonestyStrat( edata& E, real honfrac )
 	uint64_t hibd;
 	int v, i, nexti, ACT;
 	bool rb;
-	real MovingAvg, tmp, MaxUtil, MinUtil, SumU, MeanU, Mean2U, ThisU, RecipDiffUtil;
 	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
@@ -5071,56 +5140,12 @@ void HonestyStrat( edata& E, real honfrac )
 	assert(honfrac <= 1.0);
 	for(v=numberOfVoters -1; v>=0; v--) {
 		oneVoter& theVoter = allVoters[v];
-		oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = theVoter.Candidates;
-		uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
 		if( Rand01() < honfrac ) { /*honest voter*/
-			MakeIdentityPerm( numberOfCandidates, preferences );
-			PermShellSortDown<real>( numberOfCandidates, (int*)preferences, allCandidates );
-			ensure( IsPerm(numberOfCandidates, preferences), 33 );
-			MaxUtil = -HUGE;
-			MinUtil =  HUGE;
-			SumU = 0.0;
-			for(i=0; i<numberOfCandidates; i++) {
-				allCandidates[preferences[i]].ranking = i;
-				ThisU = allCandidates[i].perceivedUtility;
-				if(MaxUtil < ThisU) {  MaxUtil = ThisU; }
-				if(MinUtil > ThisU) {  MinUtil = ThisU; }
-				SumU += ThisU;
-			}
-			assert(IsPerm(numberOfCandidates, theVoter.Candidates));
-			RecipDiffUtil = MaxUtil-MinUtil;
-			if(RecipDiffUtil != 0.0) {
-				RecipDiffUtil = 1.0 / RecipDiffUtil;
-			}
-			MeanU = SumU / numberOfCandidates;
-			Mean2U = 0.0; ACT=0;
-			for(i=0; i<numberOfCandidates; i++) {
-				oneCandidateToTheVoter &theCandidate = allCandidates[i];
-				ThisU = theCandidate.perceivedUtility;
-				theCandidate.score = ( ThisU-MinUtil ) * RecipDiffUtil;
-				/* mean-based threshold (with coin toss if exactly at thresh) for approvals */
-				if( ThisU > MeanU ) {
-					theCandidate.approve = true;
-					Mean2U += ThisU;
-					ACT++;
-				} else if( ThisU < MeanU ) {
-					theCandidate.approve = false;
-				} else {
-					theCandidate.approve = RandBool();
-				}
-			}
-			ensure((ACT!=0), 4);
-			Mean2U /= ACT;
-			for(i=0; i<numberOfCandidates; i++) {
-				oneCandidateToTheVoter &theCandidate = allCandidates[i];
-				ThisU = theCandidate.perceivedUtility;
-				if( ThisU >= Mean2U ) {
-					theCandidate.approve2 = true;
-				} else {
-					theCandidate.approve2 = false;
-				}
-			}
+			voteHonestly(theVoter, numberOfCandidates);
 		}else{ /*strategic voter*/
+			real MovingAvg, tmp, Mean2U, ThisU;
+			oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = theVoter.Candidates;
+			uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
 			ACT = 0;
 			Mean2U = 0.0;
 			MovingAvg = 0.0;
