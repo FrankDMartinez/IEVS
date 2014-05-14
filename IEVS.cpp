@@ -5444,10 +5444,7 @@ int LoadEldataFiles()
 				y++;
 			}
 			itcount += ncands;
-			if((itcount+ncands) >= MaxNumRanks) {
-				printf("ran out of space (MaxNumRanks) for rank %d - terminating\n", itcount);
-				exit(EXIT_FAILURE);
-			}
+			ensure((itcount+ncands) < MaxNumRanks, 54);
 #if VERBOSELOAD
 			printf("[%d]\n", v);
 #endif
@@ -5498,10 +5495,7 @@ int LoadEldataFiles()
 				prefcount++;
 			}
 			itcount += ncands;
-			if((itcount+ncands) >= MaxNumRanks) {
-				printf("ran out of space (MaxNumRanks) for rank %d - terminating\n", itcount);
-				exit(EXIT_FAILURE);
-			}
+			ensure((itcount+ncands) < MaxNumRanks, 53);
 #if VERBOSELOAD
 			printf("[%d]\n", v);
 #endif
