@@ -6465,17 +6465,19 @@ int main(int argc, const char *const *argv)
 
 /*	Additions by Me		*/
 
-/*	adjustYeeCoordinates(numSites, xx, yy, subsqsideX, subsqsideY):	adjusts (I
- *									think) the 'x'
- *									and 'y' values
- *									created for a
- *									Yee picture
- *	numSites:	the number of point sites for the Yee picture
- *	xx:		the set of x-coordinates to adjust
- *	yy:		the set of y-coordinates to adjust
- *	subsqsideX:	the length of one side of the Yee picture
- *	subsqsideY:	the length of the other side of the Yee picture
- */
+//	Function: adjustYeeCoordinates
+//
+//	adjusts (I think) the 'x' and 'y' values created for a Yee
+//	picture
+//
+//	Parameters:
+//		numSites   - the number of point sites for the Yee
+//		             picture
+//		xx         - the set of x-coordinates to adjust
+//		yy         - the set of y-coordinates to adjust
+//		subsqsideX - the length of one side of the Yee picture
+//		subsqsideY - the length of the other side of the
+//		             Yee picture
 void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], const int &subsqsideX, const int &subsqsideY)
 {
 	int a;
@@ -6501,13 +6503,17 @@ void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], con
 	}
 }
 
-
-/*	ArgMaxArr(N, Arr[], RandPerm[]):	returns index of random max entry of
- *						Arr[0..N-1]
- *	N:		the expected number of elements in 'Arr' and 'RandPerm'
- *	Arr:		array of values to examine
- *	RandPerm:	array of perm.
- */
+//	Function: ArgMaxArr
+//
+//	Returns:
+//		index of a randomly selected entry from all entries
+//		in 'Arr[0..N-1]' with the maximum value
+//
+//	Parameters:
+//		N        - the expected number of elements in 'Arr'
+//		           and 'RandPerm'
+//		Arr      - array of values to examine
+//		RandPerm - array to aid in the random selection
 template< class T >
 int ArgMaxArr(uint64_t N, const T Arr[], int RandPerm[])
 {
