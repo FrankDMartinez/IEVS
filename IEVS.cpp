@@ -5105,21 +5105,96 @@ void voteHonestly(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 	}
 }
 
+//	Function: voteStrategically
+//
+//	determines the votes of a strategic Voter; "voting
+//	strategically" is defined as "presuming the Candidates
+//	are pre-ordered in order of decreasing likelihood of
+//	winning and the chances decline very rapidly and
+//	attempting to maximize One's vote's effect on
+//	lower-numbered Candidtes"
+//
+//	Parameters:
+//		theVoter           - the Voter voting honestly
+//		numberOfCandidates - the number of Candidate in
+//		                   - the current election
+void voteStrategically(oneVoter& theVoter, const uint64_t& numberOfCandidates)
+{
+	real MovingAvg, tmp, Mean2U, ThisU;
+	oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = theVoter.Candidates;
+	uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
+	int ACT = 0;
+	Mean2U = 0.0;
+	MovingAvg = 0.0;
+	int nexti = -1;
+	uint64_t hibd = numberOfCandidates-1;
+	int lobd = 0;
+	for(int i=0; i<(int)numberOfCandidates; i++) {
+		oneCandidateToTheVoter &theCandidate = allCandidates[i];
+		ThisU = theCandidate.perceivedUtility;
+		if(i > nexti) {
+			nexti++;
+			assert(nexti >= 0);
+			for( ; nexti<(int)numberOfCandidates; nexti++) {
+				tmp = allCandidates[nexti].perceivedUtility;
+				MovingAvg += (tmp-MovingAvg)/(nexti+1.0);
+				if( fabs(tmp-MovingAvg) > 0.000000000001) {
+					break;
+				}
+			}
+		}
+		assert(lobd >= 0);
+		assert(hibd >= 0);
+		assert(lobd < (int)numberOfCandidates);
+		assert(hibd < (int)numberOfCandidates);
+		if( ThisU > MovingAvg ) {
+			theCandidate.approve = true;
+			theCandidate.score = 1.0;
+			Mean2U += ThisU; ACT++;
+			theCandidate.ranking = lobd;
+			lobd++;
+		}
+		else if( ThisU < MovingAvg ) {
+			theCandidate.approve = false;
+			theCandidate.score = 0.0;
+			theCandidate.ranking = hibd;
+			hibd--;
+		}
+		else{
+			const bool& rb = RandBool();
+			theCandidate.approve = rb;
+			theCandidate.score = 0.5;
+			if(rb) {
+				theCandidate.ranking = lobd;
+				lobd++;
+			} else {
+				theCandidate.ranking = hibd;
+				hibd--;
+			}
+		}
+	}
+	ensure((ACT!=0), 6);
+	Mean2U /= ACT;
+	for(int j=0; j<numberOfCandidates; j++) {
+		oneCandidateToTheVoter &theCandidate = allCandidates[j];
+		const uint64_t &theRanking = theCandidate.ranking;
+		ThisU = theCandidate.perceivedUtility;
+		if( ThisU >= Mean2U ) {
+			theCandidate.approve2 = true;
+		} else {
+			theCandidate.approve2 = false;
+		}
+		assert( theRanking < numberOfCandidates );
+		preferences[theRanking] = j;
+	}
+}
+
 //	Function: HonestyStrat
 //
 //	determines election results based on Voter honesty; the
 //	probability of a Voter voting honestly is equal to the value
 //	of 'honfrac'; the probability of a Voter voting strategically
-//	is equal to the value of '1-honfrac'; "voting honestly"
-//	is defined as "approving all Candidates above mean utility,
-//	approve2 Candidates have utility of at least the mean utility
-//	of 'approved' Candidates, ranking all Candidates honestly,
-//	and a linear transform of range scores so best == 1 and
-//	worst == 0 and All Others are linearly interpolated"; voting
-//	strategically is defined as "presuming the Candidates are
-//	pre-ordered in order of decreasing likelihood of winning
-//	and the chances decline very rapidly and attempting to maximize
-//	One's vote's effect on lower-numbered Candidtes"
+//	is equal to the value of '1-honfrac'
 //
 //	Parameters:
 //		E       - the election data to use for determining
@@ -5127,10 +5202,7 @@ void voteHonestly(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 //		honfrac - probability of a Voter voting honestly
 void HonestyStrat( edata& E, real honfrac )
 {
-	int lobd;
-	uint64_t hibd;
-	int v, i, nexti, ACT;
-	bool rb;
+	int v;
 	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
@@ -5142,74 +5214,8 @@ void HonestyStrat( edata& E, real honfrac )
 		oneVoter& theVoter = allVoters[v];
 		if( Rand01() < honfrac ) { /*honest voter*/
 			voteHonestly(theVoter, numberOfCandidates);
-		}else{ /*strategic voter*/
-			real MovingAvg, tmp, Mean2U, ThisU;
-			oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = theVoter.Candidates;
-			uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
-			ACT = 0;
-			Mean2U = 0.0;
-			MovingAvg = 0.0;
-			nexti = -1;
-			hibd = numberOfCandidates-1;
-			lobd = 0;
-			for(i=0; i<(int)numberOfCandidates; i++) {
-				oneCandidateToTheVoter &theCandidate = allCandidates[i];
-				ThisU = theCandidate.perceivedUtility;
-				if(i > nexti) {
-					nexti++;
-					assert(nexti >= 0);
-					for( ; nexti<(int)numberOfCandidates; nexti++) {
-						tmp = allCandidates[nexti].perceivedUtility;
-						MovingAvg += (tmp-MovingAvg)/(nexti+1.0);
-						if( fabs(tmp-MovingAvg) > 0.000000000001) {
-							break;
-						}
-					}
-				}
-				assert(lobd >= 0);
-				assert(hibd >= 0);
-				assert(lobd < (int)numberOfCandidates);
-				assert(hibd < (int)numberOfCandidates);
-				if( ThisU > MovingAvg ) {
-					theCandidate.approve = true;
-					theCandidate.score = 1.0;
-					Mean2U += ThisU; ACT++;
-					theCandidate.ranking = lobd;
-					lobd++;
-				}
-				else if( ThisU < MovingAvg ) {
-					theCandidate.approve = false;
-					theCandidate.score = 0.0;
-					theCandidate.ranking = hibd;
-					hibd--;
-				}
-				else{
-					rb = RandBool();
-					theCandidate.approve = rb;
-					theCandidate.score = 0.5;
-					if(rb) {
-						theCandidate.ranking = lobd;
-						lobd++;
-					} else {
-						theCandidate.ranking = hibd;
-						hibd--;
-					}
-				}
-			}
-			ensure((ACT!=0), 6);
-			Mean2U /= ACT;
-			for(i=0; i<numberOfCandidates; i++) {
-				oneCandidateToTheVoter &theCandidate = allCandidates[i];
-				const uint64_t &theRanking = theCandidate.ranking;
-				ThisU = theCandidate.perceivedUtility;
-				if( ThisU >= Mean2U ) {
-					theCandidate.approve2 = true;
-				} else {
-						theCandidate.approve2 = false;
-				}
-				assert( theRanking < numberOfCandidates );
-				preferences[theRanking] = i;
-			}
+		} else { /*strategic voter*/
+			voteStrategically(theVoter, numberOfCandidates);
 		}/*end if(...honfrac) else clause*/
 	}/*end for(v)*/
 }
