@@ -5366,10 +5366,10 @@ int NumElectionsLoaded = 0;
 
 #define VERBOSELOAD 0
 
-/*	LoadEldataFiles():	loads real-world election data from a set files; the
- *				value returned is the number of elections loaded and
- *				processed
- */
+//	Function: LoadEldataFiles
+//
+//	loads real-world election data from a set files; the value
+//	returned is the number of elections loaded and processed
 int LoadEldataFiles()
 {
 	static const char*const electionDEBnames[NumDebFiles] = {
@@ -5514,6 +5514,10 @@ int LoadEldataFiles()
 	return(elcount);
 }
 
+//	Function: GenRealWorldUtils
+//
+//	loads real-world election data from a set files; the value
+//	returned is the number of elections loaded and processed
 UTGEN GenRealWorldUtils( edata& E ){  /** based on Tideman election dataset **/
 	uint y, x,V,C;
 	uint64_t VV;
