@@ -6482,14 +6482,21 @@ void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], con
 	int b;
 	bool advance;
 	for(a=0; a<numSites; a += (advance ? 1 : 0)) {
-		xx[a] = (int)((100 - (subsqsideX*0.5)) + (Rand01()*(subsqsideX-0.001)));
-		yy[a] = (int)((100 - (subsqsideY*0.5)) + (Rand01()*(subsqsideY-0.001)));
+		const auto& xxa = (int)((100 - (subsqsideX*0.5)) + (Rand01()*(subsqsideX-0.001)));
+		const auto& yya = (int)((100 - (subsqsideY*0.5)) + (Rand01()*(subsqsideY-0.001)));
+		xx[a] = xxa;
+		yy[a] = yya;
 		advance = true;
-		for(b=0; b<a; b++) {
-			if( (abs(xx[a]-xx[b]) + abs(yy[a]-yy[b])) <= (((7*subsqsideX)+(7*subsqsideY))/400) ) {
-				/*too close to some previous point*/
-				advance = false;
-			}
+		for(b=0; b<a && advance; b++) {
+			const auto& xxb = xx[b];
+			const auto& yyb = yy[b];
+			const auto& xxDifference = xxa-xxb;
+			const auto& yyDifference = yya-yyb;
+			const auto& absXXDifference = abs(xxDifference);
+			const auto& absYYDifference = abs(yyDifference);
+			const auto& absDifferenceSum = absXXDifference + absYYDifference;
+			const auto& threshold = (((7*subsqsideX)+(7*subsqsideY))/400);
+			advance = (absDifferenceSum > threshold);
 		}
 	}
 }
