@@ -8156,40 +8156,24 @@ parameters RequestParameters(void)
 			printf("Restricted Ranges...\n");
 			printf("Honesty fraction range - default is 0 100:\n");
 			scanf("%d %d", &honfraclower, &honfracupper);
-			if(honfraclower<0) {
-				honfraclower=0;
-			}
-			if(honfracupper>100) {
-				honfracupper=100;
-			}
+			honfraclower = std::max(honfraclower,0);
+			honfracupper = std::min(honfracupper,100);
 			printf("Honesty fraction range [%d, %d] chosen.\n", honfraclower, honfracupper);
 			printf("Candidate Number range - default is 2 7 [but this range ignored if real-world dataset]:\n");
 			scanf("%d %d", &candnumlower, &candnumupper);
-			if(candnumlower<2) {
-				candnumlower=2;
-			}
-			if(candnumupper>=MaxNumCands) {
-				candnumupper=MaxNumCands-1;
-			}
+			candnumlower = std::max(candnumlower,2U);
+			candnumupper = std::max(candnumupper,(unsigned)(MaxNumCands-1));
 			printf("Candidate number range [%d, %d] chosen.\n", candnumlower, candnumupper);
 			printf("Voter Number range - default is 2 %d [but this range ignored if real-world dataset:\n",
 				votnumupper);
 			scanf("%d %d", &votnumlower, &votnumupper);
-			if(votnumlower<0) {
-				votnumlower=0;
-			}
-			if(votnumupper>=MaxNumVoters) {
-				votnumupper=MaxNumVoters;
-			}
+			votnumlower = std::max(votnumlower,0);
+			votnumupper = std::min(votnumupper,MaxNumVoters);
 			printf("Voter number range [%d, %d] chosen.\n", votnumlower, votnumupper);
 			printf("Number of elections to try per scenario - default is %d\n", numelections2try);
 			scanf("%d", &numelections2try);
-			if(numelections2try<29) {
-				numelections2try=29;
-			}
-			if(numelections2try>99999999) {
-				numelections2try=99999999;
-			}
+			numelections2try = std::max(numelections2try,29);
+			numelections2try = std::min(numelections2try,99999999);
 			printf("Trying %d elections per scenario.\n", numelections2try);
 			rv = customParameters;
 			break;
