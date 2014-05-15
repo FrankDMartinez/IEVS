@@ -6934,6 +6934,34 @@ int flipACoin(int choice1, int choice2)
 	return selected;
 }
 
+//	Function: swapRandomCandidatesAtIntervals
+//
+//	swaps all entries in 'RandCandPerm[]' from one index down to
+//	another at a certain interval as long as a particular member
+//	of the Candidates corresponding to said entires remains below
+//	the value of said member of a particular "threshold Candidate"
+//
+//	Parameters:
+//		b          - the index of the "threshold Candidate"
+//		a          - the interval at which to swap
+//		Candidates - a collection of All Candidates in the current
+//		             election
+//		member     - the data member of Each Candidate to examine
+template<class T>
+void swapRandomCandidatesAtIntervals(const int& b,
+				     const int& a,
+				     const CandidateSlate& Candidates,
+				     const T oneCandidate::*member)
+{
+	const int& x=RandCandPerm[b];
+	const T& threshold = Candidates[x].*member;
+	int c = b-a;
+	for(; (c>=0) && (Candidates[RandCandPerm[c]].*member<threshold); c -= a) {
+		RandCandPerm[c+a]=RandCandPerm[c];
+	}
+	RandCandPerm[c+a]=x;
+}
+
 /*	PermShellSortDown(N, Candidates, member):	rearranges 'RandCandPerm[0..N-1]'
  *							so 'Candidates[RandCandPerm[0..N-1]].member'
  *							is in decreasing order
@@ -6946,16 +6974,10 @@ void PermShellSortDown(uint64_t N, const CandidateSlate& Candidates, const T one
 {
 	int a;
 	int b;
-	int c;
 	int d;
-	int x;
 	for(d=0; (a=ShellIncs[d])>0; d++) {
 		for(b=a; b<(int)N; b++) {
-			x=RandCandPerm[b];
-			for(c=b-a; (c>=0) && (Candidates[RandCandPerm[c]].*member<Candidates[x].*member); c -= a) {
-				RandCandPerm[c+a]=RandCandPerm[c];
-			}
-			RandCandPerm[c+a]=x;
+			swapRandomCandidatesAtIntervals(b, a, Candidates, member);
 		}
 	}
 	assert(SortedKey<T>(N,Candidates,member)<=0);
