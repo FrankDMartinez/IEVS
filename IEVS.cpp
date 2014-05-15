@@ -6916,13 +6916,16 @@ void EDataPrep(edata& E, const brdata& B)
 	}
 }
 
-/*	flipACoin(choice1, choice2):	makes a psuedo-random choice between 'choice1'
- *					and 'choice2'; the selected choice is returned;
- *					the probability of selecting either choice is
- *					the same as selecting the other choice
- *	choice1:	one possible choice
- *	choice2:	the other possible choice
- */
+//	Function: flipACoin
+//
+//	Returns:
+//		a psuedo-random choice between the two arguments given;
+//		the probability of selecting either choice is the same
+//		as selecting the other choice
+//
+//	Parameters:
+//		choice1 - one possible choice
+//		choice2 - the other possible choice
 int flipACoin(int choice1, int choice2)
 {
 	int selected;
@@ -6962,13 +6965,16 @@ void swapRandomCandidatesAtIntervals(const int& b,
 	RandCandPerm[c+a]=x;
 }
 
-/*	PermShellSortDown(N, Candidates, member):	rearranges 'RandCandPerm[0..N-1]'
- *							so 'Candidates[RandCandPerm[0..N-1]].member'
- *							is in decreasing order
- *	N:		the number of expected entries in 'Candidates'
- *	Candidates:	a slate of Candidate upon which to base the sorting
- *	member:		the member of Each Candidate to guide sorting
- */
+//	Function: PermShellSortDown
+//
+//	rearranges 'RandCandPerm[0..N-1]' so 'Candidates[RandCandPerm[0..N-1]].member'
+//	is in decreasing order
+//
+//	Parameters:
+//		N          - the number of expected entries in 'Candidates'
+//		Candidates - a slate of Candidate upon which to base
+//		             the sorting
+//		member     - the member of Each Candidate to guide sorting
 template<class T>
 void PermShellSortDown(uint64_t N, const CandidateSlate& Candidates, const T oneCandidate::*member)
 {
