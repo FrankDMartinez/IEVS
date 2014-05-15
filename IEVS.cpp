@@ -8099,8 +8099,9 @@ void RequestIntermethodWinnerAgreementCountDisplayStatus(void)
 	}
 }
 
-/*	RequestRegretOutput():	asks the User which Bayesian regrets should be outputted
- */
+//	Function: RequestRegretOutput
+//
+//	asks the User which Bayesian regrets should be outputted
 void RequestRegretOutput(void)
 {
 	bool finished;
@@ -8130,9 +8131,12 @@ void RequestRegretOutput(void)
 	}
 }
 
-/*	RequestParameters():	asks the User to set various parameters used in the
- *				analysis
- */
+//	Function: RequestParameters
+//
+//	Returns:
+//		a value indicating whether the default parameters
+//		are to be used in the analysis or a set of custom
+//		parameters
 parameters RequestParameters(void)
 {
 	uint u;
@@ -8186,12 +8190,14 @@ parameters RequestParameters(void)
 	return rv;
 }
 
-/*	RequestUtilityGenerators(parameterType):	asks the User to specify which
- *							utility generators to use; the
- *							procedure returns a pointer to
- *							the relevant driver
- *	parameterType:	the type of the various parameters set in 'RequestParameters()'
- */
+//	Function: RequestUtilityGenerators
+//
+//	Returns:
+//		a a pointer to the relevant utility driver
+//
+//	Parameters:
+//		parameterType - the type of the various parameters
+//		                requested by the User
 driver_t RequestUtilityGenerators(parameters parameterType)
 {
 	bool finished;
