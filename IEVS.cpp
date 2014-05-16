@@ -8239,6 +8239,37 @@ parameters RequestParameters(void)
 	return rv;
 }
 
+//	Function: requestCustomUtilityGenerators
+//
+//	requests the specific utility generators to use if
+//	custom parameters have been requested
+//
+//	Parameters:
+//		parameterType - the type of the various parameters
+//		                requested by the User
+void requestCustomUtilityGenerators(parameters parameterType)
+{
+	if(parameterType==customParameters) {
+		printf("Select which utility-generators you want (default 0 thru 15):\n");
+		for(int i=0; i<16; i++) {
+			printf("%2d: ", i);
+			PrintUtilName(i,true);
+			printf("\n");
+		}
+		scanf("%d %d", &utilnumlower, &utilnumupper);
+		utilnumlower = std::max(utilnumlower, 0);
+		utilnumupper = std::min(utilnumupper, 15);
+		printf("Utility gens t com [%d, %d] chosen.\n", utilnumlower, utilnumupper);
+		/**** if ???
+		printf("Select LPpow???d):\n");
+		scanf("%d", &LPpow);
+		if(LPpow<1) LPpow=1;
+		if(LPpow>5) LPpow=5;
+		printf("Using L%d distances.\n", LPpow);
+		*****/
+	}
+}
+
 //	Function: RequestUtilityGenerators
 //
 //	Returns:
@@ -8258,30 +8289,7 @@ driver_t RequestUtilityGenerators(parameters parameterType)
 		switch(u) {
 		case(1) :
 			printf("Machine.\n");
-			if(parameterType==customParameters) {
-				int i;
-				printf("Select which utility-generators you want (default 0 thru 15):\n");
-				for(i=0; i<16; i++) {
-					printf("%2d: ", i);
-					PrintUtilName(i,true);
-					printf("\n");
-				}
-				scanf("%d %d", &utilnumlower, &utilnumupper);
-				if(utilnumlower<0) {
-					utilnumlower=0;
-				}
-				if(utilnumupper>=15) {
-					utilnumupper=15;
-				}
-				printf("Utility gens t com [%d, %d] chosen.\n", utilnumlower, utilnumupper);
-				/**** if ???
-				printf("Select LPpow???d):\n");
-				scanf("%d", &LPpow);
-				if(LPpow<1) LPpow=1;
-				if(LPpow>5) LPpow=5;
-				printf("Using L%d distances.\n", LPpow);
-				*****/
-			}
+			requestCustomUtilityGenerators(parameterType);
 			driver = BRDriver;
 			finished = true;
 			break;
