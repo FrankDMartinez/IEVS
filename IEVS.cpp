@@ -7017,13 +7017,15 @@ void PermShellSortDown(uint64_t N, const CandidateSlate& Candidates, const T one
 	assert(SortedKey<T>(N,Candidates,member)<=0);
 }
 
-/*	PermShellSortDown(N, Perm, Key):	rearranges 'Perm[0..N-1]' so
- *						'Key[Perm[0..N-1]]' is in decreasing
- *						order
- *	N:	the number of expected entries in 'Perm' and 'Key'
- *	Perm:	a set of values to rearrange
- *	Key:	a set of values to guide sorting
- */
+//	Function: PermShellSortDown
+//
+//	rearranges 'Perm[0..N-1]' so 'Key[Perm[0..N-1]]' is in decreasing
+//	order
+//
+//	Parameters:
+//		N    - the number of expected entries in 'Perm' and 'Key'
+//		Perm - a set of values to rearrange
+//		Key  - a set of values to guide sorting
 template<class T>
 void PermShellSortDown(uint64_t N, int Perm[], const T Key[])
 {
@@ -7038,14 +7040,17 @@ void PermShellSortDown(uint64_t N, int Perm[], const T Key[])
 	assert(SortedKey<T>(N,Perm,Key)<=0);
 }
 
-/*	PermShellSortDown(N, Perm, Key):	rearranges 'Perm[0..N-1]' so
- *						'Key[Perm[0..N-1]].perceivedUtility'
- *						is in decreasing order
- *	N:	the number of expected entries in 'Perm' and 'Key'
- *	Perm:	a set of values to rearrange
- *	Key:	a reference to a set of constant Candidates to guide
- *		sorting
- */
+//	Function: PermShellSortDown
+//
+//	rearranges 'Perm[0..N-1]' so 'Candidates[Perm[0..N-1]].perceivedUtility'
+//	is in decreasing order
+//
+//	Parameters:
+//		N          - the number of expected entries in 'Perm'
+//		             and 'Candidates'
+//		Perm       - a set of values to rearrange
+//		Candidates - a reference to a set of constant Candidates
+//		             to guide sorting
 template<class T>
 void PermShellSortDown(uint64_t N, int Perm[], const oneCandidateToTheVoter (&Candidates)[MaxNumCands])
 {
