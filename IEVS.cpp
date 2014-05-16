@@ -6965,6 +6965,34 @@ void swapRandomCandidatesAtIntervals(const int& b,
 	RandCandPerm[c+a]=x;
 }
 
+//	Function: swapRandomCandidatesAtIntervals
+//
+//	swaps all entries in 'Perm[]' from one index down to another
+//	at a certain interval as long as the corresponding value in 'Key[]'
+//	remains below the corresponding value of a particular "threshold
+//	entry"
+//
+//	Parameters:
+//		b    - the index of the "threshold entry"
+//		a    - the interval at which to swap
+//		Perm - a collection of All Candidates in the current
+//		       election
+//		Key  - the data member of Each Candidate to examine
+template<class T>
+void swapRandomCandidatesAtIntervals(const int& b,
+				     const int& a,
+				     int Perm[],
+				     const T Key[])
+{
+	const int x=Perm[b];
+	const T& threshold = Key[x];
+	int c = b-a;
+	for(; (c>=0) && (Key[Perm[c]]<threshold); c -= a) {
+		Perm[c+a]=Perm[c];
+	}
+	Perm[c+a]=x;
+}
+
 //	Function: PermShellSortDown
 //
 //	rearranges 'RandCandPerm[0..N-1]' so 'Candidates[RandCandPerm[0..N-1]].member'
@@ -7001,16 +7029,10 @@ void PermShellSortDown(uint64_t N, int Perm[], const T Key[])
 {
 	int a;
 	int b;
-	int c;
 	int d;
-	int x;
 	for(d=0; (a=ShellIncs[d])>0; d++) {
 		for(b=a; b<(int)N; b++) {
-			x=Perm[b];
-			for(c=b-a; (c>=0) && (Key[Perm[c]]<Key[x]); c -= a) {
-				Perm[c+a]=Perm[c];
-			}
-			Perm[c+a]=x;
+			swapRandomCandidatesAtIntervals(b, a, Perm, Key);
 		}
 	}
 	assert(SortedKey<T>(N,Perm,Key)<=0);
