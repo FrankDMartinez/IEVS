@@ -2734,10 +2734,8 @@ EMETH UncoveredSet(edata& E /*A "covers" B if A beats a strict superset of those
 	CandidateSlate& allCandidates = E.Candidates;
 	const oneCandidate& Candidate0 = allCandidates[0];
 	const oneCandidate& Candidate1 = allCandidates[1];
-	const oneCandidate& Candidate2 = allCandidates[2];
 	const MarginsData& marginsOf0 = Candidate0.margins;
 	const MarginsData& marginsOf1 = Candidate1.margins;
-	const MarginsData& marginsOf2 = Candidate2.margins;
 	if( numberOfCandidates > 4*sizeof(numberOfCandidates) ) {
 		printf("UncoveredSet: too many candidates %lld to use machine words(%d) to represent sets\n",
 			numberOfCandidates,
@@ -2770,39 +2768,18 @@ EMETH UncoveredSet(edata& E /*A "covers" B if A beats a strict superset of those
 	}
 	/*select random uncovered winner:*/
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
-	for(i=(int)numberOfCandidates-1; i>=0; i--){
+	for(i=(int)numberOfCandidates-1; i>=0; i--) {
 		const oneCandidate& CandidateI = allCandidates[i];
 		const bool& IIsUncovered = CandidateI.uncovered;
 		const bool& IIsASchwartz = CandidateI.IsASchwartzMember;
-		if( IIsUncovered && !IIsASchwartz ) {
-			printf("bozo! i=%d NumCands=%lld\n", i, numberOfCandidates);
-			printf("%lld %lld %lld; %lld %lld %lld; %lld %lld %lld\n",
-				marginsOf0[0],
-				marginsOf0[1],
-				marginsOf0[2],
-				marginsOf1[0],
-				marginsOf1[1],
-				marginsOf1[2],
-				marginsOf2[0],
-				marginsOf2[1],
-				marginsOf2[2]);
-			printf("CopeWinOnlyWinner=%d\n",CopeWinOnlyWinner);
-			printf("Sc=%d%d%d\n", Candidate0.IsASchwartzMember, Candidate1.IsASchwartzMember, Candidate2.IsASchwartzMember);
-			printf("Un=%d%d%d\n", Candidate0.uncovered, Candidate1.uncovered, Candidate2.uncovered);
-		}
 		assert( !IIsUncovered || IIsASchwartz );
+		ensure( !IIsUncovered || IIsASchwartz, 55 );
 		r = RandCandPerm[i];
 		if(allCandidates[r].uncovered){
 			RandomUncoveredMemb = r;
 			return r;
 		}
 	}
-	printf("yikes!\n");
-	printf("%lld %lld %lld %lld\n",
-		marginsOf0[0],
-		marginsOf1[0],
-		marginsOf0[1],
-		marginsOf1[1]);
 	return(-1);
 }
 
