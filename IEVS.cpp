@@ -2696,10 +2696,16 @@ EMETH SmithSet(edata& E  /* Smith set = smallest nonempty set of canddts that pa
 	return(-1);
 }
 
-/*	SchwartzSet(E):	returns the index of a randomly selected Member of the Schwartz set
- *			or -1 if an error occurs
- *	E:	the election data used to determine the Schwartz set
- */
+//	Function: SchwartzSet
+//
+//	Returns:
+//		an index representing a randomly selected
+//		Candidate which is also a Member of the Schwartz set
+//		or -1 if an error occurs
+//
+//	Parameter:
+//		E - the election data to use for determining the
+//		    Schwartz set
 EMETH SchwartzSet(edata& E  /* Schwartz set = smallest nonempty set of canddts undefeated by nonmembers */)
 { /* side effects: Each Candidate's Schwartz Member state */
 	int i,r;
@@ -2727,7 +2733,23 @@ Now an order of magnitude faster assuming MaxNumCands<sizeof(uint)*4 because set
 be tested in 1 step using wordwide operations.
 ****/
 
-EMETH UncoveredSet(edata& E /*A "covers" B if A beats a strict superset of those B beats.*/)
+//	Function: UncoveredSet
+//
+//	Returns:
+//		an index representing a randomly selected
+//		Candidate from the set of All "uncovered"
+//		Candidates; a Candidate "covers" another if the
+//		set of Candidates which the first Candidate
+//		beats pairwise is a superset of the set which
+//		the second Candidate beats pairwise; a Candidate
+//		is "uncovered" if no Candidate covers said
+//		Candidate; if no uncovered Candidate exists, -1
+//		is returned
+//
+//	Parameter:
+//		E - the election data to use for determining the
+//		    uncovered Winner
+EMETH UncoveredSet(edata& E)
 { /* side effects: Each Candidate's 'uncovered' state, CoverMatrix[] */
 	int A,B,i,r;
 	const uint64_t& numberOfCandidates = E.NumCands;
@@ -2783,17 +2805,25 @@ EMETH UncoveredSet(edata& E /*A "covers" B if A beats a strict superset of those
 	return(-1);
 }
 
-/*	Bucklin(E):	returns the index of the Bucklin Winner	or -1 if an error
- *			occurs; first choice votes are first counted; if a Candidate
- *			has a majority, that Candidate wins; otherwise, the second
- *			choices are added to the first choices; again, if a Candidate
- *			with a majority vote is found, the Winner is the Candidate with
- *			the most votes accumulated; lower rankings are added as needed;
- *			yes, it is possible to find multiple Candidates with a majority
- *			from the 2nd round on
- *	E:	the election data used to determine the Winner
- */
-EMETH Bucklin(edata& E   /* canddt with over half the voters ranking him in top-k wins (for k minimal) */)
+//	Function: Bucklin
+//
+//	Returns:
+//		an index representing a randomly selected Candidate
+//		which is also a Bucklin Winner or -1 if an error
+//		occurs; Bucklin Winners are determine by first
+//		counting the first choice votes of All Voters; if a
+//		Candidate has a majority, that Candidate wins;
+//		otherwise, the second choices are added to the first
+//		choices; again, if a Candidate with a majority vote is
+//		found, the Winner is the Candidate with the most votes
+//		accumulated; lower rankings are added as needed; yes,
+//		it is possible to find multiple Candidates with a
+//		majority from the 2nd round on
+//
+//	Parameter:
+//		E - the election data to use for determining the
+//		    Bucklin Winner(s)
+EMETH Bucklin(edata& E)
 { /* side effects: Each Candidates 'voteCountForThisRound' */
 	int rnd,i,winner;
 	int64_t best;
