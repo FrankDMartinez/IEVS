@@ -2754,10 +2754,6 @@ EMETH UncoveredSet(edata& E)
 	int A,B,i,r;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
-	const oneCandidate& Candidate0 = allCandidates[0];
-	const oneCandidate& Candidate1 = allCandidates[1];
-	const MarginsData& marginsOf0 = Candidate0.margins;
-	const MarginsData& marginsOf1 = Candidate1.margins;
 	if( numberOfCandidates > 4*sizeof(numberOfCandidates) ) {
 		printf("UncoveredSet: too many candidates %lld to use machine words(%d) to represent sets\n",
 			numberOfCandidates,
