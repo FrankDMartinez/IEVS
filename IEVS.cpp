@@ -3005,6 +3005,28 @@ EMETH SimmonsCond(edata& E)
 	return winner;
 }
 
+//	Function: countLosses
+//
+//	Returns:
+//		the number of Candidates against which a given
+//		Candidate has a negative electoral margin
+//
+//	Parameters:
+//		theCandidate       - the Candidate for which to
+//		                     count losses
+//		numberOfCandidates - the number of Candidates in
+//		                     the current election
+int64_t countLosses(const  oneCandidate& theCandidate, const uint64_t& numberOfCandidates)
+{
+	const MarginsData& margins = theCandidate.margins;
+	int64_t t=0;
+	for(uint64_t j=0; j<numberOfCandidates; j++) {
+		if(margins[j] < 0) {
+			t++;
+		}
+	}
+	return t;
+}
 
 /*******
  * The following IRV (instant runoff voting) algorithm has somewhat long code, but
@@ -3037,16 +3059,11 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(i=0; i<numberOfCandidates; i++) {
-		allCandidates[i].eliminated =false;
+		oneCandidate& CandidateI = allCandidates[i];
+		CandidateI.eliminated =false;
 		HeadFav[i] = -1; /*HeadFav[i] will be the first voter whose current favorite is i*/
 		if((SmithIRVwinner<0) && (IRVTopLim==BIGINT)) {
-			t=0;
-			for(j=0; j<numberOfCandidates; j++) {
-				if(allCandidates[j].margins[i] > 0) {
-					t++;
-				}
-			}
-			allCandidates[i].lossCount = t;
+			CandidateI.lossCount = countLosses(CandidateI, numberOfCandidates);
 		}
 	} /*end for(i)*/
 	Zero(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound);
@@ -4020,7 +4037,7 @@ void updateLossCount(CandidateSlate& allCandidates,
 //		E - the election data used to determine the Winner
 EMETH DMC(edata& E  /* eliminate least-approved candidate until unbeaten winner exists */)
 { /* side effects: Each Candidate's 'lossCount' member */
-	int i,j,t;
+	int i;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
 	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
@@ -4028,11 +4045,8 @@ EMETH DMC(edata& E  /* eliminate least-approved candidate until unbeaten winner 
 	if(CondorcetWinner>=0) return(CondorcetWinner);
 #endif
 	for(i=0; i<numberOfCandidates; i++) {
-		t=0;
-		for(j=0; j<numberOfCandidates; j++) {
-			if(allCandidates[j].margins[i]>0){ t++; }
-		}
-		allCandidates[i].lossCount = t;
+		oneCandidate& CandidateI = allCandidates[i];
+		CandidateI.lossCount = countLosses(CandidateI, numberOfCandidates);
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	PermShellSortDown(numberOfCandidates, allCandidates, &oneCandidate::approvals);
