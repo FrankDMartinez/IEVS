@@ -3058,6 +3058,46 @@ int64_t countLosses(const  oneCandidate& theCandidate, const uint64_t& numberOfC
 	return t;
 }
 
+//	Function: findNextUneliminatedFavorite
+//
+//	Returns:
+//		the index representing the Candidate with is both not
+//		eliminated and the next preferred Candidate of the
+//		given Voter after the Voter's 'favorite'th preferred
+//		Candidate
+//	Parameters:
+//		theVoter           - the Voter for Whom to find
+//		                     the next uneliminated
+//		                     Candidate
+//		favorite           - the current 'favorite'th
+//		                     Candidate which has been
+//		                     found so far; this
+//		                     parameter is updated to
+//		                     reflect the rank of the
+//		                     found Candidate as ordered
+//		                     by the Voter
+//		allCandidates      - a slate of Candidates in
+//		                     the current election
+//		numberOfCandidates - the numer of Candidates in
+//		                     the current election
+int findNextUneliminatedFavorite(const oneVoter& theVoter,
+                                 int64_t& favorite,
+                                 const CandidateSlate& allCandidates,
+                                 const uint64_t numberOfCandidates)
+{
+	int x;
+	do {
+		favorite++;
+		ensure( favorite < (int)numberOfCandidates, 44 );
+		x = theVoter.topDownPrefs[favorite];
+		assert(x >= 0);
+		ensure(x >= 0, 56);
+		assert(x < (int)numberOfCandidates);
+		ensure(x < (int)numberOfCandidates, 57);
+	} while(allCandidates[x].eliminated);
+	return x;
+}
+
 /*******
  * The following IRV (instant runoff voting) algorithm has somewhat long code, but
  * by using linked lists achieves fast (very sublinear) runtime.
@@ -3141,14 +3181,8 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 			ensure(favorite >= 0, 42);
 			ensure(favorite < (int)numberOfCandidates, 43);
 			ensure( theVoter.topDownPrefs[ favorite ] == RdLoser, 34 );
-			do{
-				favorite++;
-				x = theVoter.topDownPrefs[favorite];
-			} while( allCandidates[x].eliminated);
+                        x = findNextUneliminatedFavorite(theVoter, favorite, allCandidates, numberOfCandidates);
 			/* x is new favorite of voter i (or ran out of favorites) */
-			ensure( favorite < (int)numberOfCandidates, 44 );
-			assert(x >= 0);
-			assert(x < (int)numberOfCandidates);
 			/* update favorite-list: */
 			FavListNext[i] = HeadFav[x];
 			HeadFav[x] = i;
