@@ -2960,6 +2960,49 @@ void Determine(int& Winner, methodFunction theMethod, edata& E)
 	}
 }
 
+//	Function: calculateSimmonsVotesAgainst
+//
+//	Returns:
+//		the sum of all plurality votes for Each Rival of
+//		the given Candidate which beats said Candidate
+//		pairwise; to help break ties in the
+//		"SimmonsCond" system, an additional 1/3 of a
+//		vote is added in certain cases
+//	Parameters:
+//		theCandidate       - the Candidate against which
+//		                     to compare Rivals
+//		allCandidates      - a slate of Candidates for
+//		                     this election
+//		numberOfCandidates - the number of Candidates in
+//		                     the current election
+int64_t calculateSimmonsVotesAgainst(const oneCandidate& theCandidate,
+                                     const CandidateSlate& allCandidates,
+                                     const uint64_t& numberOfCandidates)
+{
+	int64_t t=0;
+	const MarginsData& margins = theCandidate.margins;
+	for(uint64_t j=0; j<numberOfCandidates; j++) {
+		if(margins[j]<0) {
+			const auto& CandidateJ = allCandidates[j];
+			const auto& pluralityVotes = CandidateJ.pluralityVotes;
+			int64_t SchwartzFactor;
+			int64_t SmithFactor;
+			if(CandidateJ.IsASchwartzMember) {
+				SchwartzFactor = 1;
+			} else {
+				SchwartzFactor = 0;
+			}
+			if(CandidateJ.IsASmithMember) {
+				SmithFactor = 1;
+			} else {
+				SmithFactor = 0;
+			}
+			t += 3*pluralityVotes + SchwartzFactor + SmithFactor;
+		}
+	}
+	return t;
+}
+
 //	Function: SimmonsCond
 //
 //	Returns:
@@ -2974,8 +3017,7 @@ void Determine(int& Winner, methodFunction theMethod, edata& E)
 EMETH SimmonsCond(edata& E)
 {
 	int64_t SimmVotesAgainst[MaxNumCands]={0};
-	int i,j;
-	int64_t t;
+	int i;
 	int winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
@@ -2987,15 +3029,7 @@ EMETH SimmonsCond(edata& E)
 	if(CondorcetWinner>=0) return(CondorcetWinner);
 #endif
 	for(i=0; i<numberOfCandidates; i++) {
-		t=0;
-		for(j=0; j<numberOfCandidates; j++) {
-			const oneCandidate& CandidateJ = allCandidates[j];
-			if(CandidateJ.margins[i]>0) { /* j pairwise-beats i */
-				t += 3*allCandidates[j].pluralityVotes + (CandidateJ.IsASchwartzMember ? 1 : 0) + (CandidateJ.IsASmithMember ? 1 : 0);
-				/*Here I am adding 1/3 of a vote if in SmithSet, ditto SchwartzSet, to break Simmons ties*/
-			}
-		}
-		SimmVotesAgainst[i] = t;
+		SimmVotesAgainst[i] = calculateSimmonsVotesAgainst(allCandidates[i], allCandidates, numberOfCandidates);
 	}
 	winner = ArgMinArr(numberOfCandidates, SimmVotesAgainst, (int*)RandCandPerm);
 	return winner;
