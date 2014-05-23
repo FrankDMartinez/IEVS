@@ -14,8 +14,12 @@
 #include <array>
 #include <climits>
 #include <cmath>
+#include <cstdlib>
+#include <fstream>
+#include <memory>
 #include <stdio.h>
 #include <math.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <ctype.h>
@@ -29,10 +33,17 @@
   #include <unistd.h>
 #endif
 #include <stdint.h>
-#include <string.h>
+#include <string>
 #include <typeinfo>
 
+void disableOutputFile();
+bool doubleOutputExpected = false;
+void enableOutputFile(const std::string format, ...);
 void ensure(bool good, int number);
+std::string formatStandardString(const std::string formattingString, ...);
+std::string formatStandardString(const std::string formattingString, va_list arguments);
+std::ofstream secondaryOutputFile;
+void output(const char * format, ...);
 
 /* #define NDEBUG    uncomment this line if want to turn off asserts for speed */
 
@@ -145,7 +156,7 @@ David Cary's Changes (not listing ones WDS did anyhow) include:
 
 #define until(x) while(!(x))
 typedef double real;
-typedef void (*driver_t)(void);
+typedef void (*driver_t)(uint);
 
 const real PI = 3.14159265358979323844;
 
@@ -331,7 +342,7 @@ uint LCMfact[32];
 void BuildLCMfact()
 {
 	uint j,x;
-	printf("\nComputing sequence LCM(1,2,...N) for N=1..22:\n");
+	output("\nComputing sequence LCM(1,2,...N) for N=1..22:\n");
 	LCMfact[0] = 1;
 	for(j=1; j<23; j++) { /*LCMfact[23]=5354228880 won't fit in 32 bit word*/
 		LCMfact[j] = LCMfact[j-1];
@@ -340,7 +351,7 @@ void BuildLCMfact()
 			LCMfact[j] *= j/GCD(x,j);
 		}
 	}
-	printf("LCMfact[%d]=%u\n", j, LCMfact[j]);
+	output("LCMfact[%d]=%u\n", j, LCMfact[j]);
 }
 
 
@@ -371,7 +382,7 @@ uint FindArtinPrime(uint x)
 			}
 		}
 	}
-	printf("FindArtinPrime failed - terminating\n");
+	output("FindArtinPrime failed - terminating\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -554,7 +565,7 @@ uint32_t BigLinCong32()
 
 	/*It is rare that any iterations of this loop are needed:*/
 		while(y[60]!=0) {
-			printf("rare loop\n");
+			output("rare loop\n");
 			/*Step 3+:  y[0..60] = y[0..59] + y[60]shift12 - y[60]:*/
 			u=1; /*borrow*/
 			u += y[0];
@@ -661,8 +672,9 @@ void InitRand(uint seed)
 #else
 	struct timeval tv;
 #endif
+	enableOutputFile("%s.%u", __func__, seed);
 	if(seed==0) {
-		printf("using time of day and PID to generate seed");
+		output("using time of day and PID to generate seed");
 #if defined(MSWINDOWS) && MSWINDOWS
 		now = time(NULL);
 		locTime = localtime(&now);
@@ -678,7 +690,7 @@ void InitRand(uint seed)
 #endif
 		seed = (1000000*(uint)seed_sec) + (uint)seed_usec +
 			(((uint)processId)<<20) + (((uint)processId)<<10);
-		printf("=%u\n", seed);
+		output("=%u\n", seed);
 	}
 	for(i=0; i<60; i++) {
 		BLC32x[i]=0;
@@ -688,11 +700,12 @@ void InitRand(uint seed)
 	for(i=0; i<599; i++) {
 		BigLinCong32();
 	}
-	printf("Random generator initialized with seed=%u:\n", seed);
+	output("Random generator initialized with seed=%u:\n", seed);
 	for(i=0; i<7; i++) {
-		printf("%.6f ", Rand01());
+		output("%.6f ", Rand01());
 	}
-	printf("\n");
+	output("\n");
+	disableOutputFile();
 }
 
 /*	TestRand01():	performs 100000 calls to 'randgen()' to test if 'randgen[0,1]'
@@ -708,7 +721,7 @@ void TestRand01()
 	for(i=0; i<10; i++) {
 		ct[i]=0;
 	}
-	printf("Performing 100000 randgen calls to test that randgen[0,1] behaving ok:\n");
+	output("Performing 100000 randgen calls to test that randgen[0,1] behaving ok:\n");
 	for(i=0; i<100000; i++) {
 		x = Rand01();
 		s += x;
@@ -724,13 +737,13 @@ void TestRand01()
 			ct[y]++;
 		}
 	}
-	printf("mean=%g(should be 1/2)  min=%f  max=%g   variance=%g(should be 1/12=%g)\n",
+	output("mean=%g(should be 1/2)  min=%f  max=%g   variance=%g(should be 1/12=%g)\n",
 			s/100000.0, mn, mx, v/100000.0, 1/12.0);
-	printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
+	output("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
 	for(i=0; i<10; i++) {
-		printf(" %d", ct[i]);
+		output(" %d", ct[i]);
 	}
-	printf("\n");
+	output("\n");
 }
 
 /*	RandBool():	returns a random bool value
@@ -876,7 +889,7 @@ void GenRandWackyArr(int N, real Arr[])
 		}
 		break;
 	default :
-		printf("impossible case in GenRandWackyArr\n");
+		output("impossible case in GenRandWackyArr\n");
 		exit(EXIT_FAILURE);
 	}
 }
@@ -2755,10 +2768,10 @@ EMETH UncoveredSet(edata& E)
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
 	if( numberOfCandidates > 4*sizeof(numberOfCandidates) ) {
-		printf("UncoveredSet: too many candidates %lld to use machine words(%d) to represent sets\n",
+		output("UncoveredSet: too many candidates %lld to use machine words(%d) to represent sets\n",
 			numberOfCandidates,
 			(int)(4*sizeof(numberOfCandidates)) );
-		printf("You could rewrite the code to use uint128s to try allow up to 128 canddts\n");
+		output("You could rewrite the code to use uint128s to try allow up to 128 canddts\n");
 		exit(EXIT_FAILURE);
 	}
 	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
@@ -4498,10 +4511,10 @@ EMETH WoodallDAC(const edata& E  /*Woodall: Monotonocity of single-seat preferen
 	const uint& numberOfVoters = E.NumVoters;
 	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
 	if( (numberOfCandidates) > (4*sizeof(numberOfCandidates)) ) {
-		printf("WoodallDAC: too many candidates %lld to use machine words(%d) to represent sets\n",
+		output("WoodallDAC: too many candidates %lld to use machine words(%d) to represent sets\n",
 			numberOfCandidates,
 			(int)(4*sizeof(numberOfCandidates)) );
-		printf("You could rewrite the code to use uint128s to try allow up to 128 canddts\n");
+		output("You could rewrite the code to use uint128s to try allow up to 128 canddts\n");
 		exit(EXIT_FAILURE);
 	}
 	for(v=ARTINPRIME-1; v>=0; v--) { WoodHashCount[v] = 0; WoodHashSet[v] = 0; }
@@ -4850,7 +4863,7 @@ void PrintMethName( int WhichMeth, bool Padding )
 		spaces = 13;
 		break;
 	default :
-		printf("[Unsupported voting method %d]", WhichMeth);
+		output("[Unsupported voting method %d]", WhichMeth);
 		exit(EXIT_FAILURE);
 	}
 	printName(name, Padding, spaces);
@@ -4858,9 +4871,9 @@ void PrintMethName( int WhichMeth, bool Padding )
 
 void PrintAvailableVMethods(){
 	int i;
-	printf("\nAvailable Voting methods:\n");
+	output("\nAvailable Voting methods:\n");
 	for(i=0; i<NumMethods; i++){
-		printf("%d=",i); PrintMethName(i,false); printf("\n");
+		output("%d=",i); PrintMethName(i,false); output("\n");
 	}
 }
 
@@ -4964,12 +4977,12 @@ int GimmeWinner( edata& E, int WhichMeth )
 			break;
 	case(NumFastMethods+7) : w=Rouse(E); break;
 	default :
-		printf("Unsupported voting method %d\n", WhichMeth);
+		output("Unsupported voting method %d\n", WhichMeth);
 		exit(EXIT_FAILURE);
 	} /*end switch*/
 	if((w<0) || (w>=(int)E.NumCands)) {
-		printf("Voting method %d=", WhichMeth); PrintMethName(WhichMeth,false);
-		printf(" returned erroneous winner %d\n", w);
+		output("Voting method %d=", WhichMeth); PrintMethName(WhichMeth,false);
+		output(" returned erroneous winner %d\n", w);
 		exit(EXIT_FAILURE);
 	}
 	return(w);
@@ -5483,23 +5496,23 @@ int LoadEldataFiles()
 	int i,j,v,x,y,elcount,votcount,prefcount,ncands,nvoters,nwinners,itcount;
 	FILE *fp;
 	elcount=0;  votcount=0;  prefcount=0;  itcount=0;
-	printf("Loading %d HIL-format elections files...\n", NumHilFiles);
+	output("Loading %d HIL-format elections files...\n", NumHilFiles);
 	for(i=0; i<NumHilFiles; i++) {
-		printf("loading %s itcount=%d\n", electionHILnames[i], itcount);
+		output("loading %s itcount=%d\n", electionHILnames[i], itcount);
 		fp = fopen(electionHILnames[i], "r");
 		if(fp==NULL) {
-			printf("failure to open file %s for read - terminating\n", electionHILnames[i]);
-			printf("Tideman election data files can be got from\n");
-			printf("  http://rangevoting.org/TidemanData.html\n");
+			output("failure to open file %s for read - terminating\n", electionHILnames[i]);
+			output("Tideman election data files can be got from\n");
+			output("  http://rangevoting.org/TidemanData.html\n");
 			exit(EXIT_FAILURE);
 		}
 		fscanf(fp, "%d %d", &ncands, &nwinners);
 		if((ncands<3) || (ncands>MaxNumCands)) {
-			printf("bad #candidates %d in %s - terminating\n", ncands, electionHILnames[i]);
+			output("bad #candidates %d in %s - terminating\n", ncands, electionHILnames[i]);
 			exit(EXIT_FAILURE);
 		}
 		if((nwinners<1) || (nwinners>=ncands)) {
-			printf("bad #winners %d in %s - terminating\n", nwinners, electionHILnames[i]);
+			output("bad #winners %d in %s - terminating\n", nwinners, electionHILnames[i]);
 			exit(EXIT_FAILURE);
 		}
 		v = 0;
@@ -5513,14 +5526,14 @@ int LoadEldataFiles()
 					c = (char)getc(fp);
 				} while( isdigit(c) );
 #if VERBOSELOAD
-				printf("%d ", x);
+				output("%d ", x);
 #endif
 				if(x==0) {
 					break;
 				}
 				/*Now do something with x>=1 which is preference y>=0 for voter v>=0*/
 				if(x>ncands) {
-					printf("bad vote %d in %s - terminating\n", x, electionHILnames[i]);
+					output("bad vote %d in %s - terminating\n", x, electionHILnames[i]);
 					exit(EXIT_FAILURE);
 				}
 				assert(x>0);
@@ -5531,14 +5544,14 @@ int LoadEldataFiles()
 			itcount += ncands;
 			ensure((itcount+ncands) < MaxNumRanks, 54);
 #if VERBOSELOAD
-			printf("[%d]\n", v);
+			output("[%d]\n", v);
 #endif
 			votcount++;
 			v++;
 		}until(y==0);
 		/*Now do something re the election that just ended with v votes*/
 		if(v<3) {
-			printf("bad #voters %d in %s - terminating\n", v, electionHILnames[i]);
+			output("bad #voters %d in %s - terminating\n", v, electionHILnames[i]);
 			exit(EXIT_FAILURE);
 		}
 		NVotersData[elcount] = v;
@@ -5546,23 +5559,23 @@ int LoadEldataFiles()
 		elcount++;
 		fclose(fp);
 	}/*end for(i)*/
-	printf("Loading %d DEB-format elections files...\n", NumDebFiles);
+	output("Loading %d DEB-format elections files...\n", NumDebFiles);
 	for(i=0; i<NumDebFiles; i++) {
-		printf("loading %s itcount=%d\n", electionDEBnames[i], itcount);
+		output("loading %s itcount=%d\n", electionDEBnames[i], itcount);
 		fp = fopen(electionDEBnames[i], "r");
 		if(fp==NULL) {
-			printf("failure to open file %s for read - terminating\n", electionDEBnames[i]);
-			printf("Tideman election data files can be got from\n");
-			printf("  http://rangevoting.org/TidemanData.html\n");
+			output("failure to open file %s for read - terminating\n", electionDEBnames[i]);
+			output("Tideman election data files can be got from\n");
+			output("  http://rangevoting.org/TidemanData.html\n");
 			exit(EXIT_FAILURE);
 		}
 		fscanf(fp, "%d %d", &nvoters, &ncands);
 		if((nvoters<4) || (nvoters>TOOMANYELVOTERS)) {
-			printf("bad #voters %d in %s - terminating\n", nvoters, electionDEBnames[i]);
+			output("bad #voters %d in %s - terminating\n", nvoters, electionDEBnames[i]);
 			exit(EXIT_FAILURE);
 		}
 		if((ncands<3) || (ncands>MaxNumCands) || (ncands>9)) {
-			printf("bad #candidates %d in %s - terminating\n", ncands, electionDEBnames[i]);
+			output("bad #candidates %d in %s - terminating\n", ncands, electionDEBnames[i]);
 			exit(EXIT_FAILURE);
 		}
 		for(v=0; v<nvoters; v++) {
@@ -5582,7 +5595,7 @@ int LoadEldataFiles()
 			itcount += ncands;
 			ensure((itcount+ncands) < MaxNumRanks, 53);
 #if VERBOSELOAD
-			printf("[%d]\n", v);
+			output("[%d]\n", v);
 #endif
 			votcount++;
 		}
@@ -5592,7 +5605,7 @@ int LoadEldataFiles()
 		elcount++;
 		fclose(fp);
 	}/*end for(i)*/
-	printf("done loading files; loaded %d elections constituting %d prefs and %d votes and %d ranks in all\n",
+	output("done loading files; loaded %d elections constituting %d prefs and %d votes and %d ranks in all\n",
 		elcount, prefcount, votcount, itcount);
 	NumElectionsLoaded = elcount;
 	assert(NumElectionsLoaded>0);
@@ -5656,7 +5669,7 @@ void UtilDispatcher( edata& E, int WhichMeth ){   /*WhichMeth = -1 ==> real worl
 	case(14)  : GenIssueDistanceUtils(E, -4, 2.0); break;
 	case(15) : GenIssueDistanceUtils(E, -5, 2.0); break;
 
-	default : printf("Unsupported util gen %d\n", WhichMeth); exit(EXIT_FAILURE);
+	default : output("Unsupported util gen %d\n", WhichMeth); exit(EXIT_FAILURE);
 	} /*end switch*/
 }
 
@@ -5739,7 +5752,7 @@ void PrintUtilName( int WhichMeth, bool Padding )
 		spaces = 1;
 		break;
 
-	default : printf("UnsupportedUtilGen[%d]\n", WhichMeth); exit(EXIT_FAILURE);
+	default : output("UnsupportedUtilGen[%d]\n", WhichMeth); exit(EXIT_FAILURE);
 	} /*end switch*/
 	printName(name, Padding, spaces);
 }
@@ -5747,24 +5760,25 @@ void PrintUtilName( int WhichMeth, bool Padding )
 /************ useful IO stuff... ***********/
 void PrintConsts()
 {
-	printf("\nConstants:\n");
-	printf("sizeof(uint)=%d bytes\t", (int)sizeof(uint));
-	printf("sizeof(uint32_t)=%d\t", (int)sizeof(uint32_t));
-	printf("sizeof(uint64_t)=%d\t", (int)sizeof(uint64_t));
-	printf("sizeof(real)=%d\n", (int)sizeof(real));
-	printf("sizeof(edata)=%d\t", (int)sizeof(edata));
-	printf("MaxNumCands=%d\t", MaxNumCands);
-	printf("MaxNumVoters=%d\t", MaxNumVoters);
-	printf("MaxNumIssues=%d\n", MaxNumIssues);
-	printf("NumMethods=%d\t", NumMethods);
-	printf("NumCoreMethods=%d\t", NumCoreMethods);
-	printf("true=%d\t", (int)true);
-	printf("false=%d\n", (int)false);
+	enableOutputFile(__func__);
+	output("\nConstants:\n");
+	output("sizeof(uint)=%d bytes\t", (int)sizeof(uint));
+	output("sizeof(uint32_t)=%d\t", (int)sizeof(uint32_t));
+	output("sizeof(uint64_t)=%d\t", (int)sizeof(uint64_t));
+	output("sizeof(real)=%d\n", (int)sizeof(real));
+	output("sizeof(edata)=%d\t", (int)sizeof(edata));
+	output("MaxNumCands=%d\t", MaxNumCands);
+	output("MaxNumVoters=%d\t", MaxNumVoters);
+	output("MaxNumIssues=%d\n", MaxNumIssues);
+	output("NumMethods=%d\t", NumMethods);
+	output("NumCoreMethods=%d\t", NumCoreMethods);
+	output("true=%d\t", (int)true);
+	output("false=%d\n", (int)false);
 	ARTINPRIME = FindArtinPrime(MaxNumCands*3*MaxNumVoters);
-	printf("ArtinPrime=%d\n", ARTINPRIME);
+	output("ArtinPrime=%d\n", ARTINPRIME);
 
-	printf("BROutputMode=%x\n", BROutputMode);
-
+	output("BROutputMode=%x\n", BROutputMode);
+	disableOutputFile();
 	ensure(sizeof(uint32_t)==4, 24);
 	ensure(sizeof(uint64_t)==8, 25);
 }
@@ -5797,15 +5811,15 @@ void TestEDataStructs( const brdata& B )
 	edata E;
 	EDataPrep(E, B);
 	for(elnum=0; elnum < numberOfElections; elnum++) {
-		printf("GenNormalUtils:\n");
+		output("GenNormalUtils:\n");
 		GenNormalUtils(E);
-		printf("AddIgnorance:\n");
+		output("AddIgnorance:\n");
 		AddIgnorance(E, B.IgnoranceAmplitude);
-		printf("HonestyStrat:\n");
+		output("HonestyStrat:\n");
 		HonestyStrat(E, 1.0);
-		printf("BuildDefetasMatrix:\n");
+		output("BuildDefetasMatrix:\n");
 		BuildDefeatsMatrix(E);
-		printf("PrintEdata:\n");
+		output("PrintEdata:\n");
 		PrintEdata(stdout, E);
 	}
 }
@@ -6214,12 +6228,12 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 	MakeIdentityPerm(NumSites, RandPerm);
 	for(pass=8; pass>=1; pass /= 2) {
 		for(y=0; y<200; y+=pass) {
-			printf("[%d]", y);
+			output("[%d]", y);
 			if((pass==1 && y%10==9) ||
 			   (pass==2 && y%20==18) ||
 			   (pass==4 && y%40==36) ||
 			   (pass==8 && y%80==72) ) {
-				printf("\n");
+				output("\n");
 			}
 			for(x=0; x<200; x+=pass) {
 				PreColor = -1;
@@ -6322,7 +6336,7 @@ void MakeYeePict( char filename[], const int xx[], const int yy[], int NumSites,
 	F = fopen(filename, "w");
 #endif
 	if(F==NULL){
-		printf("failed to open %s\n", filename);
+		output("failed to open %s\n", filename);
 		exit(EXIT_FAILURE);
 	}
 	if(WhichMeth==0 && LpPow==2) {
@@ -6339,19 +6353,19 @@ void MakeYeePict( char filename[], const int xx[], const int yy[], int NumSites,
 	} else {
 		imgsize=OutputCompressedBarray(imgsize, Barray, true, F);
 	}
-	printf("%s: %d bytes\n", filename, imgsize);
+	output("%s: %d bytes\n", filename, imgsize);
 	fclose(F);
-	printf("coordinates:\n");
+	output("coordinates:\n");
 	for(i=0; i<NumSites; i++){
-		printf("(%d,%d)", xx[i], yy[i]);
+		output("(%d,%d)", xx[i], yy[i]);
 		if(i<NumSites-1) {
-	printf(", ");
+	output(", ");
 		}
 		if(i%8==7) {
-	printf("\n");
+	output("\n");
 		}
 	}
-	printf("\n");
+	output("\n");
 }
 
 real ColorContrastScore( uint NumSites, const int xx[], const int yy[] )
@@ -6427,7 +6441,7 @@ void PrintTheVotersBayesianRegret(brdata& regretObject, const PopulaceState_t&po
  *the end:*/
 /*	BRDriver():	produces and outputs Bayesian Regret data
  */
-void BRDriver()
+void BRDriver(uint PRNGSeed)
 {
 	static const int Pow2Primes[] = {2, 3, 7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 8191, 16381};
 	/** Greatest prime <=2^n. **/
@@ -6452,14 +6466,24 @@ void BRDriver()
 						B.Honfrac*100 > honfraclower - 0.0001 ) {
 							for(prind=0; Pow2Primes[prind]<MaxNumVoters; prind++) {
 								P.numberOfVoters = Pow2Primes[prind];
+								enableOutputFile("%u.%d.%d.%d.%d.%s",
+										 PRNGSeed,
+										 UtilMeth,
+										 iglevel,
+										 whichhonlevel,
+										 prind,
+										 __func__);
 								PrintTheVotersBayesianRegret(B, P, ScenarioCount);
+								disableOutputFile();
 							}
 					} /*end for(whichhonlevel)*/
 				}
 			}
 		}
 	}
+	enableOutputFile("%s.summary.%d.%u", __func__, ScenarioCount, PRNGSeed);
 	PrintSummaryOfNormalizedRegretData(ScenarioCount);
+	disableOutputFile();
 }
 
 
@@ -6467,7 +6491,7 @@ void BRDriver()
 /*	RWBRDriver():	produces and outputs Bayesian Regret data based upon the real
  *			world election dataset
  */
-void RWBRDriver()
+void RWBRDriver(uint PRNGSeed)
 {
 	int whichhonlevel;
 	int iglevel;
@@ -6481,11 +6505,19 @@ void RWBRDriver()
 		for(whichhonlevel=0; whichhonlevel<5; whichhonlevel++) {
 			B.Honfrac = HonLevels[whichhonlevel];
 			if(B.Honfrac*100 < honfracupper + 0.0001 && B.Honfrac*100 > honfraclower - 0.0001 ) {
+				enableOutputFile("%u.%d.%d.%s",
+						 PRNGSeed,
+						 iglevel,
+						 whichhonlevel,
+						 __func__);
 				PrintTheVotersBayesianRegret(B, P, ScenarioCount);
+				disableOutputFile();
 			}
 		} /*end for(whichhonlevel)*/
 	}/*end for(ignlevel)*/
+	enableOutputFile("%s.summary.%d.%u", __func__, ScenarioCount, PRNGSeed);
 	PrintSummaryOfNormalizedRegretData(ScenarioCount);
+	disableOutputFile();
 }
 
 /*************************** MAIN CODE: ***************************/
@@ -6501,6 +6533,7 @@ int main(int argc, const char *const *argv)
 		if (!strcmp(argv[1], "--test")) {
 			extern void runTests(void);
 
+			doubleOutputExpected = true;
 			runTests();
 			exit(EXIT_SUCCESS);
 		}
@@ -6921,18 +6954,20 @@ template< class T1 > T1 FloydRivestSelect(uint L, uint R, uint K, T1 A[])
 /*	runSelfTests():		perfomrs a test of the various
  *				PRNGs and edata structures
  */
-void runSelfTests()
+void runSelfTests(uint PRNGSeed)
 {
 	brdata B;
 
-	printf("Test of randgen & other tests\n");
+	enableOutputFile("%s.%u", __func__, PRNGSeed);
+	output("Test of randgen & other tests\n");
 	TestsOfRand();
-	printf("\nTest edata structure:\n");
+	output("\nTest edata structure:\n");
 	B.NumVoters=6;
 	B.NumCands=5;
 	B.NumElections=1;
 	B.IgnoranceAmplitude=0.001;
 	TestEDataStructs(B);
+	disableOutputFile();
 }
 
 /*	runSingleTest(aSeed):	simulates User interation of a single
@@ -6950,11 +6985,17 @@ void runSingleTest(uint aSeed)
 	votnumupper=50;//MaxNumVoters;
 	numelections2try=1;//99999999;
 	utilnumupper=15;
-	BRDriver();
+	BRDriver(aSeed);
+	bool savedState = doubleOutputExpected;
+	doubleOutputExpected = false;
 	runSingleYeeTest(aSeed);
-	runSelfTests();
+	doubleOutputExpected = savedState;
+	runSelfTests(aSeed);
+	savedState = doubleOutputExpected;
+	doubleOutputExpected = false;
 	LoadEldataFiles();
-	RWBRDriver();
+	doubleOutputExpected = savedState;
+	RWBRDriver(aSeed);
 }
 
 /*	runTests():	simulates User interaction of multiple
@@ -6978,7 +7019,7 @@ void ensure(bool good, int number)
 {
 	if(good) { /* do nothing */ }
 	else {
-		printf("TOLCINSE #%d\n", number);
+		output("TOLCINSE #%d\n", number);
 		exit(EXIT_FAILURE);
 	}
 }
@@ -6996,7 +7037,7 @@ void EDataPrep(edata& E, const brdata& B)
 	E.NumVoters = B.NumVoters;
 	E.NumCands = B.NumCands;
 	if(numberOfElections < 1){
-		printf("NumElections=%d<1, error\n", numberOfElections);
+		output("NumElections=%d<1, error\n", numberOfElections);
 		exit(EXIT_FAILURE);
 	}
 }
@@ -7187,7 +7228,7 @@ void PermShellSortDown(uint64_t N, int Perm[], const oneCandidateToTheVoter (&Ca
  */
 void printName(const char *name, bool padding, int spaces)
 {
-	printf("%s", name);
+	output("%s", name);
 	if(padding) {
 		PrintNSpaces(spaces);
 	}
@@ -7255,21 +7296,26 @@ void runSingleYeeTest(uint aSeed)
 	const int TopYeeVoters=26;
 	const int GaussStdDev=200;
 
+	enableOutputFile("YeeTestText.%u", aSeed);
 	adjustYeeCoordinates(NumSites, xx, yy, subsqsideX, subsqsideY);
 	cscore = ReorderForColorContrast(  NumSites, xx, yy );
-	printf("Color score %f (big=more constrast); Your coords are:\n", cscore);
+	output("Color score %f (big=more constrast); Your coords are:\n", cscore);
 	for(i=0; i<NumSites; i++) {
-		printf("(%d, %d)\n", xx[i], yy[i]);
+		output("(%d, %d)\n", xx[i], yy[i]);
 	}
-	printf("Reordering...\n");
+	output("Reordering...\n");
 	cscore = ReorderForColorContrast(  NumSites, xx, yy );
-	printf("Color score %f (big=more constrast); Your (reordered) coords are:\n", cscore);
+	output("Color score %f (big=more constrast); Your (reordered) coords are:\n", cscore);
 	for(i=0; i<NumSites; i++) {
-		printf("(%d, %d)\n", xx[i], yy[i]);
+		output("(%d, %d)\n", xx[i], yy[i]);
 	}
 	sprintf(fname,"IEVSbmp%u",aSeed);
+	const bool savedState = doubleOutputExpected;
+	doubleOutputExpected = false;
 	MakeYeePict( fname, xx, yy, NumSites, WhichMeth, TopYeeVoters, GaussStdDev, ihonfrac*0.01, LpPow );
-	printf("seed=%d\n", aSeed);
+	doubleOutputExpected = savedState;
+	output("seed=%d\n", aSeed);
+	disableOutputFile();
 }
 
 /*	RandomTestReport(mean_str, meansq_str, s, mn, mx, v, class T):
@@ -7290,18 +7336,18 @@ void runSingleYeeTest(uint aSeed)
 void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10])
 {
 	int i;
-	printf("mean=%g(should be %s)  min=%f  max=%g   meansq=%g(should be %s)\n",
+	output("mean=%g(should be %s)  min=%f  max=%g   meansq=%g(should be %s)\n",
 	       s/100000.0,
 	       mean_str,
 	       mn,
 	       mx,
 	       v/100000.0,
 	       meansq_str);
-	printf("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
+	output("counts in 10 bins 0-0.1, 0.1-0.2, etc: ");
 	for(i=0; i<10; i++) {
-		printf(" %d", ct[i]);
+		output(" %d", ct[i]);
 	}
-	printf("\n");
+	output("\n");
 }
 
 /*	runoffForApprovalVoting(E):	returns the approval voting runoff Winner
@@ -7608,7 +7654,7 @@ void Test(const char *name, const char *direction, real (*func1)(void), real (*f
 	for(a=0; a<10; a++) {
 		ct[a]=0;
 	}
-	printf("Performing 100000 randgen calls to test that %s behaving ok%s:\n", name, direction);
+	output("Performing 100000 randgen calls to test that %s behaving ok%s:\n", name, direction);
 	RandomTest(s, mn, mx, v, ct, func1, func2);
 	RandomTestReport(mean_str, meansq_str, s, mn, mx, v, ct);
 }
@@ -7655,11 +7701,11 @@ void PrintSummaryOfNormalizedRegretData(uint scenarios)
 	real maxc;
 	real RegretSum[NumMethods];
 	int VMPerm[NumMethods];
-	printf("==================SUMMARY OF NORMALIZED REGRET DATA FROM %d SCENARIOS=============\n",
+	output("==================SUMMARY OF NORMALIZED REGRET DATA FROM %d SCENARIOS=============\n",
 		scenarios);
 	/* regret-sum, Coombs, and Schulze beatpaths used as summarizers
 	 * since are good for honest voters and cloneproof. */
-	printf("1. voting methods sorted by sum of (normalized so RandWinner=1) regrets (best first):\n");
+	output("1. voting methods sorted by sum of (normalized so RandWinner=1) regrets (best first):\n");
 	for(i=0; i<NumMethods; i++) { RegretSum[i] = 0.0; }
 	for(j=0; j<(int)scenarios; j++) {
 		r = j*NumMethods;
@@ -7671,11 +7717,11 @@ void PrintSummaryOfNormalizedRegretData(uint scenarios)
 	RealPermShellSortUp( NumMethods, VMPerm, RegretSum );
 	for(i=0; i<NumMethods; i++) {
 		r = VMPerm[i];
-		printf("%d=", r); PrintMethName(r,true);
-		printf("\t %g\n", RegretSum[r]);
+		output("%d=", r); PrintMethName(r,true);
+		output("\t %g\n", RegretSum[r]);
 	}
 
-	printf("\n2. in order of elimination by the Coombs method (worst first):\n");
+	output("\n2. in order of elimination by the Coombs method (worst first):\n");
 	for(i=NumMethods -1; i>=0; i--) { coombElimination[i] = false; }
 	for(coombrd=NumMethods-2; coombrd>=0; coombrd--) {
 		for(i=NumMethods -1; i>=0; i--) { CoombCt[i] = 0; }
@@ -7700,19 +7746,19 @@ void PrintSummaryOfNormalizedRegretData(uint scenarios)
 		ensure(j>=0, 21);
 		assert(!coombElimination[j]);
 		coombElimination[j] = true;
-		printf("%d=",j); PrintMethName(j,true);
-		printf("\n");
+		output("%d=",j); PrintMethName(j,true);
+		output("\n");
 	}
 	for(i=0; i<NumMethods; i++) {
 		if(!coombElimination[i]) {
-			printf("Coombs Winner: %d=",i);
+			output("Coombs Winner: %d=",i);
 			PrintMethName(i,true);
-			printf("\n");
+			output("\n");
 			break;
 		}
 	}
 
-	printf("\n3. voting methods sorted via Schulze beatpaths ordering (best first):\n");
+	output("\n3. voting methods sorted via Schulze beatpaths ordering (best first):\n");
 	for(i=NumMethods -1; i>=0; i--) {
 		for(j=NumMethods -1; j>=0; j--) {
 			BPStrength[i*NumMethods +j]=0;
@@ -7751,10 +7797,10 @@ void PrintSummaryOfNormalizedRegretData(uint scenarios)
 				r = MethPerm[i]; MethPerm[i] = MethPerm[j]; MethPerm[j] = r;
 			}
 		}
-		printf("%d=",MethPerm[i]); PrintMethName(MethPerm[i], true);
-		printf("\n");
+		output("%d=",MethPerm[i]); PrintMethName(MethPerm[i], true);
+		output("\n");
 	}
-	printf("==========end of summary============\n");
+	output("==========end of summary============\n");
 }
 
 /*	PrintBROutput(regretObject, scenarios):	produces prints Bayesian regret
@@ -7788,30 +7834,30 @@ void PrintBROutput(const brdata& regretObject, uint &scenarios)
 		r=i;
 		if(BROutputMode&SORTMODE) r=MethPerm[i];
 		currentMethodsMeanRegret = regretObject.votingMethods[r].meanRegret;
-		if(htmlMode) printf("<tr><td>");
-		printf("%d=",r); PrintMethName(r,true);
-		if(htmlMode) printf("</td><td>");
-		else if(texMode) printf(" & ");
-		if(normalizeRegrets) printf(" \t %8.5g", currentMethodsMeanRegret/meanRegretBase);
-		else if(normalizeRegretsByShentrup) printf(" \t %8.5g", 100.0*(1.0 - currentMethodsMeanRegret/meanRegretBase));
-		else printf(" \t %8.5g", currentMethodsMeanRegret);
+		if(htmlMode) output("<tr><td>");
+		output("%d=",r); PrintMethName(r,true);
+		if(htmlMode) output("</td><td>");
+		else if(texMode) output(" & ");
+		if(normalizeRegrets) output(" \t %8.5g", currentMethodsMeanRegret/meanRegretBase);
+		else if(normalizeRegretsByShentrup) output(" \t %8.5g", 100.0*(1.0 - currentMethodsMeanRegret/meanRegretBase));
+		else output(" \t %8.5g", currentMethodsMeanRegret);
 		if(!omitErrorBars) {
 			const real currentMethodsSRegret = regretObject.votingMethods[r].sRegret;
-			if(htmlMode) printf("&plusmn;");
-			else if(texMode) printf("\\pm");
-			else printf("+-");
+			if(htmlMode) output("&plusmn;");
+			else if(texMode) output("\\pm");
+			else output("+-");
 			if(normalizeRegrets) reb = sqrt(currentMethodsSRegret)/meanRegretBase;
 			else if(normalizeRegretsByShentrup) reb = 100.0*sqrt(currentMethodsSRegret)/meanRegretBase;
 			else reb = sqrt(currentMethodsSRegret);
-			printf("%5.2g", reb);
+			output("%5.2g", reb);
 		}
-		if(htmlMode) printf("</td><td>");
-		else if(texMode) printf(" & ");
-		if(BROutputMode&VBCONDMODE) printf(" \t  %7d", regretObject.votingMethods[r].CondorcetAgreementCount);
-		else printf(" \t  %7d", regretObject.votingMethods[r].trueCondorcetAgreementCount);
-		if(htmlMode) printf("</td></tr>\n");
-		else if(texMode) printf(" \\\\ \n");
-		else printf("\n");
+		if(htmlMode) output("</td><td>");
+		else if(texMode) output(" & ");
+		if(BROutputMode&VBCONDMODE) output(" \t  %7d", regretObject.votingMethods[r].CondorcetAgreementCount);
+		else output(" \t  %7d", regretObject.votingMethods[r].trueCondorcetAgreementCount);
+		if(htmlMode) output("</td></tr>\n");
+		else if(texMode) output(" \\\\ \n");
+		else output("\n");
 	}/*end for(i)*/
 	for(i=0; i<NumMethods; i++) {  /*accumulate regret data for later summary*/
 		RegretData[scenarios*NumMethods + i] =
@@ -7819,41 +7865,41 @@ void PrintBROutput(const brdata& regretObject, uint &scenarios)
 	}
 	scenarios++;
 	if(scenarios > MaxScenarios) {
-		printf("ScenarioCount=%d exceeded upper limit; terminating\n", scenarios);
+		output("ScenarioCount=%d exceeded upper limit; terminating\n", scenarios);
 		exit(EXIT_FAILURE);
 	}
-	if(htmlMode) printf("</td></tr>");
-	else if(texMode) printf(" \\\\ ");
-	printf("\n");
+	if(htmlMode) output("</td></tr>");
+	else if(texMode) output(" \\\\ ");
+	output("\n");
 	if( omitErrorBars && (allMethods || top10Methods) ) {
 		const real SRegretBase = regretObject.votingMethods[2].sRegret;
 		if(normalizeRegrets) reb = sqrt(SRegretBase)/meanRegretBase;
 		else if(normalizeRegretsByShentrup) reb = 100.0*sqrt(SRegretBase)/meanRegretBase;
 		else reb = sqrt(SRegretBase);
-		printf("ErrorBar for RandomWinner's regret=");
-		if(htmlMode) printf("&plusmn;");
-		else if(texMode) printf("\\pm");
-		else printf("+-");
-		printf("%5.2g;\n", reb);
-		printf("This (experimentally always?) upperbounds the error bar for every other regret.\n");
+		output("ErrorBar for RandomWinner's regret=");
+		if(htmlMode) output("&plusmn;");
+		else if(texMode) output("\\pm");
+		else output("+-");
+		output("%5.2g;\n", reb);
+		output("This (experimentally always?) upperbounds the error bar for every other regret.\n");
 	}
 
 	if(BROutputMode&DOAGREETABLES) {
 		scalefac = 1.0;
 		if(regretObject.NumElections > 999) {
 			scalefac = 999.5/regretObject.NumElections;
-			printf("\nScaling agreementCountWithMethod values into 0-999.");
+			output("\nScaling agreementCountWithMethod values into 0-999.");
 		}
-		printf("\nAGREE 0 ");
-		for(i=1; i<NumMethods; i++) { printf(" %3d ", i); }
+		output("\nAGREE 0 ");
+		for(i=1; i<NumMethods; i++) { output(" %3d ", i); }
 		for(i=0; i<NumMethods; i++) {
-			printf("\n%2d ", i);
+			output("\n%2d ", i);
 			for(j=0; j<NumMethods; j++) {
-				if(j==i) printf("  *  ");
-				else printf(" %4d", (int)(0.4999 + regretObject.votingMethods[i].agreementCountWithMethod[j] * scalefac));
+				if(j==i) output("  *  ");
+				else output(" %4d", (int)(0.4999 + regretObject.votingMethods[i].agreementCountWithMethod[j] * scalefac));
 			}
 		}
-		printf("\n");
+		output("\n");
 	}
 }
 
@@ -7875,7 +7921,7 @@ void PrepareForBayesianRegretOutput(brdata& regretObject, const int &iglevel, bo
 	/*2999=good enough for usually 2 sig figs, and is 400X faster*/
 	regretObject.IgnoranceAmplitude = IgnLevels[iglevel];
 	FillArray(NumMethods, VotMethods, true); /*might want to only do a subset... ??*/
-	printf("\n");
+	output("\n");
 }
 
 /*	PrintBRPreamble():	prints some 'preambular' text for Bayesian regret output
@@ -7885,20 +7931,20 @@ void PrintBRPreamble()
 	if(BROutputMode&(ALLMETHS|TOP10METHS)) {
 		const bool htmlMode = !!(BROutputMode&HTMLMODE);
 		if(htmlMode) {
-			printf("<tr><th>Voting Method</th><th>Regrets</th><th>#Agreements with ");
+			output("<tr><th>Voting Method</th><th>Regrets</th><th>#Agreements with ");
 		} else {
-			printf("Voting Method & Regrets & #Agreements with ");
+			output("Voting Method & Regrets & #Agreements with ");
 		}
 		if(BROutputMode&VBCONDMODE) {
-			printf("(vote-based) ");
+			output("(vote-based) ");
 		} else {
-			printf("(true-utility-based) ");
+			output("(true-utility-based) ");
 		}
-		printf("Condorcet Winner (when CW exists)");
+		output("Condorcet Winner (when CW exists)");
 		if(htmlMode) {
-			printf("</th></tr>");
+			output("</th></tr>");
 		}
-		printf("\n");
+		output("\n");
 	}
 }
 
@@ -7942,12 +7988,12 @@ void PrintTheVotersBayesianRegret(brdata& regretObject, const PopulaceState_t &p
 				ComputeBRs(regretObject, VotMethods, -1);
 				RealPermShellSortUp(MethPerm, regretObject.votingMethods);
 			}
-			printf("(Scenario#%d:", ScenarioCount);
+			output("(Scenario#%d:", ScenarioCount);
 			if(not realWorld) {
-				printf(" UtilMeth=");
+				output(" UtilMeth=");
 				PrintUtilName(UtilMeth, false);
 			}
-			printf(" Honfrac=%.2f, NumVoters=%d, NumCands=%lld, NumElections=%d, IgnoranceAmplitude=%f)\n",
+			output(" Honfrac=%.2f, NumVoters=%d, NumCands=%lld, NumElections=%d, IgnoranceAmplitude=%f)\n",
 				regretObject.Honfrac, regretObject.NumVoters, regretObject.NumCands,
 				regretObject.NumElections, regretObject.IgnoranceAmplitude);
 			PrintBRPreamble();
@@ -7968,7 +8014,7 @@ void PrintTheVotersBayesianRegret(brdata& regretObject, const PopulaceState_t &p
 uint InitializeRandomNumberGenerator()
 {
 	uint seed;
-	printf("\nPlease enter random seed (0 causes machine to auto-generate from TimeOfDay)\n");
+	output("\nPlease enter random seed (0 causes machine to auto-generate from TimeOfDay)\n");
 	scanf("%u", &seed);
 	InitRand(seed);
 	return seed;
@@ -7997,8 +8043,8 @@ void PrintOpeningCredits()
 	const real VERSION = 3.24;
 	const int VERSIONYEAR = 2007;
 	const int VERSIONMONTH = 2;
-	printf("IEVS (Warren D. Smith's infinitely extendible voting system comparator) at your service!\n");
-	printf("Version=%f  Year=%d  Month=%d\n", VERSION, VERSIONYEAR, VERSIONMONTH);
+	output("IEVS (Warren D. Smith's infinitely extendible voting system comparator) at your service!\n");
+	output("Version=%f  Year=%d  Month=%d\n", VERSION, VERSIONYEAR, VERSIONMONTH);
 }
 
 enum parameters { unsetParameters, defaultParameters, customParameters };
@@ -8010,28 +8056,28 @@ enum parameters { unsetParameters, defaultParameters, customParameters };
 void ErectMainMenu(uint seed)
 {
 	uint choice;
-	extern void PerformBayesianRegretAnalysis(void);
+	extern void PerformBayesianRegretAnalysis(uint);
 	extern void DisplayMainQuestion(void);
 	extern void MakeYeePicture(uint);
-	extern void runSelfTests(void);
+	extern void runSelfTests(uint);
 	DisplayMainQuestion();
 	do{
 		scanf("%u", &choice);
 		switch(choice) {
 		case(1) :
-			PerformBayesianRegretAnalysis();
+			PerformBayesianRegretAnalysis(seed);
 			break;
 		case(2) :
 			MakeYeePicture(seed);
 			break;
 		case(3):
-			runSelfTests();
+			runSelfTests(seed);
 			break;
 		case(4):
-			printf("Tally an election with votes you enter (NOT IMPLEMENTED HERE - try\n");
-			printf("http://RangeVoting.org/VoteCalc.html)\n");
+			output("Tally an election with votes you enter (NOT IMPLEMENTED HERE - try\n");
+			output("http://RangeVoting.org/VoteCalc.html)\n");
 			break;
-		default : printf("Wrong choice %d, moron - try again\n", choice);
+		default : output("Wrong choice %d, moron - try again\n", choice);
 			continue;
 		}
 	} while(false); /* end switch */
@@ -8041,9 +8087,9 @@ void ErectMainMenu(uint seed)
  */
 void DisplayMainQuestion(void)
 {
-	printf("What do you want to do?\n1=BayesianRegrets\n2=YeePicture\n");
-	printf("3=Test RandGen (and other self-tests)\n");
-	printf("4=Tally an election with votes you enter\n");
+	output("What do you want to do?\n1=BayesianRegrets\n2=YeePicture\n");
+	output("3=Test RandGen (and other self-tests)\n");
+	output("4=Tally an election with votes you enter\n");
 }
 
 /*	DisplayBayesianRegretMenuIntroduction(void):	displays the opening text of the
@@ -8051,8 +8097,8 @@ void DisplayMainQuestion(void)
  */
 void DisplayBayesianRegretMenuIntroduction(void)
 {
-	printf("Answer a sequence of questions indicating what output format you want for\n");
-	printf("the regret tables:\n");
+	output("Answer a sequence of questions indicating what output format you want for\n");
+	output("the regret tables:\n");
 }
 
 /*	RequestBayesianRegretSortingMethod(void):	asks the User to choose a
@@ -8063,22 +8109,22 @@ void RequestBayesianRegretSortingMethod(void)
 {
 	bool finished;
 	uint u;
-	printf("I. voting methods (1) sorted-by-regret or (2) by voting-method-number?\n");
-	printf("[The latter, while arbitrary, has the advantage of invariance throughout the run.]\n");
+	output("I. voting methods (1) sorted-by-regret or (2) by voting-method-number?\n");
+	output("[The latter, while arbitrary, has the advantage of invariance throughout the run.]\n");
 	for( finished = false; not finished; ) {
 		scanf("%u", &u);
 		switch(u) {
 		case(1) :
-			printf("sorted by regrets.\n");
+			output("sorted by regrets.\n");
 			BROutputMode |= SORTMODE;
 			finished = true;
 			break;
 		case(2) :
-			printf("sorting by voting method number.\n");
+			output("sorting by voting method number.\n");
 			finished = true;
 			break;
 		default :
-			printf("Wrong choice %u, moron - try again\n", u);
+			output("Wrong choice %u, moron - try again\n", u);
 			break;
 		}
 	}
@@ -8090,26 +8136,26 @@ void RequestOutputFormat()
 {
 	bool finished;
 	uint u;
-	printf("II. output (1) plain ASCII (2) TeX table formatting (3) HTML table formatting?\n");
+	output("II. output (1) plain ASCII (2) TeX table formatting (3) HTML table formatting?\n");
 	for( finished = false; not finished; ) {
 		scanf("%u", &u);
 		switch(u) {
 		case(1) :
-			printf("plain ASCII.\n");
+			output("plain ASCII.\n");
 			finished = true;
 			break;
 		case(2) :
-			printf("TeX.\n");
+			output("TeX.\n");
 			BROutputMode |= TEXMODE;
 			finished = true;
 			break;
 		case(3) :
-			printf("HTML.\n");
+			output("HTML.\n");
 			BROutputMode |= HTMLMODE;
 			finished = true;
 			break;
 		default :
-			printf("Wrong choice %u, moron - try again\n", u);
+			output("Wrong choice %u, moron - try again\n", u);
 			break;
 		}
 	}
@@ -8123,27 +8169,27 @@ void RequestBayesianRegretNormalizationMethod(void)
 {
 	bool finished;
 	uint u;
-	printf("III. BRs (1) plain (2) normalized so SociallyBest=0, RandomWinner=1\n");
-	printf("     (3) normalized so SociallyBest=100, RandomWinner=0, WorseThanRandom<0?\n");
+	output("III. BRs (1) plain (2) normalized so SociallyBest=0, RandomWinner=1\n");
+	output("     (3) normalized so SociallyBest=100, RandomWinner=0, WorseThanRandom<0?\n");
 	for( finished = false; not finished; ) {
 		scanf("%u", &u);
 		switch(u) {
 		case(1) :
-			printf("plain.\n");
+			output("plain.\n");
 			finished = true;
 			break;
 		case(2) :
-			printf("Best=0, Random=1.\n");
+			output("Best=0, Random=1.\n");
 			BROutputMode |= NORMALIZEREGRETS;
 			finished = true;
 			break;
 		case(3) :
-			printf("Best=100, Random=0.\n");
+			output("Best=100, Random=0.\n");
 			BROutputMode |= SHENTRUPVSR;
 			finished = true;
 			break;
 		default :
-			printf("Wrong choice %u, moron - try again\n", u);
+			output("Wrong choice %u, moron - try again\n", u);
 			break;
 		}
 	}
@@ -8156,21 +8202,21 @@ void RequestErrorBarStatus()
 {
 	bool finished;
 	uint u;
-	printf("IV. Error bars (1) on every BR value (2) omit & only compute for RandomWinner\n");
+	output("IV. Error bars (1) on every BR value (2) omit & only compute for RandomWinner\n");
 	for( finished = false; not finished; ) {
 		scanf("%u", &u);
 		switch(u) {
 		case(1) :
-			printf("all error bars.\n");
+			output("all error bars.\n");
 			finished = true;
 			break;
 		case(2) :
-			printf("omit error bars.\n");
+			output("omit error bars.\n");
 			BROutputMode |= OMITERRORBARS;
 			finished = true;
 			break;
 		default :
-			printf("Wrong choice %u, moron - try again\n", u);
+			output("Wrong choice %u, moron - try again\n", u);
 			break;
 		}
 	}
@@ -8183,21 +8229,21 @@ void RequestAgreementCountStatus()
 {
 	bool finished;
 	uint u;
-	printf("V. Print Agreement counts with (1) true-utility(undistorted) Condorcet Winners, (2) vote-based CWs\n");
+	output("V. Print Agreement counts with (1) true-utility(undistorted) Condorcet Winners, (2) vote-based CWs\n");
 	for( finished = false; not finished; ) {
 		scanf("%u", &u);
 		switch(u) {
 		case(1) :
-			printf("true-utility CWs.\n");
+			output("true-utility CWs.\n");
 			finished = true;
 			break;
 		case(2) :
-			printf("vote-based CWs.\n");
+			output("vote-based CWs.\n");
 			BROutputMode |= VBCONDMODE;
 			finished = true;
 			break;
 		default :
-			printf("Wrong choice %u, moron - try again\n", u);
+			output("Wrong choice %u, moron - try again\n", u);
 			break;
 		}
 	}
@@ -8213,21 +8259,21 @@ void RequestIntermethodWinnerAgreementCountDisplayStatus(void)
 {
 	bool finished;
 	uint u;
-	printf("VI. Print out intermethod winner-agreement-count tables (1) no, (2) yes\n");
+	output("VI. Print out intermethod winner-agreement-count tables (1) no, (2) yes\n");
 	for( finished = false; not finished; ) {
 		scanf("%u", &u);
 		switch(u) {
 		case(1) :
-			printf("NO agree-count tables.\n");
+			output("NO agree-count tables.\n");
 			finished = true;
 			break;
 		case(2) :
-			printf("Yes agree-count tables.\n");
+			output("Yes agree-count tables.\n");
 			BROutputMode |= DOAGREETABLES;
 			finished = true;
 			break;
 		default :
-			printf("Wrong choice %u, moron - try again\n", u);
+			output("Wrong choice %u, moron - try again\n", u);
 			break;
 		}
 	}
@@ -8240,26 +8286,26 @@ void RequestRegretOutput(void)
 {
 	bool finished;
 	uint u;
-	printf("VII. Print out regrets for (1) no, (2) only best 10, (3) all methods\n");
+	output("VII. Print out regrets for (1) no, (2) only best 10, (3) all methods\n");
 	for( finished = false; not finished; ) {
 		scanf("%u", &u);
 		switch(u) {
 		case(1) :
-			printf("No regrets printed (minimum verbosity).\n");
+			output("No regrets printed (minimum verbosity).\n");
 			finished = true;
 			break;
 		case(2) :
-			printf("Top10 methods regrets only printed.\n");
+			output("Top10 methods regrets only printed.\n");
 			BROutputMode |= TOP10METHS;
 			finished = true;
 			break;
 		case(3) :
-			printf("All regrets printed (maximum verbosity).\n");
+			output("All regrets printed (maximum verbosity).\n");
 			BROutputMode |= ALLMETHS;
 			finished = true;
 			break;
 		default :
-			printf("Wrong choice %u, moron - try again\n", u);
+			output("Wrong choice %u, moron - try again\n", u);
 			break;
 		}
 	}
@@ -8275,7 +8321,7 @@ parameters RequestParameters(void)
 {
 	uint u;
 	parameters rv;
-	printf("VIII. (1) All parameter knob-settings, or (2) restricted ranges?\n");
+	output("VIII. (1) All parameter knob-settings, or (2) restricted ranges?\n");
 	honfraclower=0;
 	honfracupper=100;
 	candnumlower=2;
@@ -8287,36 +8333,36 @@ parameters RequestParameters(void)
 		scanf("%u", &u);
 		switch(u) {
 		case(1) :
-			printf("All settings.\n");
+			output("All settings.\n");
 			rv = defaultParameters;
 			break;
 		case(2) :
-			printf("Restricted Ranges...\n");
-			printf("Honesty fraction range - default is 0 100:\n");
+			output("Restricted Ranges...\n");
+			output("Honesty fraction range - default is 0 100:\n");
 			scanf("%d %d", &honfraclower, &honfracupper);
 			honfraclower = std::max(honfraclower,0);
 			honfracupper = std::min(honfracupper,100);
-			printf("Honesty fraction range [%d, %d] chosen.\n", honfraclower, honfracupper);
-			printf("Candidate Number range - default is 2 7 [but this range ignored if real-world dataset]:\n");
+			output("Honesty fraction range [%d, %d] chosen.\n", honfraclower, honfracupper);
+			output("Candidate Number range - default is 2 7 [but this range ignored if real-world dataset]:\n");
 			scanf("%d %d", &candnumlower, &candnumupper);
 			candnumlower = std::max(candnumlower,2U);
 			candnumupper = std::max(candnumupper,(unsigned)(MaxNumCands-1));
-			printf("Candidate number range [%d, %d] chosen.\n", candnumlower, candnumupper);
-			printf("Voter Number range - default is 2 %d [but this range ignored if real-world dataset:\n",
+			output("Candidate number range [%d, %d] chosen.\n", candnumlower, candnumupper);
+			output("Voter Number range - default is 2 %d [but this range ignored if real-world dataset:\n",
 				votnumupper);
 			scanf("%d %d", &votnumlower, &votnumupper);
 			votnumlower = std::max(votnumlower,0);
 			votnumupper = std::min(votnumupper,MaxNumVoters);
-			printf("Voter number range [%d, %d] chosen.\n", votnumlower, votnumupper);
-			printf("Number of elections to try per scenario - default is %d\n", numelections2try);
+			output("Voter number range [%d, %d] chosen.\n", votnumlower, votnumupper);
+			output("Number of elections to try per scenario - default is %d\n", numelections2try);
 			scanf("%d", &numelections2try);
 			numelections2try = std::max(numelections2try,29);
 			numelections2try = std::min(numelections2try,99999999);
-			printf("Trying %d elections per scenario.\n", numelections2try);
+			output("Trying %d elections per scenario.\n", numelections2try);
 			rv = customParameters;
 			break;
 		default :
-			printf("Wrong choice %u, moron - try again\n", u);
+			output("Wrong choice %u, moron - try again\n", u);
 			break;
 		}
 	}
@@ -8335,16 +8381,16 @@ parameters RequestParameters(void)
 void requestCustomUtilityGenerators(parameters parameterType)
 {
 	if(parameterType==customParameters) {
-		printf("Select which utility-generators you want (default 0 thru 15):\n");
+		output("Select which utility-generators you want (default 0 thru 15):\n");
 		for(int i=0; i<16; i++) {
-			printf("%2d: ", i);
+			output("%2d: ", i);
 			PrintUtilName(i,true);
-			printf("\n");
+			output("\n");
 		}
 		scanf("%d %d", &utilnumlower, &utilnumupper);
 		utilnumlower = std::max(utilnumlower, 0);
 		utilnumupper = std::min(utilnumupper, 15);
-		printf("Utility gens t com [%d, %d] chosen.\n", utilnumlower, utilnumupper);
+		output("Utility gens t com [%d, %d] chosen.\n", utilnumlower, utilnumupper);
 		/**** if ???
 		printf("Select LPpow???d):\n");
 		scanf("%d", &LPpow);
@@ -8368,24 +8414,24 @@ driver_t RequestUtilityGenerators(parameters parameterType)
 	bool finished;
 	driver_t driver = NULL;
 	uint u;
-	printf("IX. (1) Machine or (2) Real-world-based utilities?\n");
+	output("IX. (1) Machine or (2) Real-world-based utilities?\n");
 	for(finished = false; not finished; ) {
 		scanf("%u", &u);
 		switch(u) {
 		case(1) :
-			printf("Machine.\n");
+			output("Machine.\n");
 			requestCustomUtilityGenerators(parameterType);
 			driver = BRDriver;
 			finished = true;
 			break;
 		case(2) :
-			printf("Real-world-based.\n");
+			output("Real-world-based.\n");
 			LoadEldataFiles();
 			driver = RWBRDriver;
 			finished = true;
 			break;
 		default :
-			printf("Wrong choice %u, moron - try again\n", u);
+			output("Wrong choice %u, moron - try again\n", u);
 			break;
 		}
 	}
@@ -8400,12 +8446,12 @@ driver_t RequestUtilityGenerators(parameters parameterType)
 int RequestVotingMethod(void)
 {
 	int chosenMethod;
-	printf("Which voting method? Your choices:");
+	output("Which voting method? Your choices:");
 	PrintAvailableVMethods();
 	scanf("%d", &chosenMethod);
-	printf("using %d=", chosenMethod);
+	output("using %d=", chosenMethod);
 	PrintMethName(chosenMethod, false);
-	printf(".\n");
+	output(".\n");
 	return chosenMethod;
 }
 
@@ -8419,11 +8465,11 @@ int RequestVotingMethod(void)
 void RequestNameForBMP(char (&name)[100])
 {
 	size_t i;
-	printf("What filename [.bmp suffix will be auto-added for you]?\n");
+	output("What filename [.bmp suffix will be auto-added for you]?\n");
 	scanf("%s", name);
 	i = strlen(name);
 	if(i>30) {
-		printf("filename too long, moron\n");
+		output("filename too long, moron\n");
 		exit(EXIT_FAILURE);
 	}
 	strcat(name, ".bmp");
@@ -8438,10 +8484,10 @@ void RequestNameForBMP(char (&name)[100])
 int RequestPointSiteCount(void)
 {
 	int numberOfSites;
-	printf("how many point-sites do you want [1 to 16]?\n");
+	output("how many point-sites do you want [1 to 16]?\n");
 	scanf("%d", &numberOfSites);
 	if((numberOfSites<1) || (numberOfSites>16)) {
-		printf("out of bounds value %d moron, using 16 instead\n",numberOfSites);
+		output("out of bounds value %d moron, using 16 instead\n",numberOfSites);
 		numberOfSites=16;
 	}
 	return numberOfSites;
@@ -8461,21 +8507,21 @@ void RequestCoordPairs(int numberOfSites, int (&xarray)[16], int (&yarray)[16])
 	int i;
 	uint u;
 	bool finished;
-	printf("Do you want to:\n1. enter the %d coord-pairs yourself;\n",numberOfSites);
-	printf("2. random coordinate auto-generation?\n");
+	output("Do you want to:\n1. enter the %d coord-pairs yourself;\n",numberOfSites);
+	output("2. random coordinate auto-generation?\n");
 	for(finished = false; not finished; ) {
 		scanf("%u", &u);
 		switch(u) {
 		case(1) :
-			printf("Enter coord pairs X Y with space (not comma) between X & Y, newline between pairs\n");
-			printf("(0,0) is in the lower left.  For example an equilateral triangle would be\n");
-			printf("99 197\n186 47\n12 47\nCoords outside of the [[0,199] range are permitted.\nYour coords:\n");
+			output("Enter coord pairs X Y with space (not comma) between X & Y, newline between pairs\n");
+			output("(0,0) is in the lower left.  For example an equilateral triangle would be\n");
+			output("99 197\n186 47\n12 47\nCoords outside of the [[0,199] range are permitted.\nYour coords:\n");
 			for(i=0; i<numberOfSites; i++) {
 				scanf("%d %d", &(xarray[i]), &(yarray[i]));
 			}
-			printf("Your coords are:\n");
+			output("Your coords are:\n");
 			for(i=0; i<numberOfSites; i++) {
-				printf("(%d, %d)\n", xarray[i], yarray[i]);
+				output("(%d, %d)\n", xarray[i], yarray[i]);
 			}
 			finished = true;
 			break;
@@ -8484,7 +8530,7 @@ void RequestCoordPairs(int numberOfSites, int (&xarray)[16], int (&yarray)[16])
 			real cscore;
 			int subsqsideX;
 			int subsqsideY;
-			printf("X Y sidelengths of subsquare in which you want the random points (200 for full square):\n");
+			output("X Y sidelengths of subsquare in which you want the random points (200 for full square):\n");
 			scanf("%d %d", &subsqsideX,  &subsqsideY);
 			if((subsqsideX <=0) || (subsqsideX>=200)) {
 				subsqsideX = 200;
@@ -8492,17 +8538,17 @@ void RequestCoordPairs(int numberOfSites, int (&xarray)[16], int (&yarray)[16])
 			if((subsqsideY <=0) || (subsqsideY>=200)) {
 				subsqsideY = 200;
 			}
-			printf("using %dx%d centered subrectangle\n", subsqsideX, subsqsideY);
+			output("using %dx%d centered subrectangle\n", subsqsideX, subsqsideY);
 			adjustYeeCoordinates(numberOfSites, xarray, yarray, subsqsideX, subsqsideY);
 			cscore = ReorderForColorContrast(  numberOfSites, xarray, yarray );
-			printf("Color score %f (big=more constrast); Your coords are:\n", cscore);
+			output("Color score %f (big=more constrast); Your coords are:\n", cscore);
 			for(i=0; i<numberOfSites; i++) {
-				printf("(%d, %d)\n", xarray[i], yarray[i]);
+				output("(%d, %d)\n", xarray[i], yarray[i]);
 			}
 			finished = true;
 			break;
 		default :
-			printf("Wrong choice %u, moron - try again\n", u);
+			output("Wrong choice %u, moron - try again\n", u);
 			break;
 		}
 	}
@@ -8523,27 +8569,27 @@ void RequestCoordPairReordering(int numberOfSites, int (&xarray)[16], int (&yarr
 {
 	uint u;
 	bool finished;
-	printf("Do you want IEVS to re-order the points to try for maximum color-contrast? (1) yes (2) no\n");
+	output("Do you want IEVS to re-order the points to try for maximum color-contrast? (1) yes (2) no\n");
 	for(finished = false; not finished; ) {
 		scanf("%u", &u);
 		switch(u) {
 		case(1) :
 			real cscore;
 			int i;
-			printf("Reordering...\n");
+			output("Reordering...\n");
 			cscore = ReorderForColorContrast(  numberOfSites, xarray, yarray );
-			printf("Color score %f (big=more constrast); Your (reordered) coords are:\n", cscore);
+			output("Color score %f (big=more constrast); Your (reordered) coords are:\n", cscore);
 			for(i=0; i<numberOfSites; i++) {
-				printf("(%d, %d)\n", xarray[i], yarray[i]);
+				output("(%d, %d)\n", xarray[i], yarray[i]);
 			}
 			finished = true;
 			break;
 		case(2) :
-			printf("OK, leaving points ordered as is.\n");
+			output("OK, leaving points ordered as is.\n");
 			finished = true;
 			break;
 		default :
-			printf("Wrong choice %u, moron - try again\n", u);
+			output("Wrong choice %u, moron - try again\n", u);
 			break;
 		}
 	}
@@ -8557,17 +8603,17 @@ void RequestCoordPairReordering(int numberOfSites, int (&xarray)[16], int (&yarr
 int RequestElectorateSize(void)
 {
 	int Voters;
-	printf("What max election size (#voters) would you like?\n");
-	printf("256 recommended as good compromise between speed and randomness.\n");
-	printf("You're allowed to go as high as %d (for slowest speed).\n", MaxNumVoters);
-	printf("Algorithm keeps redoing elections with 10%% more voters each time until\n");
-	printf("either confident know the winner, or reach this voter# bound.\n");
+	output("What max election size (#voters) would you like?\n");
+	output("256 recommended as good compromise between speed and randomness.\n");
+	output("You're allowed to go as high as %d (for slowest speed).\n", MaxNumVoters);
+	output("Algorithm keeps redoing elections with 10%% more voters each time until\n");
+	output("either confident know the winner, or reach this voter# bound.\n");
 	for(;;) {
 		scanf("%d", &Voters);
 		if((Voters<=0) || (Voters>MaxNumVoters)) {
-			printf("%d out of range, moron - try again\n", Voters);
+			output("%d out of range, moron - try again\n", Voters);
 		} else {
-			printf("Using TopYeeVoters=%d.\n", Voters);
+			output("Using TopYeeVoters=%d.\n", Voters);
 			break;
 		}
 	}
@@ -8580,13 +8626,13 @@ int RequestElectorateSize(void)
 int RequestStandardDeviation(void)
 {
 	int size;
-	printf("What standard deviation on the 1D gaussian do you want? (Whole picture width is 200.)\n");
+	output("What standard deviation on the 1D gaussian do you want? (Whole picture width is 200.)\n");
 	for(;;) {
 		scanf("%d", &size);
 		if((size<=0) || (size>999)) {
-			printf("%d out of range, moron - try again\n", size);
+			output("%d out of range, moron - try again\n", size);
 		} else {
-			printf("Using GaussStdDevX=%d.\n", size);
+			output("Using GaussStdDevX=%d.\n", size);
 			break;
 		}
 	}
@@ -8600,13 +8646,13 @@ int RequestStandardDeviation(void)
 int RequestHonestyPercentage(void)
 {
 	int percentage;
-	printf("What honesty-percentage do you want? (0 to 100.)\n");
+	output("What honesty-percentage do you want? (0 to 100.)\n");
 	for(;;) {
 		scanf("%d", &percentage);
 		if((percentage<=0) || (percentage>100)) {
-			printf("%d out of range, moron - try again\n", percentage);
+			output("%d out of range, moron - try again\n", percentage);
 		} else {
-			printf("Using honfrac=%d%%.\n", percentage);
+			output("Using honfrac=%d%%.\n", percentage);
 			break;
 		}
 	}
@@ -8621,13 +8667,13 @@ int RequestHonestyPercentage(void)
 int RequestUtilityDistancePow(void)
 {
 	int LpPow;
-	printf("Utilities based on (1) L1 or (2) L2 distance?\n");
+	output("Utilities based on (1) L1 or (2) L2 distance?\n");
 	for(;;) {
 		scanf("%d", &LpPow);
 		if((LpPow<=0) || (LpPow>2)) {
-			printf("%d out of range, moron - try again\n", LpPow);
+			output("%d out of range, moron - try again\n", LpPow);
 		} else {
-			printf("Using LpPow=%d.\n", LpPow);
+			output("Using LpPow=%d.\n", LpPow);
 			break;
 		}
 	}
@@ -8639,7 +8685,7 @@ int RequestUtilityDistancePow(void)
  *						Bayesian regret analysis and to output
  *						the results
  */
-void PerformBayesianRegretAnalysis(void)
+void PerformBayesianRegretAnalysis(uint PRNGSeed)
 {
 	extern void DisplayBayesianRegretMenuIntroduction(void);
 	driver_t driver;
@@ -8663,7 +8709,7 @@ void PerformBayesianRegretAnalysis(void)
 	RequestRegretOutput();
 	parameterType = RequestParameters();
 	driver = RequestUtilityGenerators(parameterType);
-	driver();
+	driver(PRNGSeed);
 }
 
 /*	MakeYeePicture(seed):	asks the USer a series of questions and uses those
@@ -8700,9 +8746,9 @@ void MakeYeePicture(uint seed)
 	GaussStdDev = RequestStandardDeviation();
 	ihonfrac = RequestHonestyPercentage();
 	LpPow = RequestUtilityDistancePow();
-	printf("grinding...\n");
+	output("grinding...\n");
 	MakeYeePict( fname, xx, yy, NumSites, WhichMeth, TopYeeVoters, GaussStdDev, ihonfrac*0.01, LpPow );
-	printf("seed=%d\n", seed);
+	output("seed=%d\n", seed);
 }
 
 /*	resetFavorites(Voters, Candidate):	resets the favorite
@@ -8896,4 +8942,132 @@ voteVector minMaxStyleVoteVectorNormalization(const oneVoter& theVoter, const Ca
 		}
 	}
 	return normalizedVoteVector;
+}
+
+//	Function: disableOutputFile
+//
+//	closes the current 'secondaryOutputFile', if double
+//	output is expected
+void disableOutputFile()
+{
+	if(doubleOutputExpected) {
+		secondaryOutputFile.close();
+	}
+}
+
+//	Function: enableOutputFile
+//
+//	opens the named file for output, if double output is
+//	expected; the named file is specified by means of an
+//	'fprintf()'-like format specification
+//
+//	Parameters:
+//		format - a valid 'fprintf()' format string
+//		...    - optional additional arguments required for
+//		         use with the given format string
+void enableOutputFile(const std::string format, ...)
+{
+	if(doubleOutputExpected) {
+		ensure(not secondaryOutputFile.is_open(), 59);
+		va_list args;
+		va_start(args, format);
+		std::string fileName = formatStandardString(format, args);
+		va_end(args);
+		secondaryOutputFile.open(fileName);
+		ensure(secondaryOutputFile.is_open(), 60);
+	}
+}
+
+//	Function: formatStandardString
+//
+//	Returns:
+//		a standard string formatted in similar fashion
+//		as a call to 'sprintf()'
+//
+//	Parameters:
+//		format - a valid 'fprintf()' format string
+//		...    - optional additional arguments required for
+//		         use with the given format string
+std::string formatStandardString(const std::string format, ...)
+{
+	long long neededReservedSize;
+	long long reservedSize = format.size() * 2;
+	std::unique_ptr<char[]> formattedString;
+	char* reservedPointer;
+	va_list ap;
+	while(1) {
+		reservedPointer = new char[reservedSize];
+		formattedString.reset(reservedPointer);
+		va_start(ap, format);
+		neededReservedSize = vsnprintf(&formattedString[0], reservedSize, format.c_str(), ap);
+		va_end(ap);
+		if (neededReservedSize < 0 || neededReservedSize >= reservedSize) {
+			reservedSize *= 2;
+		} else {
+			break;
+		}
+	}
+	char* stringData = formattedString.get();
+	std::string rv = stringData;
+	return rv;
+}
+
+//	Function: formatStandardString
+//
+//	Returns:
+//		a standard string formatted in similar fashion
+//		as a call to 'vsprintf()'
+//
+//	Parameters:
+//		format    - a valid 'fprintf()' format string
+//		arguments - arguments for use with the given format
+//		            string
+std::string formatStandardString(const std::string format,
+                                 va_list arguments)
+{
+	long long neededReservedSize;
+	long long reservedSize = format.size() * 2;
+	std::unique_ptr<char[]> formattedString;
+	char* reservedPointer;
+	va_list copyOfArguments;
+	while(1) {
+		reservedPointer = new char[reservedSize];
+		formattedString.reset(reservedPointer);
+		va_copy(copyOfArguments, arguments);
+		neededReservedSize = vsnprintf(&formattedString[0], reservedSize, format.c_str(), copyOfArguments);
+		va_end(copyOfArguments);
+		if (neededReservedSize < 0 || neededReservedSize >= reservedSize) {
+			reservedSize *= 2;
+		} else {
+			break;
+		}
+	}
+	std::string rv = formattedString.get();
+	return rv;
+}
+
+//	Function: output
+//
+//	sends formatted text to 'stdout' and, optionally, to a
+//	secondary file
+//
+//	Parameters:
+//		format - a valid 'fprintf()' format string
+//		...    - optional additional arguments required
+//		         for use with the given format string
+void output(const char* format, ...)
+{
+	va_list args;
+	if(doubleOutputExpected) {
+		doubleOutputExpected = false;
+		ensure(secondaryOutputFile.is_open(), 58);
+		doubleOutputExpected = true;
+		va_start(args, format);
+		std::string formattedString = formatStandardString(format, args);
+		secondaryOutputFile << formattedString;
+		va_end(args);
+	}
+	va_start(args, format);
+	vprintf(format, args);
+	va_end(args);
 }
