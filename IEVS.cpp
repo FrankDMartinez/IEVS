@@ -401,9 +401,12 @@ uint FindArtinPrime(uint x)
 	exit(EXIT_FAILURE);
 }
 
-/*	PrintNSpaces(N):	prints 'N' space characters to stdout
- *	N:	the number of space characters to print
- */
+//	Function: PrintNSpaces
+//
+//	prints a number of space characters to output
+//
+//	Parameters:
+//		N - the number of space characters to print
 void PrintNSpaces(int N)
 {
 	int printed;
@@ -466,6 +469,10 @@ primitive root mod that P. A still more enormous prime is
 trivial) but doing arithmetic mod this P is (although still fairly
 easy) less pleasant because bit-shifting is required.
 *************************************************************/
+//	Function: BigLinCong32
+//
+//	Returns:
+//		a psuedo-randomly generated unsigned integer
 uint32_t BigLinCong32()
 {
 	uint32_t y[120];
@@ -667,13 +674,24 @@ oops
 2847725135 1364008005 3563722108 2020382641 1091616930
 *************************/
 
-real Rand01(){ /* returns random uniform in [0,1] */
+//	Function: Rand01
+//
+//	Returns:
+//		a psuedo-randomly generated integer with uniform
+//		probability in the range of [0,1]
+real Rand01()
+{
 	return ((BigLinCong32()+0.5)/(1.0 + MAXUINT) + BigLinCong32())/(1.0 + MAXUINT);
 }
 
-/*	InitRand(seed):	initializes the psuedo-random number generator
- *	seed:	the seed value for the generator
- */
+//	Function: InitRand
+//
+//	initializes the psuedo-random number generator
+//
+//	Parameter:
+//		seed - the seed value for the generator; if this
+//		value is 0, the time of day and PID are used to
+//		generate the seed
 void InitRand(uint seed)
 { /* initializes the randgen */
 	int i;
@@ -723,9 +741,9 @@ void InitRand(uint seed)
 	disableOutputFile();
 }
 
-/*	TestRand01():	performs 100000 calls to 'randgen()' to test if 'randgen[0,1]'
- *			is behaving as expected
- */
+//	Function: TestRand01
+//
+//	tests if 'randgen[0,1]' behaves as expected
 void TestRand01()
 {
 	int i,y, ct[10];
@@ -761,8 +779,10 @@ void TestRand01()
 	output("\n");
 }
 
-/*	RandBool():	returns a random bool value
- */
+//	Function: RandBool
+//
+//	Returns:
+//		a random bool value
 bool RandBool()
 { /* returns random boolean */
 	if( Rand01() > 0.5 ) {
@@ -909,6 +929,10 @@ void GenRandWackyArr(int N, real Arr[])
 	}
 }
 
+//	Function: TestsOfRand
+//
+//	performs various tests of the psuedo-random number
+//	generator to verify it is working as expected
 void TestsOfRand(){
 	TestRand01(); TestNormalRand(); TestRandExpl();
 	TestRadialNormalRand();
@@ -4396,12 +4420,7 @@ would disqualify all remaining candidates (i.e. would result in the empty set).
 Continue until only one candidate
 is not disqualified; he is the winner.
 *****************************************/
-/*	WoodallDAC(E):	returns an index corresponding to the Winner according to
- *			Woodall's "descending acquiescing coalitions" method or -1 if an
- *			error occurs
- *	E:	the election data used to determin the Winner
- *
- *	According to "Monotonicity and Single-Seat Election Rules" by Douglas R. Woodall, the
+/*	According to "Monotonicity and Single-Seat Election Rules" by Douglas R. Woodall, the
  *	Descending Acquiescing Coalitions (DAC) approach works like so:
  *		1. Voters rank each Candidate in decreasing order of preference.
  *		2. The number of times each possible combination of rank appears amongst all
@@ -4513,6 +4532,15 @@ is not disqualified; he is the winner.
  *	Candidates, 'a', 'b', and 'c', only 'a' appears in the subset, resulting in the
  *	elimination of 'b' and 'c' and electing 'a'.
  */
+//	Function: WoodallDAC
+//
+//	Returns:
+//		an index corresponding to the Winner according
+//		to Woodall's "descending acquiescing coalitions"
+//		method or -1 if an error occurs
+//	Parameters:
+//		E - the election data used to determine the
+//		    Winner
 EMETH WoodallDAC(const edata& E  /*Woodall: Monotonocity of single-seat preferential election rules, Discrete Applied Maths 77 (1997) 81-98.*/)
 {
 	uint WoodHashCount[3*MaxNumCands*MaxNumVoters]={0};
@@ -4593,11 +4621,15 @@ EMETH WoodallDAC(const edata& E  /*Woodall: Monotonocity of single-seat preferen
 
 /******** uber-routines which package many voting methods into one: **********/
 
-/*	PrintMethName(WhichMeth, Padding):	prints an electoral method name and
- *						potentially some padding
- *	WhichMeth:	an integer indicating the electoral method
- *	Padding:	whether to output some padding
- */
+//	Function: PrintMethName
+//
+//	prints an electoral method name and potentially some
+//	padding
+//
+//	Parameters:
+//		WhichMeth - an integer indicating the electoral
+//		            method
+//		Padding   - whether to output some padding
 void PrintMethName( int WhichMeth, bool Padding )
 {
 	const char *name;
@@ -4884,6 +4916,9 @@ void PrintMethName( int WhichMeth, bool Padding )
 	printName(name, Padding, spaces);
 }
 
+//	Function: PrintAvailableVMethods
+//
+//	outputs a list of all available voting methods
 void PrintAvailableVMethods(){
 	int i;
 	output("\nAvailable Voting methods:\n");
@@ -4896,11 +4931,17 @@ voteVector traditionalVoteVectorNormalization(const oneVoter&, const CandidateSl
 voteVector linearVoteVectorNormalization(const oneVoter&, const CandidateSlate&, const uint64_t&);
 voteVector minMaxStyleVoteVectorNormalization(const oneVoter&, const CandidateSlate&, const uint64_t&);
 
-/*	GimmeWinner(E, WhichMeth):	returns the Winner of the election as determined
- *					by a specific method
- *	E:		the election data used to determine the Winner
- *	WhichMeth:	the method to use to determine the Winner
- */
+//	Function: GimmeWinner
+//
+//	Returns:
+//		an index into the slate of all Candidates
+//		indicating the Winner of the election as
+//		determined by a specific method
+//	Parameters:
+//		E         - the election data to use in
+//		            determining the Winner
+//		WhichMeth - the voting method to use in
+//		            determining the Winner
 int GimmeWinner( edata& E, int WhichMeth )
 {
 	int w;
@@ -5688,11 +5729,15 @@ void UtilDispatcher( edata& E, int WhichMeth ){   /*WhichMeth = -1 ==> real worl
 	} /*end switch*/
 }
 
-/*	PrintUtilName(WhichMeth, Padding):	prints a utility method name and
- *						potentially some padding
- *	WhichMeth:	an integer indicating the electoral method
- *	Padding:	whether to output some padding
- */
+//	Function: PrintUtilName
+//
+//	prints a utility method name and potentially some
+//	padding
+//
+//	Parameters:
+//		WhichMeth - an integer indicating the utility
+//		            method
+//		Padding   - whether to output some padding
 void PrintUtilName( int WhichMeth, bool Padding )
 {
 	const char *name;
@@ -5773,6 +5818,10 @@ void PrintUtilName( int WhichMeth, bool Padding )
 }
 
 /************ useful IO stuff... ***********/
+//	Function: PrintConsts
+//
+//	outputs various constants used in the running of this
+//	program
 void PrintConsts()
 {
 	enableOutputFile(__func__);
@@ -5799,6 +5848,21 @@ void PrintConsts()
 }
 
 /************ Bayesian Regret ***********/
+//	Function: ComputeBRs
+//
+//	calculates Bayesian regrets of various voting methods
+//	based on various factors
+//
+//	Parameters:
+//		B          - the raw data used for determining
+//		             Bayesian regrets
+//		VotMethods - a collection of indicators of
+//		             whether or not to analyze a
+//		             particular voting method
+//		UtilMeth   - an integer indicating the
+//		             particular utility generation
+//		             method to use in determining
+//		             Bayesian regrets
 void ComputeBRs( brdata& B, const bool VotMethods[], int UtilMeth )
 {
 	const uint& numberOfElections = B.NumElections;
@@ -5819,6 +5883,10 @@ void ComputeBRs( brdata& B, const bool VotMethods[], int UtilMeth )
 	ScaleRegrets(B.votingMethods, 1.0/((B.NumElections - 1.0)*B.NumElections)); /*StdDev/sqrt(#) = StdErr.*/
 }
 
+//	Function: TestEDataStructs
+//
+//	performs various tests on election data structures to
+//	verify components perform as expected
 void TestEDataStructs( const brdata& B )
 {
 	const uint& numberOfElections = B.NumElections;
@@ -6966,9 +7034,14 @@ template< class T1 > T1 FloydRivestSelect(uint L, uint R, uint K, T1 A[])
 	return( A[K] );
 }
 
-/*	runSelfTests():		perfomrs a test of the various
- *				PRNGs and edata structures
- */
+//	Function: runSelfTests
+//
+//	performs a test of the various psuedo-random number
+//	generator functions and election data structures
+//
+//	Parameter:
+//		PRNGSeed - the seed used to initialize the
+//		           psuedo-random number generator
 void runSelfTests(uint PRNGSeed)
 {
 	brdata B;
@@ -6985,11 +7058,14 @@ void runSelfTests(uint PRNGSeed)
 	disableOutputFile();
 }
 
-/*	runSingleTest(aSeed):	simulates User interation of a single
- *				scenario to help ensure output remains
- *				the same
- *	aSeed:			the seed value for randomization
- */
+//	Function: runSingleTest
+//
+//	simulates User interaction of a single scenario to help
+//	ensure output remains as expected
+//
+//	Parameter:
+//		aSeed - the seed value used for the
+//		        psuedo-random number generator
 void runSingleTest(uint aSeed)
 {
 	extern void runSingleYeeTest(uint aSeed);
@@ -7013,10 +7089,10 @@ void runSingleTest(uint aSeed)
 	RWBRDriver(aSeed);
 }
 
-/*	runTests():	simulates User interaction of multiple
- *			scenarios to help ensure output remains the
- *			same
- */
+//	Function: runTests
+//
+//	simulates User interation of multiple scenarios to help
+//	ensure output remains the same
 void runTests()
 {
 	PrintConsts();
@@ -7024,12 +7100,14 @@ void runTests()
 	runSingleTest(2);
 }
 
-/*	ensure(good, number):	assertion function making sure 'good' is
- *				true before continuing and issuing a
- *				diagnostic if not
- *	good:			the condition to test
- *	number:			the error number to report
- */
+//	Function: ensure
+//
+//	assertion function making sure 'good' is true before
+//	continuing and issuing a diagnostic if not
+//
+//	Parameters:
+//		good   - the condition to test
+//		number - the error number to report
 void ensure(bool good, int number)
 {
 	if(good) { /* do nothing */ }
@@ -7039,13 +7117,15 @@ void ensure(bool good, int number)
 	}
 }
 
-/*	EDataPrep(E, B):	prepares 'E' for testing with data
- *				from 'B'
- *	E:			the edata object which will be
- *				tested
- *	B:			the information for initializing
- *				'E'
- */
+//	Function: EDataPrep
+//
+//	prepares election data for testing with certain Bayesian
+//	regret data
+//
+//	Parameters:
+//		E - the election data which will be tested
+//		B - the information for initializing the
+//		    election data
 void EDataPrep(edata& E, const brdata& B)
 {
 	const uint& numberOfElections = B.NumElections;
@@ -7234,13 +7314,16 @@ void PermShellSortDown(uint64_t N, int Perm[], const oneCandidateToTheVoter (&Ca
 	assert(SortedKey<T>(N,Perm,Candidates)<=0);
 }
 
-/*	printName(name, padding, spaces):	prints the given name of a utility
- *						generator or electoral method and
- *						potentially some padding blanks
- *	name:		the name to print
- *	padding:	whether to print padding blanks
- *	spaces:		number of padding blanks to print if 'padding' is 'true'
- */
+//	Function: printName
+//
+//	prints the given name of a utility generator or
+//	electoral method and potentially some padding blanks
+//
+//	Parameters:
+//		name    - the name to print
+//		padding - whether to print padding blanks
+//		spaces  - number of padding blanks to print when
+//		          they are printed
 void printName(const char *name, bool padding, int spaces)
 {
 	output("%s", name);
