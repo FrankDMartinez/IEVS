@@ -7332,19 +7332,21 @@ void printName(const char *name, bool padding, int spaces)
 	}
 }
 
-/*	RandomTest(s, mn, mx, v, ct, func1, func2):	performs a
- *			loop of 100000 times to test if the randgen
- *			calls represented by 'func1' and 'func2'
- *			perform as expected.
- *	s:		the sum of all randomly created values during
- *			the loop
- *	mn:		the minimum value created during the loop
- *	mx:		the maximum value created during the loop
- *	v:		the sum of variances created during the loop
- *	ct:		the counts of value created in blocks of 0.1
- *	func1:		the first function used to create a random value
- *	func2:		the second function used to create a random value
- */
+//	Function: RandomTest
+//
+//	performs 100000 tests to verify the given psuedo-random
+//	number generation functions perform as expected
+//
+//	Parameters:
+//		s     - a receptacle for the sum of all randomly
+//			created values during this call
+//		mn    - the minimum value created during this
+//		        call
+//		mx    - the maximum value created during this call
+//		v     - the sum of variances created during this call
+//		ct    - the counts of value created in blocks of 0.1
+//		func1 - the first function used to create a random value
+//		func2 - the second function used to create a random value
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void))
 {
 	int a;
@@ -7373,12 +7375,14 @@ void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*fun
 	}
 }
 
-/*	runSingleYeeTest(aSeed):	simulates User interaction to
- *					help ensure Yee output remains
- *					the same
- *	aSeed:				the seed value for
- *					randomization
- */
+//	Function: runSingleYeeTest
+//
+//	simulates User interaction to verify Yee output occurs
+//	as expected
+//
+//	Parameter:
+//		aSeed - the seed value for the psuedo-random
+//		        number generator
 void runSingleYeeTest(uint aSeed)
 {
 	const int LpPow=1;
@@ -7416,21 +7420,27 @@ void runSingleYeeTest(uint aSeed)
 	disableOutputFile();
 }
 
-/*	RandomTestReport(mean_str, meansq_str, s, mn, mx, v, class T):
- *			outputs the results of a call to 'RandomTest()'
- *	mean_str:	a string showing the expected arithmetic mean
- *	meansq_str:     a string showing the expected mean of the squares
- *	s:		the sum of all randomly created values during
- *			the call to 'RandomTest()'
- *	mn:		the minimum value created during the call to
- *			    'RandomTest()'
- *	mx:		the maximum value created during the call to
- *			    'RandomTest()'
- *	v:		the sum of variances created during the call
- *			    to 'RandomTest()'
- *	ct:		the counts of value created in blocks of 0.1
- *			    during the call to 'RandomTest()'
- */
+//	Function: RandomTestReport
+//
+//	outputs the results of a call to 'RandomTest()'
+//
+//	Parameters:
+//		mean_str   - a string showing the expected
+//		             arithmetic mean
+//		meansq_str - a string showing the expected mean
+//		             of the squares
+//		s          - the sum of all randomly created
+//		             values during the call to
+//		             'RandomTest()'
+//		mn         - the minimum value created during
+//		             the call to 'RandomTest()'
+//		mx         - the maximum value created during
+//		             the call to 'RandomTest()'
+//		v          - the sum of variances created during
+//		             the call to 'RandomTest()'
+//		ct         - the counts of value created in
+//		             blocks of 0.1 during the call to
+//		             'RandomTest()'
 void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10])
 {
 	int i;
@@ -7448,10 +7458,13 @@ void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real
 	output("\n");
 }
 
-/*	runoffForApprovalVoting(E):	returns the approval voting runoff Winner
- *
- *	E:				the election data
- */
+//	Function: runoffForApprovalVoting
+//
+//	Returns:
+//		an index corresponding to the approval voting
+//		runoff Winner
+//	Parameter:
+//		E - the election data
 EMETH runoffForApprovalVoting(const edata& E)
 {
 	int ASecond;
@@ -7729,18 +7742,23 @@ int SortedKey(const int Arr[], const std::array<oneVotingMethod, NumMethods>& me
 	return overallTrend;
 }
 
-/*	Test(name, direction, func1, func2, mean_str, meansq_str):
- *				runs a 'random' number generation
- *				test involving 'func1' and 'func2'
- *				to ensure the functions are
- *				performing as expected
- *	name:		the name of the test
- *	direction:	a 'direction' or behavior
- *	func1:		the first function used to create a random value
- *	func2:		the second function used to create a random value
- *	mean_str:	a string showing the expected arithmetic mean
- *	meansq_str:     a string showing the expected mean of the squares
- */
+//	Function: Test
+//
+//	runs a psuedo-random number generation test involving
+//	two given functions to verify the functions perform as
+//	expected
+//
+//	Parameters:
+//		name       - the name of the test
+//		direction  - a 'direction' or behavior
+//		func1      - the first function used to create a
+//		             random value
+//		func2      - the second function used to create
+//		             a random value
+//		mean_str   - a string showing the expected
+//		             arithmetic mean
+//		meansq_str - a string showing the expected mean
+//		             of the squares
 void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str)
 {
 	int a;
@@ -7757,11 +7775,14 @@ void Test(const char *name, const char *direction, real (*func1)(void), real (*f
 	RandomTestReport(mean_str, meansq_str, s, mn, mx, v, ct);
 }
 
-/*	TwiceMedian(N, A[] ):	returns twice the median of 'A[0..N-1]' or sum of the
- *				bimedians if 'N' is even
- *	N:	the expected number of elements in 'A'
- *	A:	the set of values to examine
- */
+//	Function: TwiceMedian
+//	
+//	Returns:
+//		twice the median of 'A[0..N-1]' or sum of the
+//		bimedians if 'N' is even
+//	Parameters:
+//		N - the expected number of elements in 'A'
+//		A - the set of values to examine
 template< class T1 >
 		T1 TwiceMedian(uint N, T1 A[] )
 {
@@ -7781,10 +7802,12 @@ template< class T1 >
 	return T+M;
 }
 
-/*	PrintSummaryOfNormalizedRegretData(scenarios):	does what it 'says on the tin'
- *
- *	scenarios:		the number of scenarios
- */
+//	Function: PrintSummaryOfNormalizedRegretData
+//
+//	prints summary of normalized regret data
+//
+//	Parameter:
+//		scenarios - the number of election scenarios run
 void PrintSummaryOfNormalizedRegretData(uint scenarios)
 {
 	real BPStrength[NumMethods*NumMethods];
@@ -7901,14 +7924,19 @@ void PrintSummaryOfNormalizedRegretData(uint scenarios)
 	output("==========end of summary============\n");
 }
 
-/*	PrintBROutput(regretObject, scenarios):	produces prints Bayesian regret
- *						information stored in 'regretObject',
- *						incrementing 'scenarios' each time the
- *						function is called
- *	regretObject:	the Bayesian regret data to output
- *	scenarios:	the count of scenarios for which Bayesian regret output has been
- *			created as of the time this function has been called
- */
+//	Function: PrintBROutput
+//	
+//	produces and outputs Bayesian regret information and
+//	keeps accurate the count of the number of election
+//	scenarios tested
+//
+//	Parameters:
+//		regretObject - the Bayesian regret data to output
+//		scenarios    - the count of scenarios for which
+//		               Bayesian regret output has been
+//		               created as of the time this
+//		               function has been called; this
+//		               value is incremented by this call
 void PrintBROutput(const brdata& regretObject, uint &scenarios)
 {
 	int i;
@@ -8001,16 +8029,19 @@ void PrintBROutput(const brdata& regretObject, uint &scenarios)
 	}
 }
 
-/*	PrepareForBayesianRegretOutput(regretObject, iglevel, VotMethods):	prepares 'regretObject'
- *										and 'VotMethods' for the
- *										outputting of Bayesian regret
- *										information, based in
- *										part on 'iglevel'
- *	regretObject:	the Bayesian regret object to be prepared
- *	iglevel:	the ignorance level
- *	VotMethods:	an array to prepare which will show which voting methods to
- *			perform
- */
+//	Function: PrepareForBayesianRegretOutput
+//
+//	prepares data structures for the outputting of Bayesian
+//	regret information, based in part on a certain Voter
+//	ignorance level
+//
+//	Parameters:
+//		regretObject - the Bayesian regret object to be
+//		               prepared
+//		iglevel      - the ignorance level
+//		VotMethods   - an array to prepare which will
+//		               show which voting methods to
+//		               perform
 void PrepareForBayesianRegretOutput(brdata& regretObject, const int &iglevel, bool (&VotMethods)[NumMethods])
 {
 	static const real IgnLevels[] = {0.001, 0.01, 0.1, 1.0, -1.0};
@@ -8022,8 +8053,9 @@ void PrepareForBayesianRegretOutput(brdata& regretObject, const int &iglevel, bo
 	output("\n");
 }
 
-/*	PrintBRPreamble():	prints some 'preambular' text for Bayesian regret output
- */
+//	Function: PrintBRPreamble
+//
+//	prints some 'preambular' text for Bayesian regret output
 void PrintBRPreamble()
 {
 	if(BROutputMode&(ALLMETHS|TOP10METHS)) {
