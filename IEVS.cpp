@@ -8078,20 +8078,20 @@ void PrintBRPreamble()
 	}
 }
 
-/*	PrintTheVotersBayesianRegret(regretObject, populaceState, ScenarioCount):	prints the
- *											Bayesian regret
- *											information for
- *											Voters in either
- *											a 'realWorld'
- *											election of for
- *											a given number
- *											of hypothetical
- *											Voters
- *	regretObject:	the Bayesian regret data to analyze and print
- *	populaceState:	the state of the polucate as a whole, ignorance, number of
- *			Voters, etc.
- *	ScenarioCount:	the number of election scenarios processed
- */
+//	Function: PrintTheVotersBayesianRegret
+//	
+//	prints the Bayesian regret information for Voters in
+//	either a "real world" election or for a given number of
+//	hypothetical Voters
+//
+//	Parameters:
+//		regretObject  - the Bayesian regret data to
+//		                analyze and print
+//		populaceState - the state of the polucate as a
+//		                whole, ignorance, number of
+//		                Voters, etc.
+//		ScenarioCount - the number of election scenarios
+//		                processed
 void PrintTheVotersBayesianRegret(brdata& regretObject, const PopulaceState_t &populaceState, uint &ScenarioCount)
 {
 	bool VotMethods[NumMethods];
@@ -8137,10 +8137,16 @@ void PrintTheVotersBayesianRegret(brdata& regretObject, const PopulaceState_t &p
 	}
 }
 
-/*	InitializeRandomNumberGenerator():	initializes the random number generator
- *						with User input and returns the value
- *						used to seed said generator
- */
+//	Function: InitializeRandomNumberGenerator
+//
+//	requests a seed value for the psuedo-random number
+//	generator from the User and initializes the said
+//	generator with said seed; if the User enters '0' for the
+//	seed, the generator is initialized with information from
+//	the time of day and PID
+//
+//	Returns:
+//		the seed value provided by the User
 uint InitializeRandomNumberGenerator()
 {
 	uint seed;
@@ -8150,8 +8156,9 @@ uint InitializeRandomNumberGenerator()
 	return seed;
 }
 
-/*	RunBasicAssertionTests():	does what it says on the tin
- */
+//	Function: RunBasicAssertionTests
+//
+//	does "what it says on the tin"
 void RunBasicAssertionTests()
 {
 	assert(SingletonSet(8));
@@ -8166,8 +8173,9 @@ void RunBasicAssertionTests()
 	assert(EmptySet(0));
 }
 
-/*	PrintOpeningCredits():	does what it says on the tin
- */
+//	Function: PrintOpeningCredits
+//
+//	does "what it says on the tin"
 void PrintOpeningCredits()
 {
 	const real VERSION = 3.24;
@@ -8179,10 +8187,13 @@ void PrintOpeningCredits()
 
 enum parameters { unsetParameters, defaultParameters, customParameters };
 
-/*	ErectMainMenu(seed):	presents the main menu for the User
- *
- *	seed:	the seed value used for the random number generator
- */
+//	Function: ErectMainMenu
+//
+//	presents the main menu for the User
+//
+//	Parameter:
+//		seed - the seed value used for the psuedo-random
+//		       number generator
 void ErectMainMenu(uint seed)
 {
 	uint choice;
@@ -8213,8 +8224,9 @@ void ErectMainMenu(uint seed)
 	} while(false); /* end switch */
 }
 
-/*	DisplayMainQuestion(void):	asks the User what They want to do
- */
+//	Function: DisplayMainQuestion
+//
+//	asks the User what They want to do
 void DisplayMainQuestion(void)
 {
 	output("What do you want to do?\n1=BayesianRegrets\n2=YeePicture\n");
@@ -8222,19 +8234,20 @@ void DisplayMainQuestion(void)
 	output("4=Tally an election with votes you enter\n");
 }
 
-/*	DisplayBayesianRegretMenuIntroduction(void):	displays the opening text of the
- *							Bayesian regret analysis menu
- */
+//	Function: DisplayBayesianRegretMenuIntroduction
+//
+//	displays the opening text of the Bayesian regret
+//	analysis menu
 void DisplayBayesianRegretMenuIntroduction(void)
 {
 	output("Answer a sequence of questions indicating what output format you want for\n");
 	output("the regret tables:\n");
 }
 
-/*	RequestBayesianRegretSortingMethod(void):	asks the User to choose a
- *							sorting method for the outputted
- *							results
- */
+//	Function: RequestBayesianRegretSortingMethod
+//
+//	asks the User to choose a sorting method for the
+//	outputted results
 void RequestBayesianRegretSortingMethod(void)
 {
 	bool finished;
@@ -8260,8 +8273,9 @@ void RequestBayesianRegretSortingMethod(void)
 	}
 }
 
-/*	RequestOutputFormat():	asks the User to choose an output format
- */
+//	Function: RequestOutputFormat
+//
+//	asks the User to choose an output format
 void RequestOutputFormat()
 {
 	bool finished;
@@ -8291,10 +8305,10 @@ void RequestOutputFormat()
 	}
 }
 
-/*	RequestBayesianRegretNormalizationMethod():	asks the User to select a method
- *							of 'normalizing' Bayesian regret
- *							values
- */
+//	Function: RequestBayesianRegretNormalizationMethod
+//
+//	asks the User to select a method of 'normalizing'
+//	Bayesian regret values
 void RequestBayesianRegretNormalizationMethod(void)
 {
 	bool finished;
@@ -8325,9 +8339,9 @@ void RequestBayesianRegretNormalizationMethod(void)
 	}
 }
 
-/*	RequestErrorBarStatus():	asks the User to specify when to produce error
- *					bars
- */
+//	Function: RequestErrorBarStatus
+//
+//	asks the User to specify when to produce error bars
 void RequestErrorBarStatus()
 {
 	bool finished;
