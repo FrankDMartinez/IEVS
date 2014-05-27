@@ -8366,9 +8366,10 @@ void RequestErrorBarStatus()
 	}
 }
 
-/*	RequestAgreementCountStatus():	asks the User to specify how to print Condorcet
- *					Winner agreement counts
- */
+//	Function: RequestAgreementCountStatus
+//
+//	asks the User to specify how to print Condorcet Winner
+//	agreement counts
 void RequestAgreementCountStatus()
 {
 	bool finished;
@@ -8393,12 +8394,10 @@ void RequestAgreementCountStatus()
 	}
 }
 
-/*	RequestIntermethodWinnerAgreementCountDisplayStatus():	asks the User if
- *								intermethod
- *								Winner-agreement-count
- *								tables should be
- *								produced
- */
+//	Function: RequestIntermethodWinnerAgreementCountDisplayStatus
+//
+//	asks the User if intermethod Winner-agreement-count
+//	tables should be produced
 void RequestIntermethodWinnerAgreementCountDisplayStatus(void)
 {
 	bool finished;
@@ -8583,10 +8582,13 @@ driver_t RequestUtilityGenerators(parameters parameterType)
 	return driver;
 }
 
-/*	RequestVotingMethod(void):	asks the User to select a voting method for
- *					creating a Yee Picture; the procedure returns a
- *					value representing the chosen voting method
- */
+//	Function: RequestVotingMethod
+//
+//	asks the User to select a voting method for creating a
+//	Yee Picture
+//
+//	Returns:
+//		an integer representing the chosen voting method
 int RequestVotingMethod(void)
 {
 	int chosenMethod;
@@ -8599,13 +8601,15 @@ int RequestVotingMethod(void)
 	return chosenMethod;
 }
 
-/*	RequestNameForBMP(name):	asks the User for a name of a file into which to
- *					output the Yee picture; the procedure
- *					automatically adds ".bmp" to the end of the file
- *					name
- *
- *	name:	a reference to a character array which receives the file name
- */
+//	Function: RequestNameForBMP
+//
+//	asks the User for a name of a file into which to output
+//	the Yee picture; the procedure automatically adds ".bmp"
+//	to the end of the file name
+//
+//	Parameters:
+//		name - a reference to a character array which
+//		       receives the file name
 void RequestNameForBMP(char (&name)[100])
 {
 	size_t i;
@@ -8619,12 +8623,15 @@ void RequestNameForBMP(char (&name)[100])
 	strcat(name, ".bmp");
 }
 
-/*	RequestPointSiteCount(void):	asks the User for a number of 'point-sites' for
- *					the Yee picture; the procedure returns the
- *					number entered by the User as long as it is at
- *					least 1 and at most 16; otherwise, the procedure
- *					returns 16.
- */
+//	Function: RequestPointSiteCount
+//
+//	asks the User for a number of 'point-sites' for the Yee
+//	picture
+//
+//	Returns:
+//		the number entered by the User as long as it is
+//		at least 1 and at most 16; otherwise, the
+//		procedure returns 16
 int RequestPointSiteCount(void)
 {
 	int numberOfSites;
