@@ -313,10 +313,14 @@ uint64_t PosInt(int64_t x)
 }
 int MaxInt(int a, int b){ return (((a)>(b)) ? (a):(b)); }
 
-/*	GCD(a, b):	returns the greatest common divisor (or factor) of 'a' and 'b'
- *	a:	one value to examine
- *	b:	the other value to examine
- */
+//	Function: GCD
+//
+//	Returns:
+//		the greatest common divisor (or factor) of two
+//		non-negative integers
+//	Parameters:
+//		a - one integer to examine
+//		b - the other integer to examine
 uint GCD(uint a, uint b)
 { /*Euclid alg*/
 	if(a>b) {
@@ -339,6 +343,11 @@ uint GCD(uint a, uint b)
 
 uint LCMfact[32];
 
+//	Function: BuildLCMfact
+//
+//	calculates the lowest common multiples of the first 22
+//	integers and stores them in elements #1 thru #22 of
+//	'LCMfact[]'; element #0 is also set to 1
 void BuildLCMfact()
 {
 	uint j,x;
@@ -363,9 +372,15 @@ i.e. these are primes which have 2 as a primitive root.
 This routine finds the greatest Artin prime P with P<=x.  (Not intended to be fast.)
   *******************************************/
 uint ARTINPRIME;
-/*	FindArtinPrime(x): returns the largest Artin prime less than or equal to 'x'
- *	x:	the maximum possible value for searching for Artin primes
- */
+
+//	Function: FindArtinPrime
+//
+//	Returns:
+//		the largest Artin prime less than or equal to a
+//		given value
+//	Parameter:
+//		x - the maximum possible value for searching for
+//		Artin primes
 uint FindArtinPrime(uint x)
 {
 	uint j,p,k;
