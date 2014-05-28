@@ -8816,7 +8816,7 @@ int RequestHonestyPercentage(void)
 	output("What honesty-percentage do you want? (0 to 100.)\n");
 	for(;;) {
 		scanf("%d", &percentage);
-		if((percentage<=0) || (percentage>100)) {
+		if((percentage<0) || (percentage>100)) {
 			output("%d out of range, moron - try again\n", percentage);
 		} else {
 			output("Using honfrac=%d%%.\n", percentage);
