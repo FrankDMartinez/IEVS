@@ -8644,15 +8644,19 @@ int RequestPointSiteCount(void)
 	return numberOfSites;
 }
 
-/*	RequestCoordPairs(numberOfSites, xarray, yarray):	asks the User if the
- *								coord-pairs should be
- *								entered manually or
- *								created for the User
- *
- *	numberOfSites:	the number of coord-pairs to enter/create
- *	xarray:		a reference to an array to receive x coordinates
- *	yarray:		a reference to an array to receive y coordinates
- */
+//	Function: RequestCoordPairs
+//
+//	asks the User if the coordinate pairs should be entered
+//	manually or created for the User and gathers such pairs
+//	in accordance with the response
+//
+//	Parameters:
+//		numberOfSites - the number of coordinate pairs
+//		                to enter/create
+//		xarray        - a reference to an array to
+//		                receive x coordinates
+//		yarray        - a reference to an array to
+//		                receive y coordinates
 void RequestCoordPairs(int numberOfSites, int (&xarray)[16], int (&yarray)[16])
 {
 	int i;
@@ -8705,17 +8709,19 @@ void RequestCoordPairs(int numberOfSites, int (&xarray)[16], int (&yarray)[16])
 	}
 }
 
-/*	RequestCoordPairReordering(numberOfSites, xarray, yarray):	asks the User if
- *									the coord-pairs
- *									should be
- *									reordered to try
- *									for maximum
- *									color-contrast
- *
- *	numberOfSites:	the number of coord-pairs to possibly reorder
- *	xarray:		a reference to an array of x coordinates
- *	yarray:		a reference to an array of y coordinates
- */
+//	Function: RequestCoordPairReordering
+//
+//	asks the User if the coordinate pairs should be
+//	reordered to try for maximum color-contrast and, if so,
+//	does so
+//
+//	Parameters:
+//		numberOfSites - the number of coord-pairs to
+//		                possibly reorder
+//		xarray        - a reference to an array of x
+//		                coordinates
+//		yarray        - a reference to an array of y
+//		                coordinates
 void RequestCoordPairReordering(int numberOfSites, int (&xarray)[16], int (&yarray)[16])
 {
 	uint u;
