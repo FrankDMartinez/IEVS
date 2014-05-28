@@ -8752,11 +8752,13 @@ void RequestCoordPairReordering(int numberOfSites, int (&xarray)[16], int (&yarr
 	}
 }
 
-/*	RequestElectorateSize(void):	asks the User for the number of Voters to use
- *					when making the Yee picture; the procedure
- *					returns the number inputted, subject to
- *					limitation
- */
+//	Function: RequestElectorateSize
+//
+//	asks the User for the number of Voters to use when making the Yee picture
+//
+//	Returns:
+//		the number inputted, subject to limitation of at
+//		least 1 and at most 'MaxNumVoters'
 int RequestElectorateSize(void)
 {
 	int Voters;
@@ -8777,9 +8779,14 @@ int RequestElectorateSize(void)
 	return Voters;
 }
 
-/*	RequestStandardDeviation(void):	asks the User for a size for the standard
- *					deviation in the 1D gaussian
- */
+//	Function: RequestStandardDeviation
+//
+//	asks the User for a size for the standard deviation in
+//	the 1D gaussian
+//
+//	Returns:
+//		the nteger inputted, subject to limitation of at
+//		least 1 and at most 999
 int RequestStandardDeviation(void)
 {
 	int size;
@@ -8796,10 +8803,13 @@ int RequestStandardDeviation(void)
 	return size;
 }
 
-/*	RequestHonestyPercentage(void):	asks the User for a Voter honesty percentage;
- *					the procedure returns that percentage, subject
- *					to limitations
- */
+//	Function: RequestHonestyPercentage
+//
+//	asks the User for a Voter honesty percentage
+//
+//	Returns:
+//		the percentage inputted, subject to limitations
+//		of at least 0 and at most 100
 int RequestHonestyPercentage(void)
 {
 	int percentage;
@@ -8816,11 +8826,13 @@ int RequestHonestyPercentage(void)
 	return percentage;
 }
 
-/*	RequestUtilityDistancePow(void):	asks the User to choose utilities to be
- *						based on either the L1 or L2 distance;
- *						the procedure returns the chosen
- *						distance type
- */
+//	Function: RequestUtilityDistancePow
+//
+//	asks the User to choose utilities to be based on either
+//	the L1 or L2 distance
+//
+//	Returns:
+//		an integer indicating the chosen distance type
 int RequestUtilityDistancePow(void)
 {
 	int LpPow;
@@ -8837,11 +8849,11 @@ int RequestUtilityDistancePow(void)
 	return LpPow;
 }
 
-/*	PerformBayesianRegretAnalysis(void):	asks the User a series of questions and
- *						uses those answers to perform
- *						Bayesian regret analysis and to output
- *						the results
- */
+//	Function: PerformBayesianRegretAnalysis
+//
+//	asks the User a series of questions and uses those
+//	answers to perform Bayesian regret analysis and to
+//	output the results
 void PerformBayesianRegretAnalysis(uint PRNGSeed)
 {
 	extern void DisplayBayesianRegretMenuIntroduction(void);
@@ -8869,11 +8881,14 @@ void PerformBayesianRegretAnalysis(uint PRNGSeed)
 	driver(PRNGSeed);
 }
 
-/*	MakeYeePicture(seed):	asks the USer a series of questions and uses those
- *				answers to create a Yee picture and to output the result
- *
- *	seed:	the seed value used for the random number generator
- */
+//	Function: MakeYeePicture
+//
+//	asks the User a series of questions and uses those
+//	answers to create a Yee picture and to output the result
+//
+//	Parameter:
+//		seed - the seed value used for the psuedo-random
+//		       number generator
 void MakeYeePicture(uint seed)
 {
 	char fname[100];
@@ -8908,13 +8923,16 @@ void MakeYeePicture(uint seed)
 	output("seed=%d\n", seed);
 }
 
-/*	resetFavorites(Voters, Candidate):	resets the favorite
- *						Candidate of each Voter
- *						to the given Candidate
- *	Voters:		a set of Voters to have favorites reset
- *	Candidate:	the Candidate to which the favorite is to be
- *			reset
- */
+//	Function: resetFavorites
+//
+//	resets the favorite Candidate of each Voter to the given
+//	Candidate
+//
+//	Parameters:
+//		Voters    - a set of Voters to have favorites
+//		            reset
+//		Candidate - the Candidate to which the favorite
+//		            is to be reset
 void resetFavorites(oneVoter (&Voters)[MaxNumVoters], const int64_t& Candidate) {
 	for( oneVoter& eachVoter : Voters ) {
 		eachVoter.favoriteCandidate = Candidate;
