@@ -411,7 +411,7 @@ void PrintNSpaces(int N)
 {
 	int printed;
 	for(printed=0; printed<N; printed++) {
-		putchar(' ');
+		output(" ");
 	}
 }
 /****** convenient constants: *******/
@@ -5641,7 +5641,7 @@ int LoadEldataFiles()
 				x = c-'0';  /* watch out for c=='-' */
 				/*Now do something with j>=0 which is preference x>0 for voter v>=0*/
 #if VERBOSELOAD
-				putchar(c);
+				output("%c", c);
 #endif
 				if(c!='-') {
 					ElData[itcount+j] = x-1;
