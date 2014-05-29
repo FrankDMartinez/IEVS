@@ -5051,6 +5051,7 @@ typedef struct dum2 {
 	real IgnoranceAmplitude;
 	real Honfrac;
 	std::array<oneVotingMethod, NumMethods> votingMethods;
+	uint honestyLevel;
 } brdata;
 
 void EDataPrep(edata& E, const brdata& B);
@@ -6516,6 +6517,125 @@ struct PopulaceState_t
 
 void PrintTheVotersBayesianRegret(brdata& regretObject, const PopulaceState_t&populaceState, uint &ScenarioCount);
 
+//	Function: PrintBayesianRegretForElectorateSizes
+//
+//	produces and outputs Bayesian Regret data as determined
+//	by electorate sizes
+//
+//	Parameters:
+//		regretObject       - the Bayesian regret data to
+//		                     analyze and print
+//		populaceState      - the state of the polucate as
+//		                     a whole, ignorance, number
+//		                     of Voters, etc.
+//		PRNGSeed           - the seed value used to initialized
+//		                     the psuedo-random number generator
+//		ScenarioCount      - the number of election scenarios
+//		                     before this call
+//		driverFunctionName - the name of the driver function
+//		                     responsible for this call
+void PrintBayesianRegretForElectorateSizes(brdata& regretObject,
+                                           PopulaceState_t& populaceState,
+                                           const uint& PRNGSeed,
+                                           uint& ScenarioCount,
+                                           const char* driverFunctionName)
+{
+	uint primeIndex;
+	static const int primesJustLessThanPowersOf2[] = {2, 3, 7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 8191, 16381};
+	const auto& utilityGeneratorMethod = populaceState.utilityGeneratorMethod;
+	const auto& ignoranceLevel = populaceState.ignoranceLevel;
+	const auto& honestyLevel = regretObject.honestyLevel;
+	for(primeIndex=0; primesJustLessThanPowersOf2[primeIndex]<MaxNumVoters; primeIndex++) {
+		populaceState.numberOfVoters = primesJustLessThanPowersOf2[primeIndex];
+		enableOutputFile("%u.%d.%d.%u.%u.%s",
+				 PRNGSeed,
+				 utilityGeneratorMethod,
+				 ignoranceLevel,
+				 honestyLevel,
+				 primeIndex,
+				 driverFunctionName);
+		PrintTheVotersBayesianRegret(regretObject,
+                                             populaceState,
+                                             ScenarioCount);
+		disableOutputFile();
+	}
+}
+
+//	Function: PrintBayesianRegretForHonestyLevels
+//
+//	produces and outputs Bayesian Regret data as determined
+//	by various honesty levels
+//
+//	Parameters:
+//		populaceState      - the state of the polucate as
+//		                     a whole, ignorance, number
+//		                     of Voters, etc.
+//		PRNGSeed           - the seed value used to initialized
+//		                     the psuedo-random number generator
+//		ScenarioCount      - the number of election scenarios
+//		                     before this call
+//		driverFunctionName - the name of the driver function
+//		                     responsible for this call
+//		maximumLevelCount  - the maximum number of honesty
+//		                     levels for which to produce
+//		                     output, starting with complete
+//		                     honesty
+void PrintBayesianRegretForHonestyLevels(PopulaceState_t& populaceState,
+                                         const uint& PRNGSeed,
+                                         uint& ScenarioCount,
+                                         const char* driverFunctionName,
+                                         const uint& maximumLevelCount)
+{
+	uint whichhonlevel;
+	brdata regretObject;
+	for(whichhonlevel=0; whichhonlevel<maximumLevelCount; whichhonlevel++) {
+		const real& fraction = HonLevels[whichhonlevel];
+		if(fraction*100 < honfracupper + 0.0001 &&
+		   fraction*100 > honfraclower - 0.0001 ) {
+			regretObject.Honfrac = fraction;
+                        regretObject.honestyLevel = whichhonlevel;
+                        PrintBayesianRegretForElectorateSizes(regretObject,
+                                                              populaceState,
+                                                              PRNGSeed,
+                                                              ScenarioCount,
+                                                              driverFunctionName);
+		}
+	}
+}
+
+//	Function: PrintBayesianRegretForEachUtility
+//
+//	produces and outputs Bayesian Regret data as determined
+//	by various utility generation methods
+//
+//	Parameters:
+//		populaceState      - the state of the polucate as
+//		                     a whole, ignorance, number
+//		                     of Voters, etc.
+//		PRNGSeed           - the seed value used to initialized
+//		                     the psuedo-random number generator
+//		ScenarioCount      - the number of election scenarios
+//		                     before this call
+//		driverFunctionName - the name of the driver function
+//		                     responsible for this call
+void PrintBayesianRegretForEachUtility(PopulaceState_t& populaceState,
+                                       const uint& PRNGSeed,
+                                       uint& ScenarioCount,
+                                       const char* driverFunctionName)
+{
+	int UtilMeth;
+	for(UtilMeth=0; UtilMeth<NumUtilGens; UtilMeth++) {
+		if(UtilMeth>=utilnumlower && UtilMeth<=utilnumupper) {
+			populaceState.utilityGeneratorMethod = UtilMeth;
+			PrintBayesianRegretForHonestyLevels(populaceState,
+			                                    PRNGSeed,
+			                                    ScenarioCount,
+			                                    driverFunctionName,
+			                                    5);
+		}
+	}
+}
+
 /*In IEVS 2.59 with NumElections=2999 and MaxNumVoters=3000,
  *this driver runs for 80-200 hours
  *on a 2003-era computer, producing several 100 Mbytes output.
@@ -6527,43 +6647,14 @@ void PrintTheVotersBayesianRegret(brdata& regretObject, const PopulaceState_t&po
 //	produces and outputs Bayesian Regret data
 void BRDriver(uint PRNGSeed)
 {
-	static const int Pow2Primes[] = {2, 3, 7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 8191, 16381};
-	/** Greatest prime <=2^n. **/
-
-	int prind;
-	int whichhonlevel;
-	int UtilMeth;
 	int iglevel;
 	uint ScenarioCount=0;
-	brdata B;
 	PopulaceState_t P;
 
 	P.realWorld = false;
 	for(iglevel=0; iglevel<5; iglevel++) {
 		P.ignoranceLevel = iglevel;
-		for(UtilMeth=0; UtilMeth<NumUtilGens; UtilMeth++) {
-			if(UtilMeth>=utilnumlower && UtilMeth<=utilnumupper) {
-				P.utilityGeneratorMethod = UtilMeth;
-				for(whichhonlevel=0; whichhonlevel<5; whichhonlevel++) {
-					B.Honfrac = HonLevels[whichhonlevel];
-					if(B.Honfrac*100 < honfracupper + 0.0001 &&
-						B.Honfrac*100 > honfraclower - 0.0001 ) {
-							for(prind=0; Pow2Primes[prind]<MaxNumVoters; prind++) {
-								P.numberOfVoters = Pow2Primes[prind];
-								enableOutputFile("%u.%d.%d.%d.%d.%s",
-										 PRNGSeed,
-										 UtilMeth,
-										 iglevel,
-										 whichhonlevel,
-										 prind,
-										 __func__);
-								PrintTheVotersBayesianRegret(B, P, ScenarioCount);
-								disableOutputFile();
-							}
-					} /*end for(whichhonlevel)*/
-				}
-			}
-		}
+		PrintBayesianRegretForEachUtility(P, PRNGSeed, ScenarioCount, __func__);
 	}
 	enableOutputFile("%s.summary.%d.%u", __func__, ScenarioCount, PRNGSeed);
 	PrintSummaryOfNormalizedRegretData(ScenarioCount);
