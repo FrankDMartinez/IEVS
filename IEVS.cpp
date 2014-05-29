@@ -6522,8 +6522,9 @@ void PrintTheVotersBayesianRegret(brdata& regretObject, const PopulaceState_t&po
  *In IEVS 2.59 and above we include a summarizer so that if
  *you ignore the voluminous output, you still get a nice summary of it at
  *the end:*/
-/*	BRDriver():	produces and outputs Bayesian Regret data
- */
+//	Function: BRDriver
+//
+//	produces and outputs Bayesian Regret data
 void BRDriver(uint PRNGSeed)
 {
 	static const int Pow2Primes[] = {2, 3, 7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 8191, 16381};
@@ -6571,9 +6572,10 @@ void BRDriver(uint PRNGSeed)
 
 
 /* Like BRDriver only based on the real world election dataset: */
-/*	RWBRDriver():	produces and outputs Bayesian Regret data based upon the real
- *			world election dataset
- */
+//	Function: RWBRDriver
+//
+//	produces and outputs Bayesian Regret data based upon the
+//	real world election dataset
 void RWBRDriver(uint PRNGSeed)
 {
 	int whichhonlevel;
@@ -9077,20 +9079,19 @@ voteVector linearVoteVectorNormalization(const oneVoter& theVoter, const Candida
 	return normalizedVoteVector;
 }
 
-/*	minMaxStyleVoteVectorNormalization(theVoter, Candidates, count):	normalizes
- *				the vote vector of non-eliminated Candidates
- *				provided by 'theVoter' and returns it;
- *				the normalization process is a 2-parameter
- *				linear transformation renormalization
- *				so the maximum equals 1 and the minimum
- *				equals 0; the procedure returns the
- *				index of the Winner or -1 if an error
- *				occurs
- *	theVoter:	the Voter with the vote vector to
- *			normalize
- *	Candidates:	the slate of Candidates to consider
- *	count:		the number of Candidates
- */
+//	Function: minMaxStyleVoteVectorNormalization
+//
+//	Returns:
+//		a normalized vote vector of non-eliminated
+//		Candidates provided by a given Candidate; the
+//		normalization process is a 2-parameter linear
+//		transformation renormalization so the maximum
+//		equals 1 and the minimum equals 0
+//	Parameters:
+//		theVoter   - the Voter with the vote vector to
+//		             normalize
+//		Candidates - the slate of Candidates to consider
+//		count      - the number of Candidates
 voteVector minMaxStyleVoteVectorNormalization(const oneVoter& theVoter, const CandidateSlate& Candidates, const uint64_t& count)
 {
 	real s = 0.0;
