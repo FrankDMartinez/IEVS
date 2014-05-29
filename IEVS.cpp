@@ -6576,29 +6576,36 @@ void PrintBayesianRegretForElectorateSizes(brdata& regretObject,
 //		                     before this call
 //		driverFunctionName - the name of the driver function
 //		                     responsible for this call
-//		maximumLevelCount  - the maximum number of honesty
-//		                     levels for which to produce
-//		                     output, starting with complete
-//		                     honesty
 void PrintBayesianRegretForHonestyLevels(PopulaceState_t& populaceState,
                                          const uint& PRNGSeed,
                                          uint& ScenarioCount,
-                                         const char* driverFunctionName,
-                                         const uint& maximumLevelCount)
+                                         const char* driverFunctionName)
 {
 	uint whichhonlevel;
 	brdata regretObject;
-	for(whichhonlevel=0; whichhonlevel<maximumLevelCount; whichhonlevel++) {
+	for(whichhonlevel=0; whichhonlevel<5; whichhonlevel++) {
 		const real& fraction = HonLevels[whichhonlevel];
 		if(fraction*100 < honfracupper + 0.0001 &&
 		   fraction*100 > honfraclower - 0.0001 ) {
 			regretObject.Honfrac = fraction;
-                        regretObject.honestyLevel = whichhonlevel;
-                        PrintBayesianRegretForElectorateSizes(regretObject,
-                                                              populaceState,
-                                                              PRNGSeed,
-                                                              ScenarioCount,
-                                                              driverFunctionName);
+			regretObject.honestyLevel = whichhonlevel;
+			if(populaceState.realWorld) {
+				enableOutputFile("%u.%d.%d.%s",
+				                 PRNGSeed,
+				                 populaceState.ignoranceLevel,
+				                 whichhonlevel,
+				                 driverFunctionName);
+				PrintTheVotersBayesianRegret(regretObject,
+                                                             populaceState,
+                                                             ScenarioCount);
+				disableOutputFile();
+			} else {
+				PrintBayesianRegretForElectorateSizes(regretObject,
+				                                      populaceState,
+				                                      PRNGSeed,
+				                                      ScenarioCount,
+				                                      driverFunctionName);
+			}
 		}
 	}
 }
@@ -6630,8 +6637,7 @@ void PrintBayesianRegretForEachUtility(PopulaceState_t& populaceState,
 			PrintBayesianRegretForHonestyLevels(populaceState,
 			                                    PRNGSeed,
 			                                    ScenarioCount,
-			                                    driverFunctionName,
-			                                    5);
+			                                    driverFunctionName);
 		}
 	}
 }
@@ -6669,28 +6675,18 @@ void BRDriver(uint PRNGSeed)
 //	real world election dataset
 void RWBRDriver(uint PRNGSeed)
 {
-	int whichhonlevel;
 	int iglevel;
 	uint ScenarioCount=0;
-	brdata B;
 	PopulaceState_t P;
 
 	P.realWorld = true;
 	for(iglevel=0; iglevel<4; iglevel++) {
 		P.ignoranceLevel = iglevel;
-		for(whichhonlevel=0; whichhonlevel<5; whichhonlevel++) {
-			B.Honfrac = HonLevels[whichhonlevel];
-			if(B.Honfrac*100 < honfracupper + 0.0001 && B.Honfrac*100 > honfraclower - 0.0001 ) {
-				enableOutputFile("%u.%d.%d.%s",
-						 PRNGSeed,
-						 iglevel,
-						 whichhonlevel,
-						 __func__);
-				PrintTheVotersBayesianRegret(B, P, ScenarioCount);
-				disableOutputFile();
-			}
-		} /*end for(whichhonlevel)*/
-	}/*end for(ignlevel)*/
+                PrintBayesianRegretForHonestyLevels(P,
+                                                    PRNGSeed,
+                                                    ScenarioCount,
+                                                    __func__);
+	}
 	enableOutputFile("%s.summary.%d.%u", __func__, ScenarioCount, PRNGSeed);
 	PrintSummaryOfNormalizedRegretData(ScenarioCount);
 	disableOutputFile();
