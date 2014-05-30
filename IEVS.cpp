@@ -6640,6 +6640,11 @@ void PrintBayesianRegretForHonestyLevels(PopulaceState_t& populaceState,
 	}
 }
 
+typedef void (NextBayesianRegretComponentAction)(PopulaceState_t& populaceState,
+                                                 const uint& PRNGSeed,
+                                                 uint& ScenarioCount,
+                                                 const char* driverFunctionName);
+
 //	Function: PrintBayesianRegretForEachUtility
 //
 //	produces and outputs Bayesian Regret data as determined
@@ -6672,6 +6677,59 @@ void PrintBayesianRegretForEachUtility(PopulaceState_t& populaceState,
 	}
 }
 
+//	Function: PrintBayesianRegretInformation
+//
+//	produces and outputs Bayesian Regret data for a series of
+//	elections
+//
+//	Parameters:
+//		PRNGSeed            - the seed value used to initialized
+//		                      the psuedo-random number generator
+//		realWorld           - whether the elections utilize
+//		                      "real world" data, if 'true',
+//		                      or computer generated utilities,
+//		                      if 'false'
+//		ignoranceLevelCount - the number of ignorance levels
+//		                      to consider in the analysis;
+//		                      an ignorance level is a scaling
+//		                      factor for the degree of ignorance
+//		                      added to the Voters; a negative
+//		                      value indicates a variable
+//		                      level of ignorance is to be
+//		                      added depending on the Voter
+//		                      (stratified); a positive value
+//		                      indicates a constant level
+//		                      of ignorance across all Voters;
+//		                      as of this writing, the ignorance
+//		                      levels are 0.001, 0.01, 0.1,
+//		                      1.0, and -1.0
+//		actOnNextComponent  - the action to take in accordance
+//		                      with whatever the next component
+//		                      to consider is
+//		driverFunctionName  - the name of the driver function
+//		                      responsible for this call
+void PrintBayesianRegretInformation(uint PRNGSeed,
+                                    const bool& realWorld,
+                                    const uint& ignoranceLevelCount,
+                                    NextBayesianRegretComponentAction actOnNextComponent,
+                                    const char* driverFunctionName)
+{
+	int iglevel;
+	uint ScenarioCount=0;
+	PopulaceState_t P;
+	P.realWorld = realWorld;
+	for(iglevel=0; iglevel<ignoranceLevelCount; iglevel++) {
+		P.ignoranceLevel = iglevel;
+		actOnNextComponent(P, PRNGSeed, ScenarioCount, driverFunctionName);
+	}
+	enableOutputFile("%s.summary.%d.%u",
+	                 driverFunctionName,
+	                 ScenarioCount,
+	                 PRNGSeed);
+	PrintSummaryOfNormalizedRegretData(ScenarioCount);
+	disableOutputFile();
+}
+
 /*In IEVS 2.59 with NumElections=2999 and MaxNumVoters=3000,
  *this driver runs for 80-200 hours
  *on a 2003-era computer, producing several 100 Mbytes output.
@@ -6681,48 +6739,35 @@ void PrintBayesianRegretForEachUtility(PopulaceState_t& populaceState,
 //	Function: BRDriver
 //
 //	produces and outputs Bayesian Regret data
+//
+//	Parameters:
+//		PRNGSeed - the seed value used to initialized the
+//		           psuedo-random number generator
 void BRDriver(uint PRNGSeed)
 {
-	int iglevel;
-	uint ScenarioCount=0;
-	PopulaceState_t P;
-
-	P.realWorld = false;
-	for(iglevel=0; iglevel<5; iglevel++) {
-		P.ignoranceLevel = iglevel;
-		PrintBayesianRegretForEachUtility(P,
-		                                  PRNGSeed,
-		                                  ScenarioCount,
-		                                  __func__);
-	}
-	enableOutputFile("%s.summary.%d.%u", __func__, ScenarioCount, PRNGSeed);
-	PrintSummaryOfNormalizedRegretData(ScenarioCount);
-	disableOutputFile();
+	PrintBayesianRegretInformation(PRNGSeed,
+	                               false,
+	                               5,
+	                               PrintBayesianRegretForEachUtility,
+	                               __func__);
 }
-
 
 /* Like BRDriver only based on the real world election dataset: */
 //	Function: RWBRDriver
 //
 //	produces and outputs Bayesian Regret data based upon the
 //	real world election dataset
+//
+//	Parameters:
+//		PRNGSeed - the seed value used to initialized the
+//		           psuedo-random number generator
 void RWBRDriver(uint PRNGSeed)
 {
-	int iglevel;
-	uint ScenarioCount=0;
-	PopulaceState_t P;
-
-	P.realWorld = true;
-	for(iglevel=0; iglevel<4; iglevel++) {
-		P.ignoranceLevel = iglevel;
-		PrintBayesianRegretForHonestyLevels(P,
-		                                    PRNGSeed,
-		                                    ScenarioCount,
-		                                    __func__);
-	}
-	enableOutputFile("%s.summary.%d.%u", __func__, ScenarioCount, PRNGSeed);
-	PrintSummaryOfNormalizedRegretData(ScenarioCount);
-	disableOutputFile();
+	PrintBayesianRegretInformation(PRNGSeed,
+	                               true,
+	                               4,
+	                               PrintBayesianRegretForHonestyLevels,
+	                               __func__);
 }
 
 /*************************** MAIN CODE: ***************************/
