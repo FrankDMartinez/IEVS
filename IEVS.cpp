@@ -6691,9 +6691,9 @@ void BRDriver(uint PRNGSeed)
 	for(iglevel=0; iglevel<5; iglevel++) {
 		P.ignoranceLevel = iglevel;
 		PrintBayesianRegretForEachUtility(P,
-                                                  PRNGSeed,
-                                                  ScenarioCount,
-                                                  __func__);
+		                                  PRNGSeed,
+		                                  ScenarioCount,
+		                                  __func__);
 	}
 	enableOutputFile("%s.summary.%d.%u", __func__, ScenarioCount, PRNGSeed);
 	PrintSummaryOfNormalizedRegretData(ScenarioCount);
@@ -6715,10 +6715,10 @@ void RWBRDriver(uint PRNGSeed)
 	P.realWorld = true;
 	for(iglevel=0; iglevel<4; iglevel++) {
 		P.ignoranceLevel = iglevel;
-                PrintBayesianRegretForHonestyLevels(P,
-                                                    PRNGSeed,
-                                                    ScenarioCount,
-                                                    __func__);
+		PrintBayesianRegretForHonestyLevels(P,
+		                                    PRNGSeed,
+		                                    ScenarioCount,
+		                                    __func__);
 	}
 	enableOutputFile("%s.summary.%d.%u", __func__, ScenarioCount, PRNGSeed);
 	PrintSummaryOfNormalizedRegretData(ScenarioCount);
