@@ -6561,6 +6561,48 @@ void PrintBayesianRegretForElectorateSizes(brdata& regretObject,
 	}
 }
 
+//	Function: PrintBayesianRegretForSingleHonestyLevel
+//
+//	produces and outputs Bayesian Regret data as determined
+//	by a single honesty level
+//
+//	Parameters:
+//		regretObject       - the Bayesian regret data to
+//		                     analyze and print
+//		populaceState      - the state of the polucate as
+//		                     a whole, ignorance, number
+//		                     of Voters, etc.
+//		PRNGSeed           - the seed value used to initialized
+//		                     the psuedo-random number generator
+//		ScenarioCount      - the number of election scenarios
+//		                     before this call
+//		driverFunctionName - the name of the driver function
+//		                     responsible for this call
+void PrintBayesianRegretForSingleHonestyLevel(brdata& regretObject,
+                                              PopulaceState_t& populaceState,
+                                              const uint& PRNGSeed,
+                                              uint& ScenarioCount,
+                                              const char* driverFunctionName)
+{
+	if(populaceState.realWorld) {
+		enableOutputFile("%u.%d.%d.%s",
+				 PRNGSeed,
+				 populaceState.ignoranceLevel,
+				 regretObject.honestyLevel,
+				 driverFunctionName);
+		PrintTheVotersBayesianRegret(regretObject,
+					     populaceState,
+					     ScenarioCount);
+		disableOutputFile();
+	} else {
+		PrintBayesianRegretForElectorateSizes(regretObject,
+						      populaceState,
+						      PRNGSeed,
+						      ScenarioCount,
+						      driverFunctionName);
+	}
+}
+
 //	Function: PrintBayesianRegretForHonestyLevels
 //
 //	produces and outputs Bayesian Regret data as determined
@@ -6589,23 +6631,11 @@ void PrintBayesianRegretForHonestyLevels(PopulaceState_t& populaceState,
 		   fraction*100 > honfraclower - 0.0001 ) {
 			regretObject.Honfrac = fraction;
 			regretObject.honestyLevel = whichhonlevel;
-			if(populaceState.realWorld) {
-				enableOutputFile("%u.%d.%d.%s",
-				                 PRNGSeed,
-				                 populaceState.ignoranceLevel,
-				                 whichhonlevel,
-				                 driverFunctionName);
-				PrintTheVotersBayesianRegret(regretObject,
-                                                             populaceState,
-                                                             ScenarioCount);
-				disableOutputFile();
-			} else {
-				PrintBayesianRegretForElectorateSizes(regretObject,
-				                                      populaceState,
-				                                      PRNGSeed,
-				                                      ScenarioCount,
-				                                      driverFunctionName);
-			}
+			PrintBayesianRegretForSingleHonestyLevel(regretObject,
+								 populaceState,
+								 PRNGSeed,
+								 ScenarioCount,
+								 driverFunctionName);
 		}
 	}
 }
