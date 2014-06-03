@@ -8267,18 +8267,16 @@ void PrintTheVotersBayesianRegret(brdata& regretObject, const PopulaceState_t &p
 	const int &iglevel = populaceState.ignoranceLevel;
 	const int &UtilMeth = populaceState.utilityGeneratorMethod;
 	if(realWorld || (numberOfVoters<=votnumupper && numberOfVoters>=votnumlower)) {
-		uint64_t completedLoops;
-		uint64_t maximumLoopCount;
+		auto& currentCandidateCount = regretObject.NumCands;
+		typeof(currentCandidateCount) maximumCandidateCount;
 		if(not realWorld) {
 			regretObject.NumVoters=numberOfVoters;
-			maximumLoopCount = (candnumupper - candnumlower) + 1;
+			currentCandidateCount = candnumlower;
+			maximumCandidateCount = candnumupper;
 		} else {
-			maximumLoopCount = 1;
+			maximumCandidateCount = currentCandidateCount;
 		}
-		for(completedLoops = 0; completedLoops < maximumLoopCount; completedLoops++) {
-			if(not realWorld) {
-				regretObject.NumCands = candnumlower + completedLoops;
-			}
+		for(; currentCandidateCount <= maximumCandidateCount; currentCandidateCount++) {
 			PrepareForBayesianRegretOutput(regretObject, iglevel, VotMethods);
 			if(realWorld) {
 				MakeIdentityPerm(NumMethods, (uint*)MethPerm);
@@ -8300,6 +8298,9 @@ void PrintTheVotersBayesianRegret(brdata& regretObject, const PopulaceState_t &p
 				RealPermShellSortUp(MethPerm, regretObject.votingMethods);
 			}
 			PrintBROutput(regretObject, ScenarioCount);
+			if(realWorld) {
+				break;
+			}
 		} /*end for(prind)*/
 	}
 }
