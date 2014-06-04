@@ -8258,7 +8258,7 @@ void PrintBRPreamble()
 //		populaceState - the state of the polucate as a
 //		                whole, ignorance, number of
 //		                Voters, etc.
-void PrintOneSetOfTheVotersBayesianRegrets(const bool &realWorld,
+void PrintOneSetOfTheVotersBayesianRegret(const bool &realWorld,
                                            brdata& regretObject,
                                            const PopulaceState_t &populaceState,
                                            uint &ScenarioCount)
@@ -8308,7 +8308,7 @@ void PrintTheVotersBayesianRegret(brdata& regretObject, const PopulaceState_t &p
 	const bool &realWorld = populaceState.realWorld;
 	const int &numberOfVoters = populaceState.numberOfVoters;
 	if(realWorld) {
-		PrintOneSetOfTheVotersBayesianRegrets(realWorld,
+		PrintOneSetOfTheVotersBayesianRegret(realWorld,
 		                                      regretObject,
 		                                      populaceState,
 		                                      ScenarioCount);
@@ -8317,7 +8317,7 @@ void PrintTheVotersBayesianRegret(brdata& regretObject, const PopulaceState_t &p
 		regretObject.NumVoters=numberOfVoters;
 		currentCandidateCount = candnumlower;
 		for(; currentCandidateCount <= candnumupper; currentCandidateCount++) {
-			PrintOneSetOfTheVotersBayesianRegrets(realWorld,
+			PrintOneSetOfTheVotersBayesianRegret(realWorld,
 			                                      regretObject,
 			                                      populaceState,
 			                                      ScenarioCount);
