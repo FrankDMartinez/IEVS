@@ -255,7 +255,7 @@ template<class T>
 		void PermShellSortDown(uint64_t N, int Perm[], const oneCandidateToTheVoter (&Candidates)[MaxNumCands]);
 template<class T>
 		void PermShellSortDown(uint64_t N, const CandidateSlate& Candidates, const T oneCandidate::*member);
-void PrintBRPreamble(void);
+void PrintBRPreamble(const uint& ScenarioCount, const bool& realWorld, const int& utilityGeneratorMethod);
 void printName(const char *name, bool padding, int spaces);
 void PrintSummaryOfNormalizedRegretData(uint scenarios);
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void));
@@ -5055,7 +5055,7 @@ typedef struct dum2 {
 } brdata;
 
 void EDataPrep(edata& E, const brdata& B);
-void PrepareForBayesianRegretOutput(brdata& regretObject, const int &iglevel, bool (&VotMethods)[NumMethods]);
+void PrepareForBayesianRegretOutput(brdata& regretObject, const int &iglevel, bool (&VotMethods)[NumMethods], const int& utilityGeneratorMethod);
 void PrintBROutput(const brdata& regretObject, uint &scenarios);
 
 //	Function: updateMethodAgreements
@@ -8203,13 +8203,19 @@ void PrintBROutput(const brdata& regretObject, uint &scenarios)
 //	ignorance level
 //
 //	Parameters:
-//		regretObject - the Bayesian regret object to be
-//		               prepared
-//		iglevel      - the ignorance level
-//		VotMethods   - an array to prepare which will
-//		               show which voting methods to
-//		               perform
-void PrepareForBayesianRegretOutput(brdata& regretObject, const int &iglevel, bool (&VotMethods)[NumMethods])
+//		regretObject           - the Bayesian regret
+//		                         object to be prepared
+//		iglevel                - the ignorance level
+//		VotMethods             - an array to prepare
+//		                         which will show which
+//		                         voting methods to
+//		                         perform
+//		utilityGeneratorMethod - an integer indicating
+//		                         the particular utility
+//		                         generation method to
+//		                         use in determining
+//		                         Bayesian regrets
+void PrepareForBayesianRegretOutput(brdata& regretObject, const int &iglevel, bool (&VotMethods)[NumMethods], const int& utilityGeneratorMethod)
 {
 	static const real IgnLevels[] = {0.001, 0.01, 0.1, 1.0, -1.0};
 	regretObject.NumElections=numelections2try;
@@ -8218,13 +8224,43 @@ void PrepareForBayesianRegretOutput(brdata& regretObject, const int &iglevel, bo
 	regretObject.IgnoranceAmplitude = IgnLevels[iglevel];
 	FillArray(NumMethods, VotMethods, true); /*might want to only do a subset... ??*/
 	output("\n");
+	MakeIdentityPerm(NumMethods, (uint*)MethPerm);
+	ComputeBRs(regretObject, VotMethods, utilityGeneratorMethod);
+	RealPermShellSortUp(MethPerm, regretObject.votingMethods);
 }
 
 //	Function: PrintBRPreamble
 //
 //	prints some 'preambular' text for Bayesian regret output
-void PrintBRPreamble()
+//
+//	Parameters:
+//		ScenarioCount          - the number of election
+//		                         scenarios processed so
+//		                         far
+//		realWorld              - whether or not the
+//		                         election is a "real
+//		                         world" election or a
+//		                         hypothetical one
+//		utilityGeneratorMethod - an integer indicating
+//		                         the utility method
+//		regretObject           - the Bayesian regret
+//		                         data to analyze and print
+void PrintBRPreamble(const uint& ScenarioCount,
+                     const bool& realWorld,
+                     const int& utilityGeneratorMethod,
+                     const brdata& regretObject)
 {
+	output("(Scenario#%d:", ScenarioCount);
+	if(not realWorld) {
+		output(" UtilMeth=");
+		PrintUtilName(utilityGeneratorMethod, false);
+	}
+	output(" Honfrac=%.2f, NumVoters=%d, NumCands=%lld, NumElections=%d, IgnoranceAmplitude=%f)\n",
+	       regretObject.Honfrac,
+	       regretObject.NumVoters,
+	       regretObject.NumCands,
+	       regretObject.NumElections,
+	       regretObject.IgnoranceAmplitude);
 	if(BROutputMode&(ALLMETHS|TOP10METHS)) {
 		const bool htmlMode = !!(BROutputMode&HTMLMODE);
 		if(htmlMode) {
@@ -8258,6 +8294,8 @@ void PrintBRPreamble()
 //		populaceState - the state of the polucate as a
 //		                whole, ignorance, number of
 //		                Voters, etc.
+//		ScenarioCount - the number of election scenarios
+//		                processed so far
 void PrintOneSetOfTheVotersBayesianRegret(const bool &realWorld,
                                            brdata& regretObject,
                                            const PopulaceState_t &populaceState,
@@ -8265,27 +8303,17 @@ void PrintOneSetOfTheVotersBayesianRegret(const bool &realWorld,
 {
 	bool VotMethods[NumMethods];
 	const int &iglevel = populaceState.ignoranceLevel;
-	const int &UtilMeth = populaceState.utilityGeneratorMethod;
-	PrepareForBayesianRegretOutput(regretObject, iglevel, VotMethods);
+	int utilityGeneratorMethod;
 	if(realWorld) {
-		MakeIdentityPerm(NumMethods, (uint*)MethPerm);
-		ComputeBRs(regretObject, VotMethods, -1);
-		RealPermShellSortUp(MethPerm, regretObject.votingMethods);
+		utilityGeneratorMethod = -1;
+	} else {
+		utilityGeneratorMethod = populaceState.utilityGeneratorMethod;
 	}
-	output("(Scenario#%d:", ScenarioCount);
-	if(not realWorld) {
-		output(" UtilMeth=");
-		PrintUtilName(UtilMeth, false);
-	}
-	output(" Honfrac=%.2f, NumVoters=%d, NumCands=%lld, NumElections=%d, IgnoranceAmplitude=%f)\n",
-	       regretObject.Honfrac, regretObject.NumVoters, regretObject.NumCands,
-	       regretObject.NumElections, regretObject.IgnoranceAmplitude);
-	PrintBRPreamble();
-	if(not realWorld) {
-		ComputeBRs(regretObject, VotMethods, UtilMeth);
-		MakeIdentityPerm(NumMethods, (uint*)MethPerm);
-		RealPermShellSortUp(MethPerm, regretObject.votingMethods);
-	}
+	PrepareForBayesianRegretOutput(regretObject,
+	                               iglevel,
+	                               VotMethods,
+	                               utilityGeneratorMethod);
+	PrintBRPreamble(ScenarioCount, realWorld, utilityGeneratorMethod, regretObject);
 	PrintBROutput(regretObject, ScenarioCount);
 }
 
