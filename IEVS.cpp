@@ -8308,20 +8308,20 @@ void PrintTheVotersBayesianRegret(brdata& regretObject, const PopulaceState_t &p
 	const bool &realWorld = populaceState.realWorld;
 	const int &numberOfVoters = populaceState.numberOfVoters;
 	if(realWorld) {
-		PrintOneSetOfTheVotersBayesianRegret(realWorld,
-		                                      regretObject,
-		                                      populaceState,
-		                                      ScenarioCount);
+		PrintOneSetOfTheVotersBayesianRegret(true,
+		                                     regretObject,
+		                                     populaceState,
+		                                     ScenarioCount);
 	} else if(numberOfVoters<=votnumupper && numberOfVoters>=votnumlower) {
 		auto& currentCandidateCount = regretObject.NumCands;
 		regretObject.NumVoters=numberOfVoters;
 		currentCandidateCount = candnumlower;
 		for(; currentCandidateCount <= candnumupper; currentCandidateCount++) {
-			PrintOneSetOfTheVotersBayesianRegret(realWorld,
-			                                      regretObject,
-			                                      populaceState,
-			                                      ScenarioCount);
-		} /*end for(prind)*/
+			PrintOneSetOfTheVotersBayesianRegret(false,
+			                                     regretObject,
+			                                     populaceState,
+			                                     ScenarioCount);
+		}
 	}
 }
 
