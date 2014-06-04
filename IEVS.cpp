@@ -8245,8 +8245,52 @@ void PrintBRPreamble()
 	}
 }
 
+//	Function: PrintOneSetOfTheVotersBayesianRegrets
+//
+//	prints the Bayesian regret information for Voters in a single
+//	election
+//
+//	Parameters:
+//		realWorld     - whether or not the election is a "real
+//		                world" election or a hypothetical one
+//		regretObject  - the Bayesian regret data to
+//		                analyze and print
+//		populaceState - the state of the polucate as a
+//		                whole, ignorance, number of
+//		                Voters, etc.
+void PrintOneSetOfTheVotersBayesianRegrets(const bool &realWorld,
+                                           brdata& regretObject,
+                                           const PopulaceState_t &populaceState,
+                                           uint &ScenarioCount)
+{
+	bool VotMethods[NumMethods];
+	const int &iglevel = populaceState.ignoranceLevel;
+	const int &UtilMeth = populaceState.utilityGeneratorMethod;
+	PrepareForBayesianRegretOutput(regretObject, iglevel, VotMethods);
+	if(realWorld) {
+		MakeIdentityPerm(NumMethods, (uint*)MethPerm);
+		ComputeBRs(regretObject, VotMethods, -1);
+		RealPermShellSortUp(MethPerm, regretObject.votingMethods);
+	}
+	output("(Scenario#%d:", ScenarioCount);
+	if(not realWorld) {
+		output(" UtilMeth=");
+		PrintUtilName(UtilMeth, false);
+	}
+	output(" Honfrac=%.2f, NumVoters=%d, NumCands=%lld, NumElections=%d, IgnoranceAmplitude=%f)\n",
+	       regretObject.Honfrac, regretObject.NumVoters, regretObject.NumCands,
+	       regretObject.NumElections, regretObject.IgnoranceAmplitude);
+	PrintBRPreamble();
+	if(not realWorld) {
+		ComputeBRs(regretObject, VotMethods, UtilMeth);
+		MakeIdentityPerm(NumMethods, (uint*)MethPerm);
+		RealPermShellSortUp(MethPerm, regretObject.votingMethods);
+	}
+	PrintBROutput(regretObject, ScenarioCount);
+}
+
 //	Function: PrintTheVotersBayesianRegret
-//	
+//
 //	prints the Bayesian regret information for Voters in
 //	either a "real world" election or for a given number of
 //	hypothetical Voters
@@ -8261,11 +8305,8 @@ void PrintBRPreamble()
 //		                processed
 void PrintTheVotersBayesianRegret(brdata& regretObject, const PopulaceState_t &populaceState, uint &ScenarioCount)
 {
-	bool VotMethods[NumMethods];
 	const bool &realWorld = populaceState.realWorld;
 	const int &numberOfVoters = populaceState.numberOfVoters;
-	const int &iglevel = populaceState.ignoranceLevel;
-	const int &UtilMeth = populaceState.utilityGeneratorMethod;
 	if(realWorld || (numberOfVoters<=votnumupper && numberOfVoters>=votnumlower)) {
 		auto& currentCandidateCount = regretObject.NumCands;
 		typeof(currentCandidateCount) maximumCandidateCount;
@@ -8277,27 +8318,10 @@ void PrintTheVotersBayesianRegret(brdata& regretObject, const PopulaceState_t &p
 			maximumCandidateCount = currentCandidateCount;
 		}
 		for(; currentCandidateCount <= maximumCandidateCount; currentCandidateCount++) {
-			PrepareForBayesianRegretOutput(regretObject, iglevel, VotMethods);
-			if(realWorld) {
-				MakeIdentityPerm(NumMethods, (uint*)MethPerm);
-				ComputeBRs(regretObject, VotMethods, -1);
-				RealPermShellSortUp(MethPerm, regretObject.votingMethods);
-			}
-			output("(Scenario#%d:", ScenarioCount);
-			if(not realWorld) {
-				output(" UtilMeth=");
-				PrintUtilName(UtilMeth, false);
-			}
-			output(" Honfrac=%.2f, NumVoters=%d, NumCands=%lld, NumElections=%d, IgnoranceAmplitude=%f)\n",
-				regretObject.Honfrac, regretObject.NumVoters, regretObject.NumCands,
-				regretObject.NumElections, regretObject.IgnoranceAmplitude);
-			PrintBRPreamble();
-			if(not realWorld) {
-				ComputeBRs(regretObject, VotMethods, UtilMeth);
-				MakeIdentityPerm(NumMethods, (uint*)MethPerm);
-				RealPermShellSortUp(MethPerm, regretObject.votingMethods);
-			}
-			PrintBROutput(regretObject, ScenarioCount);
+			PrintOneSetOfTheVotersBayesianRegrets(realWorld,
+			                                      regretObject,
+			                                      populaceState,
+			                                      ScenarioCount);
 			if(realWorld) {
 				break;
 			}
