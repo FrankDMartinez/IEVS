@@ -5078,7 +5078,7 @@ void PrintBROutput(const brdata& regretObject, uint &scenarios);
 void updateMethodAgreements(oneVotingMethod& theGivenMethod,
                             const int& m,
                             std::array<oneVotingMethod, NumMethods>& allVotingMethods,
-                            const bool methods[],
+                            const std::array<bool, NumMethods>& methods,
                             const int& w)
 {
 	for(int j=0; j<m; j++) {
@@ -5135,7 +5135,7 @@ void updateCondorcetAgreementOfOneMethod(oneVotingMethod& theGivenMethod,
 //		B       - the Bayesian regret data for this election
 //		Methods - an array indicating which voting methods
 //		          to perform
-int FindWinnersAndRegrets( edata& E,  brdata& B,  const bool Methods[] )
+int FindWinnersAndRegrets( edata& E,  brdata& B,  const std::array<bool, NumMethods>& Methods )
 {
 	std::array<oneVotingMethod, NumMethods>& allVotingMethods = B.votingMethods;
 	const CandidateSlate& allCandidates = E.Candidates;
@@ -5855,16 +5855,16 @@ void PrintConsts()
 //	based on various factors
 //
 //	Parameters:
-//		B          - the raw data used for determining
-//		             Bayesian regrets
-//		VotMethods - a collection of indicators of
-//		             whether or not to analyze a
-//		             particular voting method
-//		UtilMeth   - an integer indicating the
-//		             particular utility generation
-//		             method to use in determining
-//		             Bayesian regrets
-void ComputeBRs( brdata& B, const bool VotMethods[], int UtilMeth )
+//		B             - the raw data used for determining
+//		                Bayesian regrets
+//		VotingMethods - a collection of indicators of
+//		                whether or not to analyze a
+//		                particular voting method
+//		UtilMeth      - an integer indicating the
+//		                particular utility generation
+//		                method to use in determining
+//		                Bayesian regrets
+void ComputeBRs( brdata& B, const std::array<bool, NumMethods>& VotingMethods, int UtilMeth )
 {
 	const uint& numberOfElections = B.NumElections;
 	uint elnum;
@@ -5877,7 +5877,7 @@ void ComputeBRs( brdata& B, const bool VotMethods[], int UtilMeth )
 		UtilDispatcher(E, UtilMeth);
 		AddIgnorance(E, B.IgnoranceAmplitude);
 		HonestyStrat(E, B.Honfrac);
-		FindWinnersAndRegrets(E, B, VotMethods);
+		FindWinnersAndRegrets(E, B, VotingMethods);
 	}
 	B.NumVoters =  E.NumVoters;
 	B.NumCands = E.NumCands;
@@ -8206,7 +8206,7 @@ void PrintBROutput(const brdata& regretObject, uint &scenarios)
 //		regretObject           - the Bayesian regret
 //		                         object to be prepared
 //		iglevel                - the ignorance level
-//		VotMethods             - an array to prepare
+//		VotingMethod           - an array to prepare
 //		                         which will show which
 //		                         voting methods to
 //		                         perform
@@ -8215,17 +8215,17 @@ void PrintBROutput(const brdata& regretObject, uint &scenarios)
 //		                         generation method to
 //		                         use in determining
 //		                         Bayesian regrets
-void PrepareForBayesianRegretOutput(brdata& regretObject, const int &iglevel, bool (&VotMethods)[NumMethods], const int& utilityGeneratorMethod)
+void PrepareForBayesianRegretOutput(brdata& regretObject, const int &iglevel, std::array<bool, NumMethods>& VotingMethods, const int& utilityGeneratorMethod)
 {
 	static const real IgnLevels[] = {0.001, 0.01, 0.1, 1.0, -1.0};
 	regretObject.NumElections=numelections2try;
 	/*1299999=good enough to get all BRs accurate to at least 3 significant digits*/
 	/*2999=good enough for usually 2 sig figs, and is 400X faster*/
 	regretObject.IgnoranceAmplitude = IgnLevels[iglevel];
-	FillArray(NumMethods, VotMethods, true); /*might want to only do a subset... ??*/
+	VotingMethods.fill(true);
 	output("\n");
 	MakeIdentityPerm(NumMethods, (uint*)MethPerm);
-	ComputeBRs(regretObject, VotMethods, utilityGeneratorMethod);
+	ComputeBRs(regretObject, VotingMethods, utilityGeneratorMethod);
 	RealPermShellSortUp(MethPerm, regretObject.votingMethods);
 }
 
@@ -8301,7 +8301,7 @@ void PrintOneSetOfTheVotersBayesianRegret(const bool &realWorld,
                                            const PopulaceState_t &populaceState,
                                            uint &ScenarioCount)
 {
-	bool VotMethods[NumMethods];
+	std::array<bool, NumMethods> VotingMethods;
 	const int &iglevel = populaceState.ignoranceLevel;
 	int utilityGeneratorMethod;
 	if(realWorld) {
@@ -8311,7 +8311,7 @@ void PrintOneSetOfTheVotersBayesianRegret(const bool &realWorld,
 	}
 	PrepareForBayesianRegretOutput(regretObject,
 	                               iglevel,
-	                               VotMethods,
+	                               VotingMethods,
 	                               utilityGeneratorMethod);
 	PrintBRPreamble(ScenarioCount, realWorld, utilityGeneratorMethod, regretObject);
 	PrintBROutput(regretObject, ScenarioCount);
