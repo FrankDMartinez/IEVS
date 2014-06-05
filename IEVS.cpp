@@ -5055,7 +5055,7 @@ typedef struct dum2 {
 } brdata;
 
 void EDataPrep(edata& E, const brdata& B);
-void PrepareForBayesianRegretOutput(brdata& regretObject, const int &iglevel, bool (&VotMethods)[NumMethods], const int& utilityGeneratorMethod);
+void PrepareForBayesianRegretOutput(brdata& regretObject, const int &iglevel, const int& utilityGeneratorMethod);
 void PrintBROutput(const brdata& regretObject, uint &scenarios);
 
 //	Function: updateMethodAgreements
@@ -5071,26 +5071,21 @@ void PrintBROutput(const brdata& regretObject, uint &scenarios);
 //		                   into the array of all voting
 //		                   methods
 //		allVotingMethods - the array of all voting methods
-//		methods          - an array indicating which voting
-//		                   methods to compare
 //		w                - a value indicating the winning
 //		                   Candidate of 'theGivenMethod'
 void updateMethodAgreements(oneVotingMethod& theGivenMethod,
                             const int& m,
                             std::array<oneVotingMethod, NumMethods>& allVotingMethods,
-                            const std::array<bool, NumMethods>& methods,
                             const int& w)
 {
 	for(int j=0; j<m; j++) {
-		if(methods[j] || j<NumCoreMethods) {
-			oneVotingMethod& methodJ = allVotingMethods[j];
-			if( methodJ.Winner == w ) {
-				uint& MAgreesWithJ = theGivenMethod.agreementCountWithMethod[j];
-				uint& JAgreesWithM = methodJ.agreementCountWithMethod[m];
-				MAgreesWithJ++;
-				JAgreesWithM++;
-				ensure( MAgreesWithJ == JAgreesWithM, 31 );
-			}
+		oneVotingMethod& methodJ = allVotingMethods[j];
+		if( methodJ.Winner == w ) {
+			uint& MAgreesWithJ = theGivenMethod.agreementCountWithMethod[j];
+			uint& JAgreesWithM = methodJ.agreementCountWithMethod[m];
+			MAgreesWithJ++;
+			JAgreesWithM++;
+			ensure( MAgreesWithJ == JAgreesWithM, 31 );
 		}
 	}
 }
@@ -5104,22 +5099,17 @@ void updateMethodAgreements(oneVotingMethod& theGivenMethod,
 //
 //	Parameters:
 //		theGivenMethod - the voting method to be analyzed
-//		tested         - whether that method is actively
-//		                 tested for the current election
 //		core           - whether the given method is a "core
 //		                 method"
 void updateCondorcetAgreementOfOneMethod(oneVotingMethod& theGivenMethod,
-                                         const bool& tested,
                                          const bool& core)
 {
-	if(tested || core) {
-		const int& theWinner = theGivenMethod.Winner;
-		if(theWinner==CondorcetWinner) {
-			theGivenMethod.CondorcetAgreementCount++;
-		}
-		if(theWinner==TrueCW) {
-			theGivenMethod.trueCondorcetAgreementCount++;
-		}
+	const int& theWinner = theGivenMethod.Winner;
+	if(theWinner==CondorcetWinner) {
+		theGivenMethod.CondorcetAgreementCount++;
+	}
+	if(theWinner==TrueCW) {
+		theGivenMethod.trueCondorcetAgreementCount++;
 	}
 }
 
@@ -5133,9 +5123,7 @@ void updateCondorcetAgreementOfOneMethod(oneVotingMethod& theGivenMethod,
 //		E       - the election data to use for determining
 //		          the Winner
 //		B       - the Bayesian regret data for this election
-//		Methods - an array indicating which voting methods
-//		          to perform
-int FindWinnersAndRegrets( edata& E,  brdata& B,  const std::array<bool, NumMethods>& Methods )
+int FindWinnersAndRegrets( edata& E,  brdata& B )
 {
 	std::array<oneVotingMethod, NumMethods>& allVotingMethods = B.votingMethods;
 	const CandidateSlate& allCandidates = E.Candidates;
@@ -5145,24 +5133,22 @@ int FindWinnersAndRegrets( edata& E,  brdata& B,  const std::array<bool, NumMeth
 	BuildDefeatsMatrix(E);
 	InitCoreElState();
 	for(m=0; m<NumMethods; m++) {
-		if(Methods[m] || m<NumCoreMethods) { /* always run Core Methods */
-			oneVotingMethod& methodM = allVotingMethods[m];
-			w = GimmeWinner(E, m);
-			methodM.Winner = w;
-			r = allCandidates[BestWinner].utilitySum - allCandidates[w].utilitySum;
-			ensure( BestWinner == sociallyBestWinner, 32 );
-			ensure( r>=0.0, 52 );
-			assert(BestWinner == sociallyBestWinner); /*can only fail if somebody overwrites array...*/
-			assert(r>=0.0); /*can only fail if somebody overwrites array...*/
-			WelfordUpdateMeanSD(r, methodM);
-			updateMethodAgreements(methodM, m, allVotingMethods, Methods, w);
-		}
+		oneVotingMethod& methodM = allVotingMethods[m];
+		w = GimmeWinner(E, m);
+		methodM.Winner = w;
+		r = allCandidates[BestWinner].utilitySum - allCandidates[w].utilitySum;
+		ensure( BestWinner == sociallyBestWinner, 32 );
+		ensure( r>=0.0, 52 );
+		assert(BestWinner == sociallyBestWinner); /*can only fail if somebody overwrites array...*/
+		assert(r>=0.0); /*can only fail if somebody overwrites array...*/
+		WelfordUpdateMeanSD(r, methodM);
+		updateMethodAgreements(methodM, m, allVotingMethods, w);
 	}
 	if(CondorcetWinner >= 0) {
 		for(m=0; m<NumMethods; m++) {
 			oneVotingMethod& methodM = allVotingMethods[m];
 			const bool& coreMethod = m<NumCoreMethods;
-			updateCondorcetAgreementOfOneMethod(methodM, Methods[m], coreMethod);
+			updateCondorcetAgreementOfOneMethod(methodM, coreMethod);
 		}
 	}
 	return(CondorcetWinner);
@@ -5864,7 +5850,7 @@ void PrintConsts()
 //		                particular utility generation
 //		                method to use in determining
 //		                Bayesian regrets
-void ComputeBRs( brdata& B, const std::array<bool, NumMethods>& VotingMethods, int UtilMeth )
+void ComputeBRs( brdata& B, int UtilMeth )
 {
 	const uint& numberOfElections = B.NumElections;
 	uint elnum;
@@ -5877,7 +5863,7 @@ void ComputeBRs( brdata& B, const std::array<bool, NumMethods>& VotingMethods, i
 		UtilDispatcher(E, UtilMeth);
 		AddIgnorance(E, B.IgnoranceAmplitude);
 		HonestyStrat(E, B.Honfrac);
-		FindWinnersAndRegrets(E, B, VotingMethods);
+		FindWinnersAndRegrets(E, B);
 	}
 	B.NumVoters =  E.NumVoters;
 	B.NumCands = E.NumCands;
@@ -8206,26 +8192,23 @@ void PrintBROutput(const brdata& regretObject, uint &scenarios)
 //		regretObject           - the Bayesian regret
 //		                         object to be prepared
 //		iglevel                - the ignorance level
-//		VotingMethod           - an array to prepare
-//		                         which will show which
-//		                         voting methods to
-//		                         perform
 //		utilityGeneratorMethod - an integer indicating
 //		                         the particular utility
 //		                         generation method to
 //		                         use in determining
 //		                         Bayesian regrets
-void PrepareForBayesianRegretOutput(brdata& regretObject, const int &iglevel, std::array<bool, NumMethods>& VotingMethods, const int& utilityGeneratorMethod)
+void PrepareForBayesianRegretOutput(brdata& regretObject,
+                                    const int &iglevel,
+                                    const int& utilityGeneratorMethod)
 {
 	static const real IgnLevels[] = {0.001, 0.01, 0.1, 1.0, -1.0};
 	regretObject.NumElections=numelections2try;
 	/*1299999=good enough to get all BRs accurate to at least 3 significant digits*/
 	/*2999=good enough for usually 2 sig figs, and is 400X faster*/
 	regretObject.IgnoranceAmplitude = IgnLevels[iglevel];
-	VotingMethods.fill(true);
 	output("\n");
 	MakeIdentityPerm(NumMethods, (uint*)MethPerm);
-	ComputeBRs(regretObject, VotingMethods, utilityGeneratorMethod);
+	ComputeBRs(regretObject, utilityGeneratorMethod);
 	RealPermShellSortUp(MethPerm, regretObject.votingMethods);
 }
 
@@ -8301,7 +8284,6 @@ void PrintOneSetOfTheVotersBayesianRegret(const bool &realWorld,
                                            const PopulaceState_t &populaceState,
                                            uint &ScenarioCount)
 {
-	std::array<bool, NumMethods> VotingMethods;
 	const int &iglevel = populaceState.ignoranceLevel;
 	int utilityGeneratorMethod;
 	if(realWorld) {
@@ -8311,7 +8293,6 @@ void PrintOneSetOfTheVotersBayesianRegret(const bool &realWorld,
 	}
 	PrepareForBayesianRegretOutput(regretObject,
 	                               iglevel,
-	                               VotingMethods,
 	                               utilityGeneratorMethod);
 	PrintBRPreamble(ScenarioCount, realWorld, utilityGeneratorMethod, regretObject);
 	PrintBROutput(regretObject, ScenarioCount);
