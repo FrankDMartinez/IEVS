@@ -267,7 +267,7 @@ template<class T>
 		int SortedKey(uint64_t N, const int Arr[], const T Key[]);
 template<class T>
 		int SortedKey(uint64_t N, const int Arr[], const oneCandidateToTheVoter (&Candidates)[MaxNumCands]);
-int SortedKey(const int Arr[], const std::array<oneVotingMethod, NumMethods>& methods);
+int SortedKey(const std::array<int64_t, NumMethods>& Arr, const std::array<oneVotingMethod, NumMethods>& methods);
 void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str);
 template< class T1 >
 		T1 TwiceMedian(uint N, T1 A[] );
@@ -991,6 +991,45 @@ bool IsPerm( uint64_t N, const oneCandidateToTheVoter (&Candidates)[MaxNumCands]
 	return true;
 }
 
+class range
+{
+private:
+    int64_t last;
+    int64_t iter;
+
+public:
+    range(int64_t end, int64_t start = 0):
+    last(end),
+    iter(start)
+    {
+        ensure(end>=start,30);
+    }
+
+    // Iterable functions
+    const range& begin() const { return *this; }
+    const range& end() const { return *this; }
+
+    // Iterator functions
+    bool operator!=(const range&) const { return iter < last; }
+    void operator++() { ++iter; }
+    int64_t operator*() const { return iter; }
+};
+
+//	Function: MakeIdentityPerm
+//
+//	initializes each element in the given array with its respective
+//	index
+//
+//	Parameters:
+//		theArray - the array to initialize
+void MakeIdentityPerm(std::array<int64_t, NumMethods>& theArray)
+{
+	const range theRange = theArray.size();
+	for(const auto& i : theRange) {
+		theArray[i] = i;
+        }
+}
+
 void MakeIdentityPerm( uint64_t N, uint Perm[] ){
 	int i;
 	for(i=0; i<(int)N; i++){ Perm[i] = i; }
@@ -1166,30 +1205,6 @@ template <class T> void ScaleVec(uint64_t N, T a[], T scalefac) {
 	}
 }
 
-class range
-{
-private:
-	int64_t last;
-	int64_t iter;
-
-public:
-	range(int64_t end, int64_t start = 0):
-	last(end),
-	iter(start)
-	{
-		ensure(end>=start,30);
-	}
-
-	// Iterable functions
-	const range& begin() const { return *this; }
-	const range& end() const { return *this; }
-
-	// Iterator functions
-	bool operator!=(const range&) const { return iter < last; }
-	void operator++() { ++iter; }
-	int64_t operator*() const { return iter; }
-};
-
 /*	ScaleRegrets(methods, scalefac):	scales the 'sRegret'
  *						of each member of
  *						'methods' by 'scalefac'
@@ -1352,11 +1367,11 @@ void RealPermShellSortUp(uint N, int Perm[], const real Key[])
  *	Perm:					an array to permute
  *	methods:				a set of voting methods
  */
-void RealPermShellSortUp(int Perm[], const std::array<oneVotingMethod, NumMethods>& methods)
+void RealPermShellSortUp(std::array<int64_t, NumMethods>& Perm, const std::array<oneVotingMethod, NumMethods>& methods)
 {
 	int h,k;
 	int64_t j;
-	int x;
+	int64_t x;
 	int sortedTrend;
 	const range& theRange = methods.size();
 
@@ -6490,7 +6505,7 @@ int      votnumlower=2, votnumupper=MaxNumVoters;
 int      numelections2try = 59;
 int      utilnumlower=0,  utilnumupper = NumUtilGens;
 const real HonLevels[] = {1.0, 0.5, 0.0, 0.75, 0.25};
-int MethPerm[NumMethods];
+std::array<int64_t, NumMethods> MethPerm;
 real RegretData[MaxScenarios*NumMethods];
 
 struct PopulaceState_t
@@ -7864,7 +7879,7 @@ template<class T> int SortedKey(uint64_t N, const int Arr[], const oneCandidateT
  *			perceived mean regret values which are expected
  *			to have guided the sorting
  */
-int SortedKey(const int Arr[], const std::array<oneVotingMethod, NumMethods>& methods)
+int SortedKey(const std::array<int64_t, NumMethods>& Arr, const std::array<oneVotingMethod, NumMethods>& methods)
 {
 	size_t size = methods.size();
 	const range& theRange = range(size, 1);
@@ -8207,7 +8222,7 @@ void PrepareForBayesianRegretOutput(brdata& regretObject,
 	/*2999=good enough for usually 2 sig figs, and is 400X faster*/
 	regretObject.IgnoranceAmplitude = IgnLevels[iglevel];
 	output("\n");
-	MakeIdentityPerm(NumMethods, (uint*)MethPerm);
+	MakeIdentityPerm(MethPerm);
 	ComputeBRs(regretObject, utilityGeneratorMethod);
 	RealPermShellSortUp(MethPerm, regretObject.votingMethods);
 }
