@@ -1020,7 +1020,7 @@ public:
 //	initializes each element in the given array with its respective
 //	index
 //
-//	Parameters:
+//	Parameter:
 //		theArray - the array to initialize
 void MakeIdentityPerm(std::array<int64_t, NumMethods>& theArray)
 {
@@ -1030,6 +1030,15 @@ void MakeIdentityPerm(std::array<int64_t, NumMethods>& theArray)
         }
 }
 
+//	Function: MakeIdentityPerm
+//
+//	initializes each element in the given array with its respective
+//	index, up to a maximum index value; all elements with indices
+//	greater than said index value remain unaltered
+//
+//	Parameters:
+//		N    - the number of elements to initialize
+//		Perm - the array to initialize
 void MakeIdentityPerm( uint64_t N, uint Perm[] ){
 	int i;
 	for(i=0; i<(int)N; i++){ Perm[i] = i; }
@@ -1339,7 +1348,15 @@ const int ShellIncs[] = {1750, 701, 301, 132, 57, 23, 10, 4, 1, 0};
 Here 1750 is unsure and how the sequence continues past 1750 is unknown.
  ***/
 
-/* Rearranges Perm[0..N-1] so Key[Perm[0..N-1]] is in increasing order: */
+//	Function: RealPermShellSortUp
+//
+//	rearranges Perm so Key[Perm[0..N-1]] is in increasing
+//	order
+//
+//	Parameters:
+//		N    - the number of elements to rearrange
+//		Perm - an array to permute
+//		Key  - a set of values to guide rearranging
 void RealPermShellSortUp(uint N, int Perm[], const real Key[])
 {
 	int h,i,j,k;
@@ -1359,14 +1376,14 @@ void RealPermShellSortUp(uint N, int Perm[], const real Key[])
 
 }
 
-/*	RealPermShellSortUp(Perm, methods)	rearranges Perm[0..N-1],
- *						where 'N' is the number
- *						of entries in 'methods',
- *						so methods[Perm[0..N-1]].meanRegret
- *						is in increasing order
- *	Perm:					an array to permute
- *	methods:				a set of voting methods
- */
+//	Function: RealPermShellSortUp
+//
+//	rearranges Perm so methods[Perm[#]].meanRegret is in
+//	increasing order for all 'in bound' values of '#'
+//
+//	Parameters:
+//		Perm    - an array to permute
+//		methods - a set of voting methods
 void RealPermShellSortUp(std::array<int64_t, NumMethods>& Perm, const std::array<oneVotingMethod, NumMethods>& methods)
 {
 	int h,k;
@@ -7818,20 +7835,24 @@ template<class T> int SortedKey(uint64_t N, const int Arr[], const T Key[])
 	return overallTrend;
 }
 
-/*	SortedKey(N, Arr, Key):	helps to verify 'Arr' is sorted in
- *				a manner which is expected;
- *				returns 1 if 'Key[Arr[i]]' is in
- *				increasing order for all 'i' from
- *				0 to 'N-1', -1 if 'Key[Arr[i]]' is
- *				in decreasing order, 0 if
- *				'Key[Arr[i]]' remains the same, or
- *				2 for any other circumstance
- *	N:		number of elements expected in Arr
- *	Arr:		a set of values to have been sorted
- *	Candidates:	a reference to a set of Candidates with
- *			perceived utility values which are expected
- *			to have guided the sorting
- */
+//	Function: SortedKey
+//
+//	helps to verify 'Arr' is sorted in a manner which is
+//	expected
+//
+//	Returns:
+//		1 if 'Key[Arr[i]]' is in increasing order for
+//			all 'i' from 0 to 'N-1'
+//		-1 if 'Key[Arr[i]]' is in decreasing order
+//		0 if 'Key[Arr[i]]' remains the same
+//		2 for any other circumstance
+//	Parameters:
+//		N          - number of elements expected in Arr
+//		Arr        - a set of sorted values
+//		Candidates - a reference to a set of Candidates
+//		             with perceived utility values which
+//		             are expected to have guided the
+//		             sorting
 template<class T> int SortedKey(uint64_t N, const int Arr[], const oneCandidateToTheVoter (&Candidates)[MaxNumCands])
 {
 	int a;
@@ -7865,20 +7886,22 @@ template<class T> int SortedKey(uint64_t N, const int Arr[], const oneCandidateT
 	return overallTrend;
 }
 
-/*	SortedKey(Arr, Methods):	helps to verify 'Arr' is sorted
- *					in a manner which is expected;
- *					returns 1 if 'Key[Arr[i]]' is
- *					in increasing order for all
- *					'i' from 0 to 'N-1', -1 if
- *					'Key[Arr[i]]' is in decreasing
- *					order, 0 if 'Key[Arr[i]]' remains
- *					the same, or 2 for any other
- *					circumstance
- *	Arr:		a set of values to have been sorted
- *	methods:	a reference to a set of voting methods with
- *			perceived mean regret values which are expected
- *			to have guided the sorting
- */
+//	Function: SortedKey
+//
+//	helps to verify 'Arr' is sorted in a manner which is
+//	expected
+//
+//	Returns:
+//		1 if 'Key[Arr[i]]' is in increasing order for
+//			all 'i' from 0 to 'N-1'
+//		-1 if 'Key[Arr[i]]' is in decreasing order
+//		0 if 'Key[Arr[i]]' remains the same
+//		2 for any other circumstance
+//	Parameters:
+//		Arr    - a set of sorted values
+//		method - a reference to a set of voting methods
+//		         with perceived mean regret values which
+//		         are expected to have guided the sorting
 int SortedKey(const std::array<int64_t, NumMethods>& Arr, const std::array<oneVotingMethod, NumMethods>& methods)
 {
 	size_t size = methods.size();
