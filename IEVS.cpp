@@ -5875,9 +5875,6 @@ void PrintConsts()
 //	Parameters:
 //		B             - the raw data used for determining
 //		                Bayesian regrets
-//		VotingMethods - a collection of indicators of
-//		                whether or not to analyze a
-//		                particular voting method
 //		UtilMeth      - an integer indicating the
 //		                particular utility generation
 //		                method to use in determining
