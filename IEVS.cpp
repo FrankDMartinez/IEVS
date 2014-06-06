@@ -4662,7 +4662,7 @@ EMETH WoodallDAC(const edata& E  /*Woodall: Monotonocity of single-seat preferen
 //		WhichMeth - an integer indicating the electoral
 //		            method
 //		Padding   - whether to output some padding
-void PrintMethName( int WhichMeth, bool Padding )
+void PrintMethName( const int64_t& WhichMeth, bool Padding )
 {
 	const char *name;
 	int spaces;
@@ -8105,11 +8105,11 @@ void PrintSummaryOfNormalizedRegretData(uint scenarios)
 		for(j=i+1; j<NumMethods; j++) {
 			if( BPStrength[MethPerm[j]*NumMethods +MethPerm[i]] >
 					BPStrength[MethPerm[i]*NumMethods +MethPerm[j]] ) {
-				/*i is not as good as j, so swap:*/
-				r = MethPerm[i]; MethPerm[i] = MethPerm[j]; MethPerm[j] = r;
+				std::swap(MethPerm[i], MethPerm[j]);
 			}
 		}
-		output("%d=",MethPerm[i]); PrintMethName(MethPerm[i], true);
+		output("%d=",MethPerm[i]);
+		PrintMethName(MethPerm[i], true);
 		output("\n");
 	}
 	output("==========end of summary============\n");
@@ -8132,7 +8132,7 @@ void PrintBROutput(const brdata& regretObject, uint &scenarios)
 {
 	int i;
 	int j;
-	int r;
+	int64_t r;
 	real reb;
 	real scalefac;
 	int TopMeth = 0;
@@ -8152,7 +8152,8 @@ void PrintBROutput(const brdata& regretObject, uint &scenarios)
 		if(BROutputMode&SORTMODE) r=MethPerm[i];
 		currentMethodsMeanRegret = regretObject.votingMethods[r].meanRegret;
 		if(htmlMode) output("<tr><td>");
-		output("%d=",r); PrintMethName(r,true);
+		output("%d=",r);
+		PrintMethName(r,true);
 		if(htmlMode) output("</td><td>");
 		else if(texMode) output(" & ");
 		if(normalizeRegrets) output(" \t %8.5g", currentMethodsMeanRegret/meanRegretBase);
