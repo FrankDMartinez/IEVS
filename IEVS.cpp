@@ -5725,7 +5725,6 @@ void resizeAndReset(std::vector<oneVoter>& theVector, const uint& newSize)
 //	returned is the number of elections loaded and processed
 UTGEN GenRealWorldUtils( edata& E ){  /** based on Tideman election dataset **/
 	uint y;
-	uint V,C;
 	uint64_t VV;
 	static int WhichElection=0, offset=0;
 	real scalefac;
@@ -5735,8 +5734,8 @@ UTGEN GenRealWorldUtils( edata& E ){  /** based on Tideman election dataset **/
 	if(WhichElection >= NumElectionsLoaded){
 		WhichElection = 0; offset = 0;
 	}
-	V = NVotersData[WhichElection];
-	C = NCandsData[WhichElection];
+	const uint& V = NVotersData[WhichElection];
+	const uint& C = NCandsData[WhichElection];
 	assert(C>2);
 	assert(V>2);
 	numberOfCandidates = C;
@@ -5751,7 +5750,7 @@ UTGEN GenRealWorldUtils( edata& E ){  /** based on Tideman election dataset **/
 			allCandidatesToTheVoter[y].actualUtility = ((numberOfCandidates - (real)ElData[offset+VV+y]) + RandNormal())*scalefac;
 		}
 	}
-	offset += NVotersData[WhichElection]*NCandsData[WhichElection];
+	offset += V*C;
 	WhichElection++;
 }
 
