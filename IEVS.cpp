@@ -5481,12 +5481,13 @@ void GenWackyLocations( /*input:*/ uint NumVoters, uint64_t NumCands, uint Issue
 	GenRandNormalArr(NumCands*Issues, cLocation);
 }
 
-UTGEN GenNormalUtils( edata& E ){ /* simplest possible utility generator: random normal numbers: */
-	const uint64_t& numberOfVoters = E.NumVoters;
+UTGEN GenNormalUtils( edata& E )
+{ /* simplest possible utility generator: random normal numbers: */
 	const uint64_t& numberOfCandidates = E.NumCands;
-	for(int i=0; i<numberOfVoters; i++) {
+	for(auto& eachVoter : E.Voters) {
+		auto& theCandidates = eachVoter.Candidates;
 		for(int j=0; j<numberOfCandidates; j++) {
-			E.Voters[i].Candidates[j].actualUtility = RandNormal();
+			theCandidates[j].actualUtility = RandNormal();
 		}
 	}
 }
