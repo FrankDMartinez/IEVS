@@ -5538,8 +5538,9 @@ UTGEN GenIssueDotprodUtils( edata& E, uint Issues ){  /* utility = canddt*voter 
 const int NumHilFiles = 87;
 const int NumDebFiles = 6;
 const int MaxNumRanks = 339999;
-
-uint NVotersData[NumHilFiles+NumDebFiles],  NCandsData[NumHilFiles+NumDebFiles];
+const int numberOfRealWorldFiles = NumHilFiles + NumDebFiles;
+std::array<uint, numberOfRealWorldFiles> NVotersData;
+std::array<uint, numberOfRealWorldFiles> NCandsData;
 uint8_t ElData[MaxNumRanks];
 int NumElectionsLoaded = 0;
 
