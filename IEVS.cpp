@@ -241,7 +241,7 @@ template< class T >
 template< class T >
 		int ArgMaxArr(uint64_t N, const T Arr[], int RandPerm[]);
 template< class T >
-		int ArgMaxArr(uint64_t N, const oneCandidateToTheVoter (&Candidates)[MaxNumCands], int RandPerm[]);
+		int ArgMaxArr(uint64_t N, const std::vector<oneCandidateToTheVoter>& Candidates, int RandPerm[]);
 /*	reset(iteratableCollection):	resets 'iteratableCollection'
  *							with default values
  *	iteratableCollection:	the collection to reset
@@ -253,7 +253,7 @@ int flipACoin(int choice1, int choice2);
 template<class T>
 		void PermShellSortDown( uint64_t N, int Perm[], const T Key[] );
 template<class T>
-		void PermShellSortDown(uint64_t N, int Perm[], const oneCandidateToTheVoter (&Candidates)[MaxNumCands]);
+		void PermShellSortDown(uint64_t N, int Perm[], const std::vector<oneCandidateToTheVoter>& Candidates);
 template<class T>
 		void PermShellSortDown(uint64_t N, const CandidateSlate& Candidates, const T oneCandidate::*member);
 void PrintBRPreamble(const uint& ScenarioCount, const bool& realWorld, const int& utilityGeneratorMethod);
@@ -267,7 +267,7 @@ template<class T>
 template<class T>
 		int SortedKey(uint64_t N, const int Arr[], const T Key[]);
 template<class T>
-		int SortedKey(uint64_t N, const int Arr[], const oneCandidateToTheVoter (&Candidates)[MaxNumCands]);
+		int SortedKey(uint64_t N, const int Arr[], const std::vector<oneCandidateToTheVoter>& Candidates);
 int SortedKey(const std::vector<int64_t>& Arr, const std::array<oneVotingMethod, NumMethods>& methods);
 void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str);
 template< class T1 >
@@ -973,7 +973,7 @@ bool IsPerm( uint64_t N, const uint Perm[] )
  *		with 0, expected to appear in Perm
  *	Perm:	an array of integers
  */
-bool IsPerm( uint64_t N, const oneCandidateToTheVoter (&Candidates)[MaxNumCands] )
+bool IsPerm( uint64_t N, const std::vector<oneCandidateToTheVoter>& Candidates)
 { /* true if is a perm of [0..N-1] */
 	int i;
 	int ct[MaxNumCands];
@@ -1521,8 +1521,12 @@ void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have be
 struct oneVoter
 {
 	uint topDownPrefs[MaxNumCands];
-	oneCandidateToTheVoter Candidates[MaxNumCands];
+	std::vector<oneCandidateToTheVoter> Candidates;
 	int64_t favoriteCandidate;
+	oneVoter()
+	{
+		Candidates.reserve(MaxNumCands);
+	}
 };
 
 template< class T >
@@ -1558,7 +1562,7 @@ void PrintEdata(FILE *F, const edata& E)
 	fprintf(F, "numberOfVoters=%d  numberOfCandidates=%lld\n", numberOfVoters, numberOfCandidates);
 	for(v=0; v<(int)numberOfVoters; v++){
 		const oneVoter& theVoter = allVoters[v];
-		const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = theVoter.Candidates;
+		const std::vector<oneCandidateToTheVoter>& allCandidates = theVoter.Candidates;
 		fprintf(F, "Voter %2d:\n",v);
 		fprintf(F, "Utility: ");
 		for(j=0; j < numberOfCandidates; j++) {
@@ -1644,7 +1648,7 @@ void BuildDefeatsMatrix(edata& E)
 	}
 	for(k=0; k<(int)numberOfVoters; k++) {
 		const oneVoter& theVoter = allVoters[k];
-		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
 		for(i=0; i<numberOfCandidates; i++) {
 			const oneCandidateToTheVoter &firstCandidateToTheVoter = allCandidatesToTheVoter[i];
 			oneCandidate& firstCandidate = allTheCandidates[i];
@@ -1728,7 +1732,7 @@ void BuildDefeatsMatrix(edata& E)
 	}
 	CopeWinOnlyWinner = Maximum<int64_t>(numberOfCandidates, allTheCandidates, &oneCandidate::electedCount);
 	for(i=0; i<(int)numberOfVoters; i++) {
-		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = allVoters[i].Candidates;
+		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = allVoters[i].Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
 			const oneCandidateToTheVoter &firstCandidateToTheVoter = allCandidatesToTheVoter[j];
 			oneCandidate& firstCandidate = allTheCandidates[j];
@@ -1756,7 +1760,7 @@ EMETH SociallyBest(edata& E  /* greatest utility-sum winner */)
 	Zero(numberOfCandidates, allCandidates, &oneCandidate::utilitySum);
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
-		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
 			allCandidates[j].utilitySum += allCandidatesToTheVoter[j].actualUtility;
 		}
@@ -1823,7 +1827,7 @@ EMETH RandomBallot(const edata& E)
  *	numberOfCandidates:	the number of Candidates in the current
  *				election
  */
-real minimumActualUtility(const oneCandidateToTheVoter (&Candidates)[MaxNumCands], const uint64_t& numberOfCandidates)
+real minimumActualUtility(const std::vector<oneCandidateToTheVoter>& Candidates, const uint64_t& numberOfCandidates)
 {
 	real lowest = HUGE;
 
@@ -1847,7 +1851,7 @@ EMETH Hay(const edata& E /*Strategyproof. Prob of election proportional to sum o
 	ZeroArray( numberOfCandidates, UtilityRootSum );
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
-		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
 		minu = minimumActualUtility(allCandidatesToTheVoter, numberOfCandidates);
 		sumrts = 0.0;
 		for(j=0; j<numberOfCandidates; j++) {
@@ -3558,7 +3562,7 @@ EMETH Coombs(edata& E)
 //		                          election
 //		numberOfCandidates      - the number of Candidates in
 //		                          the current election
-void addTheApprovalOfTheVoter(const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands],
+void addTheApprovalOfTheVoter(const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter,
                               CandidateSlate& allCandidates,
                               const uint64_t& numberOfCandidates)
 {
@@ -3585,7 +3589,7 @@ EMETH Approval(edata& E)
 	const uint& numberOfVoters = E.NumVoters;
 	Zero(numberOfCandidates, allCandidates, &oneCandidate::approvals);
 	for(i=0; i<(int)numberOfVoters; i++) {
-		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = allVoters[i].Candidates;
+		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = allVoters[i].Candidates;
 		addTheApprovalOfTheVoter(allCandidatesToTheVoter, allCandidates, numberOfCandidates);
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
@@ -3622,7 +3626,7 @@ EMETH HeitzigDFC(edata& E)
 	Determine(ApprovalWinner, Approval, E);
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
-		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
 		const real perceivedUtilityOfTheApprovalWinner = allCandidatesToTheVoter[ApprovalWinner].perceivedUtility;
 		const real perceivedUtilityOfTheRandomBallotWinner = allCandidatesToTheVoter[Rwnr].perceivedUtility;
 		if( perceivedUtilityOfTheApprovalWinner > perceivedUtilityOfTheRandomBallotWinner ) {
@@ -3742,7 +3746,7 @@ EMETH MCA(edata& E  /*canddt with most-2approvals wins if gets >50%, else regula
 	Determine(ApprovalWinner, Approval, E);
 	ZeroArray( numberOfCandidates, (int*)MCAVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
-		const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+		const std::vector<oneCandidateToTheVoter>& allCandidates = allVoters[i].Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
 			if(allCandidates[j].approve2) {
 				MCAVoteCount[j] += 1;
@@ -3842,7 +3846,7 @@ EMETH Range(edata& E    /* canddt with highest average Score wins */)
 		allCandidates[i].rangeVote = 0;
 	}
 	for(i=0; i<(int)numberOfVoters; i++) {
-		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = allVoters[i].Candidates;
+		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = allVoters[i].Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
 			allCandidates[j].rangeVote += allCandidatesToTheVoter[j].score;
 		}
@@ -3864,7 +3868,7 @@ EMETH RangeN(const edata& E /*highest average rounded Score [rded to integer in 
 	assert(RangeGranul<=10000000);
 	ZeroArray( numberOfCandidates, (int*)RangeNVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
-		const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+		const std::vector<oneCandidateToTheVoter>& allCandidates = allVoters[i].Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
 			RangeNVoteCount[j] += (uint)( (allCandidates[j].score)*(RangeGranul-0.0000000001) );
 		}
@@ -3901,7 +3905,7 @@ EMETH ContinCumul(const edata& E    /* Renormalize scores so sum(over canddts)=1
 	const uint& numberOfVoters = E.NumVoters;
 	ZeroArray( numberOfCandidates, CCumVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
-		const oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = allVoters[i].Candidates;
+		const std::vector<oneCandidateToTheVoter>& allCandidates = allVoters[i].Candidates;
 		sum = 0.0;
 		for(j=0; j<numberOfCandidates; j++) {
 			sum += allCandidates[j].score;
@@ -5229,7 +5233,7 @@ too little interesting data.
 //		                   - the current election
 void voteHonestly(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 {
-	oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = theVoter.Candidates;
+	std::vector<oneCandidateToTheVoter>& allCandidates = theVoter.Candidates;
 	uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
 	MakeIdentityPerm( numberOfCandidates, preferences );
 	PermShellSortDown<real>( numberOfCandidates, (int*)preferences, allCandidates );
@@ -5300,7 +5304,7 @@ void voteHonestly(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 void voteStrategically(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 {
 	real MovingAvg, tmp, Mean2U, ThisU;
-	oneCandidateToTheVoter (&allCandidates)[MaxNumCands] = theVoter.Candidates;
+	std::vector<oneCandidateToTheVoter>& allCandidates = theVoter.Candidates;
 	uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
 	int ACT = 0;
 	Mean2U = 0.0;
@@ -5508,7 +5512,7 @@ UTGEN GenIssueDistanceUtils( edata& E, int Issues, real Lp ){  /* utility = dist
 	KK = 0.6*Issues;
 	for(x=0; x < numberOfVoters; x++){
 		oneVoter& theVoter = allVoters[x];
-		oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+		std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
 		off2   = x * Issues;
 		for(y=0; y<numberOfCandidates; y++){
 			allCandidatesToTheVoter[y].actualUtility = 1.0 / sqrt(KK +
@@ -5528,7 +5532,7 @@ UTGEN GenIssueDotprodUtils( edata& E, uint Issues ){  /* utility = canddt*voter 
 	s = 1.0/sqrt((real)Issues);
 	for(x=0; x < numberOfVoters; x++){
 		oneVoter& theVoter = allVoters[x];
-		oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+		std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
 		off2   = x * Issues;
 		for(y=0; y < numberOfCandidates; y++){
 			allCandidatesToTheVoter[y].actualUtility = s*DotProd(Issues, VoterLocation+off2, CandLocation+y*Issues);
@@ -5714,7 +5718,7 @@ int LoadEldataFiles()
 //		theVector - vector to be resized and reset
 //		newSize   - the number of elements the given vector contains
 //		            after the call to this function
-void resizeAndReset(std::vector<oneVoter>& theVector, const uint& newSize)
+template<class T> void resizeAndReset(std::vector<T>& theVector, const uint& newSize)
 {
 	theVector.resize(newSize);
 	reset(theVector);
@@ -5744,7 +5748,7 @@ UTGEN GenRealWorldUtils( edata& E ){  /** based on Tideman election dataset **/
 	resizeAndReset(allVoters, numberOfVoters);
 	scalefac = 1.0/sqrt((real)C);
 	for(auto& eachVoter : allVoters){
-		oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = eachVoter.Candidates;
+		std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
 		VV = RandInt(V);  /* choose random voter in the real world election */
 		VV *= C;
 		for(y=0; y < numberOfCandidates; y++){
@@ -6400,7 +6404,7 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 								if(s!=0 || ja==0) { /*centro-symmetric: s=sign*/
 									/*printf("k=%d v=%d j=%d ja=%d s=%d x=%f y=%f\n",k,v,j,ja,s,xt*s,yt*s);*/
 									oneVoter& theVoter = allVoters[j];
-									oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+									std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
 									xto = xt*s + x;
 									yto = yt*s + y;
 									for(i=0; i<(int)NumSites; i++) { /*go thru canddts generating utils for voter j*/
@@ -6961,7 +6965,7 @@ int ArgMaxArr(uint64_t N, const T Arr[], int RandPerm[])
  *	RandPerm:	array of perm.
  */
 template< class T >
-int ArgMaxArr(uint64_t N, const oneCandidateToTheVoter (&Candidates)[MaxNumCands], int RandPerm[])
+int ArgMaxArr(uint64_t N, const std::vector<oneCandidateToTheVoter>& Candidates, int RandPerm[])
 {
 	T maxc;
 	int a;
@@ -7161,7 +7165,7 @@ int calculateForRunoff(const edata& E, int first, int second)
 	real perceivedUtilityOfSecond;
 	for(a=0; a<numberOfVoters; a++) {
 		const oneVoter& theVoter = E.Voters[a];
-		const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
 		perceivedUtilityOfFirst = allCandidatesToTheVoter[first].perceivedUtility;
 		perceivedUtilityOfSecond = allCandidatesToTheVoter[second].perceivedUtility;
 		if( perceivedUtilityOfFirst > perceivedUtilityOfSecond ) {
@@ -7449,7 +7453,7 @@ void swapRandomCandidatesAtIntervals(const int& b,
 void swapRandomCandidatesAtIntervals(const int& b,
 				     const int& a,
 				     int Perm[],
-				     const oneCandidateToTheVoter (&Candidates)[MaxNumCands])
+				     const std::vector<oneCandidateToTheVoter>& Candidates)
 {
 	const int x=Perm[b];
 	const auto& threshold = Candidates[x].perceivedUtility;
@@ -7519,7 +7523,7 @@ void PermShellSortDown(uint64_t N, int Perm[], const T Key[])
 //		Candidates - a reference to a set of constant Candidates
 //		             to guide sorting
 template<class T>
-void PermShellSortDown(uint64_t N, int Perm[], const oneCandidateToTheVoter (&Candidates)[MaxNumCands])
+void PermShellSortDown(uint64_t N, int Perm[], const std::vector<oneCandidateToTheVoter>& Candidates)
 {
 	int a;
 	int b;
@@ -7886,7 +7890,7 @@ template<class T> int SortedKey(uint64_t N, const int Arr[], const T Key[])
 //		             with perceived utility values which
 //		             are expected to have guided the
 //		             sorting
-template<class T> int SortedKey(uint64_t N, const int Arr[], const oneCandidateToTheVoter (&Candidates)[MaxNumCands])
+template<class T> int SortedKey(uint64_t N, const int Arr[], const std::vector<oneCandidateToTheVoter>& Candidates)
 {
 	int a;
 	int overallTrend;
@@ -9253,7 +9257,7 @@ voteVector traditionalVoteVectorNormalization(const oneVoter& theVoter, const Ca
 	real s = 0.0;
 	real t;
 	voteVector normalizedVoteVector;
-	const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+	const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
 	for(int j=0; j<count; j++) {
 		if(not Candidates[j].eliminated) {
 			t = allCandidatesToTheVoter[j].score - 0.5;
@@ -9316,7 +9320,7 @@ voteVector linearVoteVectorNormalization(const oneVoter& theVoter, const Candida
 	real s = 0.0;
 	real t;
 	voteVector normalizedVoteVector;
-	const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+	const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
 	for(int j=0; j<count; j++) {
 		if(not Candidates[j].eliminated) {
 			s += allCandidatesToTheVoter[j].score;
@@ -9363,7 +9367,7 @@ voteVector minMaxStyleVoteVectorNormalization(const oneVoter& theVoter, const Ca
 {
 	real s = 0.0;
 	voteVector normalizedVoteVector;
-	const oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+	const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
 	real theMaximum = -HUGE;
 	real theMinimum = HUGE;
 	for(int j=0; j<count; j++) {
