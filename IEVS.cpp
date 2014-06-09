@@ -35,6 +35,7 @@
 #include <stdint.h>
 #include <string>
 #include <typeinfo>
+#include <vector>
 
 void disableOutputFile();
 bool doubleOutputExpected = false;
@@ -267,7 +268,7 @@ template<class T>
 		int SortedKey(uint64_t N, const int Arr[], const T Key[]);
 template<class T>
 		int SortedKey(uint64_t N, const int Arr[], const oneCandidateToTheVoter (&Candidates)[MaxNumCands]);
-int SortedKey(const std::array<int64_t, NumMethods>& Arr, const std::array<oneVotingMethod, NumMethods>& methods);
+int SortedKey(const std::vector<int64_t>& Arr, const std::array<oneVotingMethod, NumMethods>& methods);
 void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str);
 template< class T1 >
 		T1 TwiceMedian(uint N, T1 A[] );
@@ -1022,11 +1023,12 @@ public:
 //
 //	Parameter:
 //		theArray - the array to initialize
-void MakeIdentityPerm(std::array<int64_t, NumMethods>& theArray)
+void MakeIdentityPerm(std::vector<int64_t>& theArray)
 {
-	const range theRange = theArray.size();
-	for(const auto& i : theRange) {
-		theArray[i] = i;
+	int64_t i = 0;
+	for(auto& each : theArray) {
+		each = i;
+		i++;
         }
 }
 
@@ -1384,7 +1386,7 @@ void RealPermShellSortUp(uint N, int Perm[], const real Key[])
 //	Parameters:
 //		Perm    - an array to permute
 //		methods - a set of voting methods
-void RealPermShellSortUp(std::array<int64_t, NumMethods>& Perm, const std::array<oneVotingMethod, NumMethods>& methods)
+void RealPermShellSortUp(std::vector<int64_t>& Perm, const std::array<oneVotingMethod, NumMethods>& methods)
 {
 	int h,k;
 	int64_t j;
@@ -6519,7 +6521,7 @@ int      votnumlower=2, votnumupper=MaxNumVoters;
 int      numelections2try = 59;
 int      utilnumlower=0,  utilnumupper = NumUtilGens;
 const real HonLevels[] = {1.0, 0.5, 0.0, 0.75, 0.25};
-std::array<int64_t, NumMethods> MethPerm;
+std::vector<int64_t> MethPerm(NumMethods);
 real RegretData[MaxScenarios*NumMethods];
 
 struct PopulaceState_t
@@ -7899,7 +7901,7 @@ template<class T> int SortedKey(uint64_t N, const int Arr[], const oneCandidateT
 //		method - a reference to a set of voting methods
 //		         with perceived mean regret values which
 //		         are expected to have guided the sorting
-int SortedKey(const std::array<int64_t, NumMethods>& Arr, const std::array<oneVotingMethod, NumMethods>& methods)
+int SortedKey(const std::vector<int64_t>& Arr, const std::array<oneVotingMethod, NumMethods>& methods)
 {
 	size_t size = methods.size();
 	const range& theRange = range(size, 1);
