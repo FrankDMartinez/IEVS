@@ -261,7 +261,7 @@ void printName(const char *name, bool padding, int spaces);
 void PrintSummaryOfNormalizedRegretData(uint scenarios);
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void));
 void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10]);
-void resetFavorites(oneVoter (&Voters)[MaxNumVoters], const int64_t& Candidate = 0);
+void resetFavorites(std::vector<oneVoter>& Voters, const int64_t& Candidate = 0);
 template<class T>
 		int Sign(T x);
 template<class T>
@@ -1533,8 +1533,12 @@ template< class T >
 typedef struct dum1 {
 	uint NumVoters;
 	uint64_t NumCands;
-	oneVoter Voters[MaxNumVoters];
+	std::vector<oneVoter> Voters;
 	CandidateSlate Candidates;
+	dum1()
+	{
+		Voters.reserve(MaxNumVoters);
+	}
 } edata;
 
 int calculateForRunoff(const edata& E, int first, int second);
@@ -1548,7 +1552,7 @@ void PrintEdata(FILE *F, const edata& E)
 { /* prints out the edata */
 	int v;
 	uint j;
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	const uint &numberOfVoters = E.NumVoters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	fprintf(F, "numberOfVoters=%d  numberOfCandidates=%lld\n", numberOfVoters, numberOfCandidates);
@@ -1623,7 +1627,7 @@ void BuildDefeatsMatrix(edata& E)
 	int64_t y;
 	real t;
 	bool CondWin, TrueCondWin;
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	const uint &numberOfVoters = E.NumVoters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allTheCandidates = E.Candidates;
@@ -1747,7 +1751,7 @@ EMETH SociallyBest(edata& E  /* greatest utility-sum winner */)
 	int i,j;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
 	Zero(numberOfCandidates, allCandidates, &oneCandidate::utilitySum);
 	for(i=0; i<(int)numberOfVoters; i++) {
@@ -1839,7 +1843,7 @@ EMETH Hay(const edata& E /*Strategyproof. Prob of election proportional to sum o
 	real minu, sumrts, t;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	ZeroArray( numberOfCandidates, UtilityRootSum );
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
@@ -1875,7 +1879,7 @@ EMETH Plurality(edata& E   /* canddt with most top-rank votes wins */)
 	int i;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
 	Zero(numberOfCandidates, allCandidates, &oneCandidate::pluralityVotes);
 	for(i=0; i<(int)numberOfVoters; i++) {
@@ -1891,7 +1895,7 @@ EMETH AntiPlurality(edata& E   /* canddt with fewest bottom-rank votes wins */)
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint64_t& lastCandidateIndex = numberOfCandidates - 1;
 	const uint& numberOfVoters = E.NumVoters;
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
 	Zero(numberOfCandidates, allCandidates, &oneCandidate::antiPluralityVotes);
 	for(i=0; i<numberOfVoters; i++) {
@@ -1908,7 +1912,7 @@ EMETH Dabagh(const edata& E   /* canddt with greatest Dabagh = 2*#top-rank-votes
 	int i, winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	const CandidateSlate& allCandidates = E.Candidates;
 	CopyArray(numberOfCandidates, allCandidates, DabaghVoteCount, &oneCandidate::pluralityVotes);
 	ScaleVec( numberOfCandidates, DabaghVoteCount, (uint64_t)2 );
@@ -1927,7 +1931,7 @@ EMETH VtForAgainst(const edata& E   /* canddt with greatest score = #votesFor - 
 	uint64_t last;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	const CandidateSlate& allCandidates = E.Candidates;
 	last = numberOfCandidates - 1;
 	CopyArray(numberOfCandidates, allCandidates, (uint64_t*)VFAVoteCount, &oneCandidate::pluralityVotes);
@@ -2284,7 +2288,7 @@ EMETH HeismanTrophy(const edata& E  /* Heisman: weighted positional with weights
 	int winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	ZeroArray( numberOfCandidates, (int*)HeismanVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
@@ -2306,7 +2310,7 @@ EMETH BaseballMVP(const edata& E  /* weighted positional with weights 14,9,8,7,6
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint64_t& maximumNumberOfLoops = std::min<typeof(numberOfCandidates)>( numberOfCandidates, numberOfBaseballWeightings);
 	const uint& numberOfVoters = E.NumVoters;
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	ZeroArray( numberOfCandidates, (int*)BaseballVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
@@ -2911,7 +2915,7 @@ EMETH Bucklin(edata& E)
 	int64_t best;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
 	winner = -1;
 	Zero(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound);
@@ -3207,7 +3211,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 	int x,stillthere,winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
 	assert(numberOfCandidates <= MaxNumCands);
 	if((SmithIRVwinner<0) && (IRVTopLim==BIGINT) && (CopeWinOnlyWinner<0)) {
@@ -3396,7 +3400,7 @@ EMETH BTRIRV(edata& E)
 	int Iround,i,RdLoser,RdLoser2,NextI;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
 	uint64_t x;
 	assert(numberOfCandidates <= MaxNumCands);
@@ -3481,7 +3485,7 @@ EMETH Coombs(edata& E)
 	int Iround,i,RdLoser,NextI,x;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
 	assert(numberOfCandidates <= MaxNumCands);
 	for(i=0; i<numberOfCandidates; i++){
@@ -3576,7 +3580,7 @@ EMETH Approval(edata& E)
 { /* side effects: Each Candidate's 'approval' member, ApprovalWinner */
 	int i;
 	CandidateSlate& allCandidates = E.Candidates;
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	Zero(numberOfCandidates, allCandidates, &oneCandidate::approvals);
@@ -3613,7 +3617,7 @@ EMETH HeitzigDFC(edata& E)
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	const uint64_t VoterIndex = RandInt(E.NumVoters);
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	Rwnr = ArgMaxArr<real>(numberOfCandidates, E.Voters[VoterIndex].Candidates, (int*)RandCandPerm);
 	Determine(ApprovalWinner, Approval, E);
 	for(i=0; i<(int)numberOfVoters; i++) {
@@ -3700,7 +3704,7 @@ EMETH IRNR(edata& E, normalizationFunction normalizer /*Brian Olson's voting met
 	int i;
 	int j;
 	int loser;
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	CandidateSlate& allCandidates = E.Candidates;
@@ -3732,7 +3736,7 @@ EMETH MCA(edata& E  /*canddt with most-2approvals wins if gets >50%, else regula
 	int i;
 	int j;
 	int winner;
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	Determine(ApprovalWinner, Approval, E);
@@ -3829,7 +3833,7 @@ EMETH Range(edata& E    /* canddt with highest average Score wins */)
 { /* side effects:   Each Candidate's range vote, RangeWinner  */
 	int i;
 	int j;
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	CandidateSlate& allCandidates = E.Candidates;
@@ -3853,7 +3857,7 @@ EMETH RangeN(const edata& E /*highest average rounded Score [rded to integer in 
 	int i;
 	int j;
 	int winner;
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	assert(RangeGranul>=2);
@@ -3892,7 +3896,7 @@ EMETH ContinCumul(const edata& E    /* Renormalize scores so sum(over canddts)=1
 	int j;
 	int winner;
 	real sum;
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	ZeroArray( numberOfCandidates, CCumVoteCount );
@@ -3922,7 +3926,7 @@ EMETH TopMedianRating(const edata& E    /* canddt with highest median Score wins
 	int i;
 	int j;
 	int winner;
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	for(j=0; j<numberOfCandidates; j++) {
@@ -4586,7 +4590,7 @@ EMETH WoodallDAC(const edata& E  /*Woodall: Monotonocity of single-seat preferen
 	uint s, x, h, numsets;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	const oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	const std::vector<oneVoter>& allVoters = E.Voters;
 	if( (numberOfCandidates) > (4*sizeof(numberOfCandidates)) ) {
 		output("WoodallDAC: too many candidates %lld to use machine words(%d) to represent sets\n",
 			numberOfCandidates,
@@ -5378,7 +5382,7 @@ void voteStrategically(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 void HonestyStrat( edata& E, real honfrac )
 {
 	int v;
-	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	std::vector<oneVoter>& allVoters = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	assert(numberOfVoters <= MaxNumVoters);
@@ -5493,7 +5497,7 @@ UTGEN GenIssueDistanceUtils( edata& E, int Issues, real Lp ){  /* utility = dist
 	real KK;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	std::vector<oneVoter>& allVoters = E.Voters;
 	if(Issues<0){
 		Issues = -Issues;
 		GenWackyLocations( numberOfVoters, numberOfCandidates, Issues, VoterLocation, CandLocation );
@@ -5517,7 +5521,7 @@ UTGEN GenIssueDotprodUtils( edata& E, uint Issues ){  /* utility = canddt*voter 
 	real s;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	std::vector<oneVoter>& allVoters = E.Voters;
 	GenNormalLocations( numberOfVoters, numberOfCandidates, Issues, VoterLocation, CandLocation );
 	assert(Issues>0);
 	s = 1.0/sqrt((real)Issues);
@@ -5689,18 +5693,44 @@ int LoadEldataFiles()
 	return(elcount);
 }
 
+//	Function: resizeAndReset
+//
+//	resizes the given vector and resets its elements to their default
+//	state; if the new size is smaller than the current container
+//	size, the content is reduced to contain a number of elements
+//	equal to the new size, removing those beyond that new size (and
+//	destroying them); if the new size is greater than the current
+//	container size, the content is expanded by inserting at the end
+//	as many elements as needed to reach the new size, with each new
+//	element value-initialized; if the new size is also greater than
+//	the current container capacity, an automatic reallocation of
+//	the allocated storage space takes place; this function changes
+//	the actual content of the container by inserting or erasing elements
+//	from it
+//
+//	Parameters:
+//		theVector - vector to be resized and reset
+//		newSize   - the number of elements the given vector contains
+//		            after the call to this function
+void resizeAndReset(std::vector<oneVoter>& theVector, const uint& newSize)
+{
+	theVector.resize(newSize);
+	reset(theVector);
+}
+
 //	Function: GenRealWorldUtils
 //
 //	loads real-world election data from a set files; the value
 //	returned is the number of elections loaded and processed
 UTGEN GenRealWorldUtils( edata& E ){  /** based on Tideman election dataset **/
-	uint y, x,V,C;
+	uint y;
+	uint V,C;
 	uint64_t VV;
 	static int WhichElection=0, offset=0;
 	real scalefac;
 	uint64_t& numberOfCandidates = E.NumCands;
 	uint& numberOfVoters = E.NumVoters;
-	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	std::vector<oneVoter>& allVoters = E.Voters;
 	if(WhichElection >= NumElectionsLoaded){
 		WhichElection = 0; offset = 0;
 	}
@@ -5710,10 +5740,10 @@ UTGEN GenRealWorldUtils( edata& E ){  /** based on Tideman election dataset **/
 	assert(V>2);
 	numberOfCandidates = C;
 	numberOfVoters = 53;  /* always will be 53 voters */
+	resizeAndReset(allVoters, numberOfVoters);
 	scalefac = 1.0/sqrt((real)C);
-	for(x=0; x < numberOfVoters; x++){
-		oneVoter& theVoter = allVoters[x];
-		oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = theVoter.Candidates;
+	for(auto& eachVoter : allVoters){
+		oneCandidateToTheVoter (&allCandidatesToTheVoter)[MaxNumCands] = eachVoter.Candidates;
 		VV = RandInt(V);  /* choose random voter in the real world election */
 		VV *= C;
 		for(y=0; y < numberOfCandidates; y++){
@@ -6319,7 +6349,7 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 	uint RandPerm[16];
 	real xt, yt, xto, yto, th, ds, ut, rr;
 	bool leave;
-	oneVoter (&allVoters)[MaxNumVoters] = E.Voters;
+	std::vector<oneVoter>& allVoters = E.Voters;
 	assert(honfrac >= 0.0);
 	assert(honfrac <= 1.0);
 	if(NumSites>16) {
@@ -6357,6 +6387,7 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 					for(k=10; k<MaxK; k = (k*11)/10) { /*try k-voter election*/
 						v = k+k+1;
 						E.NumVoters = v;
+						resizeAndReset(allVoters, v);
 						j=0; ja=0;
 						while(ja<k) { /* generate voter locations and their candidate-utilities */
 							th = (ja*PI)/k;
@@ -7313,7 +7344,9 @@ void ensure(bool good, int number)
 void EDataPrep(edata& E, const brdata& B)
 {
 	const uint& numberOfElections = B.NumElections;
-	E.NumVoters = B.NumVoters;
+	const auto& numberOfVoters = B.NumVoters;
+	E.NumVoters = numberOfVoters;
+	resizeAndReset(E.Voters, numberOfVoters);
 	E.NumCands = B.NumCands;
 	if(numberOfElections < 1){
 		output("NumElections=%d<1, error\n", numberOfElections);
@@ -9168,7 +9201,7 @@ void MakeYeePicture(uint seed)
 //		            reset
 //		Candidate - the Candidate to which the favorite
 //		            is to be reset
-void resetFavorites(oneVoter (&Voters)[MaxNumVoters], const int64_t& Candidate) {
+void resetFavorites(std::vector<oneVoter>& Voters, const int64_t& Candidate) {
 	for( oneVoter& eachVoter : Voters ) {
 		eachVoter.favoriteCandidate = Candidate;
 	}
