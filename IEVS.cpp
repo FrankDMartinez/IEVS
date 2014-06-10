@@ -940,15 +940,17 @@ void TestsOfRand(){
 	TestRadialNormalRand2();
 }
 
-/*	IsPerm(N, Perm)	returns true if each integer value from 0 to
- *			N-1 appears exactly once in 'Perm' and false
- *			otherwise
- *	N:	the number of unique non-negative integers, starting
- *		with 0, expected to appear in Perm
- *	Perm:	an array of integers
- */
+//	Function: IsPerm
+//
+//	Returns:
+//		true if each integer from 0 to a given number appears exactly
+//		once in a given array and false otherwise
+//	Parameters:
+//		N    - the number of unique non-negative integers, starting
+//		       with 0, expected to appear in the given array
+//		Perm - an array of integers
 bool IsPerm( uint64_t N, const uint Perm[] )
-{ /* true if is a perm of [0..N-1] */
+{
 	int i;
 	int ct[MaxNumCands];
 	assert(N<MaxNumCands);
@@ -966,15 +968,18 @@ bool IsPerm( uint64_t N, const uint Perm[] )
 	return true;
 }
 
-/*	IsPerm(N, Perm)	returns true if each integer value from 0 to
- *			N-1 appears exactly once in 'Perm' and false
- *			otherwise
- *	N:	the number of unique non-negative integers, starting
- *		with 0, expected to appear in Perm
- *	Perm:	an array of integers
- */
+//	Function: IsPerm
+//
+//	Returns:
+//		true if each Candidate rank value from 0 to a given number
+//		appears exactly once in a given vector and false otherwise
+//	Parameters:
+//		N          - the number of unique non-negative rank values,
+//		             starting with 0, expected to appear in the given
+//		             vector
+//		Candidates - a vector of 'oneCandidateToTheVoter' objects
 bool IsPerm( uint64_t N, const std::vector<oneCandidateToTheVoter>& Candidates)
-{ /* true if is a perm of [0..N-1] */
+{
 	int i;
 	int ct[MaxNumCands];
 	assert(N<MaxNumCands);
@@ -1498,7 +1503,13 @@ uint RangeGranul;
  int HeadFav[MaxNumCands];
 bool CoverMatrix[MaxNumCands*MaxNumCands];
 
-void InitCoreElState(){ /*can use these flags to tell if Plurality() etc have been run*/
+//	Function: InitCoreElState
+//
+//	initializes the "core election state" in the form of
+//	various flags which indicate whether or not various
+//	functions have been called
+void InitCoreElState()
+{
 	PlurWinner = -1;
 	BordaWinner = -1;
 	ApprovalWinner = -1;
@@ -1547,13 +1558,16 @@ typedef struct dum1 {
 
 int calculateForRunoff(const edata& E, int first, int second);
 
-/*	PrintEdata(F, E):	prints election data to a file
- *	F:	a pointer to a FILE structure representing the file to which the data is
- *		to be written
- *	E:	the election data to write
- */
+//	Function: PrintEdata
+//
+//	prints election data to a file
+//
+//	Parameters:
+//		F - a pointer to a FILE structure representing
+//		    the file to which the data is to be written
+//		E - the election data to write
 void PrintEdata(FILE *F, const edata& E)
-{ /* prints out the edata */
+{
 	int v;
 	uint j;
 	const std::vector<oneVoter>& allVoters = E.Voters;
@@ -1596,7 +1610,6 @@ void PrintEdata(FILE *F, const edata& E)
 		}
 		fprintf(F, "\n");
 	}
-	/*???more?*/
 }
 
 typedef int EMETH;  /* allows fgrep EMETH IEVS.c to find out what Election methods now available */
@@ -1750,8 +1763,17 @@ void BuildDefeatsMatrix(edata& E)
 template <class T>
 	void Zero(const uint64_t& number, CandidateSlate& allCandidates, T oneCandidate::*member);
 
-EMETH SociallyBest(edata& E  /* greatest utility-sum winner */)
-{ /* side effects: Each Candidate's 'utilitySum', BestWinner */
+//	Function: SociallyBest
+//
+//	Returns:
+//		an index value corresponding to the "socially
+//		best" Candidate, defined as the Candidate with
+//		the highest sum of actual utility values
+//	Parameters:
+//		E - the election data used to determine the
+//		    socially best Candidate
+EMETH SociallyBest(edata& E)
+{
 	int i,j;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
@@ -1772,19 +1794,18 @@ EMETH SociallyBest(edata& E  /* greatest utility-sum winner */)
 	return BestWinner;
 }
 
-/*	Determine(Winner, theMethod, E):	determines the
- *						Winner of an
- *						election
- *						conducted using
- *						a given voting
- *						method
- *	Winner:		the Winner to determine; receives the
- *			results, if needed
- *	theMethod:	the voting method to determine the
- *			Winner
- *	E:		the election data to use to determine
- *			the Winner
- */
+//	Function: Determine
+//
+//	determines the Winner of an election conducted using a
+//	given voting method
+//
+//	Parameters:
+//		Winner    - the Winner to determine; receives
+//		            the results, if needed
+//		theMethod - the voting method to determine the
+//		            Winner
+//		E         - the election data to use to
+//		            determine the Winner
 template<class T> void Determine(int& Winner, T theMethod, edata& E)
 {
 	if(0 > Winner) {
@@ -1792,17 +1813,34 @@ template<class T> void Determine(int& Winner, T theMethod, edata& E)
 	}
 }
 
-/*	SociallyWorst(E):	returns the Candidate with the lowest utility sum
- *	E:	the election data used to determine the socially worst Candidate
- */
-EMETH SociallyWorst(edata& E   /* least utility-sum winner */)
-{ /* side effects: Each Candidate's 'utilitySum', WorstWinner */
+//	Function: SociallyWorst
+//
+//	Returns:
+//		an index value corresponding to the "socially
+//		worst" Candidate, defined as the Candidate with
+//		the lowest sum of actual utility values
+//	Parameters:
+//		E - the election data used to determine the
+//		    socially best Candidate
+EMETH SociallyWorst(edata& E)
+{
 	Determine(BestWinner, SociallyBest, E);
 	WorstWinner = Minimum(E.NumCands, E.Candidates, &oneCandidate::utilitySum);
 	return WorstWinner;
 }
 
-EMETH RandomWinner(const edata& E){ return (int)RandInt( E.NumCands ); }
+//	Function: RandomWinner
+//
+//	Returns:
+//		an index value corresponding to a randomly
+//		chosen Candidate
+//	Parameters:
+//		E - the election data used to select a Candidate
+//		    at random
+EMETH RandomWinner(const edata& E)
+{
+	return (int)RandInt( E.NumCands );
+}
 
 /*	RandomBallot(E):	returns the honest top Candidate of a randomly selected
  *				Voter; such a technique is considered 'strategy-proof'
