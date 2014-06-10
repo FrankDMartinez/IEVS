@@ -5756,7 +5756,7 @@ int LoadEldataFiles()
 //		theVector - vector to be resized and reset
 //		newSize   - the number of elements the given vector contains
 //		            after the call to this function
-template<class T> void resizeAndReset(std::vector<T>& theVector, const uint& newSize)
+template<class T> void resizeAndReset(std::vector<T>& theVector, const uint64_t& newSize)
 {
 	theVector.resize(newSize);
 	reset(theVector);
