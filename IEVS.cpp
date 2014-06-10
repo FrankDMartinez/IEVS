@@ -5787,10 +5787,13 @@ UTGEN GenRealWorldUtils( edata& E ){  /** based on Tideman election dataset **/
 	scalefac = 1.0/sqrt((real)C);
 	for(auto& eachVoter : allVoters){
 		std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
+                resizeAndReset(allCandidatesToTheVoter, numberOfCandidates);
 		VV = RandInt(V);  /* choose random voter in the real world election */
 		VV *= C;
-		for(y=0; y < numberOfCandidates; y++){
-			allCandidatesToTheVoter[y].actualUtility = ((numberOfCandidates - (real)ElData[offset+VV+y]) + RandNormal())*scalefac;
+		y=0;
+		for(auto& eachCandidate : allCandidatesToTheVoter) {
+			eachCandidate.actualUtility = ((numberOfCandidates - (real)ElData[offset+VV+y]) + RandNormal())*scalefac;
+			y++;
 		}
 	}
 	offset += V*C;
