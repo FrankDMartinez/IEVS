@@ -234,7 +234,7 @@ struct oneCandidate
 	bool eliminated;
 };
 
-typedef std::array<oneCandidate,MaxNumCands> CandidateSlate;
+typedef std::vector<oneCandidate> CandidateSlate;
 
 template< class T >
 		int ArgMinArr(uint64_t N, const T Arr[], int RandPerm[]);
@@ -1553,6 +1553,7 @@ typedef struct dum1 {
 	dum1()
 	{
 		Voters.reserve(MaxNumVoters);
+                Candidates.reserve(MaxNumCands);
 	}
 } edata;
 
@@ -5132,6 +5133,9 @@ typedef struct dum2 {
 	real Honfrac;
 	std::array<oneVotingMethod, NumMethods> votingMethods;
 	uint honestyLevel;
+	dum2() : NumVoters(), NumCands()
+	{
+	}
 } brdata;
 
 void EDataPrep(edata& E, const brdata& B);
@@ -5523,8 +5527,17 @@ void GenWackyLocations( /*input:*/ uint NumVoters, uint64_t NumCands, uint Issue
 	GenRandNormalArr(NumCands*Issues, cLocation);
 }
 
+//	Function: GenNormalUtils
+//
+//	sets the Each Candidate's acutal utility to Each Voter to
+//	a random value with standard normal distribution (gaussian
+//	variance=1 mean=0)
+//
+//	Parameter:
+//		E - the election data into which the utility values
+//		    are to be stored
 UTGEN GenNormalUtils( edata& E )
-{ /* simplest possible utility generator: random normal numbers: */
+{
 	const uint64_t& numberOfCandidates = E.NumCands;
 	for(auto& eachVoter : E.Voters) {
 		auto& theCandidates = eachVoter.Candidates;
@@ -5784,6 +5797,7 @@ UTGEN GenRealWorldUtils( edata& E ){  /** based on Tideman election dataset **/
 	numberOfCandidates = C;
 	numberOfVoters = 53;  /* always will be 53 voters */
 	resizeAndReset(allVoters, numberOfVoters);
+        resizeAndReset(E.Candidates, numberOfCandidates);
 	scalefac = 1.0/sqrt((real)C);
 	for(auto& eachVoter : allVoters){
 		std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
@@ -6402,6 +6416,7 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 		NumSites=16;
 	}
 	E.NumCands = NumSites;
+        resizeAndReset(E.Candidates, NumSites);
 	MakeIdentityPerm(NumSites, RandPerm);
 	for(pass=8; pass>=1; pass /= 2) {
 		for(y=0; y<200; y+=pass) {
@@ -7391,9 +7406,11 @@ void EDataPrep(edata& E, const brdata& B)
 {
 	const uint& numberOfElections = B.NumElections;
 	const auto& numberOfVoters = B.NumVoters;
+        const auto& numberOfCandidates = B.NumCands;
 	E.NumVoters = numberOfVoters;
 	resizeAndReset(E.Voters, numberOfVoters);
-	E.NumCands = B.NumCands;
+	E.NumCands = numberOfCandidates;
+	resizeAndReset(E.Candidates, numberOfCandidates);
 	if(numberOfElections < 1){
 		output("NumElections=%d<1, error\n", numberOfElections);
 		exit(EXIT_FAILURE);
