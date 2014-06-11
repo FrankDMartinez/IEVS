@@ -5564,11 +5564,10 @@ void GenWackyLocations( /*input:*/ uint NumVoters, uint64_t NumCands, uint Issue
 //		    are to be stored
 UTGEN GenNormalUtils( edata& E )
 {
-	const uint64_t& numberOfCandidates = E.NumCands;
 	for(auto& eachVoter : E.Voters) {
 		auto& theCandidates = eachVoter.Candidates;
-		for(int j=0; j<numberOfCandidates; j++) {
-			theCandidates[j].actualUtility = RandNormal();
+		for(auto& eachCandidate : theCandidates) {
+			eachCandidate.actualUtility = RandNormal();
 		}
 	}
 }
@@ -7436,11 +7435,15 @@ void EDataPrep(edata& E, const brdata& B)
 {
 	const uint& numberOfElections = B.NumElections;
 	const auto& numberOfVoters = B.NumVoters;
-        const auto& numberOfCandidates = B.NumCands;
+	const auto& numberOfCandidates = B.NumCands;
+	auto& Voters = E.Voters;
 	E.NumVoters = numberOfVoters;
 	resizeAndReset(E.Voters, numberOfVoters);
 	E.NumCands = numberOfCandidates;
 	resizeAndReset(E.Candidates, numberOfCandidates);
+	for(auto& eachVoter : Voters) {
+		resizeAndReset(eachVoter.Candidates, numberOfCandidates);
+	}
 	if(numberOfElections < 1){
 		output("NumElections=%d<1, error\n", numberOfElections);
 		exit(EXIT_FAILURE);
