@@ -5606,13 +5606,14 @@ UTGEN GenIssueDotprodUtils( edata& E, uint Issues ){  /* utility = canddt*voter 
 	GenNormalLocations( numberOfVoters, numberOfCandidates, Issues, VoterLocation, CandLocation );
 	assert(Issues>0);
 	s = 1.0/sqrt((real)Issues);
-	for(x=0; x < numberOfVoters; x++){
-		oneVoter& theVoter = allVoters[x];
-		std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
+	x=0;
+	for(auto& eachVoter : allVoters) {
+		std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
 		off2   = x * Issues;
 		for(y=0; y < numberOfCandidates; y++){
 			allCandidatesToTheVoter[y].actualUtility = s*DotProd(Issues, VoterLocation+off2, CandLocation+y*Issues);
 		}
+		x++;
 	}
 }
 
