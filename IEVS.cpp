@@ -5610,8 +5610,10 @@ UTGEN GenIssueDotprodUtils( edata& E, uint Issues ){  /* utility = canddt*voter 
 	for(auto& eachVoter : allVoters) {
 		std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
 		off2   = x * Issues;
-		for(y=0; y < numberOfCandidates; y++){
-			allCandidatesToTheVoter[y].actualUtility = s*DotProd(Issues, VoterLocation+off2, CandLocation+y*Issues);
+		y=0;
+		for(auto& eachCandidate : allCandidatesToTheVoter) {
+			eachCandidate.actualUtility = s*DotProd(Issues, VoterLocation+off2, CandLocation+y*Issues);
+			y++;
 		}
 		x++;
 	}
