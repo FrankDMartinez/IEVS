@@ -195,6 +195,11 @@ struct oneVotingMethod
 	uint trueCondorcetAgreementCount;
 	uint CondorcetAgreementCount;
 	int Winner;
+	oneVotingMethod() : agreementCountWithMethod(), regCount(),
+	                    meanRegret(), sRegret(), trueCondorcetAgreementCount(),
+	                    CondorcetAgreementCount(), Winner(-1)
+	{
+	}
 };
 
 typedef std::array<real,MaxNumCands> ArmytageData;
@@ -232,6 +237,20 @@ struct oneCandidate
 	real utilitySum;
 	int64_t voteCountForThisRound;
 	bool eliminated;
+	oneCandidate() : DefeatsMatrix(), TrueDefeatsMatrix(),
+			 ArmytageMatrix(),
+			 ArmytageDefeatsMatrix(),
+			 ArmytageMarginsMatrix(), margins(),
+			 Ibeat(), alsoApprovedWith(),
+			 antiPluralityVotes(), approvals(),
+			 electedCount(), drawCount(),
+			 BordaVotes(), pluralityVotes(),
+			 rangeVote(), lossCount(), uncovered(),
+			 IsASchwartzMember(), IsASmithMember(),
+			 normalizedRatingSum(), utilitySum(),
+			 voteCountForThisRound(), eliminated()
+	{
+	}
 };
 
 typedef std::vector<oneCandidate> CandidateSlate;
@@ -286,6 +305,12 @@ struct oneCandidateToTheVoter
 	real perceivedUtility;
 	uint64_t ranking;
 	real score;
+	oneCandidateToTheVoter() : actualUtility(), approve(),
+	                           approve2(),
+	                           perceivedUtility(),
+	                           ranking(), score()
+	{
+	}
 };
 
 /******************** GENERAL PURPOSE routines having nothing to do with voting: ******/
@@ -1534,7 +1559,7 @@ struct oneVoter
 	uint topDownPrefs[MaxNumCands];
 	std::vector<oneCandidateToTheVoter> Candidates;
 	int64_t favoriteCandidate;
-	oneVoter()
+	oneVoter() : topDownPrefs(), Candidates(), favoriteCandidate(-1)
 	{
 		Candidates.reserve(MaxNumCands);
 	}
@@ -1550,7 +1575,7 @@ typedef struct dum1 {
 	uint64_t NumCands;
 	std::vector<oneVoter> Voters;
 	CandidateSlate Candidates;
-	dum1()
+	dum1() : NumVoters(), NumCands(), Voters(), Candidates()
 	{
 		Voters.reserve(MaxNumVoters);
                 Candidates.reserve(MaxNumCands);
@@ -5133,7 +5158,8 @@ typedef struct dum2 {
 	real Honfrac;
 	std::array<oneVotingMethod, NumMethods> votingMethods;
 	uint honestyLevel;
-	dum2() : NumVoters(), NumCands()
+	dum2() : NumVoters(), NumCands(), NumElections(), IgnoranceAmplitude(),
+	         Honfrac(), votingMethods(), honestyLevel()
 	{
 	}
 } brdata;
@@ -6622,6 +6648,10 @@ struct PopulaceState_t
 	int numberOfVoters;
 	int ignoranceLevel;
 	int utilityGeneratorMethod;
+	PopulaceState_t() : realWorld(), numberOfVoters(), ignoranceLevel(),
+	                    utilityGeneratorMethod()
+	{
+	}
 };
 
 void PrintTheVotersBayesianRegret(brdata& regretObject, const PopulaceState_t&populaceState, uint &ScenarioCount);
