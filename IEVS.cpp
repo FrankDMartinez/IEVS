@@ -5597,7 +5597,19 @@ UTGEN GenIssueDistanceUtils( edata& E, int Issues, real Lp ){  /* utility = dist
 	}
 }
 
-UTGEN GenIssueDotprodUtils( edata& E, uint Issues ){  /* utility = canddt*voter vector dot-product in Issue-space */
+//	Function: GenIssueDotprodUtils
+//
+//	sets Each Candidate's actual utility, as it relates to Each
+//	respective Voter, to the "canddt*voter vector dot-product
+//	in Issue-space"
+//
+//	Parameters:
+//		E      - the election data object into which the
+//		         actual utility values are stored
+//		Issues - the number of issues to consider in creating
+//		         the actual utility values
+UTGEN GenIssueDotprodUtils( edata& E, uint Issues )
+{
 	uint off2, y, x;
 	real s;
 	const uint64_t& numberOfCandidates = E.NumCands;
