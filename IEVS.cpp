@@ -5859,30 +5859,71 @@ UTGEN GenRealWorldUtils( edata& E ){  /** based on Tideman election dataset **/
 	WhichElection++;
 }
 
-
-
-void UtilDispatcher( edata& E, int WhichMeth ){   /*WhichMeth = -1 ==> real world utils*/
+//	Function: UtilDispatcher
+//
+//	initializes the actual utility value of Each Candidate,
+//	as it relates to Each Voter, according to a given
+//	utility generation algorithm
+//
+//	Parameters:
+//		E         - the election data object in which to
+//		            store the actual utilities
+//		WhichMeth - an integer indicating the utility
+//		            generation method to use; -1
+//		            indicates "real world utilities"
+//		            should be used, 0 indicates
+//		            utilities should have a standard
+//		            normal distribution; 1 thru 5
+//		            indicate utility should be determine
+//		            by means of a "canddt*voter vector
+//		            dot-product in N-space" where 'N' is
+//		            a number of issues equal to the
+//		            value of 'WhichMeth'; 6 thru 10
+//		            indicates the use of a distance
+//		            based formula; 11 thru 15 indicates
+//		            the use of a different distance
+//		            based formula; any other value will
+//		            result in the program shutting down
+void UtilDispatcher( edata& E, int WhichMeth )
+{
 	switch(WhichMeth){
-	case(-1) : GenRealWorldUtils(E);  break;
-	case(0) : GenNormalUtils(E); break;
-	case(1) : GenIssueDotprodUtils(E, 1); break;
-	case(2) : GenIssueDotprodUtils(E, 2); break;
-	case(3) : GenIssueDotprodUtils(E, 3); break;
-	case(4) : GenIssueDotprodUtils(E, 4); break;
-	case(5) : GenIssueDotprodUtils(E, 5); break;
-	case(6) : GenIssueDistanceUtils(E, 1, 1.0);  break; /* Now using L1 distance */
-	case(7) : GenIssueDistanceUtils(E, 2, 1.0);  break;
-	case(8) : GenIssueDistanceUtils(E, 3, 1.0);  break;
-	case(9) : GenIssueDistanceUtils(E, 4, 1.0);  break;
-	case(10) : GenIssueDistanceUtils(E, 5, 1.0);  break;
-	case(11)  : GenIssueDistanceUtils(E, -1, 2.0); break; /* These L2 distance */
-	case(12)  : GenIssueDistanceUtils(E, -2, 2.0); break;
-	case(13)  : GenIssueDistanceUtils(E, -3, 2.0); break;
-	case(14)  : GenIssueDistanceUtils(E, -4, 2.0); break;
-	case(15) : GenIssueDistanceUtils(E, -5, 2.0); break;
-
-	default : output("Unsupported util gen %d\n", WhichMeth); exit(EXIT_FAILURE);
-	} /*end switch*/
+	case(-1) :
+		GenRealWorldUtils(E);
+		break;
+	case(0) :
+		GenNormalUtils(E);
+		break;
+	case(1) :
+	case(2) :
+	case(3) :
+	case(4) :
+	case(5) :
+		GenIssueDotprodUtils(E, WhichMeth);
+		break;
+	case(6) :
+	case(7) :
+	case(8) :
+	case(9) :
+	case(10) :
+		{
+		const auto& issues = (WhichMeth - 5);
+		GenIssueDistanceUtils(E, issues, 1.0);
+		break;
+		}
+	case(11) :
+	case(12) :
+	case(13) :
+	case(14) :
+	case(15) :
+		{
+		const auto& wackyIssues = (10 - WhichMeth);
+		GenIssueDistanceUtils(E, wackyIssues, 2.0);
+		break;
+		}
+	default :
+		output("Unsupported util gen %d\n", WhichMeth);
+		exit(EXIT_FAILURE);
+	}
 }
 
 //	Function: PrintUtilName
