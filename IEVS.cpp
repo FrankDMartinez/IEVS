@@ -5503,22 +5503,18 @@ void AddIgnorance( edata& E, real IgnoranceAmplitude )
 	real ignorance;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	if(IgnoranceAmplitude < 0.0) {
+	const auto& variableIgnorance = (IgnoranceAmplitude < 0.0);
+	for(i=numberOfVoters*(int)numberOfCandidates-1; i>=0; i--) {
+		uint64_t VoterIndex = i/numberOfCandidates;
+		uint64_t CandidateIndex = i % numberOfCandidates;
+		if(variableIgnorance) {
 		/* negative is flag to cause VARIABLE levels of ignorance depending on voter (stratified) */
-		for(i=numberOfVoters*(int)numberOfCandidates-1; i>=0; i--) {
-			uint64_t VoterIndex = i/numberOfCandidates;
-			uint64_t CandidateIndex = i % numberOfCandidates;
 			ignorance = ((IgnoranceAmplitude * ((2*i)+1)) / numberOfCandidates) * RandNormal();
-			E.Voters[VoterIndex].Candidates[CandidateIndex].perceivedUtility = ignorance + E.Voters[VoterIndex].Candidates[CandidateIndex].actualUtility;
-		}
-	} else {
+		} else {
 		/* positive is flag to cause CONSTANT level of ignorance across all voters */
-		for(i=numberOfVoters*(int)numberOfCandidates-1; i>=0; i--) {
-			uint64_t VoterIndex = i/numberOfCandidates;
-			uint64_t CandidateIndex = i % numberOfCandidates;
 			ignorance = IgnoranceAmplitude * RandNormal();
-			E.Voters[VoterIndex].Candidates[CandidateIndex].perceivedUtility = ignorance + E.Voters[VoterIndex].Candidates[CandidateIndex].actualUtility;
 		}
+		E.Voters[VoterIndex].Candidates[CandidateIndex].perceivedUtility = ignorance + E.Voters[VoterIndex].Candidates[CandidateIndex].actualUtility;
 	}
 	/* Both positive & negative modes have the same mean ignorance amplitude */
 }
