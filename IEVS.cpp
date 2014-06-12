@@ -5586,14 +5586,19 @@ UTGEN GenIssueDistanceUtils( edata& E, int Issues, real Lp ){  /* utility = dist
 		GenNormalLocations( numberOfVoters, numberOfCandidates, Issues, VoterLocation, CandLocation );
 	}
 	KK = 0.6*Issues;
-	for(x=0; x < numberOfVoters; x++){
-		oneVoter& theVoter = allVoters[x];
-		std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
+	x=0;
+	for(auto& eachVoter : allVoters) {
+		std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
 		off2   = x * Issues;
-		for(y=0; y<numberOfCandidates; y++){
-			allCandidatesToTheVoter[y].actualUtility = 1.0 / sqrt(KK +
-			LpDistanceSquared(Issues, VoterLocation+off2, CandLocation+y*Issues, Lp));
+		y=0;
+		for(auto& eachCandidate :  allCandidatesToTheVoter) {
+			const auto& lpDistance = LpDistanceSquared(Issues, VoterLocation+off2, CandLocation+y*Issues, Lp);
+			const auto& radicand = KK + lpDistance;
+			const auto& denominator = sqrt(radicand);
+			eachCandidate.actualUtility = 1.0 / denominator;
+			y++;
 		}
+		x++;
 	}
 }
 
