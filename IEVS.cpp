@@ -5504,7 +5504,8 @@ void AddIgnorance( edata& E, real IgnoranceAmplitude )
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	const auto& variableIgnorance = (IgnoranceAmplitude < 0.0);
-	for(i=numberOfVoters*(int)numberOfCandidates-1; i>=0; i--) {
+	const auto& maximumLoops = numberOfVoters*(int)numberOfCandidates;
+	for(i=0; i<maximumLoops; i++) {
 		uint64_t VoterIndex = i/numberOfCandidates;
 		uint64_t CandidateIndex = i % numberOfCandidates;
 		if(variableIgnorance) {
