@@ -5440,6 +5440,32 @@ void voteStrategically(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 	}
 }
 
+//	Function: voteByHonesty
+//
+//	determines a given Voter's vote based on said Voter's honesty
+//	the probability of a Voter voting honestly is equal to the
+//	value of a given "honesty fraction"; the probability of
+//	a Voter voting strategically is equal to the value of 1
+//	less said honesty fraction
+//
+//	Parameters:
+//		honestyFraction    - the fraction of Voters expected
+//		                     to vote honestly, as opposed
+//		                     to strategically
+//		theVoter           - the Voter casting a vote
+//		numberOfCandidates - the number of Candidates in
+//		                     the current election
+void voteByHonesty(const real& honestyFraction,
+                   oneVoter& theVoter,
+                   const uint64_t& numberOfCandidates)
+{
+	if( Rand01() < honestyFraction ) {
+		voteHonestly(theVoter, numberOfCandidates);
+	} else {
+		voteStrategically(theVoter, numberOfCandidates);
+	}
+}
+
 //	Function: HonestyStrat
 //
 //	determines election results based on Voter honesty; the
@@ -5461,11 +5487,7 @@ void HonestyStrat( edata& E, real honfrac )
 	assert(honfrac <= 1.0);
 	std::vector<oneVoter>& allVoters = E.Voters;
 	for(auto& eachVoter : allVoters) {
-		if( Rand01() < honfrac ) {
-			voteHonestly(eachVoter, numberOfCandidates);
-		} else {
-			voteStrategically(eachVoter, numberOfCandidates);
-		}
+		voteByHonesty(honfrac, eachVoter, numberOfCandidates);
 	}
 }
 
