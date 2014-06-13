@@ -5453,7 +5453,6 @@ void voteStrategically(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 //		honfrac - probability of a Voter voting honestly
 void HonestyStrat( edata& E, real honfrac )
 {
-	int v;
 	std::vector<oneVoter>& allVoters = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
@@ -5461,7 +5460,7 @@ void HonestyStrat( edata& E, real honfrac )
 	assert(numberOfCandidates <= MaxNumCands);
 	assert(honfrac >= 0.0);
 	assert(honfrac <= 1.0);
-	for(v=numberOfVoters -1; v>=0; v--) {
+	for(int v=0; v<numberOfVoters; v++) {
 		oneVoter& theVoter = allVoters[v];
 		if( Rand01() < honfrac ) { /*honest voter*/
 			voteHonestly(theVoter, numberOfCandidates);
