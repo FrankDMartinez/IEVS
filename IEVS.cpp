@@ -999,8 +999,6 @@ bool IsPerm( uint64_t N, const uint Perm[] )
 //		true if each integer from 0 to a given number appears exactly
 //		once in a given array and false otherwise
 //	Parameters:
-//		N    - the number of unique non-negative integers, starting
-//		       with 0, expected to appear in the given array
 //		Perm - an array of integers
 bool IsPerm(const std::vector<uint>& Perm)
 {
