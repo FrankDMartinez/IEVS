@@ -1105,7 +1105,7 @@ void MakeIdentityPerm( uint64_t N, uint Perm[] ){
 void RandomlyPermute( uint64_t N, uint RandPerm[] ){ /* randomly permutes RandPerm[0..N-1] */
 	uint64_t i;
 	uint64_t j;
-	for(i=N-1; i>0; i--){
+	for(i=1; i<N; i++) {
 		j = RandInt((uint)i);
 		std::swap(RandPerm[i], RandPerm[j]);
 	}
