@@ -1024,21 +1024,16 @@ bool IsPerm(const std::vector<uint>& Perm)
 //		             starting with 0, expected to appear in the given
 //		             vector
 //		Candidates - a vector of 'oneCandidateToTheVoter' objects
-bool IsPerm( uint64_t N, const std::vector<oneCandidateToTheVoter>& Candidates)
+bool IsPerm(const std::vector<oneCandidateToTheVoter>& Candidates)
 {
-	int i;
-	int ct[MaxNumCands];
-	assert(N<MaxNumCands);
-	for(i=0; i<(int)N; i++) {
-		ct[i] = 0;
-	}
-	for(i=0; i<(int)N; i++) {
-		ct[ Candidates[i].ranking ]++;
-	}
-	for(i=0; i<(int)N; i++) {
-		if(ct[i]!=1) {
+	std::vector<uint> ct(Candidates.size(), 0U);
+	assert(Candidates.size()<MaxNumCands);
+	for(auto& each : Candidates) {
+		auto& eachCount = ct[each.ranking];
+		if(eachCount > 0) {
 			return false;
 		}
+		eachCount++;
 	}
 	return true;
 }
@@ -5356,7 +5351,7 @@ void voteHonestly(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 		if(MinUtil > ThisU) {  MinUtil = ThisU; }
 		SumU += ThisU;
 	}
-	assert(IsPerm(numberOfCandidates, theVoter.Candidates));
+	assert(IsPerm(theVoter.Candidates));
 	real utilityRange = MaxUtil-MinUtil;
 	real RecipDiffUtil;
 	if(utilityRange != 0.0) {
