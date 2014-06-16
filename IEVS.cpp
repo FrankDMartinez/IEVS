@@ -272,7 +272,7 @@ int flipACoin(int choice1, int choice2);
 template<class T>
 		void PermShellSortDown( uint64_t N, int Perm[], const T Key[] );
 template<class T>
-		void PermShellSortDown(uint64_t N, int Perm[], const std::vector<oneCandidateToTheVoter>& Candidates);
+		void PermShellSortDown(uint64_t N, std::vector<uint>& Perm, const std::vector<oneCandidateToTheVoter>& Candidates);
 template<class T>
 		void PermShellSortDown(uint64_t N, const CandidateSlate& Candidates, const T oneCandidate::*member);
 void PrintBRPreamble(const uint& ScenarioCount, const bool& realWorld, const int& utilityGeneratorMethod);
@@ -996,6 +996,29 @@ bool IsPerm( uint64_t N, const uint Perm[] )
 //	Function: IsPerm
 //
 //	Returns:
+//		true if each integer from 0 to a given number appears exactly
+//		once in a given array and false otherwise
+//	Parameters:
+//		N    - the number of unique non-negative integers, starting
+//		       with 0, expected to appear in the given array
+//		Perm - an array of integers
+bool IsPerm(const std::vector<uint>& Perm)
+{
+	assert(Perm.size()<MaxNumCands);
+	std::vector<uint> ct(Perm.size(), 0U);
+	for(auto& each : Perm) {
+		auto& eachCount = ct[each];
+		if(eachCount > 0) {
+			return false;
+		}
+		eachCount++;
+	}
+	return true;
+}
+
+//	Function: IsPerm
+//
+//	Returns:
 //		true if each Candidate rank value from 0 to a given number
 //		appears exactly once in a given vector and false otherwise
 //	Parameters:
@@ -1053,7 +1076,7 @@ public:
 //
 //	Parameter:
 //		theArray - the array to initialize
-void MakeIdentityPerm(std::vector<int64_t>& theArray)
+template<class T> void MakeIdentityPerm(std::vector<T>& theArray)
 {
 	int64_t i = 0;
 	for(auto& each : theArray) {
@@ -1556,7 +1579,7 @@ void InitCoreElState()
  */
 struct oneVoter
 {
-	uint topDownPrefs[MaxNumCands];
+	std::vector<uint> topDownPrefs;
 	std::vector<oneCandidateToTheVoter> Candidates;
 	int64_t favoriteCandidate;
 	oneVoter() : topDownPrefs(), Candidates(), favoriteCandidate(-1)
@@ -3430,10 +3453,10 @@ enum Direction {Up, Down};
 //		CandidateCount	- the number of Candidates in this election
 //		direction	- whether to bump 'favorite' up or down
 uint findNewFavorite(int64_t& favorite,
-		     const uint (&preferences)[MaxNumCands],
-		     const CandidateSlate& allCandidates,
-		     const uint64_t& CandidateCount,
-		     const Direction& direction)
+                     const std::vector<uint>& preferences,
+                     const CandidateSlate& allCandidates,
+                     const uint64_t& CandidateCount,
+                     const Direction& direction)
 {
 	uint indexOfNewFavorite;
 	ensure(favorite >= 0, 36);
@@ -3511,7 +3534,7 @@ EMETH BTRIRV(edata& E)
 		for(i=HeadFav[RdLoser]; i>=0; i=NextI){ /* Go thru list of voters with favorite=RdLoser, adjust: */
 			oneVoter& theVoter = allVoters[i];
 			int64_t& favorite = theVoter.favoriteCandidate;
-			const uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
+			const std::vector<uint>& preferences = theVoter.topDownPrefs;
 			ensure( preferences[favorite] == RdLoser, 35 );
 			x = findNewFavorite(favorite, preferences, allCandidates, numberOfCandidates, Up);
 			NextI =	FavListNext[i];
@@ -3589,7 +3612,7 @@ EMETH Coombs(edata& E)
 		allCandidates[RdLoser].eliminated = true; /* eliminate RdLoser */
 		for(i=HeadFav[RdLoser]; i>=0; i=NextI){/*Go thru linked list of voters with favorite=RdLoser, adjust:*/
 			oneVoter& theVoter = allVoters[i];
-			const uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
+			const std::vector<uint>& preferences = theVoter.topDownPrefs;
 			int64_t& favorite = theVoter.favoriteCandidate;
 			ensure( preferences[favorite] == RdLoser, 49 );
 			x = findNewFavorite(favorite, preferences, allCandidates, numberOfCandidates, Down);
@@ -5302,10 +5325,10 @@ too little interesting data.
 void voteHonestly(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 {
 	std::vector<oneCandidateToTheVoter>& allCandidates = theVoter.Candidates;
-	uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
-	MakeIdentityPerm( numberOfCandidates, preferences );
-	PermShellSortDown<real>( numberOfCandidates, (int*)preferences, allCandidates );
-	ensure( IsPerm(numberOfCandidates, preferences), 33 );
+	std::vector<uint>& preferences = theVoter.topDownPrefs;
+	MakeIdentityPerm(preferences);
+	PermShellSortDown<real>( numberOfCandidates, preferences, allCandidates );
+	ensure( IsPerm(preferences), 33 );
 	real MaxUtil = -HUGE;
 	real MinUtil =  HUGE;
 	real SumU = 0.0;
@@ -5372,7 +5395,7 @@ void voteStrategically(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 {
 	real MovingAvg, tmp, Mean2U, ThisU;
 	std::vector<oneCandidateToTheVoter>& allCandidates = theVoter.Candidates;
-	uint (&preferences)[MaxNumCands] = theVoter.topDownPrefs;
+	std::vector<uint>& preferences = theVoter.topDownPrefs;
 	int ACT = 0;
 	Mean2U = 0.0;
 	MovingAvg = 0.0;
@@ -5862,7 +5885,9 @@ UTGEN GenRealWorldUtils( edata& E ){  /** based on Tideman election dataset **/
 	scalefac = 1.0/sqrt((real)C);
 	for(auto& eachVoter : allVoters){
 		std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
-                resizeAndReset(allCandidatesToTheVoter, numberOfCandidates);
+		auto& topDownPrefs = eachVoter.topDownPrefs;
+		resizeAndReset(allCandidatesToTheVoter, numberOfCandidates);
+		resizeAndReset(topDownPrefs, numberOfCandidates);
 		VV = RandInt(V);  /* choose random voter in the real world election */
 		VV *= C;
 		y=0;
@@ -6553,6 +6578,7 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 						resizeAndReset(allVoters, v);
 						for(auto& eachVoter : allVoters) {
 							resizeAndReset(eachVoter.Candidates, NumSites);
+							resizeAndReset(eachVoter.topDownPrefs, NumSites);
 						}
 						j=0; ja=0;
 						while(ja<k) { /* generate voter locations and their candidate-utilities */
@@ -7523,6 +7549,7 @@ void EDataPrep(edata& E, const brdata& B)
 	resizeAndReset(E.Candidates, numberOfCandidates);
 	for(auto& eachVoter : Voters) {
 		resizeAndReset(eachVoter.Candidates, numberOfCandidates);
+		resizeAndReset(eachVoter.topDownPrefs, numberOfCandidates);
 	}
 	if(numberOfElections < 1){
 		output("NumElections=%d<1, error\n", numberOfElections);
@@ -7623,7 +7650,7 @@ void swapRandomCandidatesAtIntervals(const int& b,
 //		             to guide sorting
 void swapRandomCandidatesAtIntervals(const int& b,
 				     const int& a,
-				     int Perm[],
+				     std::vector<uint>& Perm,
 				     const std::vector<oneCandidateToTheVoter>& Candidates)
 {
 	const int x=Perm[b];
@@ -7694,7 +7721,7 @@ void PermShellSortDown(uint64_t N, int Perm[], const T Key[])
 //		Candidates - a reference to a set of constant Candidates
 //		             to guide sorting
 template<class T>
-void PermShellSortDown(uint64_t N, int Perm[], const std::vector<oneCandidateToTheVoter>& Candidates)
+void PermShellSortDown(uint64_t N, std::vector<uint>& Perm, const std::vector<oneCandidateToTheVoter>& Candidates)
 {
 	int a;
 	int b;
@@ -8061,7 +8088,7 @@ template<class T> int SortedKey(uint64_t N, const int Arr[], const T Key[])
 //		             with perceived utility values which
 //		             are expected to have guided the
 //		             sorting
-template<class T> int SortedKey(uint64_t N, const int Arr[], const std::vector<oneCandidateToTheVoter>& Candidates)
+template<class T> int SortedKey(uint64_t N, const std::vector<uint>& Arr, const std::vector<oneCandidateToTheVoter>& Candidates)
 {
 	int a;
 	int overallTrend;
