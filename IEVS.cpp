@@ -1701,9 +1701,8 @@ void BuildDefeatsMatrix(edata& E)
 		eachCandidate.utilitySum = utilitySum;
 		eachCandidate.pluralityVotes = pluralityVotes;
 	}
-	for(k=0; k<(int)numberOfVoters; k++) {
-		const oneVoter& theVoter = allVoters[k];
-		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
+	for(auto& eachVoter : allVoters) {
+		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
 		for(i=0; i<numberOfCandidates; i++) {
 			const oneCandidateToTheVoter &firstCandidateToTheVoter = allCandidatesToTheVoter[i];
 			oneCandidate& firstCandidate = allTheCandidates[i];
