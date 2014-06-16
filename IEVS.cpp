@@ -5353,18 +5353,18 @@ void voteHonestly(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 	}
 	assert(IsPerm(theVoter.Candidates));
 	real utilityRange = MaxUtil-MinUtil;
-	real RecipDiffUtil;
+	real utilityCoefficient;
 	if(utilityRange != 0.0) {
-		RecipDiffUtil = 1.0 / utilityRange;
+		utilityCoefficient = 1.0 / utilityRange;
 	} else {
-		RecipDiffUtil = 0.0;
+		utilityCoefficient = 0.0;
 	}
 	real MeanU = SumU / numberOfCandidates;
 	real Mean2U = 0.0;
 	int ACT=0;
 	for(auto& eachCandidate : allCandidates) {
 		ThisU = eachCandidate.perceivedUtility;
-		eachCandidate.score = ( ThisU-MinUtil ) * RecipDiffUtil;
+		eachCandidate.score = ( ThisU-MinUtil ) * utilityCoefficient;
 		/* mean-based threshold (with coin toss if exactly at thresh) for approvals */
 		if( ThisU > MeanU ) {
 			eachCandidate.approve = true;
