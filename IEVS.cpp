@@ -5396,10 +5396,10 @@ void voteHonestly(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 //	Parameters:
 //		theVoter           - the Voter voting honestly
 //		numberOfCandidates - the number of Candidate in
-//		                   - the current election
+//		                     the current election
 void voteStrategically(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 {
-	real MovingAvg, tmp, Mean2U, ThisU;
+	real MovingAvg, Mean2U;
 	std::vector<oneCandidateToTheVoter>& allCandidates = theVoter.Candidates;
 	std::vector<uint>& preferences = theVoter.topDownPrefs;
 	int ACT = 0;
@@ -5408,14 +5408,14 @@ void voteStrategically(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 	int nexti = -1;
 	uint64_t hibd = numberOfCandidates-1;
 	int lobd = 0;
-        int i=0;
+	int i=0;
 	for(auto& eachCandiate : allCandidates) {
-		ThisU = eachCandiate.perceivedUtility;
+		const auto& utility = eachCandiate.perceivedUtility;
 		if(i > nexti) {
 			nexti++;
 			assert(nexti >= 0);
 			for( ; nexti<(int)numberOfCandidates; nexti++) {
-				tmp = allCandidates[nexti].perceivedUtility;
+				const auto& tmp = allCandidates[nexti].perceivedUtility;
 				MovingAvg += (tmp-MovingAvg)/(nexti+1.0);
 				if( fabs(tmp-MovingAvg) > 0.000000000001) {
 					break;
@@ -5426,14 +5426,14 @@ void voteStrategically(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 		assert(hibd >= 0);
 		assert(lobd < (int)numberOfCandidates);
 		assert(hibd < (int)numberOfCandidates);
-		if( ThisU > MovingAvg ) {
+		if( utility > MovingAvg ) {
 			eachCandiate.approve = true;
 			eachCandiate.score = 1.0;
-			Mean2U += ThisU; ACT++;
+			Mean2U += utility; ACT++;
 			eachCandiate.ranking = lobd;
 			lobd++;
 		}
-		else if( ThisU < MovingAvg ) {
+		else if( utility < MovingAvg ) {
 			eachCandiate.approve = false;
 			eachCandiate.score = 0.0;
 			eachCandiate.ranking = hibd;
