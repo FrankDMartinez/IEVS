@@ -5269,27 +5269,27 @@ int FindWinnersAndRegrets( edata& E,  brdata& B )
 	std::array<oneVotingMethod, NumMethods>& allVotingMethods = B.votingMethods;
 	const CandidateSlate& allCandidates = E.Candidates;
 	const int& sociallyBestWinner = allVotingMethods[0].Winner;
-	int m,w;
-	real r;
 	BuildDefeatsMatrix(E);
 	InitCoreElState();
-	for(m=0; m<NumMethods; m++) {
-		oneVotingMethod& methodM = allVotingMethods[m];
-		w = GimmeWinner(E, m);
-		methodM.Winner = w;
-		r = allCandidates[BestWinner].utilitySum - allCandidates[w].utilitySum;
+	int m=0;
+	for(auto& eachMethod : allVotingMethods) {
+		const auto& w = GimmeWinner(E, m);
+		eachMethod.Winner = w;
+		const auto& r = allCandidates[BestWinner].utilitySum - allCandidates[w].utilitySum;
 		ensure( BestWinner == sociallyBestWinner, 32 );
 		ensure( r>=0.0, 52 );
 		assert(BestWinner == sociallyBestWinner); /*can only fail if somebody overwrites array...*/
 		assert(r>=0.0); /*can only fail if somebody overwrites array...*/
-		WelfordUpdateMeanSD(r, methodM);
-		updateMethodAgreements(methodM, m, allVotingMethods, w);
+		WelfordUpdateMeanSD(r, eachMethod);
+		updateMethodAgreements(eachMethod, m, allVotingMethods, w);
+		m++;
 	}
 	if(CondorcetWinner >= 0) {
-		for(m=0; m<NumMethods; m++) {
-			oneVotingMethod& methodM = allVotingMethods[m];
+		m=0;
+		for(auto& eachMethod : allVotingMethods) {
 			const bool& coreMethod = m<NumCoreMethods;
-			updateCondorcetAgreementOfOneMethod(methodM, coreMethod);
+			updateCondorcetAgreementOfOneMethod(eachMethod, coreMethod);
+			m++;
 		}
 	}
 	return(CondorcetWinner);
