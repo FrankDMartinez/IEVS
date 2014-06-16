@@ -5408,9 +5408,9 @@ void voteStrategically(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 	int nexti = -1;
 	uint64_t hibd = numberOfCandidates-1;
 	int lobd = 0;
-	for(int i=0; i<(int)numberOfCandidates; i++) {
-		oneCandidateToTheVoter &theCandidate = allCandidates[i];
-		ThisU = theCandidate.perceivedUtility;
+        int i=0;
+	for(auto& eachCandiate : allCandidates) {
+		ThisU = eachCandiate.perceivedUtility;
 		if(i > nexti) {
 			nexti++;
 			assert(nexti >= 0);
@@ -5427,44 +5427,42 @@ void voteStrategically(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 		assert(lobd < (int)numberOfCandidates);
 		assert(hibd < (int)numberOfCandidates);
 		if( ThisU > MovingAvg ) {
-			theCandidate.approve = true;
-			theCandidate.score = 1.0;
+			eachCandiate.approve = true;
+			eachCandiate.score = 1.0;
 			Mean2U += ThisU; ACT++;
-			theCandidate.ranking = lobd;
+			eachCandiate.ranking = lobd;
 			lobd++;
 		}
 		else if( ThisU < MovingAvg ) {
-			theCandidate.approve = false;
-			theCandidate.score = 0.0;
-			theCandidate.ranking = hibd;
+			eachCandiate.approve = false;
+			eachCandiate.score = 0.0;
+			eachCandiate.ranking = hibd;
 			hibd--;
 		}
 		else{
 			const bool& rb = RandBool();
-			theCandidate.approve = rb;
-			theCandidate.score = 0.5;
+			eachCandiate.approve = rb;
+			eachCandiate.score = 0.5;
 			if(rb) {
-				theCandidate.ranking = lobd;
+				eachCandiate.ranking = lobd;
 				lobd++;
 			} else {
-				theCandidate.ranking = hibd;
+				eachCandiate.ranking = hibd;
 				hibd--;
 			}
 		}
+		i++;
 	}
 	ensure((ACT!=0), 6);
 	Mean2U /= ACT;
-	for(int j=0; j<numberOfCandidates; j++) {
-		oneCandidateToTheVoter &theCandidate = allCandidates[j];
-		const uint64_t &theRanking = theCandidate.ranking;
-		ThisU = theCandidate.perceivedUtility;
-		if( ThisU >= Mean2U ) {
-			theCandidate.approve2 = true;
-		} else {
-			theCandidate.approve2 = false;
-		}
+	int j=0;
+	for(auto& eachCandidate : allCandidates) {
+		const uint64_t &theRanking = eachCandidate.ranking;
+		const auto& utility = eachCandidate.perceivedUtility;
+		eachCandidate.approve2 = (utility >= Mean2U);
 		assert( theRanking < numberOfCandidates );
 		preferences[theRanking] = j;
+		j++;
 	}
 }
 
