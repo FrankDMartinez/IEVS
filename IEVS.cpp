@@ -5346,7 +5346,6 @@ void voteHonestly(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 		return allCandidates[a].perceivedUtility > allCandidates[b].perceivedUtility;
 	};
 	sort(preferences, sortingLambda);
-	PermShellSortDown<real>( numberOfCandidates, preferences, allCandidates );
 	ensure( IsPerm(preferences), 33 );
 	real MaxUtil = -HUGE;
 	real MinUtil =  HUGE;
