@@ -905,7 +905,9 @@ void GenRandNormalArr(uint64_t N, real Arr[]){ /* returns Arr[0..N-1] of standar
  *			choose
  */
 uint64_t RandInt(uint64_t N) {
-	return (uint64_t)(Rand01()*N);
+	const auto& rv = (uint64_t)(Rand01()*N);
+	ensure(rv<N, 61);
+	return rv;
 }
 
 real wkc(int a, int b){
