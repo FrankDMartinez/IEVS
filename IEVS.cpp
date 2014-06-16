@@ -4269,6 +4269,21 @@ void updateLossCount(CandidateSlate& allCandidates,
 	}
 }
 
+//	Function: sort
+//
+//	arranges a given container in accordance with the terms
+//	described by a given comparison operation
+//
+//	Parameters:
+//		theContainer  - the container to sort
+//		theComparator - the comparison function object to
+//		                help guide sorting
+template <class ContainerClass, class ComparisonClass>
+void sort(ContainerClass& theContainer, const ComparisonClass& theComparator)
+{
+	std::sort(theContainer.begin(), theContainer.end(), theComparator);
+}
+
 //	Function: DMC
 //
 //	Returns:
@@ -5327,6 +5342,10 @@ void voteHonestly(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 	std::vector<oneCandidateToTheVoter>& allCandidates = theVoter.Candidates;
 	std::vector<uint>& preferences = theVoter.topDownPrefs;
 	MakeIdentityPerm(preferences);
+	const auto& sortingLambda =  [&allCandidates](uint& a, uint& b) {
+		return allCandidates[a].perceivedUtility > allCandidates[b].perceivedUtility;
+	};
+	sort(preferences, sortingLambda);
 	PermShellSortDown<real>( numberOfCandidates, preferences, allCandidates );
 	ensure( IsPerm(preferences), 33 );
 	real MaxUtil = -HUGE;
