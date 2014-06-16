@@ -1078,7 +1078,7 @@ public:
 //		theArray - the array to initialize
 template<class T> void MakeIdentityPerm(std::vector<T>& theArray)
 {
-	int64_t i = 0;
+	T i = 0;
 	for(auto& each : theArray) {
 		each = i;
 		i++;
