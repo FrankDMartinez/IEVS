@@ -5347,8 +5347,8 @@ void voteHonestly(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 	for(int i=0; i<numberOfCandidates; i++) {
 		allCandidates[preferences[i]].ranking = i;
 		ThisU = allCandidates[i].perceivedUtility;
-		if(MaxUtil < ThisU) {  MaxUtil = ThisU; }
-		if(MinUtil > ThisU) {  MinUtil = ThisU; }
+		MaxUtil = std::max(MaxUtil,ThisU);
+		MinUtil = std::min(MinUtil,ThisU);
 		SumU += ThisU;
 	}
 	assert(IsPerm(theVoter.Candidates));
@@ -5378,14 +5378,9 @@ void voteHonestly(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 	}
 	ensure((ACT!=0), 4);
 	Mean2U /= ACT;
-	for(int k=0; k<numberOfCandidates; k++) {
-		oneCandidateToTheVoter &theCandidate = allCandidates[k];
-		ThisU = theCandidate.perceivedUtility;
-		if( ThisU >= Mean2U ) {
-			theCandidate.approve2 = true;
-		} else {
-			theCandidate.approve2 = false;
-		}
+	for(auto& eachCandidate : allCandidates) {
+		const auto& utility = eachCandidate.perceivedUtility;
+		eachCandidate.approve2 = (utility >= Mean2U);
 	}
 }
 
