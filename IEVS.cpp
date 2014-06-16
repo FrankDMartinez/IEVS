@@ -5328,19 +5328,18 @@ void voteHonestly(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 	real MeanU = SumU / numberOfCandidates;
 	real Mean2U = 0.0;
 	int ACT=0;
-	for(int j=0; j<numberOfCandidates; j++) {
-		oneCandidateToTheVoter &theCandidate = allCandidates[j];
-		ThisU = theCandidate.perceivedUtility;
-		theCandidate.score = ( ThisU-MinUtil ) * RecipDiffUtil;
+	for(auto& eachCandidate : allCandidates) {
+		ThisU = eachCandidate.perceivedUtility;
+		eachCandidate.score = ( ThisU-MinUtil ) * RecipDiffUtil;
 		/* mean-based threshold (with coin toss if exactly at thresh) for approvals */
 		if( ThisU > MeanU ) {
-			theCandidate.approve = true;
+			eachCandidate.approve = true;
 			Mean2U += ThisU;
 			ACT++;
 		} else if( ThisU < MeanU ) {
-			theCandidate.approve = false;
+			eachCandidate.approve = false;
 		} else {
-			theCandidate.approve = RandBool();
+			eachCandidate.approve = RandBool();
 		}
 	}
 	ensure((ACT!=0), 4);
@@ -6552,6 +6551,9 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 						v = k+k+1;
 						E.NumVoters = v;
 						resizeAndReset(allVoters, v);
+						for(auto& eachVoter : allVoters) {
+							resizeAndReset(eachVoter.Candidates, NumSites);
+						}
 						j=0; ja=0;
 						while(ja<k) { /* generate voter locations and their candidate-utilities */
 							th = (ja*PI)/k;
