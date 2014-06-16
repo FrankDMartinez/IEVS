@@ -255,12 +255,12 @@ struct oneCandidate
 
 typedef std::vector<oneCandidate> CandidateSlate;
 
-template< class T >
-		int ArgMinArr(uint64_t N, const T Arr[], int RandPerm[]);
-template< class T >
-		int ArgMaxArr(uint64_t N, const T Arr[], int RandPerm[]);
-template< class T >
-		int ArgMaxArr(uint64_t N, const std::vector<oneCandidateToTheVoter>& Candidates, int RandPerm[]);
+template< class T, class U >
+		int ArgMinArr(uint64_t N, const T Arr[], U& RandPerm);
+template< class T, class U >
+		int ArgMaxArr(uint64_t N, const T Arr[], U& RandPerm);
+template< class T, class U >
+		int ArgMaxArr(uint64_t N, const std::vector<oneCandidateToTheVoter>& Candidates, U& RandPerm);
 /*	reset(iteratableCollection):	resets 'iteratableCollection'
  *							with default values
  *	iteratableCollection:	the collection to reset
@@ -1112,6 +1112,24 @@ void RandomlyPermute( uint64_t N, uint RandPerm[] ){ /* randomly permutes RandPe
 	assert(IsPerm(N,RandPerm));
 }
 
+/*	RandomlyPermute(N, RandPerm)	randomly permutes the each
+ *					element, 'i' with a random
+ *					element, 'j', with 0<=j<=i,
+ *					for i = N-1, N-2, N-3, ...,
+ *					2, 1
+ *	N:		one more than the number of times to permute RandPerm
+ *	RandPerm:	the array to permute
+ */
+void RandomlyPermute( uint64_t N, std::vector<uint>& RandPerm ){ /* randomly permutes RandPerm[0..N-1] */
+	uint64_t i;
+	uint64_t j;
+	for(i=1; i<N; i++) {
+		j = RandInt((uint)i);
+		std::swap(RandPerm[i], RandPerm[j]);
+	}
+	assert(IsPerm(RandPerm));
+}
+
 /******* vector handling: **********/
 /*	CopyArray(N, src, dest):	copies 'N' elements from 'src[]' into 'dest[]';
  *					only elements from index 0 to 'N-1' are copied;
@@ -1179,12 +1197,13 @@ void ZeroArray(uint64_t N, T Arr[]) {
 }
 
 /* Assumes RandPerm[0..N-1] contains perm. Returns index of random max entry of Arr[0..N-1]. */
-int ArgMaxUIntArr(uint64_t N, const uint Arr[], int RandPerm[] ){
+template <class T>
+int ArgMaxUIntArr(uint64_t N, const uint Arr[], T& RandPerm ){
 	uint maxc;
 	int i, r, winner;
 	winner = -1;
 	maxc = 0;
-	RandomlyPermute( N, (uint*)RandPerm );
+	RandomlyPermute( N, RandPerm );
 	for(i=0; i<(int)N; i++){
 		r = RandPerm[i];
 		if(Arr[r]>=maxc){
@@ -1214,7 +1233,7 @@ int Arg2MaxUIntArr(uint64_t N, const uint Arr[], const int RandPerm[], int MaxIn
 	return(winner);
 }
 
-uint RandCandPerm[MaxNumCands]; /* should initially contain 0..NumCands-1 */
+std::vector<uint> RandCandPerm; /* should initially contain 0..NumCands-1 */
 
 /*	SecondMaximum(count, allCandidates, member, maximumIndex):	returns the index
  *									of the entry in
@@ -1748,7 +1767,7 @@ void BuildDefeatsMatrix(edata& E)
 	const uint &numberOfVoters = E.NumVoters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allTheCandidates = E.Candidates;
-	MakeIdentityPerm( numberOfCandidates, RandCandPerm );
+	MakeIdentityPerm(RandCandPerm);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 
 	assert(numberOfCandidates <= MaxNumCands);
@@ -1931,7 +1950,7 @@ EMETH RandomBallot(const edata& E)
 	int winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint64_t VoterIndex = RandInt(E.NumVoters);
-	winner = ArgMaxArr<real>(numberOfCandidates, E.Voters[VoterIndex].Candidates, (int*)RandCandPerm);
+	winner = ArgMaxArr<real>(numberOfCandidates, E.Voters[VoterIndex].Candidates, RandCandPerm);
 	return winner;
 }
 
@@ -2041,7 +2060,7 @@ EMETH Dabagh(const edata& E   /* canddt with greatest Dabagh = 2*#top-rank-votes
 	for(i=0; i<(int)numberOfVoters; i++) { /*add 2nd-pref votes with weight=1:*/
 		DabaghVoteCount[ allVoters[i].topDownPrefs[1] ]++;
 	}
-	winner = ArgMaxArr(numberOfCandidates, DabaghVoteCount, (int*)RandCandPerm);
+	winner = ArgMaxArr<uint64_t>(numberOfCandidates, DabaghVoteCount, RandCandPerm);
 	return winner;
 }
 
@@ -2060,7 +2079,7 @@ EMETH VtForAgainst(const edata& E   /* canddt with greatest score = #votesFor - 
 	for(i=0; i<(int)numberOfVoters; i++) {
 		VFAVoteCount[ allVoters[i].topDownPrefs[last] ]--;
 	}
-	winner = ArgMaxArr(numberOfCandidates, VFAVoteCount, (int*)RandCandPerm);
+	winner = ArgMaxArr(numberOfCandidates, VFAVoteCount, RandCandPerm);
 	return winner;
 }
 
@@ -2399,7 +2418,7 @@ EMETH Nauru(const edata& E  /* weighted positional with weights 1, 1/2, 1/3, 1/4
 			NauruVoteCount[j] += NauruWt[theRank];
 		}
 	}
-	winner = ArgMaxUIntArr( numberOfCandidates, NauruVoteCount, (int*)RandCandPerm );
+	winner = ArgMaxUIntArr( numberOfCandidates, NauruVoteCount, RandCandPerm );
 	return(winner);
 }
 
@@ -2418,7 +2437,7 @@ EMETH HeismanTrophy(const edata& E  /* Heisman: weighted positional with weights
 			HeismanVoteCount[ theVoter.topDownPrefs[j] ] += 3-j;
 		}
 	}
-	winner = ArgMaxUIntArr( numberOfCandidates, HeismanVoteCount, (int*)RandCandPerm );
+	winner = ArgMaxUIntArr( numberOfCandidates, HeismanVoteCount, RandCandPerm );
 	return(winner);
 }
 
@@ -2440,7 +2459,7 @@ EMETH BaseballMVP(const edata& E  /* weighted positional with weights 14,9,8,7,6
 			BaseballVoteCount[ theVoter.topDownPrefs[j] ] += BaseballWt[j];
 		}
 	}
-	winner = ArgMaxUIntArr( numberOfCandidates, BaseballVoteCount, (int*)RandCandPerm );
+	winner = ArgMaxUIntArr( numberOfCandidates, BaseballVoteCount, RandCandPerm );
 	return(winner);
 }
 
@@ -2461,7 +2480,7 @@ EMETH CondorcetLR(edata& E   /* candidate with least sum-of-pairwise-defeat-marg
 		}
 		SumOfDefeatMargins[i] = t;
 	}
-	winner = ArgMinArr<int>(numberOfCandidates, (int*)SumOfDefeatMargins, (int*)RandCandPerm);
+	winner = ArgMinArr<int>(numberOfCandidates, (int*)SumOfDefeatMargins, RandCandPerm);
 	return winner;
 }
 
@@ -2524,7 +2543,7 @@ EMETH Sinkhorn(edata& E  /* candidate with max Sinkhorn rating (from all-positiv
 	for(j=0; j<numberOfCandidates; j++) {
 		SinkRat[j] = SinkCol[j]/SinkRow[j];
 	}
-	winner = ArgMaxArr<real>(numberOfCandidates, SinkRat, (int*)RandCandPerm);
+	winner = ArgMaxArr<real>(numberOfCandidates, SinkRat, RandCandPerm);
 	return winner;
 }
 
@@ -2552,7 +2571,7 @@ EMETH KeenerEig(edata& E  /* winning canddt has max Frobenius eigenvector entry 
 		dist = L1Distance(numberOfCandidates, EigVec, EigVec2);
 		CopyArray( numberOfCandidates, EigVec2, EigVec );
 	}until( dist < 0.00001 );
-	winner = ArgMaxArr<real>(numberOfCandidates, EigVec, (int*)RandCandPerm);
+	winner = ArgMaxArr<real>(numberOfCandidates, EigVec, RandCandPerm);
 	return winner;
 }
 
@@ -2579,7 +2598,7 @@ EMETH SimpsonKramer(edata& E  /* candidate with mildest worst-defeat wins */)
 		}
 		WorstDefeatMargin[i] = t;
 	}
-	winner = ArgMinArr<int64_t>(numberOfCandidates, WorstDefeatMargin, (int*)RandCandPerm);
+	winner = ArgMinArr<int64_t>(numberOfCandidates, WorstDefeatMargin, RandCandPerm);
 	return winner;
 }
 
@@ -3145,7 +3164,7 @@ EMETH Copeland(edata& E   /* canddt with largest number of pairwise-wins elected
 		const oneCandidate& theCandidate = allCandidates[i];
 		CopeScore[i] = (2*theCandidate.electedCount)+theCandidate.drawCount;
 	}
-	CopelandWinner = ArgMaxArr<uint64_t>(numberOfCandidates, CopeScore, (int*)RandCandPerm);
+	CopelandWinner = ArgMaxArr<uint64_t>(numberOfCandidates, CopeScore, RandCandPerm);
 	/* Currently just break ties randomly, return random highest-scorer */
 	return CopelandWinner;
 }
@@ -3243,7 +3262,7 @@ EMETH SimmonsCond(edata& E)
 	for(i=0; i<numberOfCandidates; i++) {
 		SimmVotesAgainst[i] = calculateSimmonsVotesAgainst(allCandidates[i], allCandidates, numberOfCandidates);
 	}
-	winner = ArgMinArr(numberOfCandidates, SimmVotesAgainst, (int*)RandCandPerm);
+	winner = ArgMinArr(numberOfCandidates, SimmVotesAgainst, RandCandPerm);
 	return winner;
 }
 
@@ -3740,7 +3759,7 @@ EMETH HeitzigDFC(edata& E)
 	const uint& numberOfVoters = E.NumVoters;
 	const uint64_t VoterIndex = RandInt(E.NumVoters);
 	const std::vector<oneVoter>& allVoters = E.Voters;
-	Rwnr = ArgMaxArr<real>(numberOfCandidates, E.Voters[VoterIndex].Candidates, (int*)RandCandPerm);
+	Rwnr = ArgMaxArr<real>(numberOfCandidates, E.Voters[VoterIndex].Candidates, RandCandPerm);
 	Determine(ApprovalWinner, Approval, E);
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
@@ -3871,7 +3890,7 @@ EMETH MCA(edata& E  /*canddt with most-2approvals wins if gets >50%, else regula
 			}
 		}
 	}
-	winner = ArgMaxUIntArr( numberOfCandidates, MCAVoteCount, (int*)RandCandPerm );
+	winner = ArgMaxUIntArr( numberOfCandidates, MCAVoteCount, RandCandPerm );
 	if(2*MCAVoteCount[winner] > numberOfVoters) {
 		return(winner);
 	}
@@ -3991,7 +4010,7 @@ EMETH RangeN(const edata& E /*highest average rounded Score [rded to integer in 
 			RangeNVoteCount[j] += (uint)( (allCandidates[j].score)*(RangeGranul-0.0000000001) );
 		}
 	}
-	winner = ArgMaxUIntArr( numberOfCandidates, RangeNVoteCount, (int*)RandCandPerm );
+	winner = ArgMaxUIntArr( numberOfCandidates, RangeNVoteCount, RandCandPerm );
 	return(winner);
 }
 
@@ -4037,7 +4056,7 @@ EMETH ContinCumul(const edata& E    /* Renormalize scores so sum(over canddts)=1
 			CCumVoteCount[j] += sum * allCandidates[j].score;
 		}
 	}
-	winner = ArgMaxArr<real>(numberOfCandidates, CCumVoteCount, (int*)RandCandPerm);
+	winner = ArgMaxArr<real>(numberOfCandidates, CCumVoteCount, RandCandPerm);
 	return(winner);
 }
 
@@ -4058,7 +4077,7 @@ EMETH TopMedianRating(const edata& E    /* canddt with highest median Score wins
 		}
 		MedianRating[j] = TwiceMedian<real>(numberOfVoters, CScoreVec);
 	}
-	winner = ArgMaxArr<real>(numberOfCandidates, MedianRating, (int*)RandCandPerm);
+	winner = ArgMaxArr<real>(numberOfCandidates, MedianRating, RandCandPerm);
 	return(winner);
 }
 
@@ -4078,7 +4097,7 @@ EMETH LoMedianRank(const edata& E    /* canddt with best median ranking wins */)
 		assert( MedianRank[j] >= 0 );
 		assert( MedianRank[j] <= 2*((int)numberOfCandidates - 1) );
 	}
-	winner = ArgMinArr<int64_t>(numberOfCandidates, MedianRank, (int*)RandCandPerm);
+	winner = ArgMinArr<int64_t>(numberOfCandidates, MedianRank, RandCandPerm);
 	return(winner);
 }
 
@@ -5923,7 +5942,8 @@ UTGEN GenRealWorldUtils( edata& E ){  /** based on Tideman election dataset **/
 	numberOfCandidates = C;
 	numberOfVoters = 53;  /* always will be 53 voters */
 	resizeAndReset(allVoters, numberOfVoters);
-        resizeAndReset(E.Candidates, numberOfCandidates);
+	resizeAndReset(E.Candidates, numberOfCandidates);
+	resizeAndReset(RandCandPerm, numberOfCandidates);
 	scalefac = 1.0/sqrt((real)C);
 	for(auto& eachVoter : allVoters){
 		std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
@@ -6679,7 +6699,7 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 							break;
 						}
 					} /*end for(k)*/
-					col = ArgMaxUIntArr( NumSites, (uint*)weight, (int*)RandPerm );
+					col = ArgMaxUIntArr( NumSites, (uint*)weight, RandPerm );
 					CreatePixel(x,y,col,Barray);
 				} /*end if(pass)*/
 			} /*end for(x)*/
@@ -7168,8 +7188,8 @@ void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], con
 //		           and 'RandPerm'
 //		Arr      - array of values to examine
 //		RandPerm - array to aid in the random selection
-template< class T >
-int ArgMaxArr(uint64_t N, const T Arr[], int RandPerm[])
+template< class T, class U >
+int ArgMaxArr(uint64_t N, const T Arr[], U& RandPerm)
 {
 	T maxc;
 	int a;
@@ -7177,7 +7197,7 @@ int ArgMaxArr(uint64_t N, const T Arr[], int RandPerm[])
 	int winner;
 	winner = -1;
 	maxc = (typeid(T)==typeid(int)) ? (T)(-BIGINT) : (T)(-HUGE);
-	RandomlyPermute( N, (uint*)RandPerm );
+	RandomlyPermute( N, RandPerm );
 	for(a=0; a<(int)N; a++) {
 		r = RandPerm[a];
 		if(Arr[r] > maxc) {
@@ -7197,8 +7217,8 @@ int ArgMaxArr(uint64_t N, const T Arr[], int RandPerm[])
  *			information to examine
  *	RandPerm:	array of perm.
  */
-template< class T >
-int ArgMaxArr(uint64_t N, const std::vector<oneCandidateToTheVoter>& Candidates, int RandPerm[])
+template< class T, class U >
+int ArgMaxArr(uint64_t N, const std::vector<oneCandidateToTheVoter>& Candidates, U& RandPerm)
 {
 	T maxc;
 	int a;
@@ -7212,7 +7232,7 @@ int ArgMaxArr(uint64_t N, const std::vector<oneCandidateToTheVoter>& Candidates,
 	} else {
 		maxc = (T)(-HUGE);
 	}
-	RandomlyPermute( N, (uint*)RandPerm );
+	RandomlyPermute( N, RandPerm );
 	for(a=0; a<(int)N; a++) {
 		r = RandPerm[a];
 		if(Candidates[r].perceivedUtility > maxc) {
@@ -7236,8 +7256,8 @@ int ArgMaxArr(uint64_t N, const std::vector<oneCandidateToTheVoter>& Candidates,
 //		Arr              - array of values to examine
 //		RandPerm         - array of randomly ordered indices
 //		                   into 'Arr'
-template< class T >
-int ArgMinArr(uint64_t N, const T Arr[], int RandPerm[])
+template< class T, class U >
+int ArgMinArr(uint64_t N, const T Arr[], U& RandPerm)
 {
 	T minc;
 	int a;
@@ -7245,7 +7265,7 @@ int ArgMinArr(uint64_t N, const T Arr[], int RandPerm[])
 	int winner;
 	winner = -1;
 	minc = (typeid(T)==typeid(int)) ? (T)BIGINT : (T)HUGE;
-	RandomlyPermute( N, (uint*)RandPerm );
+	RandomlyPermute( N, RandPerm );
 	for(a=0; a<(int)N; a++) {
 		r = RandPerm[a];
 		if(Arr[r]<minc) {
@@ -7298,7 +7318,7 @@ int Maximum(uint64_t N,
 		maxc = (T)(-HUGE);
 	}
 	if(permute) {
-		RandomlyPermute( N, (uint*)RandCandPerm );
+		RandomlyPermute( N, RandCandPerm );
 	}
 	for(a=0; a<(int)N; a++) {
 		r = RandCandPerm[a];
@@ -7356,7 +7376,7 @@ int Minimum(uint64_t N,
 		minc = (T)HUGE;
 	}
 	if(permute) {
-		RandomlyPermute( N, (uint*)RandCandPerm );
+		RandomlyPermute( N, RandCandPerm );
 	}
 	for(a=0; a<(int)N; a++) {
 		r = RandCandPerm[a];
@@ -7593,6 +7613,7 @@ void EDataPrep(edata& E, const brdata& B)
 		resizeAndReset(eachVoter.Candidates, numberOfCandidates);
 		resizeAndReset(eachVoter.topDownPrefs, numberOfCandidates);
 	}
+        resizeAndReset(RandCandPerm, numberOfCandidates);
 	if(numberOfElections < 1){
 		output("NumElections=%d<1, error\n", numberOfElections);
 		exit(EXIT_FAILURE);
