@@ -1842,8 +1842,8 @@ void BuildDefeatsMatrix(edata& E)
 		beat = findWhoIsBeaten(marginsOfEachCandidate);
 	}
 	CopeWinOnlyWinner = Maximum<int64_t>(numberOfCandidates, allTheCandidates, &oneCandidate::electedCount);
-	for(i=0; i<(int)numberOfVoters; i++) {
-		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = allVoters[i].Candidates;
+	for(auto& eachVoter : allVoters) {
+		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
 			const oneCandidateToTheVoter &firstCandidateToTheVoter = allCandidatesToTheVoter[j];
 			oneCandidate& firstCandidate = allTheCandidates[j];
