@@ -1679,24 +1679,24 @@ typedef int EMETH;  /* allows fgrep EMETH IEVS.c to find out what Election metho
 
 EMETH runoffForApprovalVoting(const edata& E);
 
-/*	findWhoIsBeaten(margins, numberOfCandidates):	returns a hash of
- *						Candidates beaten by
- *						the Candidates Whose
- *						margins are given by
- *						'margins'
- *	margins:			array of margins of the given
- *				Candidate with respect to other
- *				Candidates
- *	numberOfCandidates:	the number of Candidates in the
- *				current election
- */
-uint64_t findWhoIsBeaten(const MarginsData& margins, const uint64_t& numberOfCandidates)
+//	Function: findWhoIsBeaten
+//
+//	Returns:
+//		a hash of Candidates beaten by a Candidate as determined
+//		by that Candidate's margins over Other Candidates
+//
+//	Parameter:
+//		margins - array of margins of the given Candidate
+//		          with respect to other Candidates
+uint64_t findWhoIsBeaten(const MarginsData& margins)
 {
 	uint64_t beatsHash = 0;
-	for(uint64_t j=0; j<numberOfCandidates; j++) {
-		if( margins[j] > 0 ) {
-			beatsHash |= (1U<<j);
+	uint64_t hashPart = 1U;
+	for(const auto& eachMargin : margins) {
+		if( eachMargin > 0 ) {
+			beatsHash |= hashPart;
 		}
+		hashPart <<= 1;
 	}
 	return beatsHash;
 }
@@ -1839,7 +1839,7 @@ void BuildDefeatsMatrix(edata& E)
 	for(auto& eachCandidate : allTheCandidates) {
 		uint64_t& beat = eachCandidate.Ibeat;
 		const MarginsData& marginsOfEachCandidate = eachCandidate.margins;
-		beat = findWhoIsBeaten(marginsOfEachCandidate, numberOfCandidates);
+		beat = findWhoIsBeaten(marginsOfEachCandidate);
 	}
 	CopeWinOnlyWinner = Maximum<int64_t>(numberOfCandidates, allTheCandidates, &oneCandidate::electedCount);
 	for(i=0; i<(int)numberOfVoters; i++) {
