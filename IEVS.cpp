@@ -1680,11 +1680,67 @@ uint64_t IBeatsWho(const MarginsData& margins, const uint64_t& numberOfCandidate
 	return beatsHash;
 }
 
+//	Function: adjustDefeatsWRTPriorCandidates
+//
+//	analyzes a Voter's information about a particular Candidate
+//	and updates information about said Candidate and All Other
+//	Candidates appearing before Such in the Candidate slate
+//	depending upon how the Candidates relate to Each Other
+//
+//	Parameters:
+//		currentCandidateInfo - information detailing how
+//		                       the Voter views the current
+//		                       Candidate
+//		theCurrentCandidate  - object representing the actual
+//		                       current Candidate
+//		currentSlateIndex    - the index of the current
+//		                       Candidate into the slate
+//		                       of All Candidates
+//		infoOnAllCandidates  - a collection of objects representing
+//		                       the Voter's views of the
+//		                       various Candidates
+//		allTheCandidates     - the collection of objects
+//		                       representing the slate of
+//		                       All Candidates
+void adjustDefeatsWRTPriorCandidates(const oneCandidateToTheVoter &currentCandidateInfo,
+                                     oneCandidate& theCurrentCandidate,
+                                     const int& currentSlateIndex,
+                                     const std::vector<oneCandidateToTheVoter>& infoOnAllCandidates,
+                                     CandidateSlate& allTheCandidates)
+{
+	int slateIndexOfTheOtherCandidate=0;
+	for(const auto& infoOfEachOtherCandidate : infoOnAllCandidates) {
+		if(currentSlateIndex==slateIndexOfTheOtherCandidate) {
+			break;
+		}
+		oneCandidate& theOtherCandidate = allTheCandidates[slateIndexOfTheOtherCandidate];
+		if(infoOfEachOtherCandidate.ranking>currentCandidateInfo.ranking) {
+			theCurrentCandidate.DefeatsMatrix[slateIndexOfTheOtherCandidate]++;
+		} else {
+			theOtherCandidate.DefeatsMatrix[currentSlateIndex]++;
+		}
+		const auto& scoreDifference = currentCandidateInfo.score - infoOfEachOtherCandidate.score;
+		if(scoreDifference > 0.0) {
+			theCurrentCandidate.ArmytageMatrix[slateIndexOfTheOtherCandidate] += scoreDifference;
+			theCurrentCandidate.ArmytageDefeatsMatrix[slateIndexOfTheOtherCandidate]++;
+		} else {
+			theOtherCandidate.ArmytageMatrix[currentSlateIndex] -= scoreDifference;
+			theOtherCandidate.ArmytageDefeatsMatrix[currentSlateIndex]++;
+		}
+		if(currentCandidateInfo.actualUtility > infoOfEachOtherCandidate.actualUtility) {
+			theCurrentCandidate.TrueDefeatsMatrix[slateIndexOfTheOtherCandidate]++;
+		} else {
+			theOtherCandidate.TrueDefeatsMatrix[currentSlateIndex]++;
+		}
+		slateIndexOfTheOtherCandidate++;
+	}
+}
+
 void BuildDefeatsMatrix(edata& E)
 { /* initializes  E->DefeatsMatrix[], E->MarginsMatrix[], RandCandPerm[], NauruWt[], Each Candidate's 'electedCount', Each Candidate's 'drawCount', CondorcetWinner, CopeWinOnlyWinner, TrueCW */
-	int k,i,j;
+	int k;
+	int j;
 	int64_t y;
-	real t;
 	bool CondWin, TrueCondWin;
 	const std::vector<oneVoter>& allVoters = E.Voters;
 	const uint &numberOfVoters = E.NumVoters;
@@ -1703,35 +1759,16 @@ void BuildDefeatsMatrix(edata& E)
 	}
 	for(auto& eachVoter : allVoters) {
 		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
-		for(i=0; i<numberOfCandidates; i++) {
-			const oneCandidateToTheVoter &firstCandidateToTheVoter = allCandidatesToTheVoter[i];
+		int i=0;
+		for(const auto& eachCandidate : allCandidatesToTheVoter) {
 			oneCandidate& firstCandidate = allTheCandidates[i];
-			for(j=0; j<i; j++) {
-				const oneCandidateToTheVoter &secondCandidateToTheVoter = allCandidatesToTheVoter[j];
-				oneCandidate& secondCandidate = allTheCandidates[j];
-				if( secondCandidateToTheVoter.ranking>firstCandidateToTheVoter.ranking ) {
-					firstCandidate.DefeatsMatrix[j]++;	/*i preferred above j*/
-				}else{
-					secondCandidate.DefeatsMatrix[i]++;	/*j preferred above i*/
-				}
-				t = firstCandidateToTheVoter.score - secondCandidateToTheVoter.score;
-				if(t > 0.0) {
-					firstCandidate.ArmytageMatrix[j] += t;
-					firstCandidate.ArmytageDefeatsMatrix[j]++;
-				}else{
-					secondCandidate.ArmytageMatrix[i] -= t;
-					secondCandidate.ArmytageDefeatsMatrix[i]++;
-				}
-				if(firstCandidateToTheVoter.actualUtility > secondCandidateToTheVoter.actualUtility) {
-					firstCandidate.TrueDefeatsMatrix[j]++;
-				}else{
-					secondCandidate.TrueDefeatsMatrix[i]++;
-				}
-			}
+			adjustDefeatsWRTPriorCandidates(eachCandidate, firstCandidate, i, allCandidatesToTheVoter, allTheCandidates);
+			i++;
 		}
 	}
 	CondorcetWinner = -1;
 	TrueCW = -1;
+	int i;
 	for(i=0; i<numberOfCandidates; i++) {
 		oneCandidate& firstCandidate = allTheCandidates[i];
 		firstCandidate.electedCount = 0;
