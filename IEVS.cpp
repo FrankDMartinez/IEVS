@@ -1789,42 +1789,39 @@ void BuildDefeatsMatrix(edata& E)
 	}
 	CondorcetWinner = -1;
 	TrueCW = -1;
-	int i;
-	for(i=0; i<numberOfCandidates; i++) {
-		oneCandidate& firstCandidate = allTheCandidates[i];
-		firstCandidate.electedCount = 0;
-		firstCandidate.drawCount = 0;
+	int i=0;
+	for(oneCandidate& eachCandidate : allTheCandidates) {
+		eachCandidate.electedCount = 0;
+		eachCandidate.drawCount = 0;
 		CondWin = true;
 		TrueCondWin = true;
 		for(j=0; j<numberOfCandidates; j++) {
-			const int &iDefeatsJ = firstCandidate.DefeatsMatrix[j];
+			const int &iDefeatsJ = eachCandidate.DefeatsMatrix[j];
 			oneCandidate& secondCandidate = allTheCandidates[j];
 			const int &jDefeatsI = secondCandidate.DefeatsMatrix[i];
-			int64_t& marginOfTheFirstCandidateComparedToTheSecond = firstCandidate.margins[j];
+			int64_t& marginOfTheFirstCandidateComparedToTheSecond = eachCandidate.margins[j];
 			assert( iDefeatsJ <= (int)numberOfVoters );
 			assert( iDefeatsJ >= 0 );
 			assert( iDefeatsJ + jDefeatsI <= (int)numberOfVoters );
-			y = firstCandidate.ArmytageDefeatsMatrix[j];
-			y -= secondCandidate.ArmytageDefeatsMatrix[i];
-			if(y>0) {
-				firstCandidate.ArmytageMarginsMatrix[j] = firstCandidate.ArmytageMatrix[j];
+			const auto& eachArmytageDefeat = eachCandidate.ArmytageDefeatsMatrix[j];
+			const auto& otherArmytageDefeat = secondCandidate.ArmytageDefeatsMatrix[i];
+			if(eachArmytageDefeat>otherArmytageDefeat) {
+				eachCandidate.ArmytageMarginsMatrix[j] = eachCandidate.ArmytageMatrix[j];
 			} else {/*y<=0*/
-				firstCandidate.ArmytageMarginsMatrix[j] = 0;
+				eachCandidate.ArmytageMarginsMatrix[j] = 0;
 			}
-			y = iDefeatsJ;
-			y -= jDefeatsI;
-			marginOfTheFirstCandidateComparedToTheSecond = y;
+			const auto& eachMargin = iDefeatsJ - jDefeatsI;
+			marginOfTheFirstCandidateComparedToTheSecond = eachMargin;
 			assert(i!=j || marginOfTheFirstCandidateComparedToTheSecond == 0);
-			if(y > 0) {
-				firstCandidate.electedCount++;
+			if(eachMargin > 0) {
+				eachCandidate.electedCount++;
+			} else if(eachMargin==0) {
+				eachCandidate.drawCount++;
 			}
-			if(y==0) {
-				firstCandidate.drawCount++;
-			}
-			if(y<=0 && j!=i) {
+			if(eachMargin<=0 && j!=i) {
 				CondWin = false;
 			} /* if beaten or tied, not a CondorcetWinner by this defn */
-			y = firstCandidate.TrueDefeatsMatrix[j];
+			y = eachCandidate.TrueDefeatsMatrix[j];
 			y -= secondCandidate.TrueDefeatsMatrix[i];
 			if(y<=0 && j!=i) { TrueCondWin = false; }
 		}
@@ -1834,6 +1831,7 @@ void BuildDefeatsMatrix(edata& E)
 		if( TrueCondWin ) {
 			TrueCW = i;  /* i beats all opponents (unique Condorcet winner) */
 		}
+		i++;
 	}
 	/* find who-you-beat sets: */
 	for(auto& eachCandidate : allTheCandidates) {
