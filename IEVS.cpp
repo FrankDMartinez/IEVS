@@ -7298,35 +7298,33 @@ int Maximum(uint64_t N,
             const bool& permute,
             const bool& checkElimination)
 {
-	T maxc;
-	int a;
+	T maximumValue;
 	bool test;
-	int r;
 	bool typeIsUnsigned = typeid(T) == typeid(uint);
 	int winner;
 	winner = -1;
 	if(typeid(T)==typeid(uint64_t)) {
-		maxc = (T) 0;
+		maximumValue = (T) 0;
 	} else if(typeid(T)==typeid(int64_t)) {
-		maxc = (T)(LLONG_MIN);
+		maximumValue = (T)(LLONG_MIN);
 	} else {
-		maxc = (T)(-HUGE);
+		maximumValue = (T)(-HUGE);
 	}
 	if(permute) {
 		RandomlyPermute( N, RandCandPerm );
 	}
-	for(a=0; a<(int)N; a++) {
-		r = RandCandPerm[a];
-		const oneCandidate& theCandidate = allCandidates[r];
+	for(const auto& randomCandidate : RandCandPerm) {
+		const oneCandidate& theCandidate = allCandidates[randomCandidate];
 		if(checkElimination) {
 			test = !theCandidate.eliminated;
 		} else {
 			test = true;
 		}
+		const auto& value = theCandidate.*member;
 		if(test &&
-		   ((typeIsUnsigned && allCandidates[r].*member>=maxc) || allCandidates[r].*member>maxc)) {
-			maxc=allCandidates[r].*member;
-			winner=r;
+		   ((typeIsUnsigned && value>=maximumValue) || value>maximumValue)) {
+			maximumValue=value;
+			winner=randomCandidate;
 		}
 	}
 	assert(winner>=0);
