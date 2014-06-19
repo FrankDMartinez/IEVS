@@ -1822,19 +1822,12 @@ void BuildDefeatsMatrix(edata& E)
 		int j=0;
 		for(auto& eachOtherCandidate : allTheCandidates) {
 			const int &iDefeatsJ = eachCandidate.DefeatsMatrix[j];
-			const int &jDefeatsI = eachOtherCandidate.DefeatsMatrix[i];
-			int64_t& marginOfTheFirstCandidateComparedToTheSecond = eachCandidate.margins[j];
 			assert( iDefeatsJ <= (int)numberOfVoters );
 			assert( iDefeatsJ >= 0 );
+			const int &jDefeatsI = eachOtherCandidate.DefeatsMatrix[i];
 			assert( iDefeatsJ + jDefeatsI <= (int)numberOfVoters );
-			const auto& eachArmytageDefeat = eachCandidate.ArmytageDefeatsMatrix[j];
-			const auto& otherArmytageDefeat = eachOtherCandidate.ArmytageDefeatsMatrix[i];
-			if(eachArmytageDefeat>otherArmytageDefeat) {
-				eachCandidate.ArmytageMarginsMatrix[j] = eachCandidate.ArmytageMatrix[j];
-			} else {/*y<=0*/
-				eachCandidate.ArmytageMarginsMatrix[j] = 0;
-			}
 			const auto& eachMargin = iDefeatsJ - jDefeatsI;
+			int64_t& marginOfTheFirstCandidateComparedToTheSecond = eachCandidate.margins[j];
 			marginOfTheFirstCandidateComparedToTheSecond = eachMargin;
 			assert(i!=j || marginOfTheFirstCandidateComparedToTheSecond == 0);
 			if(eachMargin > 0) {
@@ -1845,6 +1838,13 @@ void BuildDefeatsMatrix(edata& E)
 			if(eachMargin<=0 && j!=i) {
 				CondWin = false;
 			} /* if beaten or tied, not a CondorcetWinner by this defn */
+			const auto& eachArmytageDefeat = eachCandidate.ArmytageDefeatsMatrix[j];
+			const auto& otherArmytageDefeat = eachOtherCandidate.ArmytageDefeatsMatrix[i];
+			if(eachArmytageDefeat>otherArmytageDefeat) {
+				eachCandidate.ArmytageMarginsMatrix[j] = eachCandidate.ArmytageMatrix[j];
+			} else {
+				eachCandidate.ArmytageMarginsMatrix[j] = 0;
+			}
 			y = eachCandidate.TrueDefeatsMatrix[j];
 			y -= eachOtherCandidate.TrueDefeatsMatrix[i];
 			if(y<=0 && not areIdentical(eachCandidate, eachOtherCandidate)) { TrueCondWin = false; }
