@@ -1757,6 +1757,30 @@ void adjustDefeatsWRTPriorCandidates(const oneCandidateToTheVoter &currentCandid
 	}
 }
 
+//	Function: areIdentical
+//
+//	Returns:
+//		'true' if the arguments are the same objects or
+//		functions and 'false' otherwise
+//
+//	Parameters:
+//		item1 - one object or function to compare
+//		item2 - the other object or function to compare
+template <class Type1, class Type2>
+bool areIdentical(const Type1& item1, const Type2& item2) {
+	bool returnValue;
+	if(&item1==&item2) {
+		if(typeid(item1)==typeid(item2)) {
+			returnValue = true;
+		} else {
+			returnValue = false;
+		}
+	} else {
+		returnValue = false;
+	}
+	return returnValue;
+}
+
 void BuildDefeatsMatrix(edata& E)
 { /* initializes  E->DefeatsMatrix[], E->MarginsMatrix[], RandCandPerm[], NauruWt[], Each Candidate's 'electedCount', Each Candidate's 'drawCount', CondorcetWinner, CopeWinOnlyWinner, TrueCW */
 	int k;
@@ -1795,16 +1819,16 @@ void BuildDefeatsMatrix(edata& E)
 		eachCandidate.drawCount = 0;
 		CondWin = true;
 		TrueCondWin = true;
-		for(j=0; j<numberOfCandidates; j++) {
+		int j=0;
+		for(auto& eachOtherCandidate : allTheCandidates) {
 			const int &iDefeatsJ = eachCandidate.DefeatsMatrix[j];
-			oneCandidate& secondCandidate = allTheCandidates[j];
-			const int &jDefeatsI = secondCandidate.DefeatsMatrix[i];
+			const int &jDefeatsI = eachOtherCandidate.DefeatsMatrix[i];
 			int64_t& marginOfTheFirstCandidateComparedToTheSecond = eachCandidate.margins[j];
 			assert( iDefeatsJ <= (int)numberOfVoters );
 			assert( iDefeatsJ >= 0 );
 			assert( iDefeatsJ + jDefeatsI <= (int)numberOfVoters );
 			const auto& eachArmytageDefeat = eachCandidate.ArmytageDefeatsMatrix[j];
-			const auto& otherArmytageDefeat = secondCandidate.ArmytageDefeatsMatrix[i];
+			const auto& otherArmytageDefeat = eachOtherCandidate.ArmytageDefeatsMatrix[i];
 			if(eachArmytageDefeat>otherArmytageDefeat) {
 				eachCandidate.ArmytageMarginsMatrix[j] = eachCandidate.ArmytageMatrix[j];
 			} else {/*y<=0*/
@@ -1822,8 +1846,9 @@ void BuildDefeatsMatrix(edata& E)
 				CondWin = false;
 			} /* if beaten or tied, not a CondorcetWinner by this defn */
 			y = eachCandidate.TrueDefeatsMatrix[j];
-			y -= secondCandidate.TrueDefeatsMatrix[i];
-			if(y<=0 && j!=i) { TrueCondWin = false; }
+			y -= eachOtherCandidate.TrueDefeatsMatrix[i];
+			if(y<=0 && not areIdentical(eachCandidate, eachOtherCandidate)) { TrueCondWin = false; }
+			j++;
 		}
 		if( CondWin ) {
 			CondorcetWinner = i;  /* i beats all opponents (unique Condorcet winner) */
