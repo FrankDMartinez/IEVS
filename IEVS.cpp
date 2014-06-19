@@ -2037,13 +2037,11 @@ EMETH Hay(const edata& E /*Strategyproof. Prob of election proportional to sum o
 
 EMETH Plurality(edata& E   /* canddt with most top-rank votes wins */)
 { /* side effects: Each Candidate's plurality vote count, PlurWinner */
-	int i;
-	const uint& numberOfVoters = E.NumVoters;
-	const std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
 	Zero(allCandidates, &oneCandidate::pluralityVotes);
-	for(i=0; i<(int)numberOfVoters; i++) {
-		allCandidates[ allVoters[i].topDownPrefs[0] ].pluralityVotes++;
+	const std::vector<oneVoter>& allVoters = E.Voters;
+	for(const auto& eachVoter: allVoters) {
+		allCandidates[ eachVoter.topDownPrefs[0] ].pluralityVotes++;
 	}
 	PlurWinner = Maximum(allCandidates, &oneCandidate::pluralityVotes);
 	return PlurWinner;
