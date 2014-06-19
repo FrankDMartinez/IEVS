@@ -1603,7 +1603,7 @@ struct oneVoter
 };
 
 template< class T >
-		int Minimum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*member, const bool& permute = true, const bool& checkElimination = false);
+		int Minimum(const CandidateSlate& allCandidates, T oneCandidate::*member, const bool& permute = true, const bool& checkElimination = false);
 template< class T >
 		int Maximum(const CandidateSlate& allCandidates, T oneCandidate::*member, const bool& permute = true, const bool& checkElimination = false);
 
@@ -1944,7 +1944,7 @@ template<class T> void Determine(int& Winner, T theMethod, edata& E)
 EMETH SociallyWorst(edata& E)
 {
 	Determine(BestWinner, SociallyBest, E);
-	WorstWinner = Minimum(E.NumCands, E.Candidates, &oneCandidate::utilitySum);
+	WorstWinner = Minimum(E.Candidates, &oneCandidate::utilitySum);
 	return WorstWinner;
 }
 
@@ -2061,7 +2061,7 @@ EMETH AntiPlurality(edata& E   /* canddt with fewest bottom-rank votes wins */)
 	for(i=0; i<numberOfVoters; i++) {
 		allCandidates[allVoters[i].topDownPrefs[lastCandidateIndex]].antiPluralityVotes++;
 	}
-	AntiPlurWinner = Minimum<uint64_t>(numberOfCandidates, allCandidates, &oneCandidate::antiPluralityVotes);
+	AntiPlurWinner = Minimum<uint64_t>(allCandidates, &oneCandidate::antiPluralityVotes);
 	return AntiPlurWinner;
 }
 
@@ -3406,7 +3406,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(Iround=1; Iround < (int)numberOfCandidates; Iround++) { /*perform IRV rounds*/
-		RdLoser = Minimum(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound, false, true);
+		RdLoser = Minimum(allCandidates, &oneCandidate::voteCountForThisRound, false, true);
 		assert(RdLoser>=0);
 		assert(RdLoser < (int)numberOfCandidates);
 		ensure(RdLoser>=0, 12);
@@ -3588,11 +3588,11 @@ EMETH BTRIRV(edata& E)
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(Iround=1; Iround<(int)numberOfCandidates; Iround++) {
-		RdLoser = Minimum(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound, false, true);
+		RdLoser = Minimum(allCandidates, &oneCandidate::voteCountForThisRound, false, true);
 		assert(RdLoser>=0);
 		bool eliminationState = allCandidates[RdLoser].eliminated;
 		allCandidates[RdLoser].eliminated = true;
-		RdLoser2 = Minimum(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound, false, true);
+		RdLoser2 = Minimum(allCandidates, &oneCandidate::voteCountForThisRound, false, true);
 		allCandidates[RdLoser].eliminated = eliminationState;
 		assert(RdLoser2>=0);
 		if( allCandidates[RdLoser].margins[RdLoser2] > 0 ) {
@@ -3876,7 +3876,7 @@ EMETH IRNR(edata& E, normalizationFunction normalizer /*Brian Olson's voting met
 			voteVector normalizedVoteVector = normalizer(allVoters[i], allCandidates, numberOfCandidates);
 			addToNormalizedRatingSum(normalizedVoteVector, allCandidates, numberOfCandidates);
 		}
-		loser = Minimum(numberOfCandidates, allCandidates, &oneCandidate::normalizedRatingSum, true, true);
+		loser = Minimum(allCandidates, &oneCandidate::normalizedRatingSum, true, true);
 		assert(loser>=0);
 		ensure(loser>=0, 15);
 		allCandidates[loser].eliminated = true;
@@ -7355,8 +7355,6 @@ int Maximum(const CandidateSlate& allCandidates,
 //		all Candidates with the minimum value of 'allCandidates[0..N-1].member'
 //
 //	Parameters:
-//		N                - the expected number of elements
-//		                   in 'allCandidates'
 //		allCandidates    - a slate of Candidates to examine
 //		member           - the member of Each Candidate
 //		                   to use for comparison
@@ -7366,15 +7364,12 @@ int Maximum(const CandidateSlate& allCandidates,
 //		                   before testing its 'member';
 //		                   default is 'false'
 template< class T >
-int Minimum(uint64_t N,
-            const CandidateSlate& allCandidates,
+int Minimum(const CandidateSlate& allCandidates,
             T oneCandidate::*member,
             const bool& permute,
             const bool& checkElimination)
 {
 	T minc;
-	int a;
-	int r;
 	int winner;
 	bool test;
 	winner = -1;
@@ -7385,12 +7380,12 @@ int Minimum(uint64_t N,
 	} else {
 		minc = (T)HUGE;
 	}
+	const auto& numberOfCandidates = RandCandPerm.size();
 	if(permute) {
-		RandomlyPermute( N, RandCandPerm );
+		RandomlyPermute( numberOfCandidates, RandCandPerm );
 	}
-	for(a=0; a<(int)N; a++) {
-		r = RandCandPerm[a];
-		const oneCandidate& theCandidate = allCandidates[r];
+	for(const auto& randomCandidate : RandCandPerm) {
+		const oneCandidate& theCandidate = allCandidates[randomCandidate];
 		if(checkElimination) {
 			test = !theCandidate.eliminated;
 		} else {
@@ -7398,13 +7393,13 @@ int Minimum(uint64_t N,
 		}
 		if(test && theCandidate.*member<minc) {
 			minc=theCandidate.*member;
-			winner=r;
+			winner=randomCandidate;
 		}
 	}
 	assert(winner>=0);
 	if(false==checkElimination) {
 		assert( allCandidates[winner].*member <= allCandidates[0].*member );
-		assert( allCandidates[winner].*member <= allCandidates[N-1].*member );
+		assert( allCandidates[winner].*member <= allCandidates[numberOfCandidates-1].*member );
 	}
 	return(winner);
 }
