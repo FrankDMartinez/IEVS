@@ -2160,17 +2160,14 @@ EMETH PlurIR(edata& E    /* PlurIR=plur+immediate runoff (give ranking as vote) 
 
 EMETH Borda(edata& E  /* Borda: weighted positional with weights N-1, N-2, ..., 0  if N-canddts */)
 { /* side effects: Each Candidate's 'BordaVotes', BordaWinner */
-	int i,j,t;
-	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
 	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
-	for(i=0; i<numberOfCandidates; i++) {
-		const MarginsData& marginsOfI = allCandidates[i].margins;
-		t=0;
-		for(j=0; j<numberOfCandidates; j++) {
-			t += marginsOfI[j];
+	for(auto& eachCandidate : allCandidates) {
+		const MarginsData& marginsOfI = eachCandidate.margins;
+		auto& votes = eachCandidate.BordaVotes;
+		for(auto& eachMargin : marginsOfI) {
+			votes += eachMargin;
 		}
-		allCandidates[i].BordaVotes = t;
 	}
 	BordaWinner = Maximum(allCandidates, &oneCandidate::BordaVotes);
 	return BordaWinner;
