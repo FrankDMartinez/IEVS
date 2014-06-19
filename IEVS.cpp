@@ -1895,22 +1895,21 @@ template <class T>
 //		    socially best Candidate
 EMETH SociallyBest(edata& E)
 {
-	int i,j;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	const uint& numberOfVoters = E.NumVoters;
 	const std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
 	Zero(allCandidates, &oneCandidate::utilitySum);
-	for(i=0; i<(int)numberOfVoters; i++) {
-		const oneVoter& theVoter = allVoters[i];
-		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
-		for(j=0; j<numberOfCandidates; j++) {
-			allCandidates[j].utilitySum += allCandidatesToTheVoter[j].actualUtility;
+	for(auto& eachVoter : allVoters) {
+		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
+		int j=0;
+		for(auto& eachCandidate : allCandidatesToTheVoter) {
+			allCandidates[j].utilitySum += eachCandidate.actualUtility;
+			j++;
 		}
 	}
 	BestWinner = Maximum(numberOfCandidates, allCandidates, &oneCandidate::utilitySum);
-	for(j=0; j<numberOfCandidates; j++) {
-		assert( allCandidates[BestWinner].utilitySum>= allCandidates[j].utilitySum );
+	for(auto& eachCandidate : allCandidates) {
+		assert(eachCandidate.utilitySum>= eachCandidate.utilitySum);
 	}
 	return BestWinner;
 }
