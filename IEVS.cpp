@@ -35,6 +35,7 @@
 #include <stdint.h>
 #include <string>
 #include <typeinfo>
+#include <valarray>
 #include <vector>
 
 void disableOutputFile();
@@ -206,7 +207,7 @@ typedef std::array<real,MaxNumCands> ArmytageData;
 typedef std::array<int,MaxNumCands> ArmytageDefeatsData;
 typedef std::array<real,MaxNumCands> ArmytageMarginData;
 typedef std::array<int,MaxNumCands> DefeatsData;
-typedef std::array<int64_t,MaxNumCands> MarginsData;
+typedef std::valarray<int64_t> MarginsData;
 typedef std::array<int64_t,MaxNumCands> PairApprovalData;
 typedef std::array<int,MaxNumCands> TrueDefeatsData;
 
@@ -1798,9 +1799,11 @@ void BuildDefeatsMatrix(edata& E)
 	for(oneCandidate& eachCandidate : allTheCandidates) {
 		const real utilitySum = eachCandidate.utilitySum;
 		const auto pluralityVotes = eachCandidate.pluralityVotes;
+		const auto margins = eachCandidate.margins;
 		eachCandidate = oneCandidate();
 		eachCandidate.utilitySum = utilitySum;
 		eachCandidate.pluralityVotes = pluralityVotes;
+		eachCandidate.margins = margins;
 	}
 	for(auto& eachVoter : allVoters) {
 		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
@@ -5932,6 +5935,34 @@ template<class T> void resizeAndReset(std::vector<T>& theVector, const uint64_t&
 {
 	theVector.resize(newSize);
 	reset(theVector);
+}
+
+//	Function: resizeAndReset
+//
+//	resizes the given vector and resets its elements to their default
+//	state; if the new size is smaller than the current container
+//	size, the content is reduced to contain a number of elements
+//	equal to the new size, removing those beyond that new size (and
+//	destroying them); if the new size is greater than the current
+//	container size, the content is expanded by inserting at the end
+//	as many elements as needed to reach the new size, with each new
+//	element value-initialized; if the new size is also greater than
+//	the current container capacity, an automatic reallocation of
+//	the allocated storage space takes place; this function changes
+//	the actual content of the container by inserting or erasing elements
+//	from it
+//
+//	Parameters:
+//		theVector - vector to be resized and reset
+//		newSize   - the number of elements the given vector contains
+//		            after the call to this function
+template<> void resizeAndReset(CandidateSlate& theVector, const uint64_t& newSize)
+{
+	theVector.resize(newSize);
+	reset(theVector);
+	for(auto& eachCandidate : theVector) {
+		eachCandidate.margins.resize(newSize);
+	}
 }
 
 //	Function: GenRealWorldUtils
