@@ -1605,7 +1605,7 @@ struct oneVoter
 template< class T >
 		int Minimum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*member, const bool& permute = true, const bool& checkElimination = false);
 template< class T >
-		int Maximum(uint64_t N, const CandidateSlate& allCandidates, T oneCandidate::*member, const bool& permute = true, const bool& checkElimination = false);
+		int Maximum(const CandidateSlate& allCandidates, T oneCandidate::*member, const bool& permute = true, const bool& checkElimination = false);
 
 typedef struct dum1 {
 	uint NumVoters;
@@ -1864,7 +1864,7 @@ void BuildDefeatsMatrix(edata& E)
 		const MarginsData& marginsOfEachCandidate = eachCandidate.margins;
 		beat = findWhoIsBeaten(marginsOfEachCandidate);
 	}
-	CopeWinOnlyWinner = Maximum<int64_t>(numberOfCandidates, allTheCandidates, &oneCandidate::electedCount);
+	CopeWinOnlyWinner = Maximum<int64_t>(allTheCandidates, &oneCandidate::electedCount);
 	for(auto& eachVoter : allVoters) {
 		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
@@ -1895,7 +1895,6 @@ template <class T>
 //		    socially best Candidate
 EMETH SociallyBest(edata& E)
 {
-	const uint64_t& numberOfCandidates = E.NumCands;
 	const std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
 	Zero(allCandidates, &oneCandidate::utilitySum);
@@ -1907,7 +1906,7 @@ EMETH SociallyBest(edata& E)
 			j++;
 		}
 	}
-	BestWinner = Maximum(numberOfCandidates, allCandidates, &oneCandidate::utilitySum);
+	BestWinner = Maximum(allCandidates, &oneCandidate::utilitySum);
 	for(auto& eachCandidate : allCandidates) {
 		assert(eachCandidate.utilitySum>= eachCandidate.utilitySum);
 	}
@@ -2039,7 +2038,6 @@ EMETH Hay(const edata& E /*Strategyproof. Prob of election proportional to sum o
 EMETH Plurality(edata& E   /* canddt with most top-rank votes wins */)
 { /* side effects: Each Candidate's plurality vote count, PlurWinner */
 	int i;
-	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	const std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
@@ -2047,7 +2045,7 @@ EMETH Plurality(edata& E   /* canddt with most top-rank votes wins */)
 	for(i=0; i<(int)numberOfVoters; i++) {
 		allCandidates[ allVoters[i].topDownPrefs[0] ].pluralityVotes++;
 	}
-	PlurWinner = Maximum(numberOfCandidates, allCandidates, &oneCandidate::pluralityVotes);
+	PlurWinner = Maximum(allCandidates, &oneCandidate::pluralityVotes);
 	return PlurWinner;
 }
 
@@ -2176,7 +2174,7 @@ EMETH Borda(edata& E  /* Borda: weighted positional with weights N-1, N-2, ..., 
 		}
 		allCandidates[i].BordaVotes = t;
 	}
-	BordaWinner = Maximum(numberOfCandidates, allCandidates, &oneCandidate::BordaVotes);
+	BordaWinner = Maximum(allCandidates, &oneCandidate::BordaVotes);
 	return BordaWinner;
 }
 
@@ -3086,7 +3084,7 @@ EMETH Bucklin(edata& E)
 			const oneVoter& theVoter = allVoters[i];
 			allCandidates[ theVoter.topDownPrefs[rnd] ].voteCountForThisRound++;
 		}
-		winner = Maximum(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound);
+		winner = Maximum(allCandidates, &oneCandidate::voteCountForThisRound);
 		best = allCandidates[winner].voteCountForThisRound;
 		if((best*2) > numberOfVoters) {
 			break;
@@ -3677,7 +3675,7 @@ EMETH Coombs(edata& E)
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(Iround=1; Iround < (int)numberOfCandidates; Iround++) {
-		RdLoser = Maximum(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound, false, true);
+		RdLoser = Maximum(allCandidates, &oneCandidate::voteCountForThisRound, false, true);
 		assert(RdLoser>=0);
 		ensure(RdLoser>=0, 14);
 		allCandidates[RdLoser].eliminated = true; /* eliminate RdLoser */
@@ -3751,7 +3749,7 @@ EMETH Approval(edata& E)
 		addTheApprovalOfTheVoter(allCandidatesToTheVoter, allCandidates, numberOfCandidates);
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
-	ApprovalWinner = Maximum(numberOfCandidates, allCandidates, &oneCandidate::approvals);
+	ApprovalWinner = Maximum(allCandidates, &oneCandidate::approvals);
 	return(ApprovalWinner);
 }
 
@@ -4009,7 +4007,7 @@ EMETH Range(edata& E    /* canddt with highest average Score wins */)
 			allCandidates[j].rangeVote += allCandidatesToTheVoter[j].score;
 		}
 	}
-	RangeWinner = Maximum(numberOfCandidates, allCandidates, &oneCandidate::rangeVote);
+	RangeWinner = Maximum(allCandidates, &oneCandidate::rangeVote);
 	return(RangeWinner);
 }
 
@@ -7303,8 +7301,6 @@ int ArgMinArr(uint64_t N, const T Arr[])
 //		all Candidates with the maximum value of 'allCandidates[0..N-1].member'
 //
 //	Parameters:
-//		N                - the expected number of elements
-//		                   in 'allCandidates'
 //		allCandidates    - a slate of Candidates to examine
 //		member           - the member of Each Candidate
 //		                   to use for comparison
@@ -7314,8 +7310,7 @@ int ArgMinArr(uint64_t N, const T Arr[])
 //		                   before testing its 'member';
 //		                   default is 'false'
 template< class T >
-int Maximum(uint64_t N,
-	    const CandidateSlate& allCandidates,
+int Maximum(const CandidateSlate& allCandidates,
 	    T oneCandidate::*member,
             const bool& permute,
             const bool& checkElimination)
@@ -7333,7 +7328,7 @@ int Maximum(uint64_t N,
 		maximumValue = (T)(-HUGE);
 	}
 	if(permute) {
-		RandomlyPermute( N, RandCandPerm );
+		RandomlyPermute( RandCandPerm.size(), RandCandPerm );
 	}
 	for(const auto& randomCandidate : RandCandPerm) {
 		const oneCandidate& theCandidate = allCandidates[randomCandidate];
