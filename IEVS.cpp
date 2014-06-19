@@ -1882,7 +1882,7 @@ void BuildDefeatsMatrix(edata& E)
 }
 
 template <class T>
-	void Zero(const uint64_t& number, CandidateSlate& allCandidates, T oneCandidate::*member);
+	void Zero(CandidateSlate& allCandidates, T oneCandidate::*member);
 
 //	Function: SociallyBest
 //
@@ -1900,7 +1900,7 @@ EMETH SociallyBest(edata& E)
 	const uint& numberOfVoters = E.NumVoters;
 	const std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
-	Zero(numberOfCandidates, allCandidates, &oneCandidate::utilitySum);
+	Zero(allCandidates, &oneCandidate::utilitySum);
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
 		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
@@ -2044,7 +2044,7 @@ EMETH Plurality(edata& E   /* canddt with most top-rank votes wins */)
 	const uint& numberOfVoters = E.NumVoters;
 	const std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
-	Zero(numberOfCandidates, allCandidates, &oneCandidate::pluralityVotes);
+	Zero(allCandidates, &oneCandidate::pluralityVotes);
 	for(i=0; i<(int)numberOfVoters; i++) {
 		allCandidates[ allVoters[i].topDownPrefs[0] ].pluralityVotes++;
 	}
@@ -2060,7 +2060,7 @@ EMETH AntiPlurality(edata& E   /* canddt with fewest bottom-rank votes wins */)
 	const uint& numberOfVoters = E.NumVoters;
 	const std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
-	Zero(numberOfCandidates, allCandidates, &oneCandidate::antiPluralityVotes);
+	Zero(allCandidates, &oneCandidate::antiPluralityVotes);
 	for(i=0; i<numberOfVoters; i++) {
 		allCandidates[allVoters[i].topDownPrefs[lastCandidateIndex]].antiPluralityVotes++;
 	}
@@ -2278,7 +2278,7 @@ EMETH NansonBaldwin(edata& E  /* repeatedly eliminate Borda loser */)
 	if(CondorcetWinner >= 0) return CondorcetWinner;
 #endif
 	Determine(BordaWinner, Borda, E);
-	Zero(numberOfCandidates, allCandidates, &oneCandidate::eliminated);
+	Zero(allCandidates, &oneCandidate::eliminated);
 	CopyArray(numberOfCandidates, allCandidates, NansonVoteCount, &oneCandidate::BordaVotes);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(rnd=1; rnd < (int)numberOfCandidates; rnd++) {
@@ -2657,7 +2657,7 @@ EMETH RaynaudElim(edata& E  /* repeatedly eliminate canddt who suffered the wors
 		RayDefeatMargin[i] = t; /*worst margin of defeat of i, nonpositive if undefeated */
 		RayBeater[i] = beater; /*who administered that beating*/
 	}
-	Zero(numberOfCandidates, allCandidates, &oneCandidate::eliminated);
+	Zero(allCandidates, &oneCandidate::eliminated);
 	for(rnd=1; rnd < (int)numberOfCandidates; rnd++) {
 		RayLoser = -1;
 		maxc = -BIGINT;
@@ -2736,7 +2736,7 @@ EMETH ArrowRaynaud(edata& E  /* repeatedly eliminate canddt with smallest {large
 		ARVictMargin[i] = t; /*largest margin of victory of i, nonpositive if never won*/
 		ARchump[i] = chump; /*who suffered that beating*/
 	}
-	Zero(numberOfCandidates, allCandidates, &oneCandidate::eliminated);
+	Zero(allCandidates, &oneCandidate::eliminated);
 	for(rnd=1; rnd < (int)numberOfCandidates; rnd++) {
 		RandomlyPermute( numberOfCandidates, RandCandPerm );
 		ARLoser = findLoser(numberOfCandidates, allCandidates, ARVictMargin);
@@ -2934,7 +2934,7 @@ EMETH SmithSet(edata& E  /* Smith set = smallest nonempty set of canddts that pa
 	int i,r;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
-	Zero(numberOfCandidates, allCandidates, &oneCandidate::IsASmithMember);
+	Zero(allCandidates, &oneCandidate::IsASmithMember);
 	assert(CopeWinOnlyWinner>=0);
 	assert(CopeWinOnlyWinner < (int)numberOfCandidates);
 	allCandidates[CopeWinOnlyWinner].IsASmithMember = true;
@@ -2964,7 +2964,7 @@ EMETH SchwartzSet(edata& E  /* Schwartz set = smallest nonempty set of canddts u
 	int i,r;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
-	Zero(numberOfCandidates, allCandidates, &oneCandidate::IsASchwartzMember);
+	Zero(allCandidates, &oneCandidate::IsASchwartzMember);
 	assert(CopeWinOnlyWinner>=0);
 	assert(CopeWinOnlyWinner < (int)numberOfCandidates);
 	allCandidates[CopeWinOnlyWinner].IsASchwartzMember = true;
@@ -3081,7 +3081,7 @@ EMETH Bucklin(edata& E)
 	const std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
 	winner = -1;
-	Zero(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound);
+	Zero(allCandidates, &oneCandidate::voteCountForThisRound);
 	for(rnd=0; rnd<(int)numberOfCandidates; rnd++) {
 		for(i=0; i<(int)numberOfVoters; i++) {
 			const oneVoter& theVoter = allVoters[i];
@@ -3389,7 +3389,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 			CandidateI.lossCount = countLosses(CandidateI, numberOfCandidates);
 		}
 	} /*end for(i)*/
-	Zero(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound);
+	Zero(allCandidates, &oneCandidate::voteCountForThisRound);
 	resetFavorites(allVoters);
 	/* 'favoriteCandidate' is the rank of the 1st noneliminated canddt in voter i's topdownpref list (initially 0) */
 	FillArray(numberOfVoters, FavListNext, -1);
@@ -3574,7 +3574,7 @@ EMETH BTRIRV(edata& E)
 		allCandidates[i].eliminated = false;
 		HeadFav[i] = -1;
 	}
-	Zero(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound);
+	Zero(allCandidates, &oneCandidate::voteCountForThisRound);
 	resetFavorites(allVoters);
 	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
 	for(i=0; i<numberOfVoters; i++) {
@@ -3655,7 +3655,7 @@ EMETH Coombs(edata& E)
 		allCandidates[i].eliminated = false;
 		HeadFav[i] = -1; /*HeadFav[i] will be the first voter whose current most-hated is i*/
 	}
-	Zero(numberOfCandidates, allCandidates, &oneCandidate::voteCountForThisRound);
+	Zero(allCandidates, &oneCandidate::voteCountForThisRound);
 	assert(numberOfCandidates >= 2);
 	assert(numberOfCandidates <= MaxNumVoters);
 	resetFavorites(allVoters,numberOfCandidates-1);
@@ -3746,7 +3746,7 @@ EMETH Approval(edata& E)
 	const std::vector<oneVoter>& allVoters = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	Zero(numberOfCandidates, allCandidates, &oneCandidate::approvals);
+	Zero(allCandidates, &oneCandidate::approvals);
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = allVoters[i].Candidates;
 		addTheApprovalOfTheVoter(allCandidatesToTheVoter, allCandidates, numberOfCandidates);
@@ -3814,7 +3814,7 @@ EMETH HeitzigLFC(edata& E)
 	int i,j;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
-	Zero(numberOfCandidates, allCandidates, &oneCandidate::eliminated);
+	Zero(allCandidates, &oneCandidate::eliminated);
 	for(j=0; j<numberOfCandidates; j++) {
 		const oneCandidate& CandidateJ = allCandidates[j];
 		for(i=0; i<numberOfCandidates; i++) {
@@ -3872,9 +3872,9 @@ EMETH IRNR(edata& E, normalizationFunction normalizer /*Brian Olson's voting met
 	const uint& numberOfVoters = E.NumVoters;
 	CandidateSlate& allCandidates = E.Candidates;
 	extern void addToNormalizedRatingSum(const voteVector&, CandidateSlate&, const uint64_t&);
-	Zero(numberOfCandidates, allCandidates, &oneCandidate::eliminated);
+	Zero(allCandidates, &oneCandidate::eliminated);
 	for(rd=numberOfCandidates; rd>1; rd--) {
-		Zero(numberOfCandidates, allCandidates, &oneCandidate::normalizedRatingSum);
+		Zero(allCandidates, &oneCandidate::normalizedRatingSum);
 		for(i=0; i<(int)numberOfVoters; i++) {
 			voteVector normalizedVoteVector = normalizer(allVoters[i], allCandidates, numberOfCandidates);
 			addToNormalizedRatingSum(normalizedVoteVector, allCandidates, numberOfCandidates);
@@ -4000,7 +4000,7 @@ EMETH Range(edata& E    /* canddt with highest average Score wins */)
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
 	CandidateSlate& allCandidates = E.Candidates;
-	Zero(numberOfCandidates, allCandidates, &oneCandidate::rangeVote);
+	Zero(allCandidates, &oneCandidate::rangeVote);
 	for(i=0; i<numberOfCandidates; i++) {
 		allCandidates[i].rangeVote = 0;
 	}
@@ -9499,9 +9499,9 @@ void resetFavorites(std::vector<oneVoter>& Voters, const int64_t& Candidate) {
  *	member:		the member of Each Candidate to set to 0
  */
 template <class T>
-	void Zero(const uint64_t& number, CandidateSlate& allCandidates, T oneCandidate::*member) {
-		for(uint64_t count = 0; count < number; count++) {
-			allCandidates[count].*member = 0;
+	void Zero(CandidateSlate& allCandidates, T oneCandidate::*member) {
+		for(auto& eachCandidate : allCandidates) {
+			eachCandidate.*member = 0;
 		}
 }
 
