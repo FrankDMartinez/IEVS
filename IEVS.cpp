@@ -3372,13 +3372,14 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 		BuildDefeatsMatrix(E);
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
-	for(i=0; i<numberOfCandidates; i++) {
-		oneCandidate& CandidateI = allCandidates[i];
-		CandidateI.eliminated =false;
+	i=0;
+	for(auto& eachCandidate : allCandidates) {
+		eachCandidate.eliminated =false;
 		HeadFav[i] = -1; /*HeadFav[i] will be the first voter whose current favorite is i*/
 		if((SmithIRVwinner<0) && (IRVTopLim==BIGINT)) {
-			CandidateI.lossCount = countLosses(CandidateI);
+			eachCandidate.lossCount = countLosses(eachCandidate);
 		}
+		i++;
 	} /*end for(i)*/
 	Zero(allCandidates, &oneCandidate::voteCountForThisRound);
 	resetFavorites(allVoters);
