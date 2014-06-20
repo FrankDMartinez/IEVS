@@ -3357,6 +3357,38 @@ void prepareOneForIRV(oneCandidate& theCandidate, const bool& countAllLosses)
 	}
 }
 
+//	Function: updateAllLosses
+//
+//	decrements the loss count of Every non-eliminated Candidate
+//	which was ranked lower than the Loser of the most recent
+//	instant-runoff-voting round since the Loser is to be eliminated
+//	from consideration
+//
+//	Parameters:
+//		Candidates        - a slate of All Candidates in
+//		                    this election
+//		marginsOfTheLoser - the margins of the round losing
+//		                    Candidate with respect to the
+//		                    Other Candidates
+void updateAllLosses(CandidateSlate& Candidates, const MarginsData& marginsOfTheLoser)
+{
+	int j=0;
+	for(auto& eachCandidate : Candidates) {
+		if(!eachCandidate.eliminated) {
+			int64_t& lossCount = eachCandidate.lossCount;
+			const auto& theMargin = marginsOfTheLoser[j];
+			if(theMargin>0) {
+				lossCount--;
+			}
+			if( lossCount <= 0 ) {
+				SmithIRVwinner = j;
+				break;
+			}
+		}
+		j++;
+	}
+}
+
 /*******
  * The following IRV (instant runoff voting) algorithm has somewhat long code, but
  * by using linked lists achieves fast (very sublinear) runtime.
@@ -3375,8 +3407,7 @@ void prepareOneForIRV(oneCandidate& theCandidate, const bool& countAllLosses)
 //			  the instant runoff voting Winner
 EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 { /* side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's of Each Voter, Each Candidate's 'voteCountForThisRound', FavListNext[], HeadFav[], Each Candidate's 'lossCount' member, SmithIRVwinner, IRVwinner  */
-	int Iround,i,RdLoser,NextI,j;
-	int64_t t;
+	int Iround,i,RdLoser,NextI;
 	int x,stillthere,winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	std::vector<oneVoter>& allVoters = E.Voters;
@@ -3418,18 +3449,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 		allCandidates[RdLoser].eliminated = true; /* eliminate RdLoser */
 		if((IRVTopLim==BIGINT) && (SmithIRVwinner < 0)) {
 			const MarginsData& marginsOfRdLoser = allCandidates[RdLoser].margins;
-			j=0;
-			for(auto& eachCandidate : allCandidates) {
-				if(!eachCandidate.eliminated) { /* update j's 'lossCount' member */
-					int64_t& lossCount = eachCandidate.lossCount;
-					t = marginsOfRdLoser[j];
-					if(t>0) {
-						lossCount--;
-					}
-					if( lossCount <= 0 ) { SmithIRVwinner = j; break; }
-				}
-				j++;
-			}
+			updateAllLosses(allCandidates, marginsOfRdLoser);
 		}
 		for(i=HeadFav[RdLoser]; i>=0; i=NextI) {/*Go thru linked list of voters with favorite=RdLoser, adjust:*/
 			oneVoter& theVoter = allVoters[i];
