@@ -2166,11 +2166,7 @@ EMETH Borda(edata& E  /* Borda: weighted positional with weights N-1, N-2, ..., 
 	CandidateSlate& allCandidates = E.Candidates;
 	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 	for(auto& eachCandidate : allCandidates) {
-		const MarginsData& marginsOfI = eachCandidate.margins;
-		auto& votes = eachCandidate.BordaVotes;
-		for(auto& eachMargin : marginsOfI) {
-			votes += eachMargin;
-		}
+		eachCandidate.BordaVotes = eachCandidate.margins.sum();
 	}
 	BordaWinner = Maximum(allCandidates, &oneCandidate::BordaVotes);
 	return BordaWinner;
