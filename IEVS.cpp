@@ -3394,7 +3394,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 	std::fill(std::begin(HeadFav), std::end(HeadFav), -1); /*HeadFav[i] will be the first voter whose current favorite is i*/
 	resetFavorites(allVoters);
 	/* 'favoriteCandidate' is the rank of the 1st noneliminated canddt in voter i's topdownpref list (initially 0) */
-	FillArray(numberOfVoters, FavListNext, -1);
+	std::fill(std::begin(FavListNext), std::end(FavListNext), -1);
 	/* FavListNext is "next" indices in linked list of voters with common current favorite; -1 terminated. */
 	if((SmithIRVwinner<0) && (IRVTopLim==BIGINT)) {
 		SmithIRVwinner = CondorcetWinner;
