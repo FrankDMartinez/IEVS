@@ -3379,7 +3379,6 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 	int64_t t;
 	int x,stillthere,winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	const uint& numberOfVoters = E.NumVoters;
 	std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
 	assert(numberOfCandidates <= MaxNumCands);
@@ -3400,14 +3399,15 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 		SmithIRVwinner = CondorcetWinner;
 	}
 	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
-	for(i=0; i<numberOfVoters; i++) {
-		const oneVoter& theVoter = allVoters[i];
-		x = theVoter.topDownPrefs[theVoter.favoriteCandidate]; /* the initial favorite of voter i */
+	i = 0;
+	for(const auto& eachVoter : allVoters) {
+		x = eachVoter.topDownPrefs[eachVoter.favoriteCandidate]; /* the initial favorite of voter i */
 		assert(x >= 0);
 		assert(x < (int)numberOfCandidates);
 		allCandidates[x].voteCountForThisRound++;
 		FavListNext[i] = HeadFav[x];
 		HeadFav[x] = i;
+		i++;
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(Iround=1; Iround < (int)numberOfCandidates; Iround++) { /*perform IRV rounds*/
