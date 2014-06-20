@@ -3351,6 +3351,7 @@ int findNextUneliminatedFavorite(const oneVoter& theVoter,
 void prepareOneForIRV(oneCandidate& theCandidate, const bool& countAllLosses)
 {
 	theCandidate.eliminated =false;
+        theCandidate.voteCountForThisRound = 0;
 	if(countAllLosses) {
 		theCandidate.lossCount = countLosses(theCandidate);
 	}
@@ -3391,7 +3392,6 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 		prepareOneForIRV(eachCandidate, countAllLosses);
 	}
 	std::fill(std::begin(HeadFav), std::end(HeadFav), -1); /*HeadFav[i] will be the first voter whose current favorite is i*/
-	Zero(allCandidates, &oneCandidate::voteCountForThisRound);
 	resetFavorites(allVoters);
 	/* 'favoriteCandidate' is the rank of the 1st noneliminated canddt in voter i's topdownpref list (initially 0) */
 	FillArray(numberOfVoters, FavListNext, -1);
