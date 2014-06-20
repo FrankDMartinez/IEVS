@@ -3418,7 +3418,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 		allCandidates[RdLoser].eliminated = true; /* eliminate RdLoser */
 		if((IRVTopLim==BIGINT) && (SmithIRVwinner < 0)) {
 			const MarginsData& marginsOfRdLoser = allCandidates[RdLoser].margins;
-			for(j=(int)numberOfCandidates-1; j>=0; j--) {
+			for(j=0; j<numberOfCandidates; j++) {
 				if(!allCandidates[j].eliminated) { /* update j's 'lossCount' member */
 					int64_t& lossCount = allCandidates[j].lossCount;
 					t = marginsOfRdLoser[j];
