@@ -3418,15 +3418,17 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 		allCandidates[RdLoser].eliminated = true; /* eliminate RdLoser */
 		if((IRVTopLim==BIGINT) && (SmithIRVwinner < 0)) {
 			const MarginsData& marginsOfRdLoser = allCandidates[RdLoser].margins;
-			for(j=0; j<numberOfCandidates; j++) {
-				if(!allCandidates[j].eliminated) { /* update j's 'lossCount' member */
-					int64_t& lossCount = allCandidates[j].lossCount;
+			j=0;
+			for(auto& eachCandidate : allCandidates) {
+				if(!eachCandidate.eliminated) { /* update j's 'lossCount' member */
+					int64_t& lossCount = eachCandidate.lossCount;
 					t = marginsOfRdLoser[j];
 					if(t>0) {
 						lossCount--;
 					}
 					if( lossCount <= 0 ) { SmithIRVwinner = j; break; }
 				}
+				j++;
 			}
 		}
 		for(i=HeadFav[RdLoser]; i>=0; i=NextI) {/*Go thru linked list of voters with favorite=RdLoser, adjust:*/
