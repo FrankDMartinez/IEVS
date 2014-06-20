@@ -3341,6 +3341,21 @@ int findNextUneliminatedFavorite(const oneVoter& theVoter,
 	return x;
 }
 
+//	Function: prepareOneForIRV
+//
+//	prepares a 'oneCandidate' object for the instant-runoff-voting
+//	algorithm
+//
+//	Parameter:
+//		theCandidate - the 'oneCandidate' object to prepare
+void prepareOneForIRV(oneCandidate& theCandidate, const bool& countAllLosses)
+{
+	theCandidate.eliminated =false;
+	if(countAllLosses) {
+		theCandidate.lossCount = countLosses(theCandidate);
+	}
+}
+
 /*******
  * The following IRV (instant runoff voting) algorithm has somewhat long code, but
  * by using linked lists achieves fast (very sublinear) runtime.
@@ -3371,15 +3386,11 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 		BuildDefeatsMatrix(E);
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
-	i=0;
+	const auto& countAllLosses = (SmithIRVwinner<0) && (IRVTopLim==BIGINT);
 	for(auto& eachCandidate : allCandidates) {
-		eachCandidate.eliminated =false;
-		HeadFav[i] = -1; /*HeadFav[i] will be the first voter whose current favorite is i*/
-		if((SmithIRVwinner<0) && (IRVTopLim==BIGINT)) {
-			eachCandidate.lossCount = countLosses(eachCandidate);
-		}
-		i++;
-	} /*end for(i)*/
+		prepareOneForIRV(eachCandidate, countAllLosses);
+	}
+	std::fill(std::begin(HeadFav), std::end(HeadFav), -1); /*HeadFav[i] will be the first voter whose current favorite is i*/
 	Zero(allCandidates, &oneCandidate::voteCountForThisRound);
 	resetFavorites(allVoters);
 	/* 'favoriteCandidate' is the rank of the 1st noneliminated canddt in voter i's topdownpref list (initially 0) */
