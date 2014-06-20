@@ -254,7 +254,7 @@ struct oneCandidate
 	}
 };
 
-typedef std::vector<oneCandidate> CandidateSlate;
+typedef std::valarray<oneCandidate> CandidateSlate;
 
 template< class T>
 		int ArgMinArr(uint64_t N, const T Arr[]);
@@ -1616,7 +1616,6 @@ typedef struct dum1 {
 	dum1() : NumVoters(), NumCands(), Voters(), Candidates()
 	{
 		Voters.reserve(MaxNumVoters);
-                Candidates.reserve(MaxNumCands);
 	}
 } edata;
 
@@ -5928,7 +5927,7 @@ int LoadEldataFiles()
 //		theVector - vector to be resized and reset
 //		newSize   - the number of elements the given vector contains
 //		            after the call to this function
-template<class T> void resizeAndReset(std::vector<T>& theVector, const uint64_t& newSize)
+template<class T> void resizeAndReset(T& theVector, const uint64_t& newSize)
 {
 	theVector.resize(newSize);
 	reset(theVector);
@@ -5950,14 +5949,14 @@ template<class T> void resizeAndReset(std::vector<T>& theVector, const uint64_t&
 //	from it
 //
 //	Parameters:
-//		theVector - vector to be resized and reset
-//		newSize   - the number of elements the given vector contains
-//		            after the call to this function
-template<> void resizeAndReset(CandidateSlate& theVector, const uint64_t& newSize)
+//		theSlate - slate of Candidates to be resized & reset
+//		newSize  - the number of elements the given vector contains
+//		           after the call to this function
+template<> void resizeAndReset(CandidateSlate& theSlate, const uint64_t& newSize)
 {
-	theVector.resize(newSize);
-	reset(theVector);
-	for(auto& eachCandidate : theVector) {
+	theSlate.resize(newSize);
+	theSlate=oneCandidate();
+	for(auto& eachCandidate : theSlate) {
 		eachCandidate.margins.resize(newSize);
 	}
 }
