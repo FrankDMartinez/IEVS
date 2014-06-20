@@ -3389,6 +3389,16 @@ void updateAllLosses(CandidateSlate& Candidates, const MarginsData& marginsOfThe
 	}
 }
 
+//	Function: needSmithIRVWinner
+//
+//	Returns:
+//		the current state of needing to find and having
+//		found the "Smith Instant-Runoff-Voting" Winner
+bool needSmithIRVWinner()
+{
+	return (SmithIRVwinner<0) && (IRVTopLim==BIGINT);
+}
+
 /*******
  * The following IRV (instant runoff voting) algorithm has somewhat long code, but
  * by using linked lists achieves fast (very sublinear) runtime.
@@ -3413,20 +3423,20 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 	std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
 	assert(numberOfCandidates <= MaxNumCands);
-	if((SmithIRVwinner<0) && (IRVTopLim==BIGINT) && (CopeWinOnlyWinner<0)) {
+	if(needSmithIRVWinner() && (CopeWinOnlyWinner<0)) {
 		BuildDefeatsMatrix(E);
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
-	const auto& needSmithIRVWinner = (SmithIRVwinner<0) && (IRVTopLim==BIGINT);
+	const auto& needSIRVWinner = needSmithIRVWinner();
 	for(auto& eachCandidate : allCandidates) {
-		prepareOneForIRV(eachCandidate, needSmithIRVWinner);
+		prepareOneForIRV(eachCandidate, needSIRVWinner);
 	}
 	std::fill(std::begin(HeadFav), std::end(HeadFav), -1); /*HeadFav[i] will be the first voter whose current favorite is i*/
 	resetFavorites(allVoters);
 	/* 'favoriteCandidate' is the rank of the 1st noneliminated canddt in voter i's topdownpref list (initially 0) */
 	std::fill(std::begin(FavListNext), std::end(FavListNext), -1);
 	/* FavListNext is "next" indices in linked list of voters with common current favorite; -1 terminated. */
-	if(needSmithIRVWinner) {
+	if(needSmithIRVWinner()) {
 		SmithIRVwinner = CondorcetWinner;
 	}
 	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
@@ -3447,7 +3457,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 		assert(RdLoser < (int)numberOfCandidates);
 		ensure(RdLoser>=0, 12);
 		allCandidates[RdLoser].eliminated = true; /* eliminate RdLoser */
-		if((IRVTopLim==BIGINT) && (SmithIRVwinner < 0)) {
+		if(needSmithIRVWinner()) {
 			const MarginsData& marginsOfRdLoser = allCandidates[RdLoser].margins;
 			updateAllLosses(allCandidates, marginsOfRdLoser);
 		}
