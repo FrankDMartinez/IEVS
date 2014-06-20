@@ -3290,12 +3290,12 @@ EMETH SimmonsCond(edata& E)
 //		                     count losses
 //		numberOfCandidates - the number of Candidates in
 //		                     the current election
-int64_t countLosses(const  oneCandidate& theCandidate, const uint64_t& numberOfCandidates)
+int64_t countLosses(const oneCandidate& theCandidate)
 {
 	const MarginsData& margins = theCandidate.margins;
 	int64_t t=0;
-	for(uint64_t j=0; j<numberOfCandidates; j++) {
-		if(margins[j] < 0) {
+	for(const auto& eachMargin : margins) {
+		if(eachMargin < 0) {
 			t++;
 		}
 	}
@@ -3377,7 +3377,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 		CandidateI.eliminated =false;
 		HeadFav[i] = -1; /*HeadFav[i] will be the first voter whose current favorite is i*/
 		if((SmithIRVwinner<0) && (IRVTopLim==BIGINT)) {
-			CandidateI.lossCount = countLosses(CandidateI, numberOfCandidates);
+			CandidateI.lossCount = countLosses(CandidateI);
 		}
 	} /*end for(i)*/
 	Zero(allCandidates, &oneCandidate::voteCountForThisRound);
@@ -4369,7 +4369,7 @@ EMETH DMC(edata& E  /* eliminate least-approved candidate until unbeaten winner 
 #endif
 	for(i=0; i<numberOfCandidates; i++) {
 		oneCandidate& CandidateI = allCandidates[i];
-		CandidateI.lossCount = countLosses(CandidateI, numberOfCandidates);
+		CandidateI.lossCount = countLosses(CandidateI);
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	PermShellSortDown(numberOfCandidates, allCandidates, &oneCandidate::approvals);
