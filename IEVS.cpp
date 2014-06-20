@@ -3387,16 +3387,16 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 		BuildDefeatsMatrix(E);
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
-	const auto& countAllLosses = (SmithIRVwinner<0) && (IRVTopLim==BIGINT);
+	const auto& needSmithIRVWinner = (SmithIRVwinner<0) && (IRVTopLim==BIGINT);
 	for(auto& eachCandidate : allCandidates) {
-		prepareOneForIRV(eachCandidate, countAllLosses);
+		prepareOneForIRV(eachCandidate, needSmithIRVWinner);
 	}
 	std::fill(std::begin(HeadFav), std::end(HeadFav), -1); /*HeadFav[i] will be the first voter whose current favorite is i*/
 	resetFavorites(allVoters);
 	/* 'favoriteCandidate' is the rank of the 1st noneliminated canddt in voter i's topdownpref list (initially 0) */
 	std::fill(std::begin(FavListNext), std::end(FavListNext), -1);
 	/* FavListNext is "next" indices in linked list of voters with common current favorite; -1 terminated. */
-	if((SmithIRVwinner<0) && (IRVTopLim==BIGINT)) {
+	if(needSmithIRVWinner) {
 		SmithIRVwinner = CondorcetWinner;
 	}
 	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
