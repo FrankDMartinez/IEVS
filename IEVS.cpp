@@ -1596,8 +1596,8 @@ struct oneVoter
 {
 	std::vector<uint> topDownPrefs;
 	std::vector<oneCandidateToTheVoter> Candidates;
-	int64_t favoriteCandidate;
-	oneVoter() : topDownPrefs(), Candidates(), favoriteCandidate(-1)
+	int64_t favoriteUneliminatedCandidate;
+	oneVoter() : topDownPrefs(), Candidates(), favoriteUneliminatedCandidate(-1)
 	{
 		Candidates.reserve(MaxNumCands);
 	}
@@ -3406,6 +3406,34 @@ bool needSmithIRVWinner()
  * voters only allowed to indicate their top 3 choices in order..
  * For normal IRV (or SmithIRV) set IRVTopLim=BIGINT before run.
  * For Top3-IRV set IRVTopLim=3 (or any other integer N for TopN-IRV). ***/
+/*
+	Instant-runoff voting from the voters perspective
+
+		You rank Candidates in preference order.
+		You get one vote that counts. It comes from your
+		  top non-eliminated choice.
+		If a candidate gets a majority of votes, then
+		  that candidate wins.
+		If no candidate has majority of all votes, then
+		  the candidate with the least votes is
+		  eliminated.
+		If your top choice is eliminated, the next
+		  eligible candidate on your list gets a vote. The
+		  process repeats until there is a winner.
+
+	Notes about algorithm
+
+		'Majority' means more than half of all votes.
+		  Example: candidate A gets 3 votes and
+		  candidates B, C, and D each get 1 vote.
+		  Candidate A does not have majority because 3
+		  is not more than half of 6.
+		If multiple candidates tie for least votes, one
+		  is eliminated at random.
+		It is possible that multiple candidates tie for
+		  first place, in which case the Candidate to
+		  eliminate is chosen at random.
+*/
 //	Function: IRV
 //
 //	Returns:
@@ -3416,8 +3444,8 @@ bool needSmithIRVWinner()
 //		E	- the election data to use for determining
 //			  the instant runoff voting Winner
 EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
-{ /* side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's of Each Voter, Each Candidate's 'voteCountForThisRound', FavListNext[], HeadFav[], Each Candidate's 'lossCount' member, SmithIRVwinner, IRVwinner  */
-	int Iround,i,RdLoser,NextI;
+{ /* side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's of Each Voter, Each Candidate's 'voteCountForThisRound', Each Candidate's 'lossCount' member, SmithIRVwinner, IRVwinner  */
+	int Iround,i,RdLoser;
 	int x,stillthere,winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	std::vector<oneVoter>& allVoters = E.Voters;
@@ -3431,24 +3459,16 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 	for(auto& eachCandidate : allCandidates) {
 		prepareOneForIRV(eachCandidate, needSIRVWinner);
 	}
-	std::fill(std::begin(HeadFav), std::end(HeadFav), -1); /*HeadFav[i] will be the first voter whose current favorite is i*/
 	resetFavorites(allVoters);
-	/* 'favoriteCandidate' is the rank of the 1st noneliminated canddt in voter i's topdownpref list (initially 0) */
-	std::fill(std::begin(FavListNext), std::end(FavListNext), -1);
-	/* FavListNext is "next" indices in linked list of voters with common current favorite; -1 terminated. */
 	if(needSmithIRVWinner()) {
 		SmithIRVwinner = CondorcetWinner;
 	}
 	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
-	i = 0;
 	for(const auto& eachVoter : allVoters) {
-		x = eachVoter.topDownPrefs[eachVoter.favoriteCandidate]; /* the initial favorite of voter i */
+		x = eachVoter.topDownPrefs[eachVoter.favoriteUneliminatedCandidate]; /* the initial favorite of voter i */
 		assert(x >= 0);
 		assert(x < (int)numberOfCandidates);
 		allCandidates[x].voteCountForThisRound++;
-		FavListNext[i] = HeadFav[x];
-		HeadFav[x] = i;
-		i++;
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(Iround=1; Iround < (int)numberOfCandidates; Iround++) { /*perform IRV rounds*/
@@ -3461,21 +3481,17 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 			const MarginsData& marginsOfRdLoser = allCandidates[RdLoser].margins;
 			updateAllLosses(allCandidates, marginsOfRdLoser);
 		}
-		for(i=HeadFav[RdLoser]; i>=0; i=NextI) {/*Go thru linked list of voters with favorite=RdLoser, adjust:*/
-			oneVoter& theVoter = allVoters[i];
-			int64_t& favorite = theVoter.favoriteCandidate;
-			NextI =  FavListNext[i];
-			ensure(favorite >= 0, 42);
-			ensure(favorite < (int)numberOfCandidates, 43);
-			ensure( theVoter.topDownPrefs[ favorite ] == RdLoser, 34 );
-                        x = findNextUneliminatedFavorite(theVoter, favorite, allCandidates, numberOfCandidates);
-			/* x is new favorite of voter i (or ran out of favorites) */
-			/* update favorite-list: */
-			FavListNext[i] = HeadFav[x];
-			HeadFav[x] = i;
-			/* update vote count totals: */
-			if(favorite < IRVTopLim) {
-				allCandidates[x].voteCountForThisRound++;
+		for(auto& eachVoter : allVoters) {
+			int64_t& favorite = eachVoter.favoriteUneliminatedCandidate;
+			if( eachVoter.topDownPrefs[ favorite ] == RdLoser ) {
+				ensure(favorite >= 0, 42);
+				ensure(favorite < (int)numberOfCandidates, 43);
+				x = findNextUneliminatedFavorite(eachVoter, favorite, allCandidates, numberOfCandidates);
+				/* x is new favorite of voter i (or ran out of favorites) */
+				/* update vote count totals: */
+				if(favorite < IRVTopLim) {
+					allCandidates[x].voteCountForThisRound++;
+				}
 			}
 		} /*end for(i)*/
 	}  /* end of for(Iround) */
@@ -3613,7 +3629,7 @@ EMETH BTRIRV(edata& E)
 	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
 	for(i=0; i<numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
-		const int64_t& favorite = theVoter.favoriteCandidate;
+		const int64_t& favorite = theVoter.favoriteUneliminatedCandidate;
 		ensure(favorite >= 0, 45);
 		ensure(favorite < (int)numberOfCandidates, 46);
 		x = theVoter.topDownPrefs[favorite]; /* the favorite of voter i */
@@ -3639,7 +3655,7 @@ EMETH BTRIRV(edata& E)
 		allCandidates[RdLoser].eliminated = true; /* eliminate RdLoser */
 		for(i=HeadFav[RdLoser]; i>=0; i=NextI){ /* Go thru list of voters with favorite=RdLoser, adjust: */
 			oneVoter& theVoter = allVoters[i];
-			int64_t& favorite = theVoter.favoriteCandidate;
+			int64_t& favorite = theVoter.favoriteUneliminatedCandidate;
 			const std::vector<uint>& preferences = theVoter.topDownPrefs;
 			ensure( preferences[favorite] == RdLoser, 35 );
 			x = findNewFavorite(favorite, preferences, allCandidates, numberOfCandidates, Up);
@@ -3700,7 +3716,7 @@ EMETH Coombs(edata& E)
 	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
 	for(i=0; i<numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
-		const int64_t& favorite = theVoter.favoriteCandidate;
+		const int64_t& favorite = theVoter.favoriteUneliminatedCandidate;
 		ensure(favorite >= 0, 47);
 		ensure(favorite < (int)numberOfCandidates, 48);
 		x = theVoter.topDownPrefs[favorite]; /* the initial most-hated of voter i */
@@ -3719,7 +3735,7 @@ EMETH Coombs(edata& E)
 		for(i=HeadFav[RdLoser]; i>=0; i=NextI){/*Go thru linked list of voters with favorite=RdLoser, adjust:*/
 			oneVoter& theVoter = allVoters[i];
 			const std::vector<uint>& preferences = theVoter.topDownPrefs;
-			int64_t& favorite = theVoter.favoriteCandidate;
+			int64_t& favorite = theVoter.favoriteUneliminatedCandidate;
 			ensure( preferences[favorite] == RdLoser, 49 );
 			x = findNewFavorite(favorite, preferences, allCandidates, numberOfCandidates, Down);
 			NextI =	FavListNext[i];
@@ -9539,7 +9555,7 @@ void MakeYeePicture(uint seed)
 //		            is to be reset
 void resetFavorites(std::vector<oneVoter>& Voters, const int64_t& Candidate) {
 	for( oneVoter& eachVoter : Voters ) {
-		eachVoter.favoriteCandidate = Candidate;
+		eachVoter.favoriteUneliminatedCandidate = Candidate;
 	}
 }
 
