@@ -3399,6 +3399,40 @@ bool needSmithIRVWinner()
 	return (SmithIRVwinner<0) && (IRVTopLim==BIGINT);
 }
 
+//	Function: reallocateSingleVote
+//
+//	examines the current favorite Candidate of a given Voter,
+//	determines if that Candidate has been eliminated, and (if
+//	so) transfers that vote to the next prefered Candidate not
+//	yet eliminated, updating the index representing the Voter's
+//	current favorite Candidate to the index of this newly selected
+//	Candidate
+//
+//	Parameters:
+//		theVoter        - the aforementioned "given Voter"
+//		eliminatedIndex - the index into the slate of Candidates
+//		                  for the current election indicating
+//		                  which Candidate is being eliminated
+//		allCandidates   - the slate of Candidates for the
+//		                  current election
+void reallocateSingleVote( oneVoter& theVoter,
+                           const int& eliminatedIndex,
+                           CandidateSlate& allCandidates )
+{
+	int64_t& favorite = theVoter.favoriteUneliminatedCandidate;
+	if( theVoter.topDownPrefs[ favorite ] == eliminatedIndex ) {
+		ensure(favorite >= 0, 42);
+		const auto& numberOfCandidates = allCandidates.size();
+		ensure(favorite < (int)numberOfCandidates, 43);
+		const auto newFavoriteCandidate = findNextUneliminatedFavorite(theVoter, favorite, allCandidates, numberOfCandidates);
+		/* x is new favorite of voter i (or ran out of favorites) */
+		/* update vote count totals: */
+		if(favorite < IRVTopLim) {
+			allCandidates[newFavoriteCandidate].voteCountForThisRound++;
+		}
+	}
+}
+
 /*******
  * The following IRV (instant runoff voting) algorithm has somewhat long code, but
  * by using linked lists achieves fast (very sublinear) runtime.
@@ -3482,18 +3516,8 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 			updateAllLosses(allCandidates, marginsOfRdLoser);
 		}
 		for(auto& eachVoter : allVoters) {
-			int64_t& favorite = eachVoter.favoriteUneliminatedCandidate;
-			if( eachVoter.topDownPrefs[ favorite ] == RdLoser ) {
-				ensure(favorite >= 0, 42);
-				ensure(favorite < (int)numberOfCandidates, 43);
-				x = findNextUneliminatedFavorite(eachVoter, favorite, allCandidates, numberOfCandidates);
-				/* x is new favorite of voter i (or ran out of favorites) */
-				/* update vote count totals: */
-				if(favorite < IRVTopLim) {
-					allCandidates[x].voteCountForThisRound++;
-				}
-			}
-		} /*end for(i)*/
+			reallocateSingleVote( eachVoter, RdLoser, allCandidates );
+		}
 	}  /* end of for(Iround) */
 	stillthere = 0;
 	if(IRVTopLim >= (int)numberOfCandidates) {
