@@ -3524,11 +3524,13 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 		IRVwinner = -1;
 	}
 	winner = -1;
-	for(i=0; i<numberOfCandidates; i++) { /* find non-eliminated candidate... */
-		if(!allCandidates[i].eliminated) {
+	i=0;
+	for(const auto& eachCandidate : allCandidates) {
+		if(!eachCandidate.eliminated) {
 			winner=i;
 			stillthere++;
 		}
+		i++;
 	}
 	if(IRVTopLim >= (int)numberOfCandidates) {
 		IRVwinner=winner;
