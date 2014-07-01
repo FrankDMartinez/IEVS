@@ -3816,15 +3816,13 @@ void addTheApprovalOfTheVoter(const std::vector<oneCandidateToTheVoter>& allCand
 //	Parameters:
 //		E	- the election data used to determine the Winner
 EMETH Approval(edata& E)
-{ /* side effects: Each Candidate's 'approval' member, ApprovalWinner */
-	int i;
+{
 	CandidateSlate& allCandidates = E.Candidates;
 	const std::vector<oneVoter>& allVoters = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	const uint& numberOfVoters = E.NumVoters;
 	Zero(allCandidates, &oneCandidate::approvals);
-	for(i=0; i<(int)numberOfVoters; i++) {
-		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = allVoters[i].Candidates;
+	for(const auto& eachVoter : allVoters) {
+		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
 		addTheApprovalOfTheVoter(allCandidatesToTheVoter, allCandidates, numberOfCandidates);
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
