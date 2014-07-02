@@ -4066,6 +4066,9 @@ EMETH CondorcetApproval(edata& E  /*Condorcet winner if exists, else use Approva
 	return ApprovalWinner;
 }
 
+typedef std::pair<const oneCandidateToTheVoter&, oneCandidate&> coupledCandidateData;
+typedef std::vector<coupledCandidateData> coupledCandidateDataCollection;
+
 //	Function: Range
 //
 //	Returns:
@@ -4075,15 +4078,22 @@ EMETH CondorcetApproval(edata& E  /*Condorcet winner if exists, else use Approva
 //		E - the election data used to determine the Winner
 EMETH Range(edata& E)
 {
-	int j;
 	const std::vector<oneVoter>& allVoters = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
 	Zero(allCandidates, &oneCandidate::rangeVote);
+	const auto & beginingOfCandidateSlate = std::begin(allCandidates);
 	for(const auto& eachVoter : allVoters) {
+		coupledCandidateDataCollection currentCandidateData;
 		const Ballot& allCandidatesToTheVoter = eachVoter.Candidates;
-		for(j=0; j<numberOfCandidates; j++) {
-			allCandidates[j].rangeVote += allCandidatesToTheVoter[j].score;
+		currentCandidateData.reserve(numberOfCandidates);
+		std::transform(std::begin(allCandidatesToTheVoter),
+		               std::end(allCandidatesToTheVoter),
+		               beginingOfCandidateSlate,
+		               std::back_inserter(currentCandidateData),
+		               [](const oneCandidateToTheVoter& x, oneCandidate& y) { return std::make_pair(std::ref(x), std::ref(y)); });
+		for(auto& eachCoupledCandidateData : currentCandidateData) {
+			eachCoupledCandidateData.second.rangeVote += eachCoupledCandidateData.first.score;
 		}
 	}
 	RangeWinner = Maximum(allCandidates, &oneCandidate::rangeVote);
