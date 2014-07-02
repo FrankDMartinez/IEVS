@@ -261,7 +261,7 @@ template< class T>
 template< class T>
 		int ArgMaxArr(uint64_t N, const T Arr[]);
 template< class T>
-		int ArgMaxArr(uint64_t N, const std::vector<oneCandidateToTheVoter>& Candidates);
+		int ArgMaxArr(uint64_t N, const std::valarray<oneCandidateToTheVoter>& Candidates);
 /*	reset(iteratableCollection):	resets 'iteratableCollection'
  *							with default values
  *	iteratableCollection:	the collection to reset
@@ -1027,7 +1027,7 @@ bool IsPerm(const std::vector<uint>& Perm)
 //		             starting with 0, expected to appear in the given
 //		             vector
 //		Candidates - a vector of 'oneCandidateToTheVoter' objects
-bool IsPerm(const std::vector<oneCandidateToTheVoter>& Candidates)
+bool IsPerm(const std::valarray<oneCandidateToTheVoter>& Candidates)
 {
 	std::vector<uint> ct(Candidates.size(), 0U);
 	assert(Candidates.size()<MaxNumCands);
@@ -1595,11 +1595,10 @@ void InitCoreElState()
 struct oneVoter
 {
 	std::vector<uint> topDownPrefs;
-	std::vector<oneCandidateToTheVoter> Candidates;
+	std::valarray<oneCandidateToTheVoter> Candidates;
 	int64_t favoriteUneliminatedCandidate;
 	oneVoter() : topDownPrefs(), Candidates(), favoriteUneliminatedCandidate(-1)
 	{
-		Candidates.reserve(MaxNumCands);
 	}
 };
 
@@ -1639,7 +1638,7 @@ void PrintEdata(FILE *F, const edata& E)
 	fprintf(F, "numberOfVoters=%d  numberOfCandidates=%lld\n", numberOfVoters, numberOfCandidates);
 	for(v=0; v<(int)numberOfVoters; v++){
 		const oneVoter& theVoter = allVoters[v];
-		const std::vector<oneCandidateToTheVoter>& allCandidates = theVoter.Candidates;
+		const std::valarray<oneCandidateToTheVoter>& allCandidates = theVoter.Candidates;
 		fprintf(F, "Voter %2d:\n",v);
 		fprintf(F, "Utility: ");
 		for(j=0; j < numberOfCandidates; j++) {
@@ -1726,7 +1725,7 @@ uint64_t findWhoIsBeaten(const MarginsData& margins)
 void adjustDefeatsWRTPriorCandidates(const oneCandidateToTheVoter &currentCandidateInfo,
                                      oneCandidate& theCurrentCandidate,
                                      const int& currentSlateIndex,
-                                     const std::vector<oneCandidateToTheVoter>& infoOnAllCandidates,
+                                     const std::valarray<oneCandidateToTheVoter>& infoOnAllCandidates,
                                      CandidateSlate& allTheCandidates)
 {
 	int slateIndexOfTheOtherCandidate=0;
@@ -1805,7 +1804,7 @@ void BuildDefeatsMatrix(edata& E)
 		eachCandidate.margins = margins;
 	}
 	for(auto& eachVoter : allVoters) {
-		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
+		const std::valarray<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
 		int i=0;
 		for(const auto& eachCandidate : allCandidatesToTheVoter) {
 			oneCandidate& firstCandidate = allTheCandidates[i];
@@ -1868,7 +1867,7 @@ void BuildDefeatsMatrix(edata& E)
 	}
 	CopeWinOnlyWinner = Maximum<int64_t>(allTheCandidates, &oneCandidate::electedCount);
 	for(auto& eachVoter : allVoters) {
-		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
+		const std::valarray<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
 			const oneCandidateToTheVoter &firstCandidateToTheVoter = allCandidatesToTheVoter[j];
 			oneCandidate& firstCandidate = allTheCandidates[j];
@@ -1901,7 +1900,7 @@ EMETH SociallyBest(edata& E)
 	CandidateSlate& allCandidates = E.Candidates;
 	Zero(allCandidates, &oneCandidate::utilitySum);
 	for(auto& eachVoter : allVoters) {
-		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
+		const std::valarray<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
 		int j=0;
 		for(auto& eachCandidate : allCandidatesToTheVoter) {
 			allCandidates[j].utilitySum += eachCandidate.actualUtility;
@@ -1986,7 +1985,7 @@ EMETH RandomBallot(const edata& E)
  *	numberOfCandidates:	the number of Candidates in the current
  *				election
  */
-real minimumActualUtility(const std::vector<oneCandidateToTheVoter>& Candidates, const uint64_t& numberOfCandidates)
+real minimumActualUtility(const std::valarray<oneCandidateToTheVoter>& Candidates, const uint64_t& numberOfCandidates)
 {
 	real lowest = HUGE;
 
@@ -2010,7 +2009,7 @@ EMETH Hay(const edata& E /*Strategyproof. Prob of election proportional to sum o
 	ZeroArray( numberOfCandidates, UtilityRootSum );
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
-		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
+		const std::valarray<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
 		minu = minimumActualUtility(allCandidatesToTheVoter, numberOfCandidates);
 		sumrts = 0.0;
 		for(j=0; j<numberOfCandidates; j++) {
@@ -3797,7 +3796,7 @@ EMETH Coombs(edata& E)
 //		                          election
 //		numberOfCandidates      - the number of Candidates in
 //		                          the current election
-void addTheApprovalOfTheVoter(const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter,
+void addTheApprovalOfTheVoter(const std::valarray<oneCandidateToTheVoter>& allCandidatesToTheVoter,
                               CandidateSlate& allCandidates,
                               const uint64_t& numberOfCandidates)
 {
@@ -3822,7 +3821,7 @@ EMETH Approval(edata& E)
 	const uint64_t& numberOfCandidates = E.NumCands;
 	Zero(allCandidates, &oneCandidate::approvals);
 	for(const auto& eachVoter : allVoters) {
-		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
+		const std::valarray<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
 		addTheApprovalOfTheVoter(allCandidatesToTheVoter, allCandidates, numberOfCandidates);
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
@@ -3859,7 +3858,7 @@ EMETH HeitzigDFC(edata& E)
 	Determine(ApprovalWinner, Approval, E);
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
-		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
+		const std::valarray<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
 		const real perceivedUtilityOfTheApprovalWinner = allCandidatesToTheVoter[ApprovalWinner].perceivedUtility;
 		const real perceivedUtilityOfTheRandomBallotWinner = allCandidatesToTheVoter[Rwnr].perceivedUtility;
 		if( perceivedUtilityOfTheApprovalWinner > perceivedUtilityOfTheRandomBallotWinner ) {
@@ -3979,7 +3978,7 @@ EMETH MCA(edata& E  /*canddt with most-2approvals wins if gets >50%, else regula
 	Determine(ApprovalWinner, Approval, E);
 	ZeroArray( numberOfCandidates, (int*)MCAVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
-		const std::vector<oneCandidateToTheVoter>& allCandidates = allVoters[i].Candidates;
+		const std::valarray<oneCandidateToTheVoter>& allCandidates = allVoters[i].Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
 			if(allCandidates[j].approve2) {
 				MCAVoteCount[j] += 1;
@@ -4081,7 +4080,7 @@ EMETH Range(edata& E)
 	CandidateSlate& allCandidates = E.Candidates;
 	Zero(allCandidates, &oneCandidate::rangeVote);
 	for(const auto& eachVoter : allVoters) {
-		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
+		const std::valarray<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
 			allCandidates[j].rangeVote += allCandidatesToTheVoter[j].score;
 		}
@@ -4103,7 +4102,7 @@ EMETH RangeN(const edata& E /*highest average rounded Score [rded to integer in 
 	assert(RangeGranul<=10000000);
 	ZeroArray( numberOfCandidates, (int*)RangeNVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
-		const std::vector<oneCandidateToTheVoter>& allCandidates = allVoters[i].Candidates;
+		const std::valarray<oneCandidateToTheVoter>& allCandidates = allVoters[i].Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
 			RangeNVoteCount[j] += (uint)( (allCandidates[j].score)*(RangeGranul-0.0000000001) );
 		}
@@ -4140,7 +4139,7 @@ EMETH ContinCumul(const edata& E    /* Renormalize scores so sum(over canddts)=1
 	const uint& numberOfVoters = E.NumVoters;
 	ZeroArray( numberOfCandidates, CCumVoteCount );
 	for(i=0; i<(int)numberOfVoters; i++) {
-		const std::vector<oneCandidateToTheVoter>& allCandidates = allVoters[i].Candidates;
+		const std::valarray<oneCandidateToTheVoter>& allCandidates = allVoters[i].Candidates;
 		sum = 0.0;
 		for(j=0; j<numberOfCandidates; j++) {
 			sum += allCandidates[j].score;
@@ -5487,7 +5486,7 @@ too little interesting data.
 //		                   - the current election
 void voteHonestly(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 {
-	std::vector<oneCandidateToTheVoter>& allCandidates = theVoter.Candidates;
+	std::valarray<oneCandidateToTheVoter>& allCandidates = theVoter.Candidates;
 	std::vector<uint>& preferences = theVoter.topDownPrefs;
 	MakeIdentityPerm(preferences);
 	const auto& sortingLambda =  [&allCandidates](uint& a, uint& b) {
@@ -5555,7 +5554,7 @@ void voteHonestly(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 void voteStrategically(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 {
 	real MovingAvg, Mean2U;
-	std::vector<oneCandidateToTheVoter>& allCandidates = theVoter.Candidates;
+	std::valarray<oneCandidateToTheVoter>& allCandidates = theVoter.Candidates;
 	std::vector<uint>& preferences = theVoter.topDownPrefs;
 	int ACT = 0;
 	Mean2U = 0.0;
@@ -5786,7 +5785,7 @@ UTGEN GenIssueDistanceUtils( edata& E, int Issues, real Lp ){  /* utility = dist
 	KK = 0.6*Issues;
 	x=0;
 	for(auto& eachVoter : allVoters) {
-		std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
+		std::valarray<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
 		off2   = x * Issues;
 		y=0;
 		for(auto& eachCandidate :  allCandidatesToTheVoter) {
@@ -5823,7 +5822,7 @@ UTGEN GenIssueDotprodUtils( edata& E, uint Issues )
 	s = 1.0/sqrt((real)Issues);
 	x=0;
 	for(auto& eachVoter : allVoters) {
-		std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
+		std::valarray<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
 		off2   = x * Issues;
 		y=0;
 		for(auto& eachCandidate : allCandidatesToTheVoter) {
@@ -6018,6 +6017,12 @@ template<class T> void resizeAndReset(T& theVector, const uint64_t& newSize)
 	reset(theVector);
 }
 
+template<class T> void resizeAndReset(std::valarray<T>& theValueArray, const uint64_t& newSize)
+{
+	theValueArray.resize(newSize);
+	theValueArray = T();
+}
+
 //	Function: resizeAndReset
 //
 //	resizes the given vector and resets its elements to their default
@@ -6072,7 +6077,7 @@ UTGEN GenRealWorldUtils( edata& E ){  /** based on Tideman election dataset **/
 	resizeAndReset(RandCandPerm, numberOfCandidates);
 	scalefac = 1.0/sqrt((real)C);
 	for(auto& eachVoter : allVoters){
-		std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
+		std::valarray<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
 		auto& topDownPrefs = eachVoter.topDownPrefs;
 		resizeAndReset(allCandidatesToTheVoter, numberOfCandidates);
 		resizeAndReset(topDownPrefs, numberOfCandidates);
@@ -6779,7 +6784,7 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 								if(s!=0 || ja==0) { /*centro-symmetric: s=sign*/
 									/*printf("k=%d v=%d j=%d ja=%d s=%d x=%f y=%f\n",k,v,j,ja,s,xt*s,yt*s);*/
 									oneVoter& theVoter = allVoters[j];
-									std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
+									std::valarray<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
 									xto = xt*s + x;
 									yto = yt*s + y;
 									for(i=0; i<(int)NumSites; i++) { /*go thru canddts generating utils for voter j*/
@@ -7342,7 +7347,7 @@ int ArgMaxArr(uint64_t N, const T Arr[])
  *			information to examine
  */
 template<class T>
-int ArgMaxArr(uint64_t N, const std::vector<oneCandidateToTheVoter>& Candidates)
+int ArgMaxArr(uint64_t N, const std::valarray<oneCandidateToTheVoter>& Candidates)
 {
 	T maxc;
 	int a;
@@ -7530,7 +7535,7 @@ int calculateForRunoff(const edata& E, int first, int second)
 	real perceivedUtilityOfSecond;
 	for(a=0; a<numberOfVoters; a++) {
 		const oneVoter& theVoter = E.Voters[a];
-		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
+		const std::valarray<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
 		perceivedUtilityOfFirst = allCandidatesToTheVoter[first].perceivedUtility;
 		perceivedUtilityOfSecond = allCandidatesToTheVoter[second].perceivedUtility;
 		if( perceivedUtilityOfFirst > perceivedUtilityOfSecond ) {
@@ -9630,7 +9635,7 @@ voteVector traditionalVoteVectorNormalization(const oneVoter& theVoter, const Ca
 	real s = 0.0;
 	real t;
 	voteVector normalizedVoteVector;
-	const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
+	const std::valarray<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
 	for(int j=0; j<count; j++) {
 		if(not Candidates[j].eliminated) {
 			t = allCandidatesToTheVoter[j].score - 0.5;
@@ -9693,7 +9698,7 @@ voteVector linearVoteVectorNormalization(const oneVoter& theVoter, const Candida
 	real s = 0.0;
 	real t;
 	voteVector normalizedVoteVector;
-	const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
+	const std::valarray<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
 	for(int j=0; j<count; j++) {
 		if(not Candidates[j].eliminated) {
 			s += allCandidatesToTheVoter[j].score;
@@ -9740,7 +9745,7 @@ voteVector minMaxStyleVoteVectorNormalization(const oneVoter& theVoter, const Ca
 {
 	real s = 0.0;
 	voteVector normalizedVoteVector;
-	const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
+	const std::valarray<oneCandidateToTheVoter>& allCandidatesToTheVoter = theVoter.Candidates;
 	real theMaximum = -HUGE;
 	real theMinimum = HUGE;
 	for(int j=0; j<count; j++) {
