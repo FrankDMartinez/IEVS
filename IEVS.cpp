@@ -4066,20 +4066,22 @@ EMETH CondorcetApproval(edata& E  /*Condorcet winner if exists, else use Approva
 	return ApprovalWinner;
 }
 
-EMETH Range(edata& E    /* canddt with highest average Score wins */)
-{ /* side effects:   Each Candidate's range vote, RangeWinner  */
-	int i;
+//	Function: Range
+//
+//	Returns:
+//		an index representing the Candidate with the highest
+//		summed score
+//	Parameter:
+//		E - the election data used to determine the Winner
+EMETH Range(edata& E)
+{
 	int j;
 	const std::vector<oneVoter>& allVoters = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	const uint& numberOfVoters = E.NumVoters;
 	CandidateSlate& allCandidates = E.Candidates;
 	Zero(allCandidates, &oneCandidate::rangeVote);
-	for(i=0; i<numberOfCandidates; i++) {
-		allCandidates[i].rangeVote = 0;
-	}
-	for(i=0; i<(int)numberOfVoters; i++) {
-		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = allVoters[i].Candidates;
+	for(const auto& eachVoter : allVoters) {
+		const std::vector<oneCandidateToTheVoter>& allCandidatesToTheVoter = eachVoter.Candidates;
 		for(j=0; j<numberOfCandidates; j++) {
 			allCandidates[j].rangeVote += allCandidatesToTheVoter[j].score;
 		}
