@@ -2927,6 +2927,8 @@ EMETH SmithSet(edata& E  /* Smith set = smallest nonempty set of canddts that pa
 	Zero(allCandidates, &oneCandidate::IsASmithMember);
 	assert(CopeWinOnlyWinner>=0);
 	assert(CopeWinOnlyWinner < (int)numberOfCandidates);
+	ensure(CopeWinOnlyWinner>=0, 16);
+	ensure(CopeWinOnlyWinner < (int)numberOfCandidates, 17);
 	allCandidates[CopeWinOnlyWinner].IsASmithMember = true;
 	beatDFS(CopeWinOnlyWinner, 1, allCandidates, numberOfCandidates, &oneCandidate::IsASmithMember);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
