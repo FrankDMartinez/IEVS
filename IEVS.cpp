@@ -2921,7 +2921,8 @@ void determineSetMembership( const uint64_t& x, const int& diff, CandidateSlate&
  */
 EMETH SmithSet(edata& E  /* Smith set = smallest nonempty set of canddts that pairwise-beat all nonmembers */)
 { /* side effects: Each Candidate's Smith member status */
-	int i,r;
+	uint64_t i;
+	int r;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
 	Zero(allCandidates, &oneCandidate::IsASmithMember);
@@ -2932,7 +2933,7 @@ EMETH SmithSet(edata& E  /* Smith set = smallest nonempty set of canddts that pa
 	allCandidates[CopeWinOnlyWinner].IsASmithMember = true;
 	determineSetMembership(CopeWinOnlyWinner, 1, allCandidates, numberOfCandidates, &oneCandidate::IsASmithMember);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
-	for(i=(int)numberOfCandidates-1; i>=0; i--) {
+	for(i=0; i<numberOfCandidates; i++) {
 		r = RandCandPerm[i];
 		if(allCandidates[r].IsASmithMember) {
 			return r; /*return random set member*/
