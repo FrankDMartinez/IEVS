@@ -2898,7 +2898,7 @@ BeatPathStrength[k*numberOfCandidates+j] > 0   for all k in the "Smith Set" and 
 BeatPathStrength[k*numberOfCandidates+j] >= 0  for all k in the "Schwartz Set" and j outside it.
 *******/
 
-void beatDFS( const int& x, const int& diff, CandidateSlate& relationships, uint64_t N, bool oneCandidate::*member )
+void determineSetMembership( const int& x, const int& diff, CandidateSlate& relationships, uint64_t N, bool oneCandidate::*member )
 {
 	int i;
 	for(i=(int)N-1; i>=0; i--) {
@@ -2908,7 +2908,7 @@ void beatDFS( const int& x, const int& diff, CandidateSlate& relationships, uint
 				bool& theMember = theCandidate.*member;
 				if( !theMember ) {
 					theMember = true;
-					beatDFS( i, diff, relationships, N, member );
+					determineSetMembership( i, diff, relationships, N, member );
 				}
 			}
 		}
@@ -2930,7 +2930,7 @@ EMETH SmithSet(edata& E  /* Smith set = smallest nonempty set of canddts that pa
 	ensure(CopeWinOnlyWinner>=0, 16);
 	ensure(CopeWinOnlyWinner < (int)numberOfCandidates, 17);
 	allCandidates[CopeWinOnlyWinner].IsASmithMember = true;
-	beatDFS(CopeWinOnlyWinner, 1, allCandidates, numberOfCandidates, &oneCandidate::IsASmithMember);
+	determineSetMembership(CopeWinOnlyWinner, 1, allCandidates, numberOfCandidates, &oneCandidate::IsASmithMember);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(i=(int)numberOfCandidates-1; i>=0; i--) {
 		r = RandCandPerm[i];
@@ -2960,7 +2960,7 @@ EMETH SchwartzSet(edata& E  /* Schwartz set = smallest nonempty set of canddts u
 	assert(CopeWinOnlyWinner>=0);
 	assert(CopeWinOnlyWinner < (int)numberOfCandidates);
 	allCandidates[CopeWinOnlyWinner].IsASchwartzMember = true;
-	beatDFS(CopeWinOnlyWinner, 0, allCandidates, numberOfCandidates, &oneCandidate::IsASchwartzMember);
+	determineSetMembership(CopeWinOnlyWinner, 0, allCandidates, numberOfCandidates, &oneCandidate::IsASchwartzMember);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(i=(int)numberOfCandidates-1; i>=0; i--) {
 		r = RandCandPerm[i];
