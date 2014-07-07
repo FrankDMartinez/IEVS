@@ -2898,10 +2898,10 @@ BeatPathStrength[k*numberOfCandidates+j] > 0   for all k in the "Smith Set" and 
 BeatPathStrength[k*numberOfCandidates+j] >= 0  for all k in the "Schwartz Set" and j outside it.
 *******/
 
-void determineSetMembership( const int& x, const int& diff, CandidateSlate& relationships, uint64_t N, bool oneCandidate::*member )
+void determineSetMembership( const uint64_t& x, const int& diff, CandidateSlate& relationships, uint64_t N, bool oneCandidate::*member )
 {
-	int i;
-	for(i=(int)N-1; i>=0; i--) {
+	uint64_t i;
+	for(i=0; i < N; i++) {
 		if(i!=x) {
 			oneCandidate& theCandidate = relationships[i];
 			if( theCandidate.margins[x]>=diff ) {
