@@ -2963,7 +2963,7 @@ EMETH SchwartzSet(edata& E  /* Schwartz set = smallest nonempty set of canddts u
 	allCandidates[CopeWinOnlyWinner].IsASchwartzMember = true;
 	determineSetMembership(CopeWinOnlyWinner, 0, allCandidates, numberOfCandidates, &oneCandidate::IsASchwartzMember);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
-	for(i=(int)numberOfCandidates-1; i>=0; i--) {
+	for(i=0; i<numberOfCandidates; i++) {
 		r = RandCandPerm[i];
 		if(allCandidates[r].IsASchwartzMember) {
 			return r; /*return random set member*/
