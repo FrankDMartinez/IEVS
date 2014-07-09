@@ -2051,15 +2051,13 @@ EMETH Plurality(edata& E   /* canddt with most top-rank votes wins */)
 
 EMETH AntiPlurality(edata& E   /* canddt with fewest bottom-rank votes wins */)
 { /* side effects: each Candidates anti-plurality vote counts, AntiPlurWinner */
-	int i;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint64_t& lastCandidateIndex = numberOfCandidates - 1;
-	const uint& numberOfVoters = E.NumVoters;
 	const std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
 	Zero(allCandidates, &oneCandidate::antiPluralityVotes);
-	for(i=0; i<numberOfVoters; i++) {
-		allCandidates[allVoters[i].topDownPrefs[lastCandidateIndex]].antiPluralityVotes++;
+	for(const auto &eachVoter : allVoters) {
+		allCandidates[eachVoter.topDownPrefs[lastCandidateIndex]].antiPluralityVotes++;
 	}
 	AntiPlurWinner = Minimum<uint64_t>(allCandidates, &oneCandidate::antiPluralityVotes);
 	return AntiPlurWinner;
