@@ -2115,6 +2115,7 @@ EMETH Top2Runoff(edata& E    /* Top2Runoff=top-2-runoff, 2nd round has fully-hon
 	Determine(PlurWinner, Plurality, E);
 	PSecond = SecondMaximum(E.NumCands, E.Candidates, &oneCandidate::pluralityVotes, PlurWinner);
 	assert(PSecond>=0);
+	ensure(PSecond>=0, 30);
 	return calculateForRunoff(E, PlurWinner, PSecond);
 }
 
