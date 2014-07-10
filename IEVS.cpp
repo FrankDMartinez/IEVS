@@ -2611,7 +2611,7 @@ EMETH SimpsonKramer(edata& E  /* candidate with mildest worst-defeat wins */)
 	std::valarray<int64_t> WorstDefeatMargin;
 	int64_t i;
 	int64_t t;
-	int j,winner;
+	int winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
 	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
@@ -2622,8 +2622,8 @@ EMETH SimpsonKramer(edata& E  /* candidate with mildest worst-defeat wins */)
 	for(i=0; i<numberOfCandidates; i++) {
 		t = 0;
 		RandomlyPermute( numberOfCandidates, RandCandPerm );
-		for(j=0; j<numberOfCandidates; j++) {
-			const auto& x = allCandidates[j].margins[i];
+		for(const auto& eachCandidate : allCandidates) {
+			const auto& x = eachCandidate.margins[i];
 			t = std::max(t, x);
 		}
 		WorstDefeatMargin[i] = t;
