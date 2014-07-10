@@ -2608,8 +2608,9 @@ EMETH KeenerEig(edata& E  /* winning canddt has max Frobenius eigenvector entry 
 
 EMETH SimpsonKramer(edata& E  /* candidate with mildest worst-defeat wins */)
 {
-	int64_t WorstDefeatMargin[MaxNumCands]={0};
-	int i,r;
+	std::valarray<int64_t> WorstDefeatMargin;
+	int64_t i;
+	int r;
 	int64_t x;
 	int64_t t;
 	int j,winner;
@@ -2619,6 +2620,7 @@ EMETH SimpsonKramer(edata& E  /* candidate with mildest worst-defeat wins */)
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner >= 0) return CondorcetWinner;
 #endif
+	resizeAndReset(WorstDefeatMargin, numberOfCandidates);
 	for(i=(int)numberOfCandidates-1; i>=0; i--) {
 		t = 0;
 		RandomlyPermute( numberOfCandidates, RandCandPerm );
@@ -2629,7 +2631,7 @@ EMETH SimpsonKramer(edata& E  /* candidate with mildest worst-defeat wins */)
 		}
 		WorstDefeatMargin[i] = t;
 	}
-	winner = ArgMinArr<int64_t>(numberOfCandidates, WorstDefeatMargin);
+	winner = ArgMinArr<int64_t, INT64_MAX>(WorstDefeatMargin);
 	return winner;
 }
 
