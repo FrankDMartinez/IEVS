@@ -2621,10 +2621,10 @@ EMETH SimpsonKramer(edata& E  /* candidate with mildest worst-defeat wins */)
 	if(CondorcetWinner >= 0) return CondorcetWinner;
 #endif
 	resizeAndReset(WorstDefeatMargin, numberOfCandidates);
-	for(i=(int)numberOfCandidates-1; i>=0; i--) {
+	for(i=0; i<numberOfCandidates; i++) {
 		t = 0;
 		RandomlyPermute( numberOfCandidates, RandCandPerm );
-		for(j=(int)numberOfCandidates-1; j>=0; j--) {
+		for(j=0; j<numberOfCandidates; j++) {
 			r = RandCandPerm[j];
 			x = allCandidates[r].margins[i];
 			t = std::max(t, x);
