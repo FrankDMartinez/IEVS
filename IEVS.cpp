@@ -7540,17 +7540,13 @@ int Minimum(const CandidateSlate& allCandidates,
  */
 int calculateForRunoff(const edata& E, int first, int second)
 {
-	uint a;
 	uint pwct=0;
 	uint wct=0;
-	const uint numberOfVoters = E.NumVoters;
-	real perceivedUtilityOfFirst;
-	real perceivedUtilityOfSecond;
-	for(a=0; a<numberOfVoters; a++) {
-		const oneVoter& theVoter = E.Voters[a];
-		const Ballot& allCandidatesToTheVoter = theVoter.Candidates;
-		perceivedUtilityOfFirst = allCandidatesToTheVoter[first].perceivedUtility;
-		perceivedUtilityOfSecond = allCandidatesToTheVoter[second].perceivedUtility;
+	const auto& allVoters = E.Voters;
+	for(const auto& eachVoter : allVoters) {
+		const Ballot& allCandidatesToTheVoter = eachVoter.Candidates;
+		const auto& perceivedUtilityOfFirst = allCandidatesToTheVoter[first].perceivedUtility;
+		const auto& perceivedUtilityOfSecond = allCandidatesToTheVoter[second].perceivedUtility;
 		if( perceivedUtilityOfFirst > perceivedUtilityOfSecond ) {
 			pwct++;
 		}else if( perceivedUtilityOfFirst < perceivedUtilityOfSecond ) {
