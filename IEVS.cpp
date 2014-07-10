@@ -44,6 +44,7 @@ void enableOutputFile(const std::string format, ...);
 void ensure(bool good, int number);
 std::string formatStandardString(const std::string formattingString, ...);
 std::string formatStandardString(const std::string formattingString, va_list arguments);
+template<class T> void resizeAndReset(std::valarray<T>& theValueArray, const uint64_t& newSize);
 std::ofstream secondaryOutputFile;
 void output(const char * format, ...);
 
@@ -259,6 +260,8 @@ typedef std::valarray<oneCandidateToTheVoter> Ballot;
 
 template< class T>
 		int ArgMinArr(uint64_t N, const T Arr[]);
+template< class T, T MAXIMUM_MINIMUM >
+		int ArgMinArr(const std::valarray<T>& Arr);
 template< class T>
 		int ArgMaxArr(uint64_t N, const T Arr[]);
 template< class T>
@@ -2476,11 +2479,12 @@ EMETH BaseballMVP(const edata& E  /* weighted positional with weights 14,9,8,7,6
 
 EMETH CondorcetLR(edata& E   /* candidate with least sum-of-pairwise-defeat-margins wins */)
 {
-	uint SumOfDefeatMargins[MaxNumCands]={0};
+	std::valarray<uint> SumOfDefeatMargins;
 	int i,j,t,winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
 	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
+	resizeAndReset(SumOfDefeatMargins, E.NumCands);
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner >= 0) return CondorcetWinner;
 #endif
@@ -2491,7 +2495,7 @@ EMETH CondorcetLR(edata& E   /* candidate with least sum-of-pairwise-defeat-marg
 		}
 		SumOfDefeatMargins[i] = t;
 	}
-	winner = ArgMinArr<int>(numberOfCandidates, (int*)SumOfDefeatMargins);
+	winner = ArgMinArr<uint, MAXUINT>(SumOfDefeatMargins);
 	return winner;
 }
 
@@ -7408,6 +7412,27 @@ int ArgMinArr(uint64_t N, const T Arr[])
 	RandomlyPermute( N, RandCandPerm );
 	for(a=0; a<(int)N; a++) {
 		r = RandCandPerm[a];
+		if(Arr[r]<minc) {
+			minc=Arr[r];
+			winner=r;
+		}
+	}
+	assert(winner>=0);
+	assert( Arr[winner] <= Arr[0] );
+	assert( Arr[winner] <= Arr[N-1] );
+	return(winner);
+}
+
+template< class T, T MAXIMUM_MINIMUM >
+int ArgMinArr(const std::valarray<T>& Arr)
+{
+	uint64_t N = Arr.size();
+	T minc = MAXIMUM_MINIMUM;
+	int a;
+	int winner = -1;
+	RandomlyPermute( N, RandCandPerm );
+	for(a=0; a<(int)N; a++) {
+		const auto& r = RandCandPerm[a];
 		if(Arr[r]<minc) {
 			minc=Arr[r];
 			winner=r;
