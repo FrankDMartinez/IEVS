@@ -2487,9 +2487,9 @@ EMETH BaseballMVP(const edata& E  /* weighted positional with weights 14,9,8,7,6
 //		                the pairwise defeat margin information
 //		i             - the index representing the given
 //		                Candidate
-int sumPairwiseDefeatMargins( const CandidateSlate& allCandidates, int i )
+uint64_t sumPairwiseDefeatMargins( const CandidateSlate& allCandidates, int i )
 {
-	int t=0;
+	uint64_t t=0;
 	for(const auto& eachCandidate : allCandidates) {
 		t += PosInt( eachCandidate.margins[i] );
 	}
@@ -2498,7 +2498,7 @@ int sumPairwiseDefeatMargins( const CandidateSlate& allCandidates, int i )
 
 EMETH CondorcetLR(edata& E   /* candidate with least sum-of-pairwise-defeat-margins wins */)
 {
-	std::valarray<uint> SumOfDefeatMargins;
+	std::valarray<uint64_t> SumOfDefeatMargins;
 	int i;
 	int winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
@@ -2511,7 +2511,7 @@ EMETH CondorcetLR(edata& E   /* candidate with least sum-of-pairwise-defeat-marg
 	for(i=0; i<numberOfCandidates; i++) {
 		SumOfDefeatMargins[i] = sumPairwiseDefeatMargins( allCandidates, i );
 	}
-	winner = ArgMinArr<uint, MAXUINT>(SumOfDefeatMargins);
+	winner = ArgMinArr<uint64_t, MAXUINT64>(SumOfDefeatMargins);
 	return winner;
 }
 
