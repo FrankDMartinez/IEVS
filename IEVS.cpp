@@ -7440,7 +7440,7 @@ int ArgMinArr(uint64_t N, const T Arr[])
 template< class T, T MAXIMUM_MINIMUM >
 int ArgMinArr(const std::valarray<T>& Arr)
 {
-	uint64_t N = Arr.size();
+	const auto& N = Arr.size();
 	T minc = MAXIMUM_MINIMUM;
 	int a;
 	int winner = -1;
