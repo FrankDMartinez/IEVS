@@ -3085,7 +3085,6 @@ EMETH UncoveredSet(edata& E)
 EMETH Bucklin(edata& E)
 { /* side effects: Each Candidates 'voteCountForThisRound' */
 	int winner;
-	int64_t best;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
@@ -3097,7 +3096,7 @@ EMETH Bucklin(edata& E)
 			allCandidates[ eachVoter.topDownPrefs[rnd] ].voteCountForThisRound++;
 		}
 		winner = Maximum(allCandidates, &oneCandidate::voteCountForThisRound);
-		best = allCandidates[winner].voteCountForThisRound;
+		const auto& best = allCandidates[winner].voteCountForThisRound;
 		if(best >= minimumNumberOfVotesNeeded) {
 			break;
 		}
