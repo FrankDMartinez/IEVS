@@ -3087,18 +3087,18 @@ EMETH Bucklin(edata& E)
 	int winner;
 	int64_t best;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	const uint& numberOfVoters = E.NumVoters;
 	const std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
 	winner = -1;
 	Zero(allCandidates, &oneCandidate::voteCountForThisRound);
+	const auto& minimumNumberOfVotesNeeded = 1 + (E.NumVoters/2);
 	for(uint64_t rnd=0; rnd<(int)numberOfCandidates; rnd++) {
 		for(const auto& eachVoter : allVoters) {
 			allCandidates[ eachVoter.topDownPrefs[rnd] ].voteCountForThisRound++;
 		}
 		winner = Maximum(allCandidates, &oneCandidate::voteCountForThisRound);
 		best = allCandidates[winner].voteCountForThisRound;
-		if((best*2) > numberOfVoters) {
+		if(best >= minimumNumberOfVotesNeeded) {
 			break;
 		}
 	}
