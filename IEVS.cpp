@@ -3092,7 +3092,7 @@ EMETH Bucklin(edata& E)
 	winner = -1;
 	Zero(allCandidates, &oneCandidate::voteCountForThisRound);
 	const auto& minimumNumberOfVotesNeeded = 1 + (E.NumVoters/2);
-	for(uint64_t rnd=0; rnd<(int)numberOfCandidates; rnd++) {
+	for(uint64_t rnd=0; rnd<numberOfCandidates; rnd++) {
 		for(const auto& eachVoter : allVoters) {
 			allCandidates[ eachVoter.topDownPrefs[rnd] ].voteCountForThisRound++;
 		}
