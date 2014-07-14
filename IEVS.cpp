@@ -3181,8 +3181,6 @@ EMETH Copeland(edata& E   /* canddt with largest number of pairwise-wins elected
 {
 	int CopelandWinner;
 	std::valarray<uint64_t> CopeScore;
-	int i;
-	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
 	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 #if defined(CWSPEEDUP) && CWSPEEDUP
@@ -3192,9 +3190,8 @@ EMETH Copeland(edata& E   /* canddt with largest number of pairwise-wins elected
 	}
 #endif
 	Zero(allCandidates, &oneCandidate::CopelandScore);
-	for(i=0; i<numberOfCandidates; i++) {
-		oneCandidate& theCandidate = allCandidates[i];
-		theCandidate.CopelandScore = (2*theCandidate.electedCount)+theCandidate.drawCount;
+	for(auto & eachCandidate : allCandidates) {
+		eachCandidate.CopelandScore = (2*eachCandidate.electedCount)+eachCandidate.drawCount;
 	}
 	CopelandWinner = Maximum(allCandidates, &oneCandidate::CopelandScore);
 	/* Currently just break ties randomly, return random highest-scorer */
