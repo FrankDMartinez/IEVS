@@ -233,6 +233,7 @@ struct oneCandidate
 	uint64_t pluralityVotes;
 	real rangeVote;
 	int64_t lossCount;
+	int64_t instantRunoffVotingLossCount;
 	bool uncovered;
 	bool IsASchwartzMember;
 	bool IsASmithMember;
@@ -248,8 +249,8 @@ struct oneCandidate
 			 antiPluralityVotes(), approvals(),
 			 CopelandScore(), electedCount(), drawCount(),
 			 BordaVotes(), pluralityVotes(),
-			 rangeVote(), lossCount(), uncovered(),
-			 IsASchwartzMember(), IsASmithMember(),
+			 rangeVote(), lossCount(), instantRunoffVotingLossCount(),
+			 uncovered(), IsASchwartzMember(), IsASmithMember(),
 			 normalizedRatingSum(), utilitySum(),
 			 voteCountForThisRound(), eliminated()
 	{
@@ -1840,6 +1841,10 @@ void BuildDefeatsMatrix(edata& E)
 				eachCandidate.electedCount++;
 			} else if(eachMargin==0) {
 				eachCandidate.drawCount++;
+			} else if(eachMargin<0) {
+				eachCandidate.lossCount++;
+			} else {
+				ensure(false, 34);
 			}
 			if(eachMargin<=0 && j!=i) {
 				CondWin = false;
@@ -3370,7 +3375,7 @@ void prepareOneForIRV(oneCandidate& theCandidate, const bool& countAllLosses)
 	theCandidate.eliminated =false;
         theCandidate.voteCountForThisRound = 0;
 	if(countAllLosses) {
-		theCandidate.lossCount = countLosses(theCandidate);
+		theCandidate.instantRunoffVotingLossCount = theCandidate.lossCount;
 	}
 }
 
@@ -3392,12 +3397,12 @@ void updateAllLosses(CandidateSlate& Candidates, const MarginsData& marginsOfThe
 	int j=0;
 	for(auto& eachCandidate : Candidates) {
 		if(!eachCandidate.eliminated) {
-			int64_t& lossCount = eachCandidate.lossCount;
+			int64_t& instantRunoffVotingLossCount = eachCandidate.instantRunoffVotingLossCount;
 			const auto& theMargin = marginsOfTheLoser[j];
 			if(theMargin>0) {
-				lossCount--;
+				instantRunoffVotingLossCount--;
 			}
-			if( lossCount <= 0 ) {
+			if( instantRunoffVotingLossCount <= 0 ) {
 				SmithIRVwinner = j;
 				break;
 			}
@@ -3495,7 +3500,7 @@ void reallocateSingleVote( oneVoter& theVoter,
 //		E	- the election data to use for determining
 //			  the instant runoff voting Winner
 EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
-{ /* side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's of Each Voter, Each Candidate's 'voteCountForThisRound', Each Candidate's 'lossCount' member, SmithIRVwinner, IRVwinner  */
+{ /* side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's of Each Voter, Each Candidate's 'voteCountForThisRound', SmithIRVwinner, IRVwinner  */
 	int Iround,i,RdLoser;
 	int x,stillthere,winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
