@@ -234,6 +234,7 @@ struct oneCandidate
 	real rangeVote;
 	int64_t lossCount;
 	int64_t instantRunoffVotingLossCount;
+	int64_t definiteMajorityChoiceLossCount;
 	bool uncovered;
 	bool IsASchwartzMember;
 	bool IsASmithMember;
@@ -250,7 +251,8 @@ struct oneCandidate
 			 CopelandScore(), electedCount(), drawCount(),
 			 BordaVotes(), pluralityVotes(),
 			 rangeVote(), lossCount(), instantRunoffVotingLossCount(),
-			 uncovered(), IsASchwartzMember(), IsASmithMember(),
+			 definiteMajorityChoiceLossCount(), uncovered(),
+			 IsASchwartzMember(), IsASmithMember(),
 			 normalizedRatingSum(), utilitySum(),
 			 voteCountForThisRound(), eliminated()
 	{
@@ -4444,7 +4446,7 @@ void updateLossCount(CandidateSlate& allCandidates,
 {
 	for(int j=0; j<i; j++) {
 		if(margins[j]>0) {
-			allCandidates[j].lossCount--;
+			allCandidates[j].definiteMajorityChoiceLossCount--;
 		}
 	}
 }
@@ -4476,7 +4478,7 @@ void sort(ContainerClass& theContainer, const ComparisonClass& theComparator)
 //	Parameters:
 //		E - the election data used to determine the Winner
 EMETH DMC(edata& E  /* eliminate least-approved candidate until unbeaten winner exists */)
-{ /* side effects: Each Candidate's 'lossCount' member */
+{
 	int i;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
@@ -4486,14 +4488,14 @@ EMETH DMC(edata& E  /* eliminate least-approved candidate until unbeaten winner 
 #endif
 	for(i=0; i<numberOfCandidates; i++) {
 		oneCandidate& CandidateI = allCandidates[i];
-		CandidateI.lossCount = countLosses(CandidateI);
+		CandidateI.definiteMajorityChoiceLossCount = CandidateI.lossCount;
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	PermShellSortDown(numberOfCandidates, allCandidates, &oneCandidate::approvals);
 	for(i=(int)numberOfCandidates-1; i>0; i--) {
 		const oneCandidate& CandidateI = allCandidates[i];
 		const MarginsData& marginsOfI = CandidateI.margins;
-		if( CandidateI.lossCount <= 0 ){  return(i); /*winner*/ }
+		if( CandidateI.definiteMajorityChoiceLossCount <= 0 ){  return(i); /*winner*/ }
 		updateLossCount(allCandidates, marginsOfI, i);
 	}
 	return(i);
