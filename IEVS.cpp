@@ -226,6 +226,7 @@ struct oneCandidate
 	PairApprovalData alsoApprovedWith;
 	uint64_t antiPluralityVotes;
 	uint approvals;
+	uint64_t CopelandScore;
 	int64_t electedCount;
 	uint64_t drawCount;
 	int64_t BordaVotes;
@@ -245,7 +246,7 @@ struct oneCandidate
 			 ArmytageMarginsMatrix(), margins(),
 			 Ibeat(), alsoApprovedWith(),
 			 antiPluralityVotes(), approvals(),
-			 electedCount(), drawCount(),
+			 CopelandScore(), electedCount(), drawCount(),
 			 BordaVotes(), pluralityVotes(),
 			 rangeVote(), lossCount(), uncovered(),
 			 IsASchwartzMember(), IsASmithMember(),
@@ -3179,10 +3180,10 @@ EMETH ArmytagePCSchulze(edata& E  /*Armytage pairwise comparison based on Schulz
 EMETH Copeland(edata& E   /* canddt with largest number of pairwise-wins elected (tie counts as win/2) BUGGY */)
 {
 	int CopelandWinner;
-	uint64_t CopeScore[MaxNumCands]={0};
+	std::valarray<uint64_t> CopeScore;
 	int i;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	const CandidateSlate& allCandidates = E.Candidates;
+	CandidateSlate& allCandidates = E.Candidates;
 	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner >= 0) {
@@ -3190,11 +3191,12 @@ EMETH Copeland(edata& E   /* canddt with largest number of pairwise-wins elected
 		return CopelandWinner;
 	}
 #endif
+	Zero(allCandidates, &oneCandidate::CopelandScore);
 	for(i=0; i<numberOfCandidates; i++) {
-		const oneCandidate& theCandidate = allCandidates[i];
-		CopeScore[i] = (2*theCandidate.electedCount)+theCandidate.drawCount;
+		oneCandidate& theCandidate = allCandidates[i];
+		theCandidate.CopelandScore = (2*theCandidate.electedCount)+theCandidate.drawCount;
 	}
-	CopelandWinner = ArgMaxArr<uint64_t>(numberOfCandidates, CopeScore);
+	CopelandWinner = Maximum(allCandidates, &oneCandidate::CopelandScore);
 	/* Currently just break ties randomly, return random highest-scorer */
 	return CopelandWinner;
 }
