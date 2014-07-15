@@ -3543,8 +3543,9 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 	for(auto Iround=1; Iround<(int)numberOfCandidates; Iround++) {
 		const auto& RdLoser = Minimum(allCandidates, &oneCandidate::voteCountForThisRound, false, true);
 		assert(RdLoser>=0);
-		assert(RdLoser < (int)numberOfCandidates);
 		ensure(RdLoser>=0, 12);
+		assert(RdLoser < (int)numberOfCandidates);
+		ensure(RdLoser < (int)numberOfCandidates, 62);
 		allCandidates[RdLoser].eliminated = true;
 		if(needSmithIRVWinner()) {
 			const MarginsData& marginsOfRdLoser = allCandidates[RdLoser].margins;
@@ -3697,6 +3698,8 @@ EMETH BTRIRV(edata& E)
 		auto RdLoser = Minimum(allCandidates, &oneCandidate::voteCountForThisRound, false, true);
 		assert(RdLoser>=0);
 		ensure(RdLoser>=0, 40);
+		assert(RdLoser < (int)numberOfCandidates);
+		ensure(RdLoser < (int)numberOfCandidates, 62);
 		bool eliminationState = allCandidates[RdLoser].eliminated;
 		allCandidates[RdLoser].eliminated = true;
 		auto RdLoser2 = Minimum(allCandidates, &oneCandidate::voteCountForThisRound, false, true);
@@ -3712,12 +3715,25 @@ EMETH BTRIRV(edata& E)
 			reallocateSingleVote( eachVoter, RdLoser, allCandidates );
 		}
 	}
-	for(auto i=0; i<numberOfCandidates; i++){ /* find the non-eliminated candidate... */
-		if(!allCandidates[i].eliminated){
-			return i; /*IRV winner*/
-		}
+	auto stillthere = 0;
+	if(false && IRVTopLim >= (int)numberOfCandidates) {
+		IRVwinner = -1;
 	}
-	return(-1); /*error*/
+	auto winner = -1;
+	auto i=0;
+	for(const auto& eachCandidate : allCandidates) {
+		if(!eachCandidate.eliminated) {
+			winner=i;
+			stillthere++;
+		}
+		i++;
+	}
+	if(false && IRVTopLim >= (int)numberOfCandidates) {
+		IRVwinner=winner;
+	}
+	assert(stillthere==1);
+	ensure((stillthere==1), 3);
+	return(winner);
 }
 
 //	Function: Coombs
