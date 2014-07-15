@@ -172,7 +172,9 @@ const int NumSlowMethods = 8;
 const int NumFastMethods = (NumMethods-NumSlowMethods);
 const int NumUtilGens = 11;  /*UTGEN the # in this line needs to change if add new util gen*/
 const int NumCoreMethods = 12;
-/* #define CWSPEEDUP to be 1 causes to cause it to be faster; but 0 or leaving it undefined is better for diagnosing bugs */
+// define CWSPEEDUP to be 'true' to cause it to be faster; but 'false'
+// is better for diagnosing bugs
+const auto& CWSPEEDUP = false;
 
 const uint HTMLMODE = 1U; /*output adding "HTML table" formatting commands*/
 const uint TEXMODE = 2U;  /*output adding "TeX table" formatting commands*/
@@ -2275,9 +2277,11 @@ EMETH NansonBaldwin(edata& E  /* repeatedly eliminate Borda loser */)
 	int i, BordaLoser, rnd;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
-#if defined(CWSPEEDUP) && CWSPEEDUP
-	if(CondorcetWinner >= 0) return CondorcetWinner;
-#endif
+	if(CWSPEEDUP) {
+		if(CondorcetWinner >= 0) {
+			return CondorcetWinner;
+		}
+	}
 	Determine(BordaWinner, Borda, E);
 	Zero(allCandidates, &oneCandidate::eliminated);
 	CopyArray(numberOfCandidates, allCandidates, NansonVoteCount, &oneCandidate::BordaVotes);
@@ -2380,9 +2384,11 @@ EMETH IterCopeland( const edata& E  /*iterate Copeland on tied-winner set from p
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
 	assert(numberOfCandidates >= 2);
-#if defined(CWSPEEDUP) && CWSPEEDUP
-	if(CondorcetWinner >= 0) return CondorcetWinner;
-#endif
+	if(CWSPEEDUP) {
+		if(CondorcetWinner >= 0) {
+			return CondorcetWinner;
+		}
+	}
 	winner = -1; oldtiect = -1;
 	ZeroArray(numberOfCandidates, summ);
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
@@ -2514,9 +2520,11 @@ EMETH CondorcetLR(edata& E   /* candidate with least sum-of-pairwise-defeat-marg
 	const CandidateSlate& allCandidates = E.Candidates;
 	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 	resizeAndReset(SumOfDefeatMargins, numberOfCandidates);
-#if defined(CWSPEEDUP) && CWSPEEDUP
-	if(CondorcetWinner >= 0) return CondorcetWinner;
-#endif
+	if(CWSPEEDUP) {
+		if(CondorcetWinner >= 0) {
+			return CondorcetWinner;
+		}
+	}
 	for(i=0; i<numberOfCandidates; i++) {
 		SumOfDefeatMargins[i] = sumPairwiseDefeatMargins( allCandidates, i );
 	}
@@ -2624,9 +2632,11 @@ EMETH SimpsonKramer(edata& E  /* candidate with mildest worst-defeat wins */)
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
 	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
-#if defined(CWSPEEDUP) && CWSPEEDUP
-	if(CondorcetWinner >= 0) return CondorcetWinner;
-#endif
+	if(CWSPEEDUP) {
+		if(CondorcetWinner >= 0) {
+			return CondorcetWinner;
+		}
+	}
 	resizeAndReset(WorstDefeatMargin, numberOfCandidates);
 	for(i=0; i<numberOfCandidates; i++) {
 		t = 0;
@@ -2658,9 +2668,11 @@ EMETH RaynaudElim(edata& E  /* repeatedly eliminate canddt who suffered the wors
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
 	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
-#if defined(CWSPEEDUP) && CWSPEEDUP
-	if(CondorcetWinner >= 0) return CondorcetWinner;
-#endif
+	if(CWSPEEDUP) {
+		if(CondorcetWinner >= 0) {
+			return CondorcetWinner;
+		}
+	}
 	for(i=(int)numberOfCandidates-1; i>=0; i--) {
 		t = -BIGINT; beater = -1;
 		RandomlyPermute( numberOfCandidates, RandCandPerm );
@@ -3191,12 +3203,11 @@ EMETH Copeland(edata& E   /* canddt with largest number of pairwise-wins elected
 	std::valarray<uint64_t> CopeScore;
 	CandidateSlate& allCandidates = E.Candidates;
 	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
-#if defined(CWSPEEDUP) && CWSPEEDUP
-	if(CondorcetWinner >= 0) {
-		CopelandWinner = CondorcetWinner;
-		return CopelandWinner;
+	if(CWSPEEDUP) {
+		if(CondorcetWinner >= 0) {
+			return CondorcetWinner;
+		}
 	}
-#endif
 	Zero(allCandidates, &oneCandidate::CopelandScore);
 	for(auto & eachCandidate : allCandidates) {
 		eachCandidate.CopelandScore = (2*eachCandidate.electedCount)+eachCandidate.drawCount;
@@ -3291,9 +3302,11 @@ EMETH SimmonsCond(edata& E)
 	Determine(PlurWinner, Plurality, E);
 	Determine(SmithWinner, SmithSet, E);
 	Determine(SchwartzWinner, SchwartzSet, E);
-#if defined(CWSPEEDUP) && CWSPEEDUP
-	if(CondorcetWinner>=0) return(CondorcetWinner);
-#endif
+	if(CWSPEEDUP) {
+		if(CondorcetWinner >= 0) {
+			return CondorcetWinner;
+		}
+	}
 	for(auto& eachCandidate : allCandidates) {
 		eachCandidate.SimmonsVotesAgainst = calculateSimmonsVotesAgainst(eachCandidate, allCandidates, numberOfCandidates);
 	}
@@ -3662,9 +3675,11 @@ EMETH BTRIRV(edata& E)
 	CandidateSlate& allCandidates = E.Candidates;
 	assert(numberOfCandidates <= MaxNumCands);
 	ensure(numberOfCandidates <= MaxNumCands, 35);
-#if defined(CWSPEEDUP) && CWSPEEDUP
-	if(CondorcetWinner>=0) return(CondorcetWinner);
-#endif
+	if(CWSPEEDUP) {
+		if(CondorcetWinner >= 0) {
+			return CondorcetWinner;
+		}
+	}
 	for(auto& eachCandidate : allCandidates) {
 		prepareOneForIRV(eachCandidate, false);
 	}
@@ -4238,9 +4253,11 @@ EMETH TidemanRankedPairs(const edata& E  /*lock in comparisons with largest marg
 	CandidateSlate Tpath = E.Candidates;
 	int i,r,j,winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
-#if defined(CWSPEEDUP) && CWSPEEDUP
-	if(CondorcetWinner>=0) return(CondorcetWinner);
-#endif
+	if(CWSPEEDUP) {
+		if(CondorcetWinner >= 0) {
+			return CondorcetWinner;
+		}
+	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(i=0; i < (int)numberOfCandidates; i++) { Tpath[i].margins[i]=BIGINT; }
 	/* Whenever a victory
@@ -4346,9 +4363,11 @@ EMETH HeitzigRiver(const edata& E /*http://lists.electorama.com/pipermail/electi
 	int64_t maxc;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
-#if defined(CWSPEEDUP) && CWSPEEDUP
-	if(CondorcetWinner>=0) return(CondorcetWinner);
-#endif
+	if(CWSPEEDUP) {
+		if(CondorcetWinner >= 0) {
+			return CondorcetWinner;
+		}
+	}
 	/* find potential (and actual) parents: */
 	for(i=0; i < (int)numberOfCandidates; i++) {
 		maxc = -BIGINT; pp = -1;
@@ -4461,9 +4480,11 @@ EMETH DMC(edata& E  /* eliminate least-approved candidate until unbeaten winner 
 	const uint64_t& numberOfCandidates = E.NumCands;
 	CandidateSlate& allCandidates = E.Candidates;
 	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
-#if defined(CWSPEEDUP) && CWSPEEDUP
-	if(CondorcetWinner>=0) return(CondorcetWinner);
-#endif
+	if(CWSPEEDUP) {
+		if(CondorcetWinner >= 0) {
+			return CondorcetWinner;
+		}
+	}
 	for(i=0; i<numberOfCandidates; i++) {
 		oneCandidate& CandidateI = allCandidates[i];
 		CandidateI.definiteMajorityChoiceLossCount = CandidateI.lossCount;
