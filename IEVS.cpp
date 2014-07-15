@@ -231,6 +231,7 @@ struct oneCandidate
 	uint64_t drawCount;
 	int64_t BordaVotes;
 	uint64_t pluralityVotes;
+	int64_t SimmonsVotesAgainst;
 	real rangeVote;
 	int64_t lossCount;
 	int64_t instantRunoffVotingLossCount;
@@ -3283,11 +3284,9 @@ int64_t calculateSimmonsVotesAgainst(const oneCandidate& theCandidate,
 //			  the Simmons Condorect Winner
 EMETH SimmonsCond(edata& E)
 {
-	int64_t SimmVotesAgainst[MaxNumCands]={0};
-	int i;
 	int winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	const CandidateSlate& allCandidates = E.Candidates;
+	CandidateSlate& allCandidates = E.Candidates;
 	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 	Determine(PlurWinner, Plurality, E);
 	Determine(SmithWinner, SmithSet, E);
@@ -3295,10 +3294,10 @@ EMETH SimmonsCond(edata& E)
 #if defined(CWSPEEDUP) && CWSPEEDUP
 	if(CondorcetWinner>=0) return(CondorcetWinner);
 #endif
-	for(i=0; i<numberOfCandidates; i++) {
-		SimmVotesAgainst[i] = calculateSimmonsVotesAgainst(allCandidates[i], allCandidates, numberOfCandidates);
+	for(auto& eachCandidate : allCandidates) {
+		eachCandidate.SimmonsVotesAgainst = calculateSimmonsVotesAgainst(eachCandidate, allCandidates, numberOfCandidates);
 	}
-	winner = ArgMinArr(numberOfCandidates, SimmVotesAgainst);
+	winner = Minimum(allCandidates, &oneCandidate::SimmonsVotesAgainst);
 	return winner;
 }
 
