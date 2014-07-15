@@ -3519,6 +3519,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 	std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
 	assert(numberOfCandidates <= MaxNumCands);
+	ensure(numberOfCandidates <= MaxNumCands, 46);
 	if(needSmithIRVWinner() && (CopeWinOnlyWinner<0)) {
 		BuildDefeatsMatrix(E);
 	}
@@ -3533,18 +3534,18 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 	}
 	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
 	for(const auto& eachVoter : allVoters) {
-		const auto& x = eachVoter.topDownPrefs[eachVoter.favoriteUneliminatedCandidate]; /* the initial favorite of voter i */
-		assert(x >= 0);
+		const auto& x = eachVoter.topDownPrefs[eachVoter.favoriteUneliminatedCandidate];
 		assert(x < (int)numberOfCandidates);
+		ensure(x < (int)numberOfCandidates, 45);
 		allCandidates[x].voteCountForThisRound++;
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
-	for(auto Iround=1; Iround < (int)numberOfCandidates; Iround++) { /*perform IRV rounds*/
+	for(auto Iround=1; Iround<(int)numberOfCandidates; Iround++) {
 		const auto& RdLoser = Minimum(allCandidates, &oneCandidate::voteCountForThisRound, false, true);
 		assert(RdLoser>=0);
 		assert(RdLoser < (int)numberOfCandidates);
 		ensure(RdLoser>=0, 12);
-		allCandidates[RdLoser].eliminated = true; /* eliminate RdLoser */
+		allCandidates[RdLoser].eliminated = true;
 		if(needSmithIRVWinner()) {
 			const MarginsData& marginsOfRdLoser = allCandidates[RdLoser].margins;
 			updateAllLosses(allCandidates, marginsOfRdLoser);
