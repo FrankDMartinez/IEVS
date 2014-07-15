@@ -3502,8 +3502,6 @@ void reallocateSingleVote( oneVoter& theVoter,
 //			  the instant runoff voting Winner
 EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 { /* side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's of Each Voter, Each Candidate's 'voteCountForThisRound', SmithIRVwinner, IRVwinner  */
-	int Iround,i,RdLoser;
-	int x,stillthere,winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
@@ -3522,14 +3520,14 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 	}
 	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
 	for(const auto& eachVoter : allVoters) {
-		x = eachVoter.topDownPrefs[eachVoter.favoriteUneliminatedCandidate]; /* the initial favorite of voter i */
+		const auto& x = eachVoter.topDownPrefs[eachVoter.favoriteUneliminatedCandidate]; /* the initial favorite of voter i */
 		assert(x >= 0);
 		assert(x < (int)numberOfCandidates);
 		allCandidates[x].voteCountForThisRound++;
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
-	for(Iround=1; Iround < (int)numberOfCandidates; Iround++) { /*perform IRV rounds*/
-		RdLoser = Minimum(allCandidates, &oneCandidate::voteCountForThisRound, false, true);
+	for(auto Iround=1; Iround < (int)numberOfCandidates; Iround++) { /*perform IRV rounds*/
+		const auto& RdLoser = Minimum(allCandidates, &oneCandidate::voteCountForThisRound, false, true);
 		assert(RdLoser>=0);
 		assert(RdLoser < (int)numberOfCandidates);
 		ensure(RdLoser>=0, 12);
@@ -3542,12 +3540,12 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 			reallocateSingleVote( eachVoter, RdLoser, allCandidates );
 		}
 	}  /* end of for(Iround) */
-	stillthere = 0;
+	auto stillthere = 0;
 	if(IRVTopLim >= (int)numberOfCandidates) {
 		IRVwinner = -1;
 	}
-	winner = -1;
-	i=0;
+	auto winner = -1;
+	auto i=0;
 	for(const auto& eachCandidate : allCandidates) {
 		if(!eachCandidate.eliminated) {
 			winner=i;
