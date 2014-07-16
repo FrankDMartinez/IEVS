@@ -3513,6 +3513,14 @@ void reallocateSingleVote( oneVoter& theVoter,
 //	Parameters:
 //		E	- the election data to use for determining
 //			  the instant runoff voting Winner
+//	Template Parameter:
+//		performingTraditionalIRV - whether to eliminate
+//		                           the plurality Loser (true)
+//		                           or either the plurality
+//		                           Loser or the plurality
+//		                           "2nd Loser", whichever
+//		                           loses pairwise to the
+//		                           Other (false)
 template<bool performingTraditionalIRV> EMETH IRV(edata& E)
 { /* side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's of Each Voter, Each Candidate's 'voteCountForThisRound', SmithIRVwinner, IRVwinner  */
 	const uint64_t& numberOfCandidates = E.NumCands;
@@ -3538,7 +3546,7 @@ template<bool performingTraditionalIRV> EMETH IRV(edata& E)
 	if(performingTraditionalIRV && needSmithIRVWinner()) {
 		SmithIRVwinner = CondorcetWinner;
 	}
-	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
+	/* compute vote totals for 1st round */
 	for(const auto& eachVoter : allVoters) {
 		const auto& x = eachVoter.topDownPrefs[eachVoter.favoriteUneliminatedCandidate];
 		assert(x < (int)numberOfCandidates);
@@ -3639,7 +3647,7 @@ enum Direction {Up, Down};
 //
 //	Returns:
 //		the index of a given Voter's next favorite Candidate
-//		which has not yet been eliminated by 'BTRIRV()'
+//		which has not yet been eliminated
 //	Parameters:
 //		favorite	- the index of the Voter's current favorite
 //				  Candidate
