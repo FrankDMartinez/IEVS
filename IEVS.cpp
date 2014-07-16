@@ -3469,6 +3469,54 @@ void reallocateSingleVote( oneVoter& theVoter,
 	}
 }
 
+//	Function: determineActualRoundLoser
+//
+//	Returns:
+//		the index representing the actual Loser of the current
+//		round, depending upon the algorithm utilized; if
+//		the algorithm calls for the elimination of the plurality
+//		Loser, the index representing the plurality Loser
+//		is simply returned; otherwise, the index representing
+//		either the plurality Loser or the penultimate plurality
+//		Loser, Whoever of the 2 pair-wise loses to the Other,
+//		is returned
+//
+//	Parameters:
+//		allCandidates  - the slate of Candidates for the
+//		                 current election
+//		pluralityLoser - the index into the slate of Candidates
+//		                 for the current election indicating
+//		                 which Candidate is the plurality
+//		                 Loser
+//
+//	Template Parameters:
+//		pluralityLoserLoses - whether the plurality Loser
+//		                      automatically loses
+template <bool pluralityLoserLoses>
+int determineActualRoundLoser(CandidateSlate& allCandidates, int pluralityLoser);
+
+template <>
+int determineActualRoundLoser<true>(CandidateSlate& allCandidates, int pluralityLoser)
+{
+	return pluralityLoser;
+}
+
+template <>
+int determineActualRoundLoser<false>(CandidateSlate& allCandidates, int pluralityLoser)
+{
+	bool eliminationState = allCandidates[pluralityLoser].eliminated;
+	allCandidates[pluralityLoser].eliminated = true;
+	auto penultimatePluralityLoser = Minimum(allCandidates, &oneCandidate::voteCountForThisRound, false, true);
+	allCandidates[pluralityLoser].eliminated = eliminationState;
+	assert(penultimatePluralityLoser>=0);
+	ensure(penultimatePluralityLoser>=0, 41);
+	if( allCandidates[pluralityLoser].margins[penultimatePluralityLoser] > 0 ) {
+		pluralityLoser = penultimatePluralityLoser;
+	}
+	ensure(pluralityLoser>=0, 13);
+	return pluralityLoser;
+}
+
 /*******
  * The following IRV (instant runoff voting) algorithm has somewhat long code, but
  * by using linked lists achieves fast (very sublinear) runtime.
@@ -3560,18 +3608,7 @@ template<bool performingTraditionalIRV> EMETH IRV(edata& E)
 		ensure(RdLoser>=0, 12);
 		assert(RdLoser < (int)numberOfCandidates);
 		ensure(RdLoser < (int)numberOfCandidates, 62);
-		if(not performingTraditionalIRV) {
-			bool eliminationState = allCandidates[RdLoser].eliminated;
-			allCandidates[RdLoser].eliminated = true;
-			auto RdLoser2 = Minimum(allCandidates, &oneCandidate::voteCountForThisRound, false, true);
-			allCandidates[RdLoser].eliminated = eliminationState;
-			assert(RdLoser2>=0);
-			ensure(RdLoser2>=0, 41);
-			if( allCandidates[RdLoser].margins[RdLoser2] > 0 ) {
-				RdLoser = RdLoser2;
-			}
-			ensure(RdLoser>=0, 13);
-		}
+		RdLoser = determineActualRoundLoser<performingTraditionalIRV>( allCandidates, RdLoser );
 		allCandidates[RdLoser].eliminated = true;
 		if(performingTraditionalIRV && needSmithIRVWinner()) {
 			const MarginsData& marginsOfRdLoser = allCandidates[RdLoser].margins;
