@@ -3513,50 +3513,68 @@ void reallocateSingleVote( oneVoter& theVoter,
 //	Parameters:
 //		E	- the election data to use for determining
 //			  the instant runoff voting Winner
-EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
+template<bool performingTraditionalIRV> EMETH IRV(edata& E)
 { /* side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's of Each Voter, Each Candidate's 'voteCountForThisRound', SmithIRVwinner, IRVwinner  */
 	const uint64_t& numberOfCandidates = E.NumCands;
 	std::vector<oneVoter>& allVoters = E.Voters;
 	CandidateSlate& allCandidates = E.Candidates;
 	assert(numberOfCandidates <= MaxNumCands);
-	ensure(numberOfCandidates <= MaxNumCands, 46);
-	if(needSmithIRVWinner() && (CopeWinOnlyWinner<0)) {
-		BuildDefeatsMatrix(E);
+	ensure(numberOfCandidates <= MaxNumCands, 35);
+	if(performingTraditionalIRV) {
+		if(needSmithIRVWinner() && (CopeWinOnlyWinner<0)) {
+			BuildDefeatsMatrix(E);
+		}
+		RandomlyPermute( numberOfCandidates, RandCandPerm );
+	} else if(CWSPEEDUP) {
+		if(CondorcetWinner >= 0) {
+			return CondorcetWinner;
+		}
 	}
-	RandomlyPermute( numberOfCandidates, RandCandPerm );
-	const auto& needSIRVWinner = needSmithIRVWinner();
+	const auto& needSIRVWinner = performingTraditionalIRV && needSmithIRVWinner();
 	for(auto& eachCandidate : allCandidates) {
 		prepareOneForIRV(eachCandidate, needSIRVWinner);
 	}
 	resetFavorites(allVoters);
-	if(needSmithIRVWinner()) {
+	if(performingTraditionalIRV && needSmithIRVWinner()) {
 		SmithIRVwinner = CondorcetWinner;
 	}
 	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
 	for(const auto& eachVoter : allVoters) {
 		const auto& x = eachVoter.topDownPrefs[eachVoter.favoriteUneliminatedCandidate];
 		assert(x < (int)numberOfCandidates);
-		ensure(x < (int)numberOfCandidates, 45);
+		ensure(x < (int)numberOfCandidates, 39);
 		allCandidates[x].voteCountForThisRound++;
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	for(auto Iround=1; Iround<(int)numberOfCandidates; Iround++) {
-		const auto& RdLoser = Minimum(allCandidates, &oneCandidate::voteCountForThisRound, false, true);
+		auto RdLoser = Minimum(allCandidates, &oneCandidate::voteCountForThisRound, false, true);
 		assert(RdLoser>=0);
 		ensure(RdLoser>=0, 12);
 		assert(RdLoser < (int)numberOfCandidates);
 		ensure(RdLoser < (int)numberOfCandidates, 62);
+		if(not performingTraditionalIRV) {
+			bool eliminationState = allCandidates[RdLoser].eliminated;
+			allCandidates[RdLoser].eliminated = true;
+			auto RdLoser2 = Minimum(allCandidates, &oneCandidate::voteCountForThisRound, false, true);
+			allCandidates[RdLoser].eliminated = eliminationState;
+			assert(RdLoser2>=0);
+			ensure(RdLoser2>=0, 41);
+			if( allCandidates[RdLoser].margins[RdLoser2] > 0 ) {
+				RdLoser = RdLoser2;
+			}
+			ensure(RdLoser>=0, 13);
+		}
 		allCandidates[RdLoser].eliminated = true;
-		if(needSmithIRVWinner()) {
+		if(performingTraditionalIRV && needSmithIRVWinner()) {
 			const MarginsData& marginsOfRdLoser = allCandidates[RdLoser].margins;
 			updateAllLosses(allCandidates, marginsOfRdLoser);
 		}
 		for(auto& eachVoter : allVoters) {
 			reallocateSingleVote( eachVoter, RdLoser, allCandidates );
 		}
-	}  /* end of for(Iround) */
+	}
 	auto stillthere = 0;
-	if(IRVTopLim >= (int)numberOfCandidates) {
+	if(performingTraditionalIRV && IRVTopLim >= (int)numberOfCandidates) {
 		IRVwinner = -1;
 	}
 	auto winner = -1;
@@ -3568,7 +3586,7 @@ EMETH IRV(edata& E   /* instant runoff; repeatedly eliminate plurality loser */)
 		}
 		i++;
 	}
-	if(IRVTopLim >= (int)numberOfCandidates) {
+	if(performingTraditionalIRV && IRVTopLim >= (int)numberOfCandidates) {
 		IRVwinner=winner;
 	}
 	assert(stillthere==1);
@@ -3591,7 +3609,7 @@ EMETH SmithIRV(edata& E)
 { /* must be run after IRV. */
 	if(IRVwinner<0){
 		SmithIRVwinner = -1;
-		IRV(E);
+		IRV<true>(E);
 	}
 	return SmithIRVwinner;
 }
@@ -3610,7 +3628,7 @@ EMETH Top3IRV(edata& E)
 {
 	int w;
 	IRVTopLim = 3;
-	w = IRV(E);
+	w = IRV<true>(E);
 	IRVTopLim = BIGINT;
 	return w;
 }
@@ -3658,82 +3676,6 @@ uint findNewFavorite(int64_t& favorite,
 	} while( allCandidates[indexOfNewFavorite].eliminated );
 	ensure( favorite < (int)CandidateCount, 38 );
 	return indexOfNewFavorite;
-}
-
-//	Function: BTRIRV
-//
-//	Returns:
-//		the index of the instant runoff voting Winner or
-//		-1 if an error occurs; Candidates eliminated are
-//		either the plurality Loser or the plurality "2nd Loser",
-//		whichever loses pairwise to the Other
-//	Parameters:
-//		E	- the election data to use for determining
-//			  the instant runoff voting Winner
-EMETH BTRIRV(edata& E)
-{ /* side effects: Each Candidate's 'eliminated' member, 'favoriteCandidate's, Each Candidate's 'voteCountForThisRound', FavListNext[], HeadFav[], */
-	const uint64_t& numberOfCandidates = E.NumCands;
-	std::vector<oneVoter>& allVoters = E.Voters;
-	CandidateSlate& allCandidates = E.Candidates;
-	assert(numberOfCandidates <= MaxNumCands);
-	ensure(numberOfCandidates <= MaxNumCands, 35);
-	if(CWSPEEDUP) {
-		if(CondorcetWinner >= 0) {
-			return CondorcetWinner;
-		}
-	}
-	for(auto& eachCandidate : allCandidates) {
-		prepareOneForIRV(eachCandidate, false);
-	}
-	resetFavorites(allVoters);
-	/* compute vote totals for 1st round and set up forward-linked lists (-1 terminates each list): */
-	for(const auto& eachVoter : allVoters) {
-		const auto& x = eachVoter.topDownPrefs[eachVoter.favoriteUneliminatedCandidate];
-		assert(x < (int)numberOfCandidates);
-		ensure(x < (int)numberOfCandidates, 39);
-		allCandidates[x].voteCountForThisRound++;
-	}
-	RandomlyPermute( numberOfCandidates, RandCandPerm );
-	for(auto Iround=1; Iround<(int)numberOfCandidates; Iround++) {
-		auto RdLoser = Minimum(allCandidates, &oneCandidate::voteCountForThisRound, false, true);
-		assert(RdLoser>=0);
-		ensure(RdLoser>=0, 40);
-		assert(RdLoser < (int)numberOfCandidates);
-		ensure(RdLoser < (int)numberOfCandidates, 62);
-		bool eliminationState = allCandidates[RdLoser].eliminated;
-		allCandidates[RdLoser].eliminated = true;
-		auto RdLoser2 = Minimum(allCandidates, &oneCandidate::voteCountForThisRound, false, true);
-		allCandidates[RdLoser].eliminated = eliminationState;
-		assert(RdLoser2>=0);
-		ensure(RdLoser2>=0, 41);
-		if( allCandidates[RdLoser].margins[RdLoser2] > 0 ) {
-			RdLoser = RdLoser2;
-		}
-		ensure(RdLoser>=0, 13);
-		allCandidates[RdLoser].eliminated = true; /* eliminate RdLoser */
-		for(auto& eachVoter : allVoters) {
-			reallocateSingleVote( eachVoter, RdLoser, allCandidates );
-		}
-	}
-	auto stillthere = 0;
-	if(false && IRVTopLim >= (int)numberOfCandidates) {
-		IRVwinner = -1;
-	}
-	auto winner = -1;
-	auto i=0;
-	for(const auto& eachCandidate : allCandidates) {
-		if(!eachCandidate.eliminated) {
-			winner=i;
-			stillthere++;
-		}
-		i++;
-	}
-	if(false && IRVTopLim >= (int)numberOfCandidates) {
-		IRVwinner=winner;
-	}
-	assert(stillthere==1);
-	ensure((stillthere==1), 3);
-	return(winner);
 }
 
 //	Function: Coombs
@@ -5293,7 +5235,7 @@ int GimmeWinner( edata& E, int WhichMeth )
 	case(2) : w=RandomWinner(E); break;
 	case(3) : w=Plurality(E); break;
 	case(4) : w=Borda(E); break;
-	case(5) : w=IRV(E); break;
+	case(5) : w=IRV<true>(E); break;
 	case(6) : w=Approval(E); break;
 	case(7) : w=Range(E); break;
 	case(8) : w=SmithSet(E); break;
@@ -5307,7 +5249,7 @@ int GimmeWinner( edata& E, int WhichMeth )
 	case(15) : w=Copeland(E); break;
 	case(16) : w=SimmonsCond(E); break;
 	case(17) : w=SmithIRV(E); break;
-	case(18) : w=BTRIRV(E); break;
+	case(18) : w=IRV<false>(E); break;
 	case(19) : w=DMC(E); break;
 	case(20) : w=Dabagh(E); break;
 	case(21) : w=VtForAgainst(E); break;
