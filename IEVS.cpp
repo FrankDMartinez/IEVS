@@ -298,6 +298,8 @@ template<class T>
 template<class T>
 		int SortedKey(uint64_t N, const int Arr[], const T Key[]);
 template<class T>
+		int SortedKey(uint64_t N, const CandidateSlate& Candidates, const T oneCandidate::*member);
+template<class T>
 		int SortedKey(uint64_t N, const int Arr[], const std::vector<oneCandidateToTheVoter>& Candidates);
 int SortedKey(const std::vector<int64_t>& Arr, const std::array<oneVotingMethod, NumMethods>& methods);
 void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str);
@@ -4467,6 +4469,29 @@ void sort(ContainerClass& theContainer, const ComparisonClass& theComparator)
 	std::sort(theContainer.begin(), theContainer.end(), theComparator);
 }
 
+//	Function: sortByDescendingValue
+//
+//	rearranges a given container so 'Candidates[RandCandPerm[0..N-1]].approvals'
+//	is in decreasing order
+//
+//	Parameters:
+//		theContainer  - the container to sort
+//		allCandidates - the slate of Candidates to help
+//		                guide sorting
+template <class ContainerClass>
+void sortByDescendingValue(ContainerClass& theContainer, const CandidateSlate& allCandidates)
+{
+	ensure(theContainer.size() == allCandidates.size(), 45);
+	sort(theContainer,
+	     [&allCandidates](const uint& a, const uint& b)->bool
+	     {
+	     	return (allCandidates[a].approvals) > (allCandidates[b].approvals);
+	     } );
+	const auto& trend = SortedKey(allCandidates.size(),allCandidates,&oneCandidate::approvals);
+	assert(trend<=0);
+	ensure(trend<=0, 40);
+}
+
 //	Function: DMC
 //
 //	Returns:
@@ -4493,7 +4518,7 @@ EMETH DMC(edata& E  /* eliminate least-approved candidate until unbeaten winner 
 		eachCandidate.definiteMajorityChoiceLossCount = eachCandidate.lossCount;
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
-	PermShellSortDown(numberOfCandidates, allCandidates, &oneCandidate::approvals);
+	sortByDescendingValue(RandCandPerm, allCandidates);
 	for(i=(int)numberOfCandidates-1; i>0; i--) {
 		const oneCandidate& CandidateI = allCandidates[i];
 		const MarginsData& marginsOfI = CandidateI.margins;
