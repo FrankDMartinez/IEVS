@@ -5001,7 +5001,7 @@ void PrintMethName( const int64_t& WhichMeth, bool Padding )
 		spaces = 8;
 		break;
 	case(18) :
-		name = "BTRIRV";
+		name = "IRV eliminating 1 of 2 Losers";
 		spaces = 7;
 		break;
 	case(19) :
