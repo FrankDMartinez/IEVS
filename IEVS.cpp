@@ -4489,9 +4489,8 @@ EMETH DMC(edata& E  /* eliminate least-approved candidate until unbeaten winner 
 			return CondorcetWinner;
 		}
 	}
-	for(i=0; i<numberOfCandidates; i++) {
-		oneCandidate& CandidateI = allCandidates[i];
-		CandidateI.definiteMajorityChoiceLossCount = CandidateI.lossCount;
+	for(auto& eachCandidate : allCandidates) {
+		eachCandidate.definiteMajorityChoiceLossCount = eachCandidate.lossCount;
 	}
 	RandomlyPermute( numberOfCandidates, RandCandPerm );
 	PermShellSortDown(numberOfCandidates, allCandidates, &oneCandidate::approvals);
