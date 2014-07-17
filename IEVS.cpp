@@ -229,6 +229,7 @@ struct oneCandidate
 	uint64_t antiPluralityVotes;
 	uint approvals;
 	uint64_t CopelandScore;
+	uint64_t DabaghVoteCount;
 	int64_t electedCount;
 	uint64_t drawCount;
 	int64_t BordaVotes;
@@ -251,8 +252,8 @@ struct oneCandidate
 			 ArmytageMarginsMatrix(), margins(),
 			 Ibeat(), alsoApprovedWith(),
 			 antiPluralityVotes(), approvals(),
-			 CopelandScore(), electedCount(), drawCount(),
-			 BordaVotes(), pluralityVotes(),
+			 CopelandScore(), DabaghVoteCount(), electedCount(),
+			 drawCount(), BordaVotes(), pluralityVotes(),
 			 rangeVote(), lossCount(), instantRunoffVotingLossCount(),
 			 definiteMajorityChoiceLossCount(), uncovered(),
 			 IsASchwartzMember(), IsASmithMember(),
@@ -2079,21 +2080,29 @@ EMETH AntiPlurality(edata& E   /* canddt with fewest bottom-rank votes wins */)
 	return AntiPlurWinner;
 }
 
-/* Plurality needs to have already been run before running Dabagh.  */
-EMETH Dabagh(const edata& E   /* canddt with greatest Dabagh = 2*#top-rank-votes + 1*#second-rank-votes, wins */)
+//	Function: Dabagh
+//
+//	Returns:
+//		an index representing the Candidate elected by
+//		the Dabagh method; Voter pick a first and second
+//		Choice, for Each Voter, Candidates are given 2
+//		votes if They are the Voter's 1st Choice and 1
+//		vote if They are the Voter's 2nd Choice, and the
+//		Candidate with the most votes is declared
+//		elected
+//	Parameter:
+//		E - the election data to use for determining the
+//		    elected Candidate
+EMETH Dabagh(edata& E)
 {
-	uint64_t DabaghVoteCount[MaxNumCands];
-	int i, winner;
-	const uint64_t& numberOfCandidates = E.NumCands;
-	const uint& numberOfVoters = E.NumVoters;
 	const std::vector<oneVoter>& allVoters = E.Voters;
-	const CandidateSlate& allCandidates = E.Candidates;
-	CopyArray(numberOfCandidates, allCandidates, DabaghVoteCount, &oneCandidate::pluralityVotes);
-	ScaleVec( numberOfCandidates, DabaghVoteCount, (uint64_t)2 );
-	for(i=0; i<(int)numberOfVoters; i++) { /*add 2nd-pref votes with weight=1:*/
-		DabaghVoteCount[ allVoters[i].topDownPrefs[1] ]++;
+	CandidateSlate& allCandidates = E.Candidates;
+	for(const auto& eachVoter : allVoters) {
+		const auto& preferences = eachVoter.topDownPrefs;
+		allCandidates[ preferences[0] ].DabaghVoteCount += 2;
+		allCandidates[ preferences[1] ].DabaghVoteCount++;
 	}
-	winner = ArgMaxArr<uint64_t>(numberOfCandidates, DabaghVoteCount);
+	const auto& winner = Maximum(allCandidates, &oneCandidate::DabaghVoteCount);
 	return winner;
 }
 
