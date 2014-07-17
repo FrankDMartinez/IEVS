@@ -233,6 +233,7 @@ struct oneCandidate
 	int64_t electedCount;
 	uint64_t drawCount;
 	int64_t BordaVotes;
+	int64_t netVotesFor;
 	uint64_t pluralityVotes;
 	int64_t SimmonsVotesAgainst;
 	real rangeVote;
@@ -253,10 +254,10 @@ struct oneCandidate
 			 Ibeat(), alsoApprovedWith(),
 			 antiPluralityVotes(), approvals(),
 			 CopelandScore(), DabaghVoteCount(), electedCount(),
-			 drawCount(), BordaVotes(), pluralityVotes(),
-			 rangeVote(), lossCount(), instantRunoffVotingLossCount(),
-			 definiteMajorityChoiceLossCount(), uncovered(),
-			 IsASchwartzMember(), IsASmithMember(),
+			 drawCount(), BordaVotes(), netVotesFor(),
+			 pluralityVotes(), rangeVote(), lossCount(),
+			 instantRunoffVotingLossCount(), definiteMajorityChoiceLossCount(),
+			 uncovered(), IsASchwartzMember(), IsASmithMember(),
 			 normalizedRatingSum(), utilitySum(),
 			 voteCountForThisRound(), eliminated()
 	{
@@ -2106,22 +2107,28 @@ EMETH Dabagh(edata& E)
 	return winner;
 }
 
-/* Plurality needs to have already been run before running VtForAgainst.  */
-EMETH VtForAgainst(const edata& E   /* canddt with greatest score = #votesFor - #votesAgainst,  wins */)
+//	Function: VtForAgainst
+//
+//	Returns:
+//		an index representing the Candidate with the
+//		highest net votes in favor, defined as "number
+//		of Voters ranking the Candidate first minus
+//		number of Voters ranking the Candidate last"
+//	Parameter:
+//		E - the election data to use for determining the
+//		    elected Candidate
+EMETH VtForAgainst(edata& E)
 {
-	int64_t VFAVoteCount[MaxNumCands];
-	int i, winner;
-	uint64_t last;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	const uint& numberOfVoters = E.NumVoters;
 	const std::vector<oneVoter>& allVoters = E.Voters;
-	const CandidateSlate& allCandidates = E.Candidates;
-	last = numberOfCandidates - 1;
-	CopyArray(numberOfCandidates, allCandidates, (uint64_t*)VFAVoteCount, &oneCandidate::pluralityVotes);
-	for(i=0; i<(int)numberOfVoters; i++) {
-		VFAVoteCount[ allVoters[i].topDownPrefs[last] ]--;
+	CandidateSlate& allCandidates = E.Candidates;
+	const auto& last = numberOfCandidates - 1;
+	for(const auto& eachVoter : allVoters) {
+		auto& preferences = eachVoter.topDownPrefs;
+		allCandidates[ preferences[0] ].netVotesFor++;
+		allCandidates[ preferences[last] ].netVotesFor--;
 	}
-	winner = ArgMaxArr(numberOfCandidates, VFAVoteCount);
+	const auto& winner = Maximum(allCandidates, &oneCandidate::netVotesFor);
 	return winner;
 }
 
