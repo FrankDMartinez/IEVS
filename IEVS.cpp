@@ -7515,7 +7515,7 @@ int Maximum(const CandidateSlate& allCandidates,
 	bool typeIsUnsigned = typeid(T) == typeid(uint);
 	int winner;
 	winner = -1;
-	if(typeid(T)==typeid(uint64_t)) {
+	if(typeid(T)==typeid(uint64_t) || typeIsUnsigned) {
 		maximumValue = (T) 0;
 	} else if(typeid(T)==typeid(int64_t)) {
 		maximumValue = (T)(LLONG_MIN);
