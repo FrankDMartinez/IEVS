@@ -2847,6 +2847,19 @@ template<class T> bool beatPathWinnerExists(const T (&bpsArray)[MaxNumCands*MaxN
 	return true;
 }
 
+template<class T> bool beatPathWinnerExists(const std::valarray<T>& strengthsArray, const int& k)
+{
+	auto j=0;
+	const auto& kStrength = strengthsArray[k];
+	for(const auto& eachStrengthCollection : strengthsArray) {
+		if( eachStrengthCollection[k] > kStrength[j] ) {
+			return false;
+		}
+		j++;
+	}
+	return true;
+}
+
 /*	SchulzeBeatpaths(E):	returns the index of the Schulze beatpaths Winner; this
  *				implementation is an O(N^3) algorithm, but it is known
  *				how to speed it up to O(N^2); the Schulze beatpath
@@ -2906,31 +2919,29 @@ template<class T> bool beatPathWinnerExists(const T (&bpsArray)[MaxNumCands*MaxN
  */
 EMETH SchulzeBeatpaths(edata& E  /* winner = X so BeatPathStrength over rivals Y exceeds strength from Y */)
 {
-	int64_t BeatPathStrength[MaxNumCands*MaxNumCands]={0};
+	std::valarray<MarginsData> beatPathStrength;
 	int i,j,k;
 	int winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
 	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
+	beatPathStrength.resize(E.NumCands);
 	for(i=0; i<numberOfCandidates; i++) {
-		const MarginsData& marginsOfI = allCandidates[i].margins;
-		for(j=0; j<numberOfCandidates; j++) {
-			if(i != j) {
-				BeatPathStrength[i*numberOfCandidates +j] = marginsOfI[j];
-			}
-		}
+		beatPathStrength[i] = allCandidates[i].margins;
 	}
 	for(i=0; i<numberOfCandidates; i++) {
+		auto& iStrengths = beatPathStrength[i];
 		for(j=0; j<numberOfCandidates; j++) {
-			for(k=0; k<(int)numberOfCandidates; k++) {
-				auto minc = BeatPathStrength[j*numberOfCandidates+i];
-				minc = std::min(BeatPathStrength[i*numberOfCandidates +k],minc);
-				BeatPathStrength[j*numberOfCandidates +k] = std::max(BeatPathStrength[j*numberOfCandidates +k], minc);
+			auto& jStrengths = beatPathStrength[j];
+			for(k=0; k<numberOfCandidates; k++) {
+				auto minc = jStrengths[i];
+				minc = std::min(iStrengths[k],minc);
+				jStrengths[k] = std::max(jStrengths[k], minc);
 			}
 		}
 	}
 	for(const auto& eachCandidate : RandCandPerm) {
-		const auto& haveAWinner = beatPathWinnerExists(BeatPathStrength, eachCandidate, numberOfCandidates);
+		const auto& haveAWinner = beatPathWinnerExists(beatPathStrength, eachCandidate);
 		if( haveAWinner ) {
 			winner = eachCandidate;
 			return winner;
