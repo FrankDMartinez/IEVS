@@ -2938,7 +2938,7 @@ EMETH SchulzeBeatpaths(edata& E  /* winner = X so BeatPathStrength over rivals Y
 			}
 		}
 	}
-	for(i=(int)numberOfCandidates-1; i>=0; i--) {
+	for(i=0; i<numberOfCandidates; i++) {
 		bool haveAWinner;
 		k = RandCandPerm[i];
 		haveAWinner = beatPathWinnerExists(BeatPathStrength, k, numberOfCandidates);
