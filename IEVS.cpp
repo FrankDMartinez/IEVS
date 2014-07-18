@@ -2938,12 +2938,11 @@ EMETH SchulzeBeatpaths(edata& E  /* winner = X so BeatPathStrength over rivals Y
 			}
 		}
 	}
-	for(i=0; i<numberOfCandidates; i++) {
-		bool haveAWinner;
-		k = RandCandPerm[i];
-		haveAWinner = beatPathWinnerExists(BeatPathStrength, k, numberOfCandidates);
+	for(const auto& eachCandidate : RandCandPerm) {
+		const auto& haveAWinner = beatPathWinnerExists(BeatPathStrength, eachCandidate, numberOfCandidates);
 		if( haveAWinner ) {
-			winner = k;   return winner;
+			winner = eachCandidate;
+			return winner;
 		}
 	}
 	return(-1);
