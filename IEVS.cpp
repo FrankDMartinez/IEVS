@@ -2908,7 +2908,6 @@ EMETH SchulzeBeatpaths(edata& E  /* winner = X so BeatPathStrength over rivals Y
 {
 	int64_t BeatPathStrength[MaxNumCands*MaxNumCands]={0};
 	int i,j,k;
-	int64_t minc;
 	int winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
@@ -2923,18 +2922,10 @@ EMETH SchulzeBeatpaths(edata& E  /* winner = X so BeatPathStrength over rivals Y
 	}
 	for(i=0; i<numberOfCandidates; i++) {
 		for(j=0; j<numberOfCandidates; j++) {
-			if(i != j) {
-				for(k=0; k<(int)numberOfCandidates; k++) {
-					if((k != j) && (k != i)) {
-						minc = BeatPathStrength[j*numberOfCandidates+i];
-						if( BeatPathStrength[i*numberOfCandidates +k] < minc ) {
-							minc = BeatPathStrength[i*numberOfCandidates +k];
-						}
-						if( BeatPathStrength[j*numberOfCandidates +k] < minc ) {
-							BeatPathStrength[j*numberOfCandidates +k] = minc;
-						}
-					}
-				}
+			for(k=0; k<(int)numberOfCandidates; k++) {
+				auto minc = BeatPathStrength[j*numberOfCandidates+i];
+				minc = std::min(BeatPathStrength[i*numberOfCandidates +k],minc);
+				BeatPathStrength[j*numberOfCandidates +k] = std::max(BeatPathStrength[j*numberOfCandidates +k], minc);
 			}
 		}
 	}
