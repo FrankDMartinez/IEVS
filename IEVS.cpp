@@ -2920,23 +2920,23 @@ template<class T> bool beatPathWinnerExists(const std::valarray<T>& strengthsArr
 EMETH SchulzeBeatpaths(edata& E  /* winner = X so BeatPathStrength over rivals Y exceeds strength from Y */)
 {
 	std::valarray<MarginsData> beatPathStrength;
-	int i,j,k;
 	int winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
 	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
 	beatPathStrength.resize(E.NumCands);
-	for(i=0; i<numberOfCandidates; i++) {
+	for(auto i=0; i<numberOfCandidates; i++) {
 		beatPathStrength[i] = allCandidates[i].margins;
 	}
-	for(i=0; i<numberOfCandidates; i++) {
+	for(auto i=0; i<numberOfCandidates; i++) {
 		auto& iStrengths = beatPathStrength[i];
-		for(j=0; j<numberOfCandidates; j++) {
-			auto& jStrengths = beatPathStrength[j];
-			for(k=0; k<numberOfCandidates; k++) {
-				auto minc = jStrengths[i];
+		for(auto& eachStrengths : beatPathStrength) {
+			auto& strengthRegardingI = eachStrengths[i];
+			for(auto k=0; k<numberOfCandidates; k++) {
+				auto minc = strengthRegardingI;
+				auto& strengthRegardingk = eachStrengths[k];
 				minc = std::min(iStrengths[k],minc);
-				jStrengths[k] = std::max(jStrengths[k], minc);
+				strengthRegardingk = std::max(strengthRegardingk, minc);
 			}
 		}
 	}
