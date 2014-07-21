@@ -7430,7 +7430,6 @@ int ArgMaxArr(uint64_t N, const Ballot& Candidates)
 {
 	T maxc;
 	int a;
-	int r;
 	int winner;
 	winner = -1;
 	if(typeid(T)==typeid(int)) {
@@ -7442,9 +7441,11 @@ int ArgMaxArr(uint64_t N, const Ballot& Candidates)
 	}
 	RandomlyPermute( N, RandCandPerm );
 	for(a=0; a<(int)N; a++) {
-		r = RandCandPerm[a];
-		if(Candidates[r].perceivedUtility > maxc) {
-			maxc=Candidates[r].perceivedUtility;
+		const auto& r = RandCandPerm[a];
+		const auto& theCandidate = Candidates[r];
+		const auto& perceivedUtility = theCandidate.perceivedUtility;
+		if(perceivedUtility > maxc) {
+			maxc=perceivedUtility;
 			winner=r;
 		}
 	}
