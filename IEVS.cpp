@@ -1981,6 +1981,21 @@ EMETH RandomWinner(const edata& E)
 	return (int)RandInt( E.NumCands );
 }
 
+//	Function: chooseOneRandomVoter
+//
+//	Returns:
+//		a randomly selected Voter
+//	Parameter:
+//		allVoters - the collection of Voters in the current
+//		            election
+const oneVoter& chooseOneRandomVoter(const std::vector<oneVoter>& allVoters)
+{
+	const auto& numberOfVoters = allVoters.size();
+	const auto& VoterIndex = RandInt(numberOfVoters);
+	auto& theVoter = allVoters[VoterIndex];
+	return theVoter;
+}
+
 /*	RandomBallot(E):	returns the honest top Candidate of a randomly selected
  *				Voter; such a technique is considered 'strategy-proof'
  *	E:	the election data used to determine thw Winner
@@ -1989,8 +2004,8 @@ EMETH RandomBallot(const edata& E)
 { /*honest top choice of a random voter is elected. Strategyproof.*/
 	int winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	const uint64_t VoterIndex = RandInt(E.NumVoters);
-	winner = ArgMaxArr<real>(numberOfCandidates, E.Voters[VoterIndex].Candidates);
+	auto& theVoter = chooseOneRandomVoter(E.Voters);
+	winner = ArgMaxArr<real>(numberOfCandidates, theVoter.Candidates);
 	return winner;
 }
 
@@ -3893,9 +3908,9 @@ EMETH HeitzigDFC(edata& E)
 	uint pwct=0, wct=0;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	const uint64_t VoterIndex = RandInt(E.NumVoters);
+	auto& theVoter = chooseOneRandomVoter(E.Voters);
 	const std::vector<oneVoter>& allVoters = E.Voters;
-	Rwnr = ArgMaxArr<real>(numberOfCandidates, E.Voters[VoterIndex].Candidates);
+	Rwnr = ArgMaxArr<real>(numberOfCandidates, theVoter.Candidates);
 	Determine(ApprovalWinner, Approval, E);
 	for(i=0; i<(int)numberOfVoters; i++) {
 		const oneVoter& theVoter = allVoters[i];
