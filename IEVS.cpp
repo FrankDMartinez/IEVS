@@ -2008,7 +2008,6 @@ EMETH RandomBallot(const edata& E)
 	const uint64_t& numberOfCandidates = E.NumCands;
 	auto& theVoter = chooseOneRandomVoter(E.Voters);
 	if( theVoter.honest ) {
-		RandomlyPermute( numberOfCandidates, RandCandPerm );
 		winner = theVoter.topDownPrefs[0];
 	} else {
 		winner = ArgMaxArr<real>(numberOfCandidates, theVoter.Candidates);
