@@ -1612,7 +1612,9 @@ struct oneVoter
 	std::vector<uint> topDownPrefs;
 	Ballot Candidates;
 	int64_t favoriteUneliminatedCandidate;
-	oneVoter() : topDownPrefs(), Candidates(), favoriteUneliminatedCandidate(-1)
+	bool honest;
+	oneVoter() : topDownPrefs(), Candidates(), favoriteUneliminatedCandidate(-1),
+	             honest()
 	{
 	}
 };
@@ -2005,7 +2007,12 @@ EMETH RandomBallot(const edata& E)
 	int winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	auto& theVoter = chooseOneRandomVoter(E.Voters);
-	winner = ArgMaxArr<real>(numberOfCandidates, theVoter.Candidates);
+	if( theVoter.honest ) {
+		RandomlyPermute( numberOfCandidates, RandCandPerm );
+		winner = theVoter.topDownPrefs[0];
+	} else {
+		winner = ArgMaxArr<real>(numberOfCandidates, theVoter.Candidates);
+	}
 	return winner;
 }
 
@@ -5630,6 +5637,7 @@ void voteHonestly(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 		const auto& utility = eachCandidate.perceivedUtility;
 		eachCandidate.approve2 = (utility >= Mean2U);
 	}
+	theVoter.honest = true;
 }
 
 //	Function: voteStrategically
@@ -5712,6 +5720,7 @@ void voteStrategically(oneVoter& theVoter, const uint64_t& numberOfCandidates)
 		preferences[theRanking] = j;
 		j++;
 	}
+	theVoter.honest = false;
 }
 
 //	Function: voteByHonesty
