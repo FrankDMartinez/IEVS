@@ -224,6 +224,7 @@ struct oneCandidate
 	ArmytageDefeatsData ArmytageDefeatsMatrix;
 	ArmytageMarginData ArmytageMarginsMatrix;
 	MarginsData margins;
+	uint64_t index;
 	uint64_t Ibeat;
 	PairApprovalData alsoApprovedWith;
 	uint64_t antiPluralityVotes;
@@ -250,7 +251,7 @@ struct oneCandidate
 	oneCandidate() : DefeatsMatrix(), TrueDefeatsMatrix(),
 			 ArmytageMatrix(),
 			 ArmytageDefeatsMatrix(),
-			 ArmytageMarginsMatrix(), margins(),
+			 ArmytageMarginsMatrix(), margins(), index(),
 			 Ibeat(), alsoApprovedWith(),
 			 antiPluralityVotes(), approvals(),
 			 CopelandScore(), DabaghVoteCount(), electedCount(),
@@ -1811,10 +1812,12 @@ void BuildDefeatsMatrix(edata& E)
 
 	assert(numberOfCandidates <= MaxNumCands);
 	for(oneCandidate& eachCandidate : allTheCandidates) {
+		const auto index = eachCandidate.index;
 		const real utilitySum = eachCandidate.utilitySum;
 		const auto pluralityVotes = eachCandidate.pluralityVotes;
 		const auto margins = eachCandidate.margins;
 		eachCandidate = oneCandidate();
+		eachCandidate.index = index;
 		eachCandidate.utilitySum = utilitySum;
 		eachCandidate.pluralityVotes = pluralityVotes;
 		eachCandidate.margins = margins;
@@ -1982,19 +1985,18 @@ EMETH RandomWinner(const edata& E)
 	return (int)RandInt( E.NumCands );
 }
 
-//	Function: chooseOneRandomVoter
+//	Function: chooseOneAtRandom
 //
 //	Returns:
-//		a randomly selected Voter
+//		a randomly selected element of a given collection
 //	Parameter:
-//		allVoters - the collection of Voters in the current
-//		            election
-const oneVoter& chooseOneRandomVoter(const std::valarray<oneVoter>& allVoters)
+//		theCollection - the collection from which to choose
+template<typename MemberType> const MemberType& chooseOneAtRandom(const std::valarray<MemberType>& theCollection)
 {
-	const auto& numberOfVoters = allVoters.size();
-	const auto& VoterIndex = RandInt(numberOfVoters);
-	auto& theVoter = allVoters[VoterIndex];
-	return theVoter;
+	const auto& numberOfMembers = theCollection.size();
+	const auto& MemberIndex = RandInt(numberOfMembers);
+	auto& theMember = theCollection[MemberIndex];
+	return theMember;
 }
 
 /*	RandomBallot(E):	returns the honest top Candidate of a randomly selected
@@ -2005,7 +2007,7 @@ EMETH RandomBallot(const edata& E)
 { /*honest top choice of a random voter is elected. Strategyproof.*/
 	int winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	auto& theVoter = chooseOneRandomVoter(E.Voters);
+	auto& theVoter = chooseOneAtRandom(E.Voters);
 	if( theVoter.honest ) {
 		winner = theVoter.topDownPrefs[0];
 	} else {
@@ -2243,18 +2245,18 @@ EMETH Black(edata& E  /* Condorcet winner if exists, else use Borda */)
  */
 EMETH RandomPair(const edata& E)
 { /*pairwise honest-util winner among 2 random candidates is elected*/
-	int x,y;
-	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
-	x = (int)RandInt(numberOfCandidates);
-	y = (int)RandInt(numberOfCandidates);
-	if( allCandidates[x].utilitySum > allCandidates[y].utilitySum ) {
-		return x;
+	auto& theFirst = chooseOneAtRandom(allCandidates);
+	auto& theSecond = chooseOneAtRandom(allCandidates);
+	typeof(oneCandidate::index) rv;
+	if( theFirst.utilitySum > theSecond.utilitySum ) {
+		rv = theFirst.index;
+	} else if( theFirst.utilitySum < theSecond.utilitySum ) {
+		rv = theSecond.index;
+	} else {
+		rv = flipACoin(theSecond.index, theFirst.index);
 	}
-	if( allCandidates[x].utilitySum < allCandidates[y].utilitySum ) {
-		return y;
-	}
-	return flipACoin(y, x);
+	return rv;
 }
 
 /*	findLoser(count, Candidates, weights):	returns the index of
@@ -3913,7 +3915,7 @@ EMETH HeitzigDFC(edata& E)
 	uint pwct=0, wct=0;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	auto& theVoter = chooseOneRandomVoter(E.Voters);
+	auto& theVoter = chooseOneAtRandom(E.Voters);
 	const auto& allVoters = E.Voters;
 	Rwnr = ArgMaxArr<real>(numberOfCandidates, theVoter.Candidates);
 	Determine(ApprovalWinner, Approval, E);
@@ -6147,8 +6149,11 @@ template<> void resizeAndReset(CandidateSlate& theSlate, const uint64_t& newSize
 {
 	theSlate.resize(newSize);
 	theSlate=oneCandidate();
+	auto index=0;
 	for(auto& eachCandidate : theSlate) {
 		eachCandidate.margins.resize(newSize);
+		eachCandidate.index = index;
+		index++;
 	}
 }
 
