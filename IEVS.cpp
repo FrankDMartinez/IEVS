@@ -190,22 +190,6 @@ uint BROutputMode=0;
 struct oneCandidateToTheVoter;
 struct oneVoter;
 
-struct oneVotingMethod
-{
-	std::array<uint, NumMethods> agreementCountWithMethod;
-	uint regCount;
-	real meanRegret;
-	real sRegret;
-	uint trueCondorcetAgreementCount;
-	uint CondorcetAgreementCount;
-	int Winner;
-	oneVotingMethod() : agreementCountWithMethod(), regCount(),
-	                    meanRegret(), sRegret(), trueCondorcetAgreementCount(),
-	                    CondorcetAgreementCount(), Winner(-1)
-	{
-	}
-};
-
 typedef std::array<real,MaxNumCands> ArmytageData;
 typedef std::array<int,MaxNumCands> ArmytageDefeatsData;
 typedef std::array<real,MaxNumCands> ArmytageMarginData;
@@ -224,7 +208,7 @@ struct oneCandidate
 	ArmytageDefeatsData ArmytageDefeatsMatrix;
 	ArmytageMarginData ArmytageMarginsMatrix;
 	MarginsData margins;
-	uint64_t index;
+	int64_t index;
 	uint64_t Ibeat;
 	PairApprovalData alsoApprovedWith;
 	uint64_t antiPluralityVotes;
@@ -265,6 +249,24 @@ struct oneCandidate
 	}
 };
 
+typedef typeof(oneCandidate::index) EMETH;  /* allows fgrep EMETH IEVS.c to find out what Election methods now available */
+
+struct oneVotingMethod
+{
+	std::array<uint, NumMethods> agreementCountWithMethod;
+	uint regCount;
+	real meanRegret;
+	real sRegret;
+	uint trueCondorcetAgreementCount;
+	uint CondorcetAgreementCount;
+	EMETH Winner;
+	oneVotingMethod() : agreementCountWithMethod(), regCount(),
+	meanRegret(), sRegret(), trueCondorcetAgreementCount(),
+	CondorcetAgreementCount(), Winner(-1)
+	{
+	}
+};
+
 typedef std::valarray<oneCandidate> CandidateSlate;
 typedef std::valarray<oneCandidateToTheVoter> Ballot;
 
@@ -283,7 +285,7 @@ template< class T>
 template <typename T> void reset(T& iteratableCollection) {
 	std::fill(iteratableCollection.begin(), iteratableCollection.end(), typename T::value_type());
 }
-int flipACoin(int choice1, int choice2);
+EMETH flipACoin(const EMETH& choice1, const EMETH& choice2);
 template<class T>
 		void PermShellSortDown( uint64_t N, int Perm[], const T Key[] );
 template<class T>
@@ -1263,7 +1265,7 @@ std::vector<uint> RandCandPerm; /* should initially contain 0..NumCands-1 */
  *	maximumIndex:	the index into 'allCandidates' presumed to have the hightest value
  *			of 'member'
  */
-template<class T> int SecondMaximum(uint64_t count, const CandidateSlate& allCandidates, const T oneCandidate::*member, int maximumIndex ) {
+template<class T> int SecondMaximum(uint64_t count, const CandidateSlate& allCandidates, const T oneCandidate::*member, EMETH maximumIndex ) {
 	T maxc;
 	int i;
 	int r;
@@ -1560,24 +1562,24 @@ some other methods may not work.
 side-effects:  can alter these global variables (list follows):
 ***************************/
 
- int PlurWinner;
- int AntiPlurWinner;
- int PSecond;
- int ApprovalWinner;
- int IRVwinner;
- int SmithWinner;
- int SchwartzWinner;
- int RangeWinner;
- int BordaWinner;
- int WorstWinner;
- int BestWinner;
- int RandomUncoveredMemb;
+ EMETH PlurWinner;
+ EMETH AntiPlurWinner;
+ EMETH PSecond;
+ EMETH ApprovalWinner;
+ EMETH IRVwinner;
+ EMETH SmithWinner;
+ EMETH SchwartzWinner;
+ EMETH RangeWinner;
+ EMETH BordaWinner;
+ EMETH WorstWinner;
+ EMETH BestWinner;
+ EMETH RandomUncoveredMemb;
 uint RangeGranul;
  int IRVTopLim = BIGINT;
- int CondorcetWinner;   /*negative if does not exist*/
- int TrueCW;   /*cond winner based on undistorted true utilities; negative if does not exist*/
- int CopeWinOnlyWinner;
- int SmithIRVwinner;
+ EMETH CondorcetWinner;   /*negative if does not exist*/
+ EMETH TrueCW;   /*cond winner based on undistorted true utilities; negative if does not exist*/
+ EMETH CopeWinOnlyWinner;
+ EMETH SmithIRVwinner;
  int FavListNext[MaxNumVoters];
  int HeadFav[MaxNumCands];
 bool CoverMatrix[MaxNumCands*MaxNumCands];
@@ -1635,7 +1637,7 @@ typedef struct dum1 {
 	}
 } edata;
 
-int calculateForRunoff(const edata& E, int first, int second);
+EMETH calculateForRunoff(const edata& E, EMETH first, EMETH second);
 
 //	Function: PrintEdata
 //
@@ -1690,8 +1692,6 @@ void PrintEdata(FILE *F, const edata& E)
 		fprintf(F, "\n");
 	}
 }
-
-typedef int EMETH;  /* allows fgrep EMETH IEVS.c to find out what Election methods now available */
 
 EMETH runoffForApprovalVoting(const edata& E);
 
@@ -1949,7 +1949,29 @@ EMETH SociallyBest(edata& E)
 //		            Winner
 //		E         - the election data to use to
 //		            determine the Winner
-template<class T> void Determine(int& Winner, T theMethod, edata& E)
+template<class T> void Determine(EMETH& Winner, T theMethod, edata& E)
+{
+	if(0 > Winner) {
+		theMethod(E);
+	}
+}
+
+typedef EMETH (methodFunction)(edata&);
+
+/*	Determine(Winner, theMethod, E):	determines the
+ *						Winner of an
+ *						election
+ *						conducted using
+ *						a given voting
+ *						method
+ *	Winner:		the Winner to determine; receives the
+ *			results, if needed
+ *	theMethod:	the voting method to determine the
+ *			Winner
+ *	E:		the election data to use to determine
+ *			the Winner
+ */
+void Determine(EMETH& Winner, methodFunction theMethod, edata& E)
 {
 	if(0 > Winner) {
 		theMethod(E);
@@ -3240,7 +3262,7 @@ EMETH ArmytagePCSchulze(edata& E  /*Armytage pairwise comparison based on Schulz
  */
 EMETH Copeland(edata& E   /* canddt with largest number of pairwise-wins elected (tie counts as win/2) BUGGY */)
 {
-	int CopelandWinner;
+	EMETH CopelandWinner;
 	std::valarray<uint64_t> CopeScore;
 	CandidateSlate& allCandidates = E.Candidates;
 	Determine(CopeWinOnlyWinner, BuildDefeatsMatrix, E);
@@ -3256,28 +3278,6 @@ EMETH Copeland(edata& E   /* canddt with largest number of pairwise-wins elected
 	CopelandWinner = Maximum(allCandidates, &oneCandidate::CopelandScore);
 	/* Currently just break ties randomly, return random highest-scorer */
 	return CopelandWinner;
-}
-
-typedef EMETH (methodFunction)(edata&);
-
-/*	Determine(Winner, theMethod, E):	determines the
- *						Winner of an
- *						election
- *						conducted using
- *						a given voting
- *						method
- *	Winner:		the Winner to determine; receives the
- *			results, if needed
- *	theMethod:	the voting method to determine the
- *			Winner
- *	E:		the election data to use to determine
- *			the Winner
- */
-void Determine(int& Winner, methodFunction theMethod, edata& E)
-{
-	if(0 > Winner) {
-		theMethod(E);
-	}
 }
 
 //	Function: calculateSimmonsVotesAgainst
@@ -3712,9 +3712,8 @@ EMETH SmithIRV(edata& E)
 //			  the instant runoff voting Winner
 EMETH Top3IRV(edata& E)
 {
-	int w;
 	IRVTopLim = 3;
-	w = IRV<true>(E);
+	const auto w = IRV<true>(E);
 	IRVTopLim = BIGINT;
 	return w;
 }
@@ -4771,7 +4770,7 @@ Even perfect info incentives for burial and betrayal are practically  nil.
 EMETH UncAAO(edata& E)
 {
 	int UncAAOF[MaxNumCands]={0};
-	int i,j,ff,r,winner;
+	int i,j,ff,r;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const CandidateSlate& allCandidates = E.Candidates;
 	Determine(ApprovalWinner, Approval, E);
@@ -4794,7 +4793,7 @@ EMETH UncAAO(edata& E)
 			UncAAOF[i] = ff;
 		}
 	}
-	winner = ApprovalWinner;
+	auto winner = ApprovalWinner;
 	do{ winner =  UncAAOF[winner]; }until( winner == UncAAOF[winner] );
 	return(winner);
 }
@@ -5334,9 +5333,9 @@ voteVector minMaxStyleVoteVectorNormalization(const oneVoter&, const CandidateSl
 //		            determining the Winner
 //		WhichMeth - the voting method to use in
 //		            determining the Winner
-int GimmeWinner( edata& E, int WhichMeth )
+EMETH GimmeWinner( edata& E, int WhichMeth )
 {
-	int w;
+	EMETH w;
 	switch(WhichMeth) {
 	case(0) : w=SociallyBest(E); break;
 	case(1) : w=SociallyWorst(E); break;
@@ -5472,7 +5471,7 @@ void PrintBROutput(const brdata& regretObject, uint &scenarios);
 void updateMethodAgreements(oneVotingMethod& theGivenMethod,
                             const int& m,
                             std::array<oneVotingMethod, NumMethods>& allVotingMethods,
-                            const int& w)
+                            const EMETH& w)
 {
 	for(int j=0; j<m; j++) {
 		oneVotingMethod& methodJ = allVotingMethods[j];
@@ -5500,7 +5499,7 @@ void updateMethodAgreements(oneVotingMethod& theGivenMethod,
 void updateCondorcetAgreementOfOneMethod(oneVotingMethod& theGivenMethod,
                                          const bool& core)
 {
-	const int& theWinner = theGivenMethod.Winner;
+	const auto& theWinner = theGivenMethod.Winner;
 	if(theWinner==CondorcetWinner) {
 		theGivenMethod.CondorcetAgreementCount++;
 	}
@@ -5519,11 +5518,11 @@ void updateCondorcetAgreementOfOneMethod(oneVotingMethod& theGivenMethod,
 //		E       - the election data to use for determining
 //		          the Winner
 //		B       - the Bayesian regret data for this election
-int FindWinnersAndRegrets( edata& E,  brdata& B )
+EMETH FindWinnersAndRegrets( edata& E,  brdata& B )
 {
 	std::array<oneVotingMethod, NumMethods>& allVotingMethods = B.votingMethods;
 	const CandidateSlate& allCandidates = E.Candidates;
-	const int& sociallyBestWinner = allVotingMethods[0].Winner;
+	const auto& sociallyBestWinner = allVotingMethods[0].Winner;
 	BuildDefeatsMatrix(E);
 	InitCoreElState();
 	int m=0;
@@ -6827,7 +6826,8 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 	edata E;
 	uint x;
 	uint y;
-	int k,v,j,ja,i,s,maxw,col,w;
+	int k,v,j,ja,i,s,maxw,col;
+	EMETH w;
 	uint pass;
 	int x0,x1,y_0,y_1,PreColor;
 	uint p0,p1,p2,p3;
@@ -7653,7 +7653,7 @@ int Minimum(const CandidateSlate& allCandidates,
  *		winner or the approval Winner for example
  *	second:	an index representing an alternate Candidate with respect to 'first'
  */
-int calculateForRunoff(const edata& E, int first, int second)
+EMETH calculateForRunoff(const edata& E, EMETH first, EMETH second)
 {
 	uint pwct=0;
 	uint wct=0;
@@ -7871,9 +7871,9 @@ void EDataPrep(edata& E, const brdata& B)
 //	Parameters:
 //		choice1 - one possible choice
 //		choice2 - the other possible choice
-int flipACoin(int choice1, int choice2)
+EMETH flipACoin(const EMETH& choice1, const EMETH& choice2)
 {
-	int selected;
+	EMETH selected;
 	if(RandBool()) {
 		selected = choice1;
 	} else {
