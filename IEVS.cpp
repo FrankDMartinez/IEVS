@@ -1812,15 +1812,12 @@ void BuildDefeatsMatrix(edata& E)
 
 	assert(numberOfCandidates <= MaxNumCands);
 	for(oneCandidate& eachCandidate : allTheCandidates) {
-		const auto index = eachCandidate.index;
-		const real utilitySum = eachCandidate.utilitySum;
-		const auto pluralityVotes = eachCandidate.pluralityVotes;
-		const auto margins = eachCandidate.margins;
-		eachCandidate = oneCandidate();
-		eachCandidate.index = index;
-		eachCandidate.utilitySum = utilitySum;
-		eachCandidate.pluralityVotes = pluralityVotes;
-		eachCandidate.margins = margins;
+		oneCandidate theReset;
+		theReset.index = eachCandidate.index;
+		theReset.utilitySum = eachCandidate.utilitySum;
+		theReset.pluralityVotes = eachCandidate.pluralityVotes;
+		theReset.margins = eachCandidate.margins;
+		eachCandidate = theReset;
 	}
 	for(auto& eachVoter : allVoters) {
 		const Ballot& allCandidatesToTheVoter = eachVoter.Candidates;
