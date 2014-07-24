@@ -1830,23 +1830,23 @@ void BuildDefeatsMatrix(edata& E)
 	}
 	CondorcetWinner = -1;
 	TrueCW = -1;
-	int i=0;
 	for(oneCandidate& eachCandidate : allTheCandidates) {
+		const auto& indexOfTheCandidate = eachCandidate.index;
 		eachCandidate.electedCount = 0;
 		eachCandidate.drawCount = 0;
 		CondWin = true;
 		TrueCondWin = true;
-		int j=0;
 		for(auto& eachOtherCandidate : allTheCandidates) {
-			const int &iDefeatsJ = eachCandidate.DefeatsMatrix[j];
+			const auto& indexOfTheOtherCandidate = eachOtherCandidate.index;
+			const int &iDefeatsJ = eachCandidate.DefeatsMatrix[indexOfTheOtherCandidate];
 			assert( iDefeatsJ <= (int)numberOfVoters );
 			assert( iDefeatsJ >= 0 );
-			const int &jDefeatsI = eachOtherCandidate.DefeatsMatrix[i];
+			const int &jDefeatsI = eachOtherCandidate.DefeatsMatrix[indexOfTheCandidate];
 			assert( iDefeatsJ + jDefeatsI <= (int)numberOfVoters );
 			const auto& eachMargin = iDefeatsJ - jDefeatsI;
-			int64_t& marginOfTheFirstCandidateComparedToTheSecond = eachCandidate.margins[j];
+			int64_t& marginOfTheFirstCandidateComparedToTheSecond = eachCandidate.margins[indexOfTheOtherCandidate];
 			marginOfTheFirstCandidateComparedToTheSecond = eachMargin;
-			assert(i!=j || marginOfTheFirstCandidateComparedToTheSecond == 0);
+			assert(indexOfTheCandidate!=indexOfTheOtherCandidate || marginOfTheFirstCandidateComparedToTheSecond == 0);
 			if(eachMargin > 0) {
 				eachCandidate.electedCount++;
 			} else if(eachMargin==0) {
@@ -1856,28 +1856,26 @@ void BuildDefeatsMatrix(edata& E)
 			} else {
 				ensure(false, 34);
 			}
-			if(eachMargin<=0 && j!=i) {
+			if(eachMargin<=0 && indexOfTheOtherCandidate!=indexOfTheCandidate) {
 				CondWin = false;
 			} /* if beaten or tied, not a CondorcetWinner by this defn */
-			const auto& eachArmytageDefeat = eachCandidate.ArmytageDefeatsMatrix[j];
-			const auto& otherArmytageDefeat = eachOtherCandidate.ArmytageDefeatsMatrix[i];
+			const auto& eachArmytageDefeat = eachCandidate.ArmytageDefeatsMatrix[indexOfTheOtherCandidate];
+			const auto& otherArmytageDefeat = eachOtherCandidate.ArmytageDefeatsMatrix[indexOfTheCandidate];
 			if(eachArmytageDefeat>otherArmytageDefeat) {
-				eachCandidate.ArmytageMarginsMatrix[j] = eachCandidate.ArmytageMatrix[j];
+				eachCandidate.ArmytageMarginsMatrix[indexOfTheOtherCandidate] = eachCandidate.ArmytageMatrix[indexOfTheOtherCandidate];
 			} else {
-				eachCandidate.ArmytageMarginsMatrix[j] = 0;
+				eachCandidate.ArmytageMarginsMatrix[indexOfTheOtherCandidate] = 0;
 			}
-			y = eachCandidate.TrueDefeatsMatrix[j];
-			y -= eachOtherCandidate.TrueDefeatsMatrix[i];
+			y = eachCandidate.TrueDefeatsMatrix[indexOfTheOtherCandidate];
+			y -= eachOtherCandidate.TrueDefeatsMatrix[indexOfTheCandidate];
 			if(y<=0 && not areIdentical(eachCandidate, eachOtherCandidate)) { TrueCondWin = false; }
-			j++;
 		}
 		if( CondWin ) {
-			CondorcetWinner = i;  /* i beats all opponents (unique Condorcet winner) */
+			CondorcetWinner = indexOfTheCandidate;
 		}
 		if( TrueCondWin ) {
-			TrueCW = i;  /* i beats all opponents (unique Condorcet winner) */
+			TrueCW = indexOfTheCandidate;
 		}
-		i++;
 	}
 	/* find who-you-beat sets: */
 	for(auto& eachCandidate : allTheCandidates) {
@@ -3660,14 +3658,12 @@ template<bool performingTraditionalIRV> EMETH IRV(edata& E)
 	if(performingTraditionalIRV && IRVTopLim >= (int)numberOfCandidates) {
 		IRVwinner = -1;
 	}
-	auto winner = -1;
-	auto i=0;
+	EMETH winner = -1;
 	for(const auto& eachCandidate : allCandidates) {
 		if(!eachCandidate.eliminated) {
-			winner=i;
+			winner=eachCandidate.index;
 			stillthere++;
 		}
-		i++;
 	}
 	if(performingTraditionalIRV && IRVTopLim >= (int)numberOfCandidates) {
 		IRVwinner=winner;
