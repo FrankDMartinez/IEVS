@@ -2996,15 +2996,14 @@ BeatPathStrength[k*numberOfCandidates+j] >= 0  for all k in the "Schwartz Set" a
 
 void determineSetMembership( const uint64_t& x, const int& diff, CandidateSlate& relationships, uint64_t N, bool oneCandidate::*member )
 {
-	uint64_t i;
-	for(i=0; i < N; i++) {
-		if(i!=x) {
-			oneCandidate& theCandidate = relationships[i];
-			if( theCandidate.margins[x]>=diff ) {
-				bool& theMember = theCandidate.*member;
+	for(auto& eachCandidate : relationships) {
+		const auto& indexOfTheCandidate = eachCandidate.index;
+		if(indexOfTheCandidate!=x) {
+			if( eachCandidate.margins[x]>=diff ) {
+				bool& theMember = eachCandidate.*member;
 				if( !theMember ) {
 					theMember = true;
-					determineSetMembership( i, diff, relationships, N, member );
+					determineSetMembership( indexOfTheCandidate, diff, relationships, N, member );
 				}
 			}
 		}
