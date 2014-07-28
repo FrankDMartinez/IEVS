@@ -404,6 +404,7 @@ void BuildLCMfact()
 		if(x) {
 			LCMfact[j] *= j/GCD(x,j);
 		}
+		output("LCMfact[%d]=%u\n", j, LCMfact[j]);
 	}
 	output("LCMfact[%d]=%u\n", j, LCMfact[j]);
 }
@@ -7802,6 +7803,9 @@ void runSingleTest(uint aSeed)
 void runTests()
 {
 	PrintConsts();
+	enableOutputFile("lowestCommonMultiple");
+	BuildLCMfact();
+	disableOutputFile();
 	runSingleTest(1);
 	runSingleTest(2);
 }
