@@ -202,69 +202,49 @@ typedef std::array<int,MaxNumCands> TrueDefeatsData;
  */
 struct oneCandidate
 {
-	DefeatsData DefeatsMatrix;
-	TrueDefeatsData TrueDefeatsMatrix;
-	ArmytageData ArmytageMatrix;
-	ArmytageDefeatsData ArmytageDefeatsMatrix;
-	ArmytageMarginData ArmytageMarginsMatrix;
-	MarginsData margins;
-	int64_t index;
-	uint64_t Ibeat;
-	PairApprovalData alsoApprovedWith;
-	uint64_t antiPluralityVotes;
-	uint approvals;
-	uint64_t CopelandScore;
-	uint64_t DabaghVoteCount;
-	int64_t electedCount;
-	uint64_t drawCount;
-	int64_t BordaVotes;
-	int64_t netVotesFor;
-	uint64_t pluralityVotes;
-	int64_t SimmonsVotesAgainst;
-	real rangeVote;
-	int64_t lossCount;
-	int64_t instantRunoffVotingLossCount;
-	int64_t definiteMajorityChoiceLossCount;
-	bool uncovered;
-	bool IsASchwartzMember;
-	bool IsASmithMember;
-	real normalizedRatingSum;
-	real utilitySum;
-	int64_t voteCountForThisRound;
-	bool eliminated;
-	oneCandidate() : DefeatsMatrix(), TrueDefeatsMatrix(),
-			 ArmytageMatrix(),
-			 ArmytageDefeatsMatrix(),
-			 ArmytageMarginsMatrix(), margins(), index(),
-			 Ibeat(), alsoApprovedWith(),
-			 antiPluralityVotes(), approvals(),
-			 CopelandScore(), DabaghVoteCount(), electedCount(),
-			 drawCount(), BordaVotes(), netVotesFor(),
-			 pluralityVotes(), rangeVote(), lossCount(),
-			 instantRunoffVotingLossCount(), definiteMajorityChoiceLossCount(),
-			 uncovered(), IsASchwartzMember(), IsASmithMember(),
-			 normalizedRatingSum(), utilitySum(),
-			 voteCountForThisRound(), eliminated()
-	{
-	}
+	DefeatsData DefeatsMatrix{};
+	TrueDefeatsData TrueDefeatsMatrix{};
+	ArmytageData ArmytageMatrix{};
+	ArmytageDefeatsData ArmytageDefeatsMatrix{};
+	ArmytageMarginData ArmytageMarginsMatrix{};
+	MarginsData margins{};
+	int64_t index{};
+	uint64_t Ibeat{};
+	PairApprovalData alsoApprovedWith{};
+	uint64_t antiPluralityVotes{};
+	uint approvals{};
+	uint64_t CopelandScore{};
+	uint64_t DabaghVoteCount{};
+	int64_t electedCount{};
+	uint64_t drawCount{};
+	int64_t BordaVotes{};
+	int64_t netVotesFor{};
+	uint64_t pluralityVotes{};
+	int64_t SimmonsVotesAgainst{};
+	real rangeVote{};
+	int64_t lossCount{};
+	int64_t instantRunoffVotingLossCount{};
+	int64_t definiteMajorityChoiceLossCount{};
+	bool uncovered{};
+	bool IsASchwartzMember{};
+	bool IsASmithMember{};
+	real normalizedRatingSum{};
+	real utilitySum{};
+	int64_t voteCountForThisRound{};
+	bool eliminated{};
 };
 
 typedef typeof(oneCandidate::index) EMETH;  /* allows fgrep EMETH IEVS.c to find out what Election methods now available */
 
 struct oneVotingMethod
 {
-	std::array<uint, NumMethods> agreementCountWithMethod;
-	uint regCount;
-	real meanRegret;
-	real sRegret;
-	uint trueCondorcetAgreementCount;
-	uint CondorcetAgreementCount;
-	EMETH Winner;
-	oneVotingMethod() : agreementCountWithMethod(), regCount(),
-	meanRegret(), sRegret(), trueCondorcetAgreementCount(),
-	CondorcetAgreementCount(), Winner(-1)
-	{
-	}
+	std::array<uint, NumMethods> agreementCountWithMethod{};
+	uint regCount{};
+	real meanRegret{};
+	real sRegret{};
+	uint trueCondorcetAgreementCount{};
+	uint CondorcetAgreementCount{};
+	EMETH Winner{-1};
 };
 
 typedef std::valarray<oneCandidate> CandidateSlate;
@@ -318,18 +298,12 @@ template< class T1 >
  */
 struct oneCandidateToTheVoter
 {
-	real actualUtility;
-	bool approve;
-	bool approve2;
-	real perceivedUtility;
-	uint64_t ranking;
-	real score;
-	oneCandidateToTheVoter() : actualUtility(), approve(),
-	                           approve2(),
-	                           perceivedUtility(),
-	                           ranking(), score()
-	{
-	}
+	real actualUtility{};
+	bool approve{};
+	bool approve2{};
+	real perceivedUtility{};
+	uint64_t ranking{};
+	real score{};
 };
 
 /******************** GENERAL PURPOSE routines having nothing to do with voting: ******/
@@ -1613,14 +1587,10 @@ void InitCoreElState()
  */
 struct oneVoter
 {
-	std::vector<uint> topDownPrefs;
-	Ballot Candidates;
-	int64_t favoriteUneliminatedCandidate;
-	bool honest;
-	oneVoter() : topDownPrefs(), Candidates(), favoriteUneliminatedCandidate(-1),
-	             honest()
-	{
-	}
+	std::vector<uint> topDownPrefs{};
+	Ballot Candidates{};
+	int64_t favoriteUneliminatedCandidate{-1};
+	bool honest{};
 };
 
 template< class T >
@@ -1629,13 +1599,10 @@ template< class T >
 		int Maximum(const CandidateSlate& allCandidates, T oneCandidate::*member, const bool& permute = true, const bool& checkElimination = false);
 
 typedef struct dum1 {
-	uint NumVoters;
-	uint64_t NumCands;
-	std::valarray<oneVoter> Voters;
-	CandidateSlate Candidates;
-	dum1() : NumVoters(), NumCands(), Voters(), Candidates()
-	{
-	}
+	uint NumVoters{};
+	uint64_t NumCands{};
+	std::valarray<oneVoter> Voters{};
+	CandidateSlate Candidates{};
 } edata;
 
 EMETH calculateForRunoff(const edata& E, EMETH first, EMETH second);
@@ -5429,17 +5396,13 @@ EMETH GimmeWinner( edata& E, int WhichMeth )
 }
 
 typedef struct dum2 {
-	uint NumVoters;
-	uint64_t NumCands;
-	uint NumElections;
-	real IgnoranceAmplitude;
-	real Honfrac;
-	std::array<oneVotingMethod, NumMethods> votingMethods;
-	uint honestyLevel;
-	dum2() : NumVoters(), NumCands(), NumElections(), IgnoranceAmplitude(),
-	         Honfrac(), votingMethods(), honestyLevel()
-	{
-	}
+	uint NumVoters{};
+	uint64_t NumCands{};
+	uint NumElections{};
+	real IgnoranceAmplitude{};
+	real Honfrac{};
+	std::array<oneVotingMethod, NumMethods> votingMethods{};
+	uint honestyLevel{};
 } brdata;
 
 void EDataPrep(edata& E, const brdata& B);
@@ -7041,14 +7004,10 @@ real RegretData[MaxScenarios*NumMethods];
 
 struct PopulaceState_t
 {
-	bool realWorld;
-	int numberOfVoters;
-	int ignoranceLevel;
-	int utilityGeneratorMethod;
-	PopulaceState_t() : realWorld(), numberOfVoters(), ignoranceLevel(),
-	                    utilityGeneratorMethod()
-	{
-	}
+	bool realWorld{};
+	int numberOfVoters{};
+	int ignoranceLevel{};
+	int utilityGeneratorMethod{};
 };
 
 void PrintTheVotersBayesianRegret(brdata& regretObject, const PopulaceState_t&populaceState, uint &ScenarioCount);
