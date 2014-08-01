@@ -218,6 +218,7 @@ struct oneCandidate
 	int64_t electedCount{};
 	uint64_t drawCount{};
 	int64_t BordaVotes{};
+	uint NauruVoteCount{};
 	int64_t netVotesFor{};
 	uint64_t pluralityVotes{};
 	int64_t SimmonsVotesAgainst{};
@@ -2450,29 +2451,38 @@ EMETH IterCopeland( const edata& E  /*iterate Copeland on tied-winner set from p
 	return(-1);
 }
 
-EMETH Nauru(const edata& E  /* weighted positional with weights 1, 1/2, 1/3, 1/4,... */)
+//	Function: Nauru
+//
+//	Returns:
+//		an index representing the Candidate which would be elected
+//		according to the procedures for an election of parliament
+//		in the Republic of Nauru; according to Nauru law, the
+//		algorithm approximates as so: Voters rank Candidates
+//		by preference, Candidates receive 1 full vote for each
+//		1st place ranking, 1/2 vote for each 2nd place ranking,
+//		1/3 vote for each 3rd place ranking, etc., with the Candidate
+//		receiving the most votes being elected
+//	Parameter:
+//		E - the election data to used to determine the Winner
+EMETH Nauru(edata& E)
 {
-	uint NauruVoteCount[MaxNumCands];
-	int i;
 	int j;
 	int winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
+	auto& allTheCandidates = E.Candidates;
 	uint64_t x = LCMfact[numberOfCandidates];
 	uint64_t NauruWt[numberOfCandidates];
-	const uint& numberOfVoters = E.NumVoters;
-	ZeroArray( numberOfCandidates, (int*)NauruVoteCount );
 	for(j=1; j<=numberOfCandidates; j++) {
 		NauruWt[j-1] = x / j;
 	}
-	for(i=0; i<(int)numberOfVoters; i++) {
-		const oneVoter& theVoter = E.Voters[i];
+	for(const auto& eachVoter : E.Voters) {
 		for(j=0; j<numberOfCandidates; j++) {
-			const uint64_t& theRank = theVoter.Candidates[j].ranking;
+			const uint64_t& theRank = eachVoter.Candidates[j].ranking;
 			ensure(theRank < numberOfCandidates, 50);
-			NauruVoteCount[j] += NauruWt[theRank];
+			allTheCandidates[j].NauruVoteCount += NauruWt[theRank];
 		}
 	}
-	winner = ArgMaxUIntArr( numberOfCandidates, NauruVoteCount, RandCandPerm );
+	winner = Maximum( allTheCandidates, &oneCandidate::NauruVoteCount );
 	return(winner);
 }
 
