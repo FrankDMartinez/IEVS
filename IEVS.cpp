@@ -2451,6 +2451,45 @@ EMETH IterCopeland( const edata& E  /*iterate Copeland on tied-winner set from p
 	return(-1);
 }
 
+//	Typedef: CouplingBase
+//
+//	a base type for the `Coupling` type
+typedef std::pair<oneCandidateToTheVoter&, oneCandidate&> CouplingBase;
+
+//	Struct: Coupling
+//
+//	a class which couple Voter information about Candidates with
+//	Candidate information about Themselves
+struct Coupling : CouplingBase {
+	//	Variable: VotersCandidate
+	//	1 Voter's information about a Candidate; this reference
+	//	name helps make the code more readable at times
+	oneCandidateToTheVoter& VotersCandidate = CouplingBase::first;
+	//	Variable: Candidates
+	//	1 Candidate's information about Themself; this reference
+	//	name helps make the code more readable at times
+	oneCandidate& Candidates = CouplingBase::second;
+	//	Constructor: Coupling
+	//	initializes the object's references
+	Coupling(const CouplingBase& thePair) : CouplingBase(thePair)
+	{
+	}
+};
+
+//	Typedef: CoupledCollection
+//
+//	a collection of `Coupling` objects
+typedef std::vector<Coupling> CoupledCollection;
+
+CoupledCollection couple(Ballot& theBallot, CandidateSlate& theSlate)
+{
+	ensure(theBallot.size() == theSlate.size(), 63);
+	CoupledCollection theCoupling;
+	std::transform(std::begin(theBallot), std::end(theBallot), std::begin(theSlate), std::back_inserter(theCoupling),
+		       [](oneCandidateToTheVoter& VoterInformation, oneCandidate& CandidateInformation) { return std::make_pair(std::ref(VoterInformation), std::ref(CandidateInformation)); });
+	return theCoupling;
+}
+
 //	Function: Nauru
 //
 //	Returns:
@@ -2466,20 +2505,20 @@ EMETH IterCopeland( const edata& E  /*iterate Copeland on tied-winner set from p
 //		E - the election data to used to determine the Winner
 EMETH Nauru(edata& E)
 {
-	int j;
 	int winner;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	auto& allTheCandidates = E.Candidates;
 	uint64_t x = LCMfact[numberOfCandidates];
 	uint64_t NauruWt[numberOfCandidates];
-	for(j=1; j<=numberOfCandidates; j++) {
+	for(auto j=1; j<=numberOfCandidates; j++) {
 		NauruWt[j-1] = x / j;
 	}
-	for(const auto& eachVoter : E.Voters) {
-		for(j=0; j<numberOfCandidates; j++) {
-			const uint64_t& theRank = eachVoter.Candidates[j].ranking;
+	for(auto& eachVoter : E.Voters) {
+		CoupledCollection VotersAndCandidates = couple(eachVoter.Candidates, allTheCandidates);
+		for(auto& each : VotersAndCandidates) {
+			const uint64_t& theRank = each.VotersCandidate.ranking;
 			ensure(theRank < numberOfCandidates, 50);
-			allTheCandidates[j].NauruVoteCount += NauruWt[theRank];
+			each.Candidates.NauruVoteCount += NauruWt[theRank];
 		}
 	}
 	winner = Maximum( allTheCandidates, &oneCandidate::NauruVoteCount );
