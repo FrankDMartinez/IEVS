@@ -107,7 +107,7 @@ equalities, I suggest adding a boolean vector
 with v[x]=true meaning x is really tied with, not below,
 the candidate immediately preceding.  That is a later goal.
 
-HonestyStrat() now supports an arbitrary mixture of honest and (one kind of) strategic voters.
+castVotes() now supports an arbitrary mixture of honest and (one kind of) strategic voters.
 More strategies can/will be added later.
 
 3 utility generators now implemented (some parameterized), plus
@@ -5773,7 +5773,7 @@ void voteByHonesty(const real& honestyFraction,
 	}
 }
 
-//	Function: HonestyStrat
+//	Function: castVotes
 //
 //	determines election results based on Voter honesty; the
 //	probability of a Voter voting honestly is equal to the value
@@ -5784,7 +5784,7 @@ void voteByHonesty(const real& honestyFraction,
 //		E       - the election data to use for determining
 //		          the Winner
 //		honfrac - probability of a Voter voting honestly
-void HonestyStrat( edata& E, real honfrac )
+void castVotes( edata& E, real honfrac )
 {
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
@@ -6466,7 +6466,7 @@ void ComputeBRs( brdata& B, int UtilMeth )
 	for(elnum=0; elnum < numberOfElections; elnum++){
 		UtilDispatcher(E, UtilMeth);
 		AddIgnorance(E, B.IgnoranceAmplitude);
-		HonestyStrat(E, B.Honfrac);
+		castVotes(E, B.Honfrac);
 		FindWinnersAndRegrets(E, B);
 	}
 	B.NumVoters =  E.NumVoters;
@@ -6489,8 +6489,8 @@ void TestEDataStructs( const brdata& B )
 		GenNormalUtils(E);
 		output("AddIgnorance:\n");
 		AddIgnorance(E, B.IgnoranceAmplitude);
-		output("HonestyStrat:\n");
-		HonestyStrat(E, 1.0);
+		output("castVotes:\n");
+		castVotes(E, 1.0);
 		output("BuildDefetasMatrix:\n");
 		BuildDefeatsMatrix(E);
 		output("PrintEdata:\n");
@@ -6968,7 +6968,7 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 							ja++;
 						}/*end while(ja)*/
 						InitCoreElState();
-						HonestyStrat(E, honfrac);
+						castVotes(E, honfrac);
 						BuildDefeatsMatrix(E);
 						SmithIRVwinner = 0;
 						w = GimmeWinner( E,  WhichMeth );
