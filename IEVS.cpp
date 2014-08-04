@@ -189,6 +189,10 @@ const uint TOP10METHS = 512U;
 uint BROutputMode=0;
 struct oneCandidateToTheVoter;
 struct oneVoter;
+//	Typedef: Constituency
+//
+//	a type representing the Voters collectively
+typedef std::valarray<oneVoter> Constituency;
 
 typedef std::array<real,MaxNumCands> ArmytageData;
 typedef std::array<int,MaxNumCands> ArmytageDefeatsData;
@@ -278,7 +282,7 @@ void printName(const char *name, bool padding, int spaces);
 void PrintSummaryOfNormalizedRegretData(uint scenarios);
 void RandomTest(real &s, real &mn, real &mx, real &v, int (&ct) [10], real (*func1)(void), real (*func2)(void));
 void RandomTestReport(const char *mean_str, const char *meansq_str, real s, real mn, real mx, real v, int (&ct)[10]);
-void resetFavorites(std::valarray<oneVoter>& Voters, const int64_t& Candidate = 0);
+void resetFavorites(Constituency& Voters, const int64_t& Candidate = 0);
 template<class T>
 		int Sign(T x);
 template<class T>
@@ -1591,6 +1595,11 @@ struct oneVoter
 	std::vector<uint> topDownPrefs{};
 	Ballot Candidates{};
 	int64_t favoriteUneliminatedCandidate{-1};
+	//	Variable: index
+	//
+	//	the index in the `Constituency` object corresponding
+	//	to this object
+	int64_t index{};
 	bool honest{};
 };
 
@@ -1602,7 +1611,10 @@ template< class T >
 typedef struct dum1 {
 	uint NumVoters{};
 	uint64_t NumCands{};
-	std::valarray<oneVoter> Voters{};
+	//	Variable: Voters
+	//
+	//	the collection of Voters in a given election
+	Constituency Voters{};
 	CandidateSlate Candidates{};
 } edata;
 
@@ -4238,20 +4250,28 @@ EMETH ContinCumul(const edata& E    /* Renormalize scores so sum(over canddts)=1
 	return(winner);
 }
 
-EMETH TopMedianRating(const edata& E    /* canddt with highest median Score wins */)
+//	Function: TopMedianRating
+//
+//	Returns:
+//		an index representing the Candidate receiving the highest
+//		median score vote
+//	Parameter:
+//		E - the data used to determine the Winner
+EMETH TopMedianRating(const edata& E)
 {
 	real MedianRating[MaxNumCands]={0};
 	real CScoreVec[MaxNumVoters];
-	int i;
-	int j;
 	int winner;
 	const auto& allVoters = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
 	const uint& numberOfVoters = E.NumVoters;
-	for(j=0; j<numberOfCandidates; j++) {
-		for(i=0; i<numberOfVoters; i++) {
-			const oneCandidateToTheVoter &theCandidate = allVoters[i].Candidates[j];
-			CScoreVec[i] = theCandidate.score;
+	auto& allCandidates = E.Candidates;
+	for(auto& eachCandidate : allCandidates) {
+		auto& j = eachCandidate.index;
+		for(auto& eachVoter : allVoters) {
+			const oneCandidateToTheVoter &theCandidate = eachVoter.Candidates[j];
+			auto& index = eachVoter.index;
+			CScoreVec[index] = theCandidate.score;
 		}
 		MedianRating[j] = TwiceMedian<real>(numberOfVoters, CScoreVec);
 	}
@@ -6128,6 +6148,39 @@ template<class T> void resizeAndReset(std::valarray<T>& theValueArray, const uin
 {
 	theValueArray.resize(newSize);
 	theValueArray = T();
+}
+
+//	Function: resizeAndReset
+//
+//	resizes the given container of Voters and resets its elements
+//	to their default state, initializing the `index` member of each
+//	element to the index into the container which corresponds to
+//	said element; if the new size is smaller than the current container
+//	size, the content is reduced to contain a number of elements
+//	equal to the new size, removing those beyond that new size (and
+//	destroying them); if the new size is greater than the current
+//	container size, the content is expanded by inserting at the end
+//	as many elements as needed to reach the new size, with each new
+//	element initialized as described above; if the new size is also
+//	greater than the current container capacity, an automatic reallocation
+//	of the allocated storage space takes place; this function changes
+//	the actual content of the container by inserting or erasing elements
+//	from it
+//
+//	Parameters:
+//		theVoters - the collection of Voters to be resized and
+//		            reset
+//		newSize   - the number of elements the given collection
+//		            contains after the call to this function
+template<> void resizeAndReset(Constituency& theVoters, const uint64_t& newSize)
+{
+	theVoters.resize(newSize);
+	theVoters = oneVoter();
+	auto index=0;
+	for(auto& eachVoter : theVoters) {
+		eachVoter.index = index;
+		index++;
+	}
 }
 
 //	Function: resizeAndReset
@@ -9712,7 +9765,7 @@ void MakeYeePicture(uint seed)
 //		            reset
 //		Candidate - the Candidate to which the favorite
 //		            is to be reset
-void resetFavorites(std::valarray<oneVoter>& Voters, const int64_t& Candidate) {
+void resetFavorites(Constituency& Voters, const int64_t& Candidate) {
 	for( oneVoter& eachVoter : Voters ) {
 		eachVoter.favoriteUneliminatedCandidate = Candidate;
 	}
