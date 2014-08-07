@@ -503,10 +503,6 @@ easy) less pleasant because bit-shifting is required.
 //		a psuedo-randomly generated unsigned integer
 uint32_t BigLinCong32()
 {
-	uint32_t y[120];
-	int i;
-	uint64_t u;
-
 	if(BLC32NumLeft==0) {
 		/* Need to refill BLC32x[0..59] with 60 new random numbers: */
 
@@ -516,11 +512,13 @@ uint32_t BigLinCong32()
  * in y[0..119].  Here
  *  A = 1284507170 * 2^(w*3) + 847441413 * 2^(w*44) + 650134147 * 2^(w*59)
  * is a "good" primitive root mod P, if w=32.
- *****************************************************************/
+  *****************************************************************/
+		uint32_t y[120];
+		int i;
 		for(i=0; i<3; i++) {
 			y[i] = 0;
 		}
-		u=0;
+		uint64_t u=0;
 		for(/*i=3*/; i<44; i++) {
 			u += A1 * BLC32x[i-3];
 			y[i] = lohalf(u);
@@ -1123,9 +1121,8 @@ void RandomlyPermute( uint64_t N, uint RandPerm[] ){ /* randomly permutes RandPe
  *	RandPerm:	the array to permute
  */
 void RandomlyPermute( uint64_t N, std::vector<uint>& RandPerm ){ /* randomly permutes RandPerm[0..N-1] */
-	uint64_t i;
 	uint64_t j;
-	for(i=1; i<N; i++) {
+	for(uint64_t i=1; i<N; i++) {
 		j = RandInt((uint)i);
 		std::swap(RandPerm[i], RandPerm[j]);
 	}
@@ -4264,15 +4261,14 @@ EMETH ContinCumul(const edata& E    /* Renormalize scores so sum(over canddts)=1
 EMETH TopMedianRating(const edata& E)
 {
 	real MedianRating[MaxNumCands]={0};
-	int winner;
-	const uint64_t& numberOfCandidates = E.NumCands;
 	auto& allCandidates = E.Candidates;
 	for(auto& eachCandidate : allCandidates) {
 		auto& j = eachCandidate.index;
 		MedianRating[j] = TwiceMedian<real>(eachCandidate.scoreVotes);
 	}
-	winner = ArgMaxArr<real>(numberOfCandidates, MedianRating);
-	return(winner);
+	const uint64_t& numberOfCandidates = E.NumCands;
+	const auto& winner = ArgMaxArr<real>(numberOfCandidates, MedianRating);
+	return winner;
 }
 
 EMETH LoMedianRank(const edata& E    /* canddt with best median ranking wins */)
@@ -7519,14 +7515,11 @@ void adjustYeeCoordinates(const int &numSites, int (&xx)[16], int (&yy)[16], con
 template<class T>
 int ArgMaxArr(uint64_t N, const T Arr[])
 {
-	T maxc;
-	int a;
 	int r;
-	int winner;
-	winner = -1;
-	maxc = (typeid(T)==typeid(int)) ? (T)(-BIGINT) : (T)(-HUGE);
+	int winner = -1;
+	auto maxc = (typeid(T)==typeid(int)) ? (T)(-BIGINT) : (T)(-HUGE);
 	RandomlyPermute( N, RandCandPerm );
-	for(a=0; a<(int)N; a++) {
+	for(auto a=0; a<(int)N; a++) {
 		r = RandCandPerm[a];
 		if(Arr[r] > maxc) {
 			maxc=Arr[r];
