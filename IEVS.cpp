@@ -207,6 +207,7 @@ typedef std::array<int,MaxNumCands> TrueDefeatsData;
 struct oneCandidate
 {
 	DefeatsData DefeatsMatrix{};
+	std::valarray<uint64_t> rankings{};
 	std::valarray<real> scoreVotes{};
 	TrueDefeatsData TrueDefeatsMatrix{};
 	ArmytageData ArmytageMatrix{};
@@ -1805,6 +1806,7 @@ void BuildDefeatsMatrix(edata& E)
 		theReset.pluralityVotes = eachCandidate.pluralityVotes;
 		theReset.margins = eachCandidate.margins;
 		theReset.scoreVotes = eachCandidate.scoreVotes;
+		theReset.rankings = eachCandidate.rankings;
 		eachCandidate = theReset;
 	}
 	for(auto& eachVoter : allVoters) {
@@ -4279,21 +4281,17 @@ EMETH TopMedianRating(const edata& E)
 
 EMETH LoMedianRank(const edata& E    /* canddt with best median ranking wins */)
 {
-	int64_t MedianRank[MaxNumCands]={0};
-	int64_t CRankVec[MaxNumVoters];
-	int i,j;
-	int winner;
+	uint64_t MedianRank[MaxNumCands]={0};
 	const uint64_t& numberOfCandidates = E.NumCands;
-	const uint& numberOfVoters = E.NumVoters;
-	for(j=0; j<numberOfCandidates; j++) {
-		for(i=0; i<numberOfVoters; i++) {
-			CRankVec[i] = E.Voters[i].Candidates[j].ranking;
-		}
-		MedianRank[j] = TwiceMedian<int64_t>(numberOfVoters, CRankVec);
-		assert( MedianRank[j] >= 0 );
-		assert( MedianRank[j] <= 2*((int)numberOfCandidates - 1) );
+	auto& allCandidates = E.Candidates;
+	for(auto& eachCandidate : allCandidates) {
+		const auto& twiceTheMedianRank = TwiceMedian(eachCandidate.rankings);
+		assert( twiceTheMedianRank <= 2*((int)numberOfCandidates - 1) );
+		ensure(twiceTheMedianRank <= 2*((int)numberOfCandidates - 1), 69);
+		auto& j = eachCandidate.index;
+		MedianRank[j] = twiceTheMedianRank;
 	}
-	winner = ArgMinArr<int64_t>(numberOfCandidates, MedianRank);
+	const auto& winner = ArgMinArr<uint64_t>(numberOfCandidates, MedianRank);
 	return(winner);
 }
 
@@ -5818,6 +5816,7 @@ void recordVotes(const oneVoter& theVoter, CandidateSlate& theCandidates)
 	for(auto& eachCandidate : theCandidates) {
 		const auto& theCandidateIndex = eachCandidate.index;
 		eachCandidate.scoreVotes[theVoterIndex] = CandidatesToTheVoter[theCandidateIndex].score;
+		eachCandidate.rankings[theVoterIndex] = CandidatesToTheVoter[theCandidateIndex].ranking;
 	}
 }
 
@@ -6239,14 +6238,15 @@ template<> void resizeAndReset(CandidateSlate& theSlate, const uint64_t& newSize
 
 //	Function: resizeAndResetVoteCollections
 //
-//	resizes the score vote collection of Each Candidate, resetting
-//	their values; the resultant collections each have sufficient
-//	space to hold vote information from All Voters in the current
-//	election
+//	resizes the score vote and ranking vote collections of Each
+//	Candidate, resetting their values; the resultant collections
+//	each have sufficient space to hold vote information from
+//	All Voters in the current election
 void resizeAndResetVoteCollections(CandidateSlate& theCandidates, const uint64_t& numberOfVoters)
 {
 	for(auto& eachCandidate : theCandidates) {
 		eachCandidate.scoreVotes.resize(numberOfVoters);
+		eachCandidate.rankings.resize(numberOfVoters);
 	}
 }
 
