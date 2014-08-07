@@ -207,6 +207,7 @@ typedef std::array<int,MaxNumCands> TrueDefeatsData;
 struct oneCandidate
 {
 	DefeatsData DefeatsMatrix{};
+	std::valarray<real> scoreVotes{};
 	TrueDefeatsData TrueDefeatsMatrix{};
 	ArmytageData ArmytageMatrix{};
 	ArmytageDefeatsData ArmytageDefeatsMatrix{};
@@ -295,6 +296,8 @@ int SortedKey(const std::vector<int64_t>& Arr, const std::array<oneVotingMethod,
 void Test(const char *name, const char *direction, real (*func1)(void), real (*func2)(void), const char *mean_str, const char *meansq_str);
 template< class T1 >
 		T1 TwiceMedian(uint N, T1 A[] );
+template<class ElementType>
+		ElementType TwiceMedian(std::valarray<ElementType> theValues);
 #define NullFunction ((real(*)(void))NULL)
 
 /*	oneCandidateToTheVoter:	information about a particular Candidate
@@ -1798,6 +1801,7 @@ void BuildDefeatsMatrix(edata& E)
 		theReset.utilitySum = eachCandidate.utilitySum;
 		theReset.pluralityVotes = eachCandidate.pluralityVotes;
 		theReset.margins = eachCandidate.margins;
+		theReset.scoreVotes = eachCandidate.scoreVotes;
 		eachCandidate = theReset;
 	}
 	for(auto& eachVoter : allVoters) {
@@ -2466,7 +2470,7 @@ EMETH IterCopeland( const edata& E  /*iterate Copeland on tied-winner set from p
 //	Typedef: CouplingBase
 //
 //	a base type for the `Coupling` type
-typedef std::pair<oneCandidateToTheVoter&, oneCandidate&> CouplingBase;
+typedef std::pair<const oneCandidateToTheVoter&, oneCandidate&> CouplingBase;
 
 //	Struct: Coupling
 //
@@ -2476,7 +2480,7 @@ struct Coupling : CouplingBase {
 	//	Variable: VotersCandidate
 	//	1 Voter's information about a Candidate; this reference
 	//	name helps make the code more readable at times
-	oneCandidateToTheVoter& VotersCandidate = CouplingBase::first;
+	const oneCandidateToTheVoter& VotersCandidate = CouplingBase::first;
 	//	Variable: Candidates
 	//	1 Candidate's information about Themself; this reference
 	//	name helps make the code more readable at times
@@ -2493,12 +2497,12 @@ struct Coupling : CouplingBase {
 //	a collection of `Coupling` objects
 typedef std::vector<Coupling> CoupledCollection;
 
-CoupledCollection couple(Ballot& theBallot, CandidateSlate& theSlate)
+CoupledCollection couple(const Ballot& theBallot, CandidateSlate& theSlate)
 {
 	ensure(theBallot.size() == theSlate.size(), 63);
 	CoupledCollection theCoupling;
 	std::transform(std::begin(theBallot), std::end(theBallot), std::begin(theSlate), std::back_inserter(theCoupling),
-		       [](oneCandidateToTheVoter& VoterInformation, oneCandidate& CandidateInformation) { return std::make_pair(std::ref(VoterInformation), std::ref(CandidateInformation)); });
+		       [](const oneCandidateToTheVoter& VoterInformation, oneCandidate& CandidateInformation) { return std::make_pair(std::ref(VoterInformation), std::ref(CandidateInformation)); });
 	return theCoupling;
 }
 
@@ -4260,20 +4264,12 @@ EMETH ContinCumul(const edata& E    /* Renormalize scores so sum(over canddts)=1
 EMETH TopMedianRating(const edata& E)
 {
 	real MedianRating[MaxNumCands]={0};
-	real CScoreVec[MaxNumVoters];
 	int winner;
-	const auto& allVoters = E.Voters;
 	const uint64_t& numberOfCandidates = E.NumCands;
-	const uint& numberOfVoters = E.NumVoters;
 	auto& allCandidates = E.Candidates;
 	for(auto& eachCandidate : allCandidates) {
 		auto& j = eachCandidate.index;
-		for(auto& eachVoter : allVoters) {
-			const oneCandidateToTheVoter &theCandidate = eachVoter.Candidates[j];
-			auto& index = eachVoter.index;
-			CScoreVec[index] = theCandidate.score;
-		}
-		MedianRating[j] = TwiceMedian<real>(numberOfVoters, CScoreVec);
+		MedianRating[j] = TwiceMedian<real>(eachCandidate.scoreVotes);
 	}
 	winner = ArgMaxArr<real>(numberOfCandidates, MedianRating);
 	return(winner);
@@ -5778,7 +5774,9 @@ void voteByHonesty(const real& honestyFraction,
 //	determines election results based on Voter honesty; the
 //	probability of a Voter voting honestly is equal to the value
 //	of 'honfrac'; the probability of a Voter voting strategically
-//	is equal to the value of '1-honfrac'
+//	is equal to the value of '1-honfrac'; regardless of Each
+//	Voter's honesty, the votes are also recorded as cast for
+//	the various Candidates, as would happen in an actual election
 //
 //	Parameters:
 //		E       - the election data to use for determining
@@ -5793,8 +5791,31 @@ void castVotes( edata& E, real honfrac )
 	assert(honfrac >= 0.0);
 	assert(honfrac <= 1.0);
 	auto& allVoters = E.Voters;
+	auto& allCandidates = E.Candidates;
 	for(auto& eachVoter : allVoters) {
+		extern void recordVotes(const oneVoter& theVoter, CandidateSlate& theCandidates);
 		voteByHonesty(honfrac, eachVoter, numberOfCandidates);
+		recordVotes(eachVoter, allCandidates);
+	}
+}
+
+//	Function: recordVotes
+//
+//	records the votes of a given Voter with respect to Each
+//	Candidate
+//
+//	Parameters:
+//		theVoter      - the Voter casting votes
+//		theCandidates - the collection of Candidates in
+//		                this election
+void recordVotes(const oneVoter& theVoter, CandidateSlate& theCandidates)
+{
+	auto& theVoterIndex = theVoter.index;
+	auto& CandidatesToTheVoter = theVoter.Candidates;
+	CoupledCollection VotersAndCandidates = couple(theVoter.Candidates, theCandidates);
+	for(auto& eachCandidate : theCandidates) {
+		const auto& theCandidateIndex = eachCandidate.index;
+		eachCandidate.scoreVotes[theVoterIndex] = CandidatesToTheVoter[theCandidateIndex].score;
 	}
 }
 
@@ -6214,6 +6235,19 @@ template<> void resizeAndReset(CandidateSlate& theSlate, const uint64_t& newSize
 	}
 }
 
+//	Function: resizeAndResetVoteCollections
+//
+//	resizes the score vote collection of Each Candidate, resetting
+//	their values; the resultant collections each have sufficient
+//	space to hold vote information from All Voters in the current
+//	election
+void resizeAndResetVoteCollections(CandidateSlate& theCandidates, const uint64_t& numberOfVoters)
+{
+	for(auto& eachCandidate : theCandidates) {
+		eachCandidate.scoreVotes.resize(numberOfVoters);
+	}
+}
+
 //	Function: GenRealWorldUtils
 //
 //	loads real-world election data from a set files; the value
@@ -6236,7 +6270,9 @@ UTGEN GenRealWorldUtils( edata& E ){  /** based on Tideman election dataset **/
 	numberOfCandidates = C;
 	numberOfVoters = 53;  /* always will be 53 voters */
 	resizeAndReset(allVoters, numberOfVoters);
-	resizeAndReset(E.Candidates, numberOfCandidates);
+	auto& theCandidates = E.Candidates;
+	resizeAndReset(theCandidates, numberOfCandidates);
+	resizeAndResetVoteCollections(theCandidates, numberOfVoters);
 	resizeAndReset(RandCandPerm, numberOfCandidates);
 	scalefac = 1.0/sqrt((real)C);
 	for(auto& eachVoter : allVoters){
@@ -6900,7 +6936,8 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 		NumSites=16;
 	}
 	E.NumCands = NumSites;
-        resizeAndReset(E.Candidates, NumSites);
+	auto& theCandidates = E.Candidates;
+	resizeAndReset(theCandidates, NumSites);
 	MakeIdentityPerm(NumSites, RandPerm);
 	for(pass=8; pass>=1; pass /= 2) {
 		for(y=0; y<200; y+=pass) {
@@ -6933,6 +6970,7 @@ void YeePicture( uint NumSites, int MaxK, const int xx[], const int yy[], int Wh
 						v = k+k+1;
 						E.NumVoters = v;
 						resizeAndReset(allVoters, v);
+						resizeAndResetVoteCollections(theCandidates, v);
 						for(auto& eachVoter : allVoters) {
 							resizeAndReset(eachVoter.Candidates, NumSites);
 							resizeAndReset(eachVoter.topDownPrefs, NumSites);
@@ -7906,7 +7944,9 @@ void EDataPrep(edata& E, const brdata& B)
 	E.NumVoters = numberOfVoters;
 	resizeAndReset(E.Voters, numberOfVoters);
 	E.NumCands = numberOfCandidates;
-	resizeAndReset(E.Candidates, numberOfCandidates);
+	auto& theCandidates = E.Candidates;
+	resizeAndReset(theCandidates, numberOfCandidates);
+	resizeAndResetVoteCollections(theCandidates, numberOfVoters);
 	for(auto& eachVoter : Voters) {
 		resizeAndReset(eachVoter.Candidates, numberOfCandidates);
 		resizeAndReset(eachVoter.topDownPrefs, numberOfCandidates);
@@ -8564,6 +8604,33 @@ void Test(const char *name, const char *direction, real (*func1)(void), real (*f
 
 //	Function: TwiceMedian
 //	
+//	Returns:
+//		twice the median of 'A' or sum of the bimedians
+//		if the number of elements in 'A' is even
+//	Parameters:
+//		theValues - the set of values to examine
+template<class ElementType> ElementType TwiceMedian(std::valarray<ElementType> theValues)
+{
+	ElementType theResult;
+	const auto& oneBimedianIndex = theValues.size()/2;
+	const auto& theBeginning = std::begin(theValues);
+	const auto& theMedianPoint = theBeginning + oneBimedianIndex;
+	const auto& theEnding = std::end(theValues);
+	std::nth_element(theBeginning, theMedianPoint, theEnding);
+	const auto& oneBimedianValue = theValues[oneBimedianIndex];
+	if(theValues.size()%2) {
+		theResult = 2*oneBimedianValue;
+	} else {
+		const std::slice theSlice(0,oneBimedianIndex,1);
+		std::valarray<ElementType> subset = theValues[theSlice];
+		const auto& theOtherBimedianValue = subset.max();
+		theResult = oneBimedianValue + theOtherBimedianValue;
+	}
+	return theResult;
+}
+
+//	Function: TwiceMedian
+//
 //	Returns:
 //		twice the median of 'A[0..N-1]' or sum of the
 //		bimedians if 'N' is even
