@@ -578,6 +578,7 @@ uint32_t BigLinCong32()
 			u = u>>32;
 		}
 		assert(u>0);
+		ensure(u>0, 65);
 		y[72] = (uint32_t)(u-1); /*unborrow*/
 
 		/*  Step 2: y[0..60] = y[0..59] + y[60..72]shift12  - y[60..72]: */
@@ -609,6 +610,7 @@ uint32_t BigLinCong32()
 		}
 		/*i=60*/
 		assert(u>0);
+		ensure(u>0, 66);
 		y[i] = (uint32_t)(u-1); /*unborrow*/
 
 	/*It is rare that any iterations of this loop are needed:*/
@@ -641,6 +643,7 @@ uint32_t BigLinCong32()
 			}
 			/*i=60*/
 			assert(u>0);
+			ensure(u>0, 67);
 			y[i] = (uint32_t)(u-1); /*unborrow*/
 		}
 
@@ -1005,6 +1008,7 @@ bool IsPerm( uint64_t N, const uint Perm[] )
 bool IsPerm(const std::vector<uint>& Perm)
 {
 	assert(Perm.size()<MaxNumCands);
+	ensure(Perm.size()<MaxNumCands, 68);
 	std::vector<uint> ct(Perm.size(), 0U);
 	for(auto& each : Perm) {
 		auto& eachCount = ct[each];
@@ -1126,7 +1130,9 @@ void RandomlyPermute( uint64_t N, std::vector<uint>& RandPerm ){ /* randomly per
 		j = RandInt((uint)i);
 		std::swap(RandPerm[i], RandPerm[j]);
 	}
-	assert(IsPerm(RandPerm));
+	const auto& isGoodPerm = IsPerm(RandPerm);
+	assert(isGoodPerm);
+	ensure(isGoodPerm, 64);
 }
 
 /******* vector handling: **********/
@@ -7527,6 +7533,7 @@ int ArgMaxArr(uint64_t N, const T Arr[])
 		}
 	}
 	assert(winner>=0);
+	ensure(winner>=0, 46);
 	return(winner);
 }
 
