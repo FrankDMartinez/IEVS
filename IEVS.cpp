@@ -4960,7 +4960,7 @@ is not disqualified; he is the winner.
 EMETH WoodallDAC(const edata& E  /*Woodall: Monotonocity of single-seat preferential election rules, Discrete Applied Maths 77 (1997) 81-98.*/)
 {
 	uint WoodHashCount[3*MaxNumCands*MaxNumVoters]={0};
-	uint WoodHashSet[3*MaxNumCands*MaxNumVoters]={0};
+	std::valarray<uint> WoodHashSet(3*MaxNumCands*MaxNumVoters);
 	uint WoodSetPerm[3*MaxNumCands*MaxNumVoters];
 	bool leave;
 	/* Hash Tab entries contain counter and set-code which is a single machine word. */
@@ -4977,11 +4977,10 @@ EMETH WoodallDAC(const edata& E  /*Woodall: Monotonocity of single-seat preferen
 		exit(EXIT_FAILURE);
 	}
 	for(v=ARTINPRIME-1; v>=0; v--) { WoodHashCount[v] = 0; WoodHashSet[v] = 0; }
-	for(v=0; v<numberOfVoters; v++) {
-		const oneVoter& theVoter = allVoters[v];
+	for(const auto& eachVoter : allVoters) {
 			s = 0;
 			for(c=0; c < (int)numberOfCandidates; c++) {
-				s |= (1U<<(theVoter.topDownPrefs[c]));
+				s |= (1U<<(eachVoter.topDownPrefs[c]));
 				h = s%ARTINPRIME;
 				assert( !EmptySet(s) );
 				leave = false;
